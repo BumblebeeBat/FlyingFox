@@ -1,4 +1,4 @@
-defmodule Txs do
+defmodule Mempool do
 	def start do
 		{:ok, pid}=Task.start_link(fn -> looper([]) end)
 		Process.register(pid, :txs)
@@ -16,23 +16,26 @@ defmodule Txs do
 				looper(mem)
 		end
 	end
-	def txs() do
+	def txs do
 		send(:txs, {:txs, self()})
 		receive do
 			{:ok, mem} -> mem
 		end
 	end
 	def add_tx(tx) do
-		send(:txs, {:add_tx, tx, self()})
+		cond do
+			VerifyTx.check_tx(tx, txs) -> send(:txs, {:add_tx, tx, self()})
+			true -> "bad tx"
+		end
 	end
 	def dump() do
 		send(:txs, {:dump})
 	end
 	def test do
-		start
-		add_tx("55")
-		IO.puts inspect txs
-		add_tx("550000")
+		{pub, priv}=Sign.new_key
+		tx=[type: :spend]
+		tx=Sign.sign_tx(tx, pub, priv)
+		add_tx(tx)
 		IO.puts inspect txs
 		dump
 		IO.puts inspect txs		

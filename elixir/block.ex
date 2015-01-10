@@ -1,26 +1,28 @@
 defmodule Block do
 	def load_block(h) do
-		deserialize(KV.get(to_string(h)))
+	  KV.get(to_string(h))
 	end
 	def start do
 		KV.start
 	end
-	def serialize(block) do
-		{:ok, out}=MessagePack.pack(block)
-		out
-	end
-	def deserialize(block) do
-		{:ok, out}=MessagePack.unpack(block)
-		out
-	end
 	def genesis_block do
-		new=[0]
-		KV.put("0", serialize(new))
+		new=[height: 0, txs: []]
+		KV.put("height", 0)
+		KV.put("0", new)
 	end
-	def new_block(height) do
+	def add_block(block) do
+		h=KV.get("height")
+		h2=block[:height]
+		^h2=h+1
+		true=VerifyTx.check_txs(block[:txs])
+		#are the txs all valid?
+		KV.put(to_string(h2), block)
+		#move money around for each tx
+	end
+	def grow_chain(height) do
 		prev=load_block(height)
-		new=[hd(prev)+1]
-		KV.put(to_string(height+1), serialize(new))
+		new=[height: hd(prev)+1, txs: []]
+		KV.put(to_string(height+1), new)
 	end
 	def height(block) do
 		hd(block)

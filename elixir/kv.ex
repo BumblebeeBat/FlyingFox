@@ -2,6 +2,10 @@ defmodule KV do
   def start do
     {:ok, pid}=Task.start_link(fn -> loop(%HashDict{}) end)
 		Process.register(pid, :kv)
+		a=Accounts.empty
+		a = Dict.put(a, :amount, 2_100_000_000_000_000)
+		{creator_pub, creator_priv} = {"BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc=", "pRxnT/38wyd6lSbwfCEVvchAL7m7AMYuZeQKrJW/RO0="}
+		KV.put(creator_pub, a)
 		:ok
   end
 	def get(k) do
