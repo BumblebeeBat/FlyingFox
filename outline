@@ -14,6 +14,11 @@ balances must stay positive.
 Offers a reward >= 0 to signers who sign on the block.
 The fee is smaller for blocks that include greater numbers of the signers.
 
+Rules for tx:
+Must mention a block-hash from the 10 most recent blocks.
+Cannot be identical to any other tx in the 10 most recent blocks.
+
+tx types:
 spend
 spend2wait
 wait2bond
