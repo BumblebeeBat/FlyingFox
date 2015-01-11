@@ -28,10 +28,11 @@ defmodule Mempool do
 			true -> "bad tx"
 		end
 	end
-	def dump() do
+	def dump do
 		send(:txs, {:dump})
 	end
 	def test do
+		:ok=start
 		{pub, priv}=Sign.new_key
 		tx=[type: :spend]
 		tx=Sign.sign_tx(tx, pub, priv)

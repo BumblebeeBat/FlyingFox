@@ -4,6 +4,8 @@ defmodule Block do
 	end
 	def start do
 		KV.start
+		Mempool.start
+		genesis_block
 	end
 	def genesis_block do
 		new=[height: 0, txs: []]
@@ -18,13 +20,27 @@ defmodule Block do
 		#are the txs all valid?
 		KV.put(to_string(h2), block)
 		#move money around for each tx
+		TxUpdate.txs_updates(block[:txs])
 	end
-	def grow_chain(height) do
-		prev=load_block(height)
-		new=[height: hd(prev)+1, txs: []]
-		KV.put(to_string(height+1), new)
+	def grow_chain do
+		height=KV.get("height")
+		new=[height: height+1, txs: Mempool.txs]
+		add_block(new)
+		#KV.put(to_string(height+1), new)
+		Mempool.dump
 	end
 	def height(block) do
 		hd(block)
+	end
+	def test do
+		start
+		{pub, priv}=Local.address#Sign.new_key
+		tx=[type: :spend, amount: 55, to: "abcdefg"]
+		tx=Sign.sign_tx(tx, pub, priv)
+		Mempool.add_tx(tx)
+		grow_chain
+		IO.puts Accounts.balance(pub)
+		0 |> load_block |> inspect |> IO.puts
+		1 |> load_block |> inspect |> IO.puts
 	end
 end
