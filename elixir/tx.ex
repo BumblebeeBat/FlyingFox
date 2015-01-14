@@ -1,49 +1,49 @@
 defmodule TxUpdate do
-  def tx_update(tx) do
+  def tx_update(tx, d) do
     case Dict.get(elem(tx, 2), :type) do
-      :spend ->      spend(tx)
-      :spend2wait -> spend2wait(tx)
-      :wait2bond ->  wait2bond(tx)
-      :bond2spend -> bond2spend(tx)
-      :sign ->       sign(tx)
-      :slasher ->    slasher(tx)
-      :reveal ->     reveal(tx)
+      :spend ->      spend(tx, d)
+      :spend2wait -> spend2wait(tx, d)
+      :wait2bond ->  wait2bond(tx, d)
+      :bond2spend -> bond2spend(tx, d)
+      :sign ->       sign(tx, d)
+      :slasher ->    slasher(tx, d)
+      :reveal ->     reveal(tx, d)
       _	->           false			
     end
   end
-  def txs_updates(txs) do
-    Enum.map(txs, &(tx_update(&1)))
+  def txs_updates(txs, d) do
+    Enum.map(txs, &(tx_update(&1, d)))
   end
-  def spend(tx) do
-    {pub, priv, tx}=tx
+  def adjust_int(pub, key, amount, d) do
     acc=KV.get(pub)
-    acc=Dict.put(acc, :amount, acc[:amount]-tx[:amount])
+    acc=Dict.put(acc, key, acc[key]+(amount*d))
     KV.put(pub, acc)
-    acc2=KV.get(tx[:to])
-    if acc2==nil do acc2=Accounts.empty end
-    acc2=Dict.put(acc2, :amount, acc2[:amount]+tx[:amount])
-    KV.put(tx[:to], acc2)
+  end
+  def spend(tx, d) do
+    {pub, sig, tx}=tx
+    adjust_int(pub, :amount, -tx[:amount], d)
+    adjust_int(tx[:to], :amount, tx[:amount], d)
     #For users to give money to each other. Balances must stay positive. Creator of the tx has a fee which is >=0. The fee pays the creator of the block.
   end
-  def spend2wait(tx) do
+  def spend2wait(tx, d) do
     #convert some money from the spendable variety into the kind that is locked up for a long time. transforms money into wait-money.
   end
-  def wait2bond(tx) do
+  def wait2bond(tx, d) do
     #If a user wants to take part in the consensus process, they would use this transaction type to turn some of their wait-money into bond-money. The price for bond-money changes continuously over time, and more bond-money is printed and given to the people who participate. If you participate, then the value of your bond-money will slowly grow. If you dont participate, then the value will quickly shrink. 
     #There is a minimum size for purchasing bond-money, priced in money. 
     #Every several hundred blocks we divide everyones bond-coins in half, and cut the exchange rate in half. That way the numbers dont get too big. Anyone who has less than the minimum is forced to unbond at that time.
   end
-  def bond2spend(tx) do
+  def bond2spend(tx, d) do
     #Users can take their money out of the bond at any time. 
   end
-  def sign(tx) do
+  def sign(tx, d) do
     #Includes hash(entropy_bit+salt).
     #~64 bond-holders are selected every block. A block requires at least 43 of them to sign for it to be valid. The bond-money of each signer is shrunk to pay a safety deposit. They all pay the same amount. The amount they pay is based off how much money is spent in the spend txs in this block. Total safety deposits needs to be 1.5x as big as the total amount of money spent in spend-type txs. The most they could have to pay is as much bond-money as the poorest of them has.
   end
-  def slasher(tx) do
+  def slasher(tx, d) do
     #If you can prove that the same address signed on 2 different blocks at the same height, then you can take 1/3rd of the deposit, and destroy the rest.
   end
-  def reveal(tx) do
+  def reveal(tx, d) do
     #After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
   end
 end

@@ -29,7 +29,9 @@ defmodule KV do
         send caller, {:ok, Dict.keys(map)}
         loop(map)
       {:get, key, caller} ->
-        send caller, {:ok, Dict.get(map, key)}
+        a = Dict.get(map, key)
+        if a == nil do a = Accounts.empty end
+        send caller, {:ok, a}
         loop(map)
       {:put, key, value} ->
         loop(Dict.put(map, key, value))
