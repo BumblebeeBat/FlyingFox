@@ -1,6 +1,6 @@
-defmodule Det_hash do
+defmodule DetHash do
   def hash(s) do
-    :crypto.hmac(:sha256, to_string(s), "") |> Base.encode16 end
+    :crypto.hmac(:sha256, to_string(s), "") |> Base.encode64 end
   def collect(l) do#list of strings -> string
     Enum.reduce(l, "", fn element, acc -> element<>acc end) end
   def hash_list(l) do
@@ -14,8 +14,10 @@ defmodule Det_hash do
   def doit(a) do
     cond do
       is_list(a) -> hash_list(a)
+      is_tuple(a) -> hash_list(Tuple.to_list(a))
       is_integer(a) -> hash(a)
       is_float(a) -> hash(a)
+      is_binary(a) -> hash(a)
       true -> hash_dict(a)
     end
   end

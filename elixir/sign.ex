@@ -21,7 +21,6 @@ defmodule Sign do
   def sign_tx(tx, pub, priv) do
     h=Det_hash.hash_dict(tx)
     sig=sign(h, priv)
-    sig=sig
     {pub, sig, tx}
   end
   def verify_tx(signed_tx) do
