@@ -55,7 +55,13 @@ we no longer need to use a patricia tree because of the time delay to get bonded
 An idea that Vlad Zamfir explained to me:
 The total amount of money spent in a block must be less than or equal to the total amount of safety deposits left by the people who signed on that block. That way, any double-spend attack ends up costing more money than can be stolen. All the safety deposits are deleted. 
 
-It will have 8 transaction types
+It will have 7 transaction types:
+2 for turning money into bonds
+turning money into bonds
+spending money to another address
+bond-holders can sign which includes giving a safety deposit and hash(secret+salt)
+people who sign can be slashed if they cheat
+eventually, signers reveal their secret and reclaim the safety deposit.
 
 It will not have a scripting language.
 
@@ -63,4 +69,4 @@ From the tendermint I take the idea of bonded verifiers. Signers are only select
 
 
 minority game device to generate random-like numbers:
-is a simple anti-consensus game. At each round, M players can bet stake S on 1 or 0, and those who bet with the majority lose their stake and pay those who bet with the minority, who win > 0.5 * S * M. Idea is that you generate an N bit number by running N iterations of the game (i-th bit = minority answer in the i-th round). So you have an economic argument that numbers so generate will be random-like because if P(i+1 = 0 | {1,2,...,i}) didn't equal 0.5, there would be a profitable strategy to play in the minority game. 
+is a simple anti-consensus game. At each round, M players can bet stake S on 1 or 0, and those who bet with the majority lose their stake and pay those who bet with the minority, who win > 0.5 * S * M. Idea is that you generate an N bit number by running N iterations of the game (i-th bit = minority answer in the i-th round). So you have an economic argument that numbers will be random-like because if P(i+1 = 0 | {1,2,...,i}) didn't equal 0.5, there would be a profitable strategy to play in the minority game. 

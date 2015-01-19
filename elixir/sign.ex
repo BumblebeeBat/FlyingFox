@@ -19,13 +19,13 @@ defmodule Sign do
     :crypto.verify(:ecdsa, :sha256, s, sig, [pub, params])
   end
   def sign_tx(tx, pub, priv) do
-    h=Det_hash.hash_dict(tx)
+    h=DetHash.doit(tx)
     sig=sign(h, priv)
     {pub, sig, tx}
   end
   def verify_tx(signed_tx) do
     {pub, sig, tx}=signed_tx
-    h=Det_hash.hash_dict(tx)
+    h=DetHash.doit(tx)
     verify(h, sig, pub)
   end
   def test do

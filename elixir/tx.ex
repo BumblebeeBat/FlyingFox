@@ -27,11 +27,11 @@ defmodule TxUpdate do
     acc=Dict.put(acc, key, acc[key]+(amount*d))
     KV.put(pub, acc)
   end
-  def sym_append(pub, key, item, d) do#unused
+  def sym_append(pub, key, item, d) do
     acc=KV.get(pub)
     cond do
-      d==1 -> acc=Dict.put(acc, key, [item|acc[key]])
-      d==-1 -> acc=Dict.put(acc, key, tl(acc[key]))
+      d==1  -> acc=Dict.put(acc, key, acc[key]++[item])
+      d==-1 -> acc=Dict.put(acc, key, acc[key]--[item])
     end
     KV.put(pub, acc)
   end
@@ -57,7 +57,7 @@ defmodule TxUpdate do
     sym_increment(pub, :bond, a, d)
     sym_replace(pub, :wait, {a, h}, {0,0}, d)
     #If a user wants to take part in the consensus process, they would use this transaction type to turn some of their wait-money into bond-money. The price for bond-money changes continuously over time, and more bond-money is printed and given to the people who participate. If you participate, then the value of your bond-money will slowly grow. If you dont participate, then the value will quickly shrink. 
-    #There is a minimum size for purchasing bond-money, priced in money. 
+    #There is a minimum size for purchasing bond-money, priced in spend-money. 
     #Every several hundred blocks we divide everyones bond-coins in half, and cut the exchange rate in half. That way the numbers dont get too big. Anyone who has less than the minimum is forced to unbond at that time.
   end
   def bond2spend(tx, d) do
@@ -71,7 +71,7 @@ defmodule TxUpdate do
   end
   def sign(tx, d, bond_size) do
     {pub, _, tx}=tx
-    sym_increment(pub, :bond, -bond_size, d)
+    sym_increment(pub, :bond, -bond_size*length(tx[:winners]), d)
     #loses some :bond money. total_money
     #Includes hash(entropy_bit+salt).
     #~64 bond-holders are selected every block. A block requires at least 43 of them to sign for it to be valid. The bond-money of each signer is shrunk to pay a safety deposit. They all pay the same amount. The amount they pay is based off how much money is spent in the spend txs in this block. Total safety deposits needs to be 1.5x as big as the total amount of money spent in spend-type txs. The most they could have to pay is as much bond-money as the poorest of them has.
@@ -82,6 +82,9 @@ defmodule TxUpdate do
   end
   def reveal(tx, d) do
     {pub, _, tx}=tx
+    #lets change old_block somehow so that you cannot reveal the same secret twice.
+    sym_append(to_string(tx[:signed_on]), :meta, pub, d)
+    sym_increment(pub, :bond, tx[:amount], d)
     #After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
   end
 end
@@ -126,10 +129,7 @@ defmodule VerifyTx do
     #do I have enough money? including repeats?
     {pub, sig, tx}=tx
     acc=KV.get(pub)
-    #IO.puts inspect acc
     a=tx[:amount]
-    #IO.puts inspect a
-    #IO.puts inspect tx
     cond do
       a==nil -> false
       not is_integer(a) -> false
@@ -140,7 +140,8 @@ defmodule VerifyTx do
   end
   def spenders do [:spend2wait, :spend, :slasher] end
   def spenders_count(txs) do
-    length(Enum.filter(txs, &(&1[:type] in spenders)))
+    IO.puts inspect txs
+    length(Enum.filter(txs, &(elem(&1, 2)[:type] in spenders)))
   end
   def spend2wait?(tx, txs) do
     #do I have enough money? including repeats?
@@ -159,8 +160,6 @@ defmodule VerifyTx do
     {pub, _, tx}=tx
     acc=KV.get(pub)    
     {a, h}=tx[:wait_money]
-    tx |> inspect |> IO.puts
-    acc |> inspect |> IO.puts
     cond do
       {a, h}!=acc[:wait] -> false #{amount, height}
       h>KV.get("height")+50 -> false #wait 50 blocks
@@ -190,11 +189,9 @@ defmodule VerifyTx do
     cond do
       height<1 -> 0
       true ->
-        block = KV.get(height)
-        IO.puts inspect block
+        block = Block.load_block(height)
         txs=block[:txs]
-        IO.puts inspect txs
-        txs=Enum.filter(txs, &(&1[:type]==:reveal))
+        txs=Enum.filter(txs, &(elem(&1, 2)[:type]==:reveal))
         txs=Enum.map(txs, &(&1[:entropy]))
         txs
     end
@@ -213,9 +210,8 @@ defmodule VerifyTx do
     prev = KV.get(prev)
     l=Enum.map(tx[:winners], fn(x)->winner?(acc[:bond], tot_bonds, rng, pub, x) end)
     l=Enum.reduce(l, fn(x, y) -> x and y end)
-    m = length(Enum.filter(txs, fn(t)-> t[:type] == :sign end))
-    IO.puts inspect m
-    IO.puts inspect m==0
+    IO.puts "txs #{ inspect txs}"
+    m = length(Enum.filter(txs, fn(t)-> elem(t, 2)[:type] == :sign end))
     cond do
       not is_binary(tx[:secret_hash]) -> 
         IO.puts("a")
@@ -243,7 +239,20 @@ defmodule VerifyTx do
   end
   def reveal?(tx, txs) do
     {pub, _, tx}=tx
-    false
+    b=KV.get(to_string(tx[:signed_on]))
+    old_block=b[:block]#Block.load_block(tx[:signed_on])
+    already_revealed=b[:meta][:revealed]
+    bond_size=old_block[:bond_size]
+    winners = Block.txs_filter(old_block[:txs], :sign)
+    winners = Enum.filter(winners, &(pub==elem(&1, 0)))
+    winners = length(elem(hd(winners), 2)[:winners])
+    cond do
+      #make sure old_block hasn't been revealed by this person before
+      pub in already_revealed -> false
+      tx[:amount]!=bond_size*length(tx[:winners]) -> false
+      KV.get("height")-50>tx[:signed_on] -> false
+      true -> true
+    end
     #After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
   end
 end
