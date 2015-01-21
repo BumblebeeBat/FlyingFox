@@ -958,3 +958,2463 @@ Traceback (most recent call last):
   File "forth.py", line 12, in forth
     f[0]=float(f[0])
 ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: swap
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: swap
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: drop
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: drop
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
+ERROR:root:could not convert string to float: +
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: +
+ERROR:root:could not convert string to float: /
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: /
+ERROR:root:could not convert string to float: *
+Traceback (most recent call last):
+  File "stablecoin.py", line 12, in forth
+    f[0]=float(f[0])
+ValueError: could not convert string to float: *
