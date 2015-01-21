@@ -41,11 +41,11 @@ def test():
     print("for margins " + str(margin))
     for p in [0.05, 0.2, 0.5, 0.8]:
         print("-----------------------")
-        print('at price: ' +str(p*(margin[1]-margin[0])+margin[0]))
+        print('at price of bitcoin in USD ' +str(p*(margin[1]-margin[0])+margin[0]))
         #example_pm={'results':[p], 'predictions':['price of BTC in USD within 200-900'], 'functions':['700 * 200 + 1 / 200 *'], 'output states':['stable-coin', 'vol-coin'], 'algorithm':[0, ['stable-coin']]}
         example_pm={'results':[p], 'predictions':['price of BTC in USD within '+ str(margin[0])+', ' + str(margin[1])], 'functions':[str(margin[1]-margin[0])+' * '+str(margin[0]) +' + 1 / '+ str(margin[0]) +' *'], 'output states':['stable-coin', 'vol-coin'], 'algorithm':[0, ['stable-coin']]}
-        print('volshare '+str(share_value(example_pm, 'vol-coin')))
-        print('stableshare '+str(share_value(example_pm, 'stable-coin')))
-        print('value stableshare in USD ' +str(share_value(example_pm, 'stable-coin')*(p*(margin[1]-margin[0])+margin[0])))
-if __name__=='__main__': #for windows
+        print('price of volshare in bitcoin: '+str(share_value(example_pm, 'vol-coin')))
+        print('price of stableshare in bitcoin: '+str(share_value(example_pm, 'stable-coin')))
+        print('price of stableshare in USD ' +str(share_value(example_pm, 'stable-coin')*(p*(margin[1]-margin[0])+margin[0])))
+if __name__=='__main__': 
     test()
