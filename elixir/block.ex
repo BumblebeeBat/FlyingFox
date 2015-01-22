@@ -98,6 +98,16 @@ defmodule Block do
     tx=[type: :sign, prev_hash: prev[:hash], winners: w, secret_hash: secret]
     tx=Sign.sign_tx(tx, pub, priv)
     Mempool.add_tx(tx)
+    w
+  end
+  def test_reveal do
+    w=create_sign
+    buy_block
+    h=KV.get("height")
+    many buy_block
+    old_block=KV.get(h)
+    bond_size=old_block[:bond_size]
+    tx=[signed_on: h, winners:  w, amount:length(w)*bond_size]
   end
   def test_rng do#need to test reveal first
     r=VerifyTx.rng()
