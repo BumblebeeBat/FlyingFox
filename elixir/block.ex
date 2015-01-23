@@ -1,6 +1,6 @@
 defmodule Block do
   def load_block(h) do
-    KV.get(to_string(h))[:block]
+    KV.get(to_string(h))[:tx]
   end
   def start do
     KV.start
@@ -15,16 +15,16 @@ defmodule Block do
     KV.put("tot_bonds", bonds)
   end
   def genesis_block do
-    new=[height: 0, txs: [], hash: ""]
+    new=[meta: [revealed: []], tx: [height: 0, txs: [], hash: ""]]
     KV.put("height", 0)
     KV.put("0", new)
   end
   def txs_filter(txs, type) do 
-    Enum.filter(txs, fn(t) -> elem(t, 2)[:type]==type end)
+    Enum.filter(txs, fn(t) -> t[:tx][:type]==type end)
   end
   def num_signers(txs) do 
     txs_filter(txs, :sign)
-    |> Enum.map(fn(t) -> length(elem(t, 2)[:winners]) end) 
+    |> Enum.map(fn(t) -> length(t[:tx][:winners]) end) 
     |> Enum.reduce(0, &(&1+&2))
   end
   def remove_block do
@@ -37,35 +37,38 @@ defmodule Block do
   end
   def add_block(block) do
     true=Sign.verify_tx(block)
-    {pub, sig, block}=block
     h=KV.get("height")
-    h2=block[:height]
+    h2=block[:tx][:height]
     ^h2=h+1
-    true=VerifyTx.check_txs(block[:txs])
+    txs=block[:tx][:txs]
+    true=VerifyTx.check_txs(txs)
     #run more checks
     #safety deposit per signer must be the same for each.
     #the poorest signer needs to be able to afford the safety deposit.
     #make sure block_hash matches previous block.
     #block creator needs to pay a fee. he needs to have signed so we can take his fee.
     #make sure it has enough signers.
-    sign_txs=txs_filter(block[:txs], :sign)
-    send_txs = txs_filter(block[:txs], :spend)
-    send_txs=Enum.map(send_txs, fn(t) -> elem(t, 2)[:amount] end)
+    sign_txs=txs_filter(txs, :sign)
+    send_txs = txs_filter(txs, :spend)
+    send_txs=Enum.map(send_txs, fn(t) -> t[:tx][:amount] end)
     send_txs=Enum.reduce(send_txs, 0, &(&1+&2))
-    signers = Enum.map(sign_txs, fn(t) -> elem(t, 0) end)
+    signers = Enum.map(sign_txs, fn(t) -> t[:pub] end)
     accs = Enum.map(signers, fn(s) -> KV.get(s) end)
     balances = Enum.map(accs, fn(s) -> s[:bond] end)
     ns=num_signers(sign_txs)
     true=ns>43
-    signer_bond=block[:bond_size]/ns
+    signer_bond=block[:tx][:bond_size]/ns
     sb = Enum.reduce(balances, nil, &(min(&1, &2)))
     true = sb >= signer_bond
-    KV.put(to_string(h2), [block: block, meta: {}])
-    txs = block[:txs] 
-    txs = Enum.filter(txs, fn(t) -> elem(t, 2)[:type]==:sign end)
-    bs=block[:bond_size]
+    {p, q}=Local.address
+    KV.put(to_string(h2), block)
+    txs = block[:tx][:txs] 
+    txs = Enum.filter(txs, fn(t) -> t[:tx][:type]==:sign end)
+    bs=block[:tx][:bond_size]
     true = bs>=send_txs #maybe multiply send_txs by 1.5?
-    TxUpdate.txs_updates(block[:txs], 1, signer_bond)
+    IO.puts inspect block
+    true = (block[:meta][:revealed] == [])
+    TxUpdate.txs_updates(block[:tx][:txs], 1, signer_bond)
     KV.put("height", h2)
   end
   def blockhash(height, txs) do
@@ -79,6 +82,7 @@ defmodule Block do
     bh=blockhash(height, txs)
     new=[height: height+1, txs: txs, hash: bh, bond_size: 100_000]
     new=Sign.sign_tx(new, pub, priv)
+    new=Dict.put(new, :meta, [revealed: []])
     add_block(new)
     Mempool.dump
   end
@@ -86,14 +90,17 @@ defmodule Block do
     Enum.filter(0..199, fn(x) -> VerifyTx.winner?(balance, total, seed, pub, x) end)
   end
   def create_sign do
-    {pub, priv}=Local.address#Sign.new_key
+    {pub, priv}=Local.address
     acc = KV.get(pub)
     prev = KV.get("height")
     tot_bonds = KV.get("tot_bonds")
     prev = prev-1
     prev = KV.get(prev)
     w=winners(acc[:bond], tot_bonds, VerifyTx.rng, pub)
-    ran=:crypto.rand_bytes(10)
+    ran=:crypto.rand_bytes(10)#should save this for later.
+    h=KV.get("height")+1
+    IO.puts("secret #{inspect ran}")
+    KV.put("secret #{inspect h}", ran)
     secret=DetHash.doit(ran)
     tx=[type: :sign, prev_hash: prev[:hash], winners: w, secret_hash: secret]
     tx=Sign.sign_tx(tx, pub, priv)
@@ -101,13 +108,23 @@ defmodule Block do
     w
   end
   def test_reveal do
+    {pub, priv}=Local.address
     w=create_sign
     buy_block
     h=KV.get("height")
-    many buy_block
-    old_block=KV.get(h)
+    Enum.map(1..5, fn(x) -> create_sign
+                             buy_block end)
+    IO.puts("h: #{inspect h}")
+    old_block=load_block(h)
+    IO.puts("oldblock in block: #{inspect old_block}")
     bond_size=old_block[:bond_size]
-    tx=[signed_on: h, winners:  w, amount:length(w)*bond_size]
+    tx=[type: :reveal, signed_on: h, winners:  w, amount: length(w)*bond_size, secret: KV.get("secret #{inspect h}")]
+    tx=Sign.sign_tx(tx, pub, priv)
+    Mempool.add_tx(tx)
+    create_sign
+    buy_block
+    h=KV.get("height")
+    IO.puts inspect h
   end
   def test_rng do#need to test reveal first
     r=VerifyTx.rng()
@@ -142,7 +159,7 @@ defmodule Block do
     #tx=[type: :spend, amount: 55, to: "abcdefg", fee: 100]
     tx=Sign.sign_tx(tx, pub, priv)
     Mempool.add_tx(tx)
-    Enum.map(1..54, fn(x) -> create_sign
+    Enum.map(1..VerifyTx.epoch, fn(x) -> create_sign
                              buy_block end)
     acc=KV.get(pub)
     tx=[type: :wait2bond, wait_money: acc[:wait]]
