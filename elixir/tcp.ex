@@ -1,20 +1,31 @@
-defmodule Networking do
-  def start(port) do
+defmodule Server do
+  def absorb(b) do
+      Block.add_block(b)
+      Block.create_sign
+      Block.create_reveal    
+  end
+  def start(port, type) do
     tcp_options = [:binary, {:packet, 0}, {:active, false}]
     {:ok, socket} = :gen_tcp.listen(port, tcp_options)
-    new_peer(socket)
+    new_peer(socket, type)
   end
   defp connect(host, port) do
     {:ok, s} = :gen_tcp.connect(:erlang.binary_to_list(host), port, [{:active, false}, {:packet, 0}])
     s
   end
-  defp new_peer(socket) do
+  defp new_peer(socket, type) do
     {:ok, conn} = :gen_tcp.accept(socket)
-    spawn(fn -> done_listening?(conn, "") end)
-    new_peer(socket)		
+    fun=&(&1)
+    cond do
+      type == :absorb -> fun=&(absorb(&1))
+    end
+    spawn(fn -> fun.(listen(conn, "")) end)
+    new_peer(socket, type)		
   end
   defp ms(socket, string) do
+    IO.puts inspect string
     :ok = :gen_tcp.send(socket, string<>"_")
+    string
   end
   def talk(host, port, msg) do
     s=connect(host, port)

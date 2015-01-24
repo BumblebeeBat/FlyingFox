@@ -181,20 +181,23 @@ defmodule VerifyTx do
     a=HashMath.hash2int(DetHash.doit({seed, pub, j}))
     a<b and j>=0 and j<200 and is_integer(j)
   end
+  def first_bits(b, s) do
+    <<c :: size(s), d :: bitstring>>=b
+    c
+  end
   def ran_block(height) do
     txs = Block.load_block(height)[:txs]
     cond do
-      height<1 -> 0
       is_nil(txs) -> 0
       true ->
         txs=Enum.filter(txs, &(&1[:tx][:type]==:reveal))
-        txs=Enum.map(txs, &(&1[:tx][:secret]))
+        txs=Enum.map(txs, &(first_bits(&1[:tx][:secret], length(&1[:tx][:winners]))))
         txs
     end
   end
   def rng do
     h=KV.get("height")
-    Enum.map(0..20, &(ran_block(h-&1)))
+    Enum.map(0..epoch, &(ran_block(h-&1)))
   end
   def sign?(tx, txs) do
     #require hash(enropy+salt)
@@ -237,11 +240,25 @@ defmodule VerifyTx do
     cond do
       #make sure old_block hasn't been revealed by this person before
       #secret_hash must match.
-      length(signed)==0 -> false
-      DetHash.doit(tx[:tx][:secret]) != hd(signed)[:tx][:secret_hash] -> false
-      tx[:pub] in b[:meta][:revealed] -> false
-      tx[:tx][:amount]!=bond_size*length(tx[:tx][:winners]) -> false
-      KV.get("height")-epoch>tx[:tx][:signed_on] -> false
+      length(signed)==0 -> 
+        IO.puts "0"
+        false
+      byte_size(tx[:tx][:secret])!=10 -> 
+        IO.puts "tx #{inspect tx}"
+        IO.puts "1"
+        false
+      DetHash.doit(tx[:tx][:secret]) != hd(signed)[:tx][:secret_hash] -> 
+        IO.puts "2"
+        false
+      tx[:pub] in b[:meta][:revealed] -> 
+        IO.puts "3"
+        false
+      tx[:tx][:amount]!=bond_size*length(tx[:tx][:winners]) -> 
+        IO.puts "4"
+        false
+      KV.get("height")-epoch>tx[:tx][:signed_on] -> 
+        IO.puts "5"
+        false
       true -> true
     end
     #After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
