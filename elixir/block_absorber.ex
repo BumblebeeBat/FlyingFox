@@ -4,47 +4,18 @@ defmodule BlockAbsorber do
       {:ping, p} ->
         send(p, {:ok, :pong})
         looper
-      {:get, v, p} ->
-        send(p, {:ok, KV.get(v)})
-        looper
       {:block, b} ->
-        Block.add_block(b)
-        Block.create_sign
-        Block.create_reveal
+        Blockchain.absorb(b)
         looper
       true ->
         looper
     end
   end
   def port do 5556 end
-  def serve do
-    start
-    Tcp.start(port, :absorb)
-  end
+  def key do :absorber end
   def start do
-    Block.start
     {:ok, pid} = Task.start_link(fn->looper end)
-    Process.register(pid, :absorber)
-    Block.create_sign
-    Block.create_reveal
+    Process.register(pid, key)
   end
-  def talk(s) do
-    Tcp.talk("localhost", port, s)
-  end
-  def test3() do
-    talk(Block.buy_block)
-  end
-  def test2 do
-    b=Block.buy_block
-    IO.puts inspect b
-    #send(pid, {:block, b})
-    #IO.puts inspect send(pid, {:get, "1", self})    
-  end
-  def test do
-    {:ok, pid} = Task.start_link(fn->looper end)
-    send(pid, {:ping, self()})
-    receive do
-      {:ok, :pong} -> IO.puts "success"
-    end
-  end
+  def talk(s) do send(key, s) end
 end

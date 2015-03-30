@@ -1,10 +1,8 @@
-defmodule Block do
-  def load_block(h) do
+defmodule Blockchain do
+  defp get_block(h) do
     KV.get(to_string(h))[:tx]
   end
-  def start do
-    KV.start
-    Mempool.start
+  defp genesis_state do
     genesis_block
     a=Accounts.empty
     bonds =                    100_000_000_000_000
@@ -13,23 +11,25 @@ defmodule Block do
     {creator_pub, creator_priv} = {"BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc=", "pRxnT/38wyd6lSbwfCEVvchAL7m7AMYuZeQKrJW/RO0="}
     KV.put(creator_pub, a)
     KV.put("tot_bonds", bonds)
+    create_sign
+    create_reveal
   end
-  def genesis_block do
+  defp genesis_block do
     new=[meta: [revealed: []], tx: [height: 0, txs: [], hash: ""]]
     KV.put("height", 0)
     KV.put("0", new)
   end
-  def txs_filter(txs, type) do 
+  defp txs_filter(txs, type) do 
     Enum.filter(txs, fn(t) -> t[:tx][:type]==type end)
   end
-  def num_signers(txs) do 
+  defp num_signers(txs) do 
     txs_filter(txs, :sign)
     |> Enum.map(fn(t) -> length(t[:tx][:winners]) end) 
     |> Enum.reduce(0, &(&1+&2))
   end
   def remove_block do
     h=KV.get("height")
-    block=load_block(h)
+    block=get_block(h)
     n=num_signers(txs_filter(block[:txs], :sign))
     TxUpdate.txs_updates(block[:txs], -1, div(block[:bond_size], n))
     #give block creator his fee back.
@@ -113,7 +113,7 @@ defmodule Block do
     cond do
       h<1 -> nil
       true ->
-        old_block=load_block(h)
+        old_block=get_block(h)
         old_tx = old_block[:txs] |> Enum.filter(&(&1[:tx][:type]==:sign)) |> Enum.filter(&(&1[:pub]==pub)) |> hd
         w=old_tx[:tx][:winners]
         bond_size=old_block[:bond_size]
@@ -169,10 +169,10 @@ defmodule Block do
     Mempool.add_tx(tx)
     add_block(buy_block)
     IO.puts Accounts.balance(pub)
-    0 |> load_block |> inspect |> IO.puts
-    1 |> load_block |> inspect |> IO.puts
-    2 |> load_block |> inspect |> IO.puts
-    3 |> load_block |> inspect |> IO.puts
+    0 |> get_block |> inspect |> IO.puts
+    1 |> get_block |> inspect |> IO.puts
+    2 |> get_block |> inspect |> IO.puts
+    3 |> get_block |> inspect |> IO.puts
     remove_block
     pub |> KV.get |> inspect |> IO.puts
   end
@@ -191,10 +191,10 @@ defmodule Block do
     create_sign
     add_block(buy_block)
     acc=KV.get(pub)
-    0 |> load_block |> inspect |> IO.puts
-    1 |> load_block |> inspect |> IO.puts
-    2 |> load_block |> inspect |> IO.puts
-    55 |> load_block |> inspect |> IO.puts
+    0 |> get_block |> inspect |> IO.puts
+    1 |> get_block |> inspect |> IO.puts
+    2 |> get_block |> inspect |> IO.puts
+    55 |> get_block |> inspect |> IO.puts
     pub |> KV.get |> inspect |> IO.puts
     acc=KV.get(pub)
     tx=[type: :bond2spend, amount: 179, fee: 100]
@@ -202,7 +202,7 @@ defmodule Block do
     Mempool.add_tx(tx)
     create_sign
     add_block(buy_block)
-    56 |> load_block |> inspect |> IO.puts
+    56 |> get_block |> inspect |> IO.puts
     pub |> KV.get |> inspect |> IO.puts
   end
 end
