@@ -1,4 +1,4 @@
-defmodule Secret do
+defmodule Secret do#erasure coding
   def encode(secret) do
     << a :: 32, b :: 32, c :: 32 >> = :crypto.rand_bytes(12)
     :random.seed(a,b,c)

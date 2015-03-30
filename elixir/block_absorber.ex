@@ -16,9 +16,10 @@ defmodule BlockAbsorber do
         looper
     end
   end
+  def port do 5556 end
   def serve do
     start
-    Server.start(5555, :absorb)
+    Tcp.start(port, :absorb)
   end
   def start do
     Block.start
@@ -28,9 +29,9 @@ defmodule BlockAbsorber do
     Block.create_reveal
   end
   def talk(s) do
-    Server.talk("localhost", 5555, s)
+    Tcp.talk("localhost", port, s)
   end
-  def test3 do
+  def test3() do
     talk(Block.buy_block)
   end
   def test2 do

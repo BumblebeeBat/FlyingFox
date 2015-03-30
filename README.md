@@ -6,27 +6,11 @@ Commerce is a proof of stake blockchain
 
 Donations: 1GbpRPE83Vjg73KFvTVZ4EnS2qNkiLY5TT
 
-=====INSTALL 
-for Ubuntu
-
-    git clone https://github.com/zack-bitcoin/slasher.git
-    pip install pysha3
-    pip install bitcoin
-    cd slasher
-
-====RUN A NODE
-
-    ./cli.py start
-
-It will take time to download the blockchain.
-
-====TALK TO THE NODE
-
-    ./cli.py
-
 ====About this software
 
 This is not yet a functioning cryptocurrency! The money does not have value.
+The python directory is the remains of an old project, the elixir directory is my work in progress.
+
 
 ====Ideas I stole frm other projects:
 

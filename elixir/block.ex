@@ -35,6 +35,11 @@ defmodule Block do
     #give block creator his fee back.
     KV.put("height", h-1)
   end
+  def being_spent(txs) do
+    send_txs = txs_filter(txs, :spend)
+    send_txs=Enum.map(send_txs, fn(t) -> t[:tx][:amount] end)
+    send_txs=Enum.reduce(send_txs, 0, &(&1+&2))
+  end
   def add_block(block) do
     true=Sign.verify_tx(block)
     h=KV.get("height")
@@ -48,14 +53,12 @@ defmodule Block do
     #block creator needs to pay a fee. he needs to have signed so we can take his fee.
     #make sure it has enough signers.
     sign_txs=txs_filter(txs, :sign)
-    send_txs = txs_filter(txs, :spend)
-    send_txs=Enum.map(send_txs, fn(t) -> t[:tx][:amount] end)
-    send_txs=Enum.reduce(send_txs, 0, &(&1+&2))
+    spending=being_spent(txs)
     signers = Enum.map(sign_txs, fn(t) -> t[:pub] end)
     accs = Enum.map(signers, fn(s) -> KV.get(s) end)
     balances = Enum.map(accs, fn(s) -> s[:bond] end)
     ns=num_signers(sign_txs)
-    true=ns>43#at least 2/3rds participation
+    true=ns>Constants.signers_per_block*2/3
     signer_bond=block[:tx][:bond_size]/ns
     sb = Enum.reduce(balances, nil, &(min(&1, &2)))
     true = sb >= signer_bond#poorest signer can afford
@@ -64,7 +67,7 @@ defmodule Block do
     txs = block[:tx][:txs] 
     txs = Enum.filter(txs, fn(t) -> t[:tx][:type]==:sign end)
     bs=block[:tx][:bond_size]
-    true = bs>=send_txs #maybe multiply send_txs by 1.5?
+    true = bs>=spending*3 #maybe multiply send_txs by 1.5?
     #IO.puts inspect block
     true = (block[:meta][:revealed] == [])
     TxUpdate.txs_updates(block[:tx][:txs], 1, signer_bond)
@@ -118,6 +121,11 @@ defmodule Block do
         tx=Sign.sign_tx(tx, pub, priv)
         Mempool.add_tx(tx)
     end
+  end
+  def absorb(b) do
+    add_block(b)
+    create_sign
+    create_reveal
   end
   def test(n \\ 10) do
     cond do

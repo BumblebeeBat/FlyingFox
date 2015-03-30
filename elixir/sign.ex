@@ -24,6 +24,7 @@ defmodule Sign do
     [pub: pub, sig: sig, tx: tx, meta: []]
   end
   def verify_tx(signed_tx) do
+    IO.puts inspect signed_tx
     h=DetHash.doit(signed_tx[:tx])
     verify(h, signed_tx[:sig], signed_tx[:pub])
   end

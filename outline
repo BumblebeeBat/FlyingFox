@@ -1,3 +1,5 @@
+Use onion routing to reveal transactions, it is critical that bond-holders don't reveal their IP address.
+
 Rules for choosing which fork to download:
 The blockchain must only contain valid blocks.
 If the user gave a weak subjectivity hash, then only download blockchains that have a block that hashes to the correct value at the correct height.
@@ -50,3 +52,16 @@ If you can prove that the same address signed on 2 different blocks at the same 
 
 reveal:
 After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
+
+
+
+Transaction types for phase 2:
+
+Create channel:
+This creates a 2-way channel between 2 people. It allows them to give money to each other without writing anything onto the blockchain.
+
+Channel spend:
+This is how you spend money without writing on the blockchain.
+
+Channel download:
+One participant pays a little money and downloads a chunk of a file, the other person earns the money and uploads the file. This happens off-chain, so it is cheap to upload the entire file.
