@@ -1,10 +1,10 @@
 defmodule Blockchain do
-  defp get_block(h) do
-    KV.get(to_string(h))[:tx]
+  def get_block(h) do
+    KV.get(to_string(h))[:data]
   end
-  defp genesis_state do
+  def genesis_state do
     genesis_block
-    a=Accounts.empty
+    a=Constants.empty_account
     bonds =                    100_000_000_000_000
     a = Dict.put(a, :amount, 2_000_000_000_000_000)
     a = Dict.put(a, :bond, bonds)     
@@ -13,66 +13,125 @@ defmodule Blockchain do
     KV.put("tot_bonds", bonds)
     create_sign
     create_reveal
+    #IO.puts("mempool #{inspect Mempool.txs}")
   end
-  defp genesis_block do
-    new=[meta: [revealed: []], tx: [height: 0, txs: [], hash: ""]]
+  def genesis_block do
+    new=[meta: [revealed: []], data: [height: 0, txs: [], hash: ""]]
     KV.put("height", 0)
     KV.put("0", new)
   end
-  defp txs_filter(txs, type) do 
-    Enum.filter(txs, fn(t) -> t[:tx][:type]==type end)
+  def txs_filter(txs, type) do 
+    Enum.filter(txs, fn(t) -> t[:data][:type]==type end)
   end
-  defp num_signers(txs) do 
-    txs_filter(txs, :sign)
-    |> Enum.map(fn(t) -> length(t[:tx][:winners]) end) 
+  def num_signers(txs) do 
+    txs_filter(txs, "sign")
+    |> Enum.map(fn(t) -> length(t[:data][:winners]) end) 
     |> Enum.reduce(0, &(&1+&2))
   end
   def remove_block do
     h=KV.get("height")
     block=get_block(h)
-    n=num_signers(txs_filter(block[:txs], :sign))
+    n=num_signers(txs_filter(block[:txs], "sign"))
     TxUpdate.txs_updates(block[:txs], -1, div(block[:bond_size], n))
     #give block creator his fee back.
     KV.put("height", h-1)
   end
   def being_spent(txs) do
-    send_txs = txs_filter(txs, :spend)
+    send_txs = txs_filter(txs, "spend")
     send_txs=Enum.map(send_txs, fn(t) -> t[:tx][:amount] end)
     send_txs=Enum.reduce(send_txs, 0, &(&1+&2))
   end
-  def add_block(block) do
-    true=Sign.verify_tx(block)
+  def valid_block?(block) do
+    IO.puts("check block")
     h=KV.get("height")
-    h2=block[:tx][:height]
-    ^h2=h+1
-    txs=block[:tx][:txs]
-    true=VerifyTx.check_txs(txs)
+    h2=block[:data][:height]
+    cond do
+      not Sign.verify_tx(block) -> 
+        IO.puts("bad signature #{inspect block}")
+        false
+      h2 != h+1 ->
+        IO.puts("incorrect height")
+        false
+      true -> valid_block_2?(block, h2, h)
+    end
+  end
+  def valid_block_2?(block, h2, h) do
+    IO.puts("check block2")
+    txs=block[:data][:txs]
+    #true=VerifyTx.check_txs(txs)
     #run more checks
     #safety deposit per signer must be the same for each.
     #make sure block_hash matches previous block.
     #block creator needs to pay a fee. he needs to have signed so we can take his fee.
     #make sure it has enough signers.
-    sign_txs=txs_filter(txs, :sign)
+    sign_txs=txs_filter(txs, "sign")
     spending=being_spent(txs)
     signers = Enum.map(sign_txs, fn(t) -> t[:pub] end)
     accs = Enum.map(signers, fn(s) -> KV.get(s) end)
     balances = Enum.map(accs, fn(s) -> s[:bond] end)
     ns=num_signers(sign_txs)
-    true=ns>Constants.signers_per_block*2/3
-    signer_bond=block[:tx][:bond_size]/ns
-    sb = Enum.reduce(balances, nil, &(min(&1, &2)))
-    true = sb >= signer_bond#poorest signer can afford
+    cond do
+      not VerifyTx.check_txs(txs) ->
+           IO.puts("invalid tx")
+           false
+      ns <= Constants.signers_per_block*2/3 -> 
+        IO.puts("not enough signers")
+        false
+      true -> valid_block_3?(block, ns, balances, spending)
+    end
+  end
+  def valid_block_3?(block, ns, balances, spending) do
+    IO.puts("check block3")
     {p, q}=Local.address
-    KV.put(to_string(h2), block)
-    txs = block[:tx][:txs] 
-    txs = Enum.filter(txs, fn(t) -> t[:tx][:type]==:sign end)
-    bs=block[:tx][:bond_size]
-    true = bs>=spending*3 #maybe multiply send_txs by 1.5?
-    #IO.puts inspect block
-    true = (block[:meta][:revealed] == [])
-    TxUpdate.txs_updates(block[:tx][:txs], 1, signer_bond)
-    KV.put("height", h2)
-    Mempool.dump    
+    IO.puts("ns #{inspect ns}")
+    signer_bond=block[:data][:bond_size]/ns
+    sb = Enum.reduce(balances, nil, &(min(&1, &2)))
+    txs = block[:data][:txs] 
+    bs=block[:data][:bond_size]
+    txs = Enum.filter(txs, fn(t) -> t[:data][:type]=="sign" end)
+    cond do
+      sb < signer_bond -> 
+        IO.puts("poorest signer can afford")
+        false
+      bs<spending*3 -> 
+        IO.puts("not enough bonds to spend that much")
+        false
+      block[:meta][:revealed] != [] -> 
+        IO.puts("none revealed? weird error")
+        false
+      true -> 
+        IO.puts("valid block")
+        true
+    end
+  end
+  def add_block(block) do
+    cond do
+      not valid_block?(block) -> 
+        IO.puts("invalid block")
+        false
+      true ->
+        h=KV.get("height")
+        h2=block[:data][:height]
+        txs=block[:data][:txs]
+        #block creator needs to pay a fee. he needs to have signed so we can take his fee.
+        #make sure it has enough signers.
+        sign_txs=txs_filter(txs, "sign")
+        spending=being_spent(txs)
+        ns = num_signers(sign_txs)
+        signers = Enum.map(sign_txs, &(&1[:pub]))
+        accs = Enum.map(signers, &(KV.get(&1)))
+        balances = Enum.map(accs, &(&1[:bond]))
+        signer_bond=block[:data][:bond_size]/ns
+        sb = Enum.reduce(balances, nil, &(min(&1, &2)))
+        {p, q}=Local.address
+        KV.put(to_string(h2), block)
+        txs = block[:data][:txs] 
+        txs = Enum.filter(txs, fn(t) -> t[:data][:type]=="sign" end)
+        bs=block[:data][:bond_size]
+        TxUpdate.txs_updates(block[:data][:txs], 1, signer_bond)
+        KV.put("height", h2)
+        Mempool.dump    
+    end
   end
   def blockhash(height, txs) do
     prev_block=KV.get(height-1)
@@ -102,7 +161,7 @@ defmodule Blockchain do
     h=KV.get("height")+1
     KV.put("secret #{inspect h}", ran)
     secret=DetHash.doit(ran)
-    tx=[type: :sign, prev_hash: prev[:hash], winners: w, secret_hash: secret]
+    tx=[type: "sign", prev_hash: prev[:hash], winners: w, secret_hash: secret]
     tx=Sign.sign_tx(tx, pub, priv)
     Mempool.add_tx(tx)
     w
@@ -114,10 +173,10 @@ defmodule Blockchain do
       h<1 -> nil
       true ->
         old_block=get_block(h)
-        old_tx = old_block[:txs] |> Enum.filter(&(&1[:tx][:type]==:sign)) |> Enum.filter(&(&1[:pub]==pub)) |> hd
-        w=old_tx[:tx][:winners]
+        old_tx = old_block[:txs] |> Enum.filter(&(&1[:data][:type]=="sign")) |> Enum.filter(&(&1[:pub]==pub)) |> hd
+        w=old_tx[:data][:winners]
         bond_size=old_block[:bond_size]
-        tx=[type: :reveal, signed_on: h, winners: w, amount: length(w)*bond_size, secret: KV.get("secret #{inspect h}")]
+        tx=[type: "reveal", signed_on: h, winners: w, amount: length(w)*bond_size, secret: KV.get("secret #{inspect h}")]
         tx=Sign.sign_tx(tx, pub, priv)
         Mempool.add_tx(tx)
     end
@@ -164,11 +223,12 @@ defmodule Blockchain do
   def test_add_remove do
     create_sign
     {pub, priv}=Local.address#Sign.new_key
-    tx=[type: :spend, amount: 55, to: "abcdefg", fee: 100]
+    tx=[type: "spend", amount: 55, to: "abcdefg", fee: 100]
     tx=Sign.sign_tx(tx, pub, priv)
     Mempool.add_tx(tx)
     add_block(buy_block)
-    IO.puts Accounts.balance(pub)
+    acc=KV.get(pub)
+    IO.puts Dict.get(acc, :amount)
     0 |> get_block |> inspect |> IO.puts
     1 |> get_block |> inspect |> IO.puts
     2 |> get_block |> inspect |> IO.puts
@@ -178,14 +238,14 @@ defmodule Blockchain do
   end
   def test_moneys do
     {pub, priv}=Local.address#Sign.new_key
-    tx=[type: :spend2wait, amount: 300, fee: 100]
+    tx=[type: "spend2wait", amount: 300, fee: 100]
     #tx=[type: :spend, amount: 55, to: "abcdefg", fee: 100]
     tx=Sign.sign_tx(tx, pub, priv)
     Mempool.add_tx(tx)
     Enum.map(1..VerifyTx.epoch, fn(x) -> create_sign
                              add_block(buy_block) end)
     acc=KV.get(pub)
-    tx=[type: :wait2bond, wait_money: acc[:wait]]
+    tx=[type: "wait2bond", wait_money: acc[:wait]]
     tx=Sign.sign_tx(tx, pub, priv)
     Mempool.add_tx(tx)
     create_sign
@@ -197,7 +257,7 @@ defmodule Blockchain do
     55 |> get_block |> inspect |> IO.puts
     pub |> KV.get |> inspect |> IO.puts
     acc=KV.get(pub)
-    tx=[type: :bond2spend, amount: 179, fee: 100]
+    tx=[type: "bond2spend", amount: 179, fee: 100]
     tx=Sign.sign_tx(tx, pub, priv)
     Mempool.add_tx(tx)
     create_sign

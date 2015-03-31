@@ -1,15 +1,15 @@
 defmodule HashMath do
-  def helper(h, abc, acc) do
+  def abc do ["0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "A": 10, "B": 11, "C": 12, "D": 13, "E": 14, "F": 15] end
+  def helper(h, acc) do
     cond do
       h=="" -> acc
       true -> 
         a=String.slice(h, 0..0)
         b=String.slice(h, 1,10000)
-        helper(b, abc, acc*16+abc[String.to_atom(a)])
+        helper(b, acc*16+abc[String.to_atom(a)])
     end
   end
-  def abc do ["0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "A": 10, "B": 11, "C": 12, "D": 13, "E": 14, "F": 15] end
-  def hex2int(h) do helper(h, abc, 0) end
+  def hex2int(h) do helper(h, 0) end
   def hash2int(h) do
     {:ok, h}=Base.decode64(h)
     h=Base.encode16(h)
@@ -75,7 +75,7 @@ defmodule HashMath do
   #s=size(i)
     #IO.puts s
     s=to16(i, size(i))  
-    IO.puts inspect s
+    #IO.puts inspect s
     {:ok, s}=Base.decode16(s)
     Base.encode64(s)
   end

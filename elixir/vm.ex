@@ -1,14 +1,11 @@
 defmodule VM do
   def out_of_gas do IO.puts "you ran out of gas" end
   def run(db) do
-    #IO.puts "top run #{inspect db}"
     cond do
       db[:gas]<0 -> out_of_gas
       length(db[:code])==0 -> db
       true ->
         op=hd(db[:code])
-        #IO.puts "op #{inspect op}"
-        #IO.puts inspect db
         cond do
           is_atom(op) ->
             lan=db[:language]
@@ -19,8 +16,6 @@ defmodule VM do
             run(db)
           true ->
             IO.puts "error"
-            #db=Dict.put(db, :stack, [op|db[:stack]])
-            #db=Dict.put(db, :code, tl(db[:code]))
             #run(db)
         end
     end

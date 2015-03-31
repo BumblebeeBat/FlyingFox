@@ -21,11 +21,11 @@ defmodule Sign do
   def sign_tx(tx, pub, priv) do
     h=DetHash.doit(tx)
     sig=sign(h, priv)
-    [pub: pub, sig: sig, tx: tx, meta: []]
+    [pub: pub, sig: sig, data: tx, meta: []]
   end
   def verify_tx(signed_tx) do
-    IO.puts inspect signed_tx
-    h=DetHash.doit(signed_tx[:tx])
+    #IO.puts("signed tx #{inspect signed_tx[:data]}")
+    h=DetHash.doit(signed_tx[:data])
     verify(h, signed_tx[:sig], signed_tx[:pub])
   end
   def test do

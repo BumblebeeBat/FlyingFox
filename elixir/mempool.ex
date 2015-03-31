@@ -1,9 +1,4 @@
 defmodule Mempool do
-  def start do
-    {:ok, pid}=Task.start_link(fn -> looper([]) end)
-    Process.register(pid, :txs)
-    :ok
-  end
   def looper(mem) do
     receive do
       {:dump} ->
@@ -15,6 +10,11 @@ defmodule Mempool do
         send(s, {:ok, mem})
         looper(mem)
     end
+  end
+  def start do
+    {:ok, pid}=Task.start_link(fn -> looper([]) end)
+    Process.register(pid, :txs)
+    :ok
   end
   def txs do
     send(:txs, {:txs, self()})
@@ -34,7 +34,7 @@ defmodule Mempool do
   def test do
     :ok=start
     {pub, priv}=Sign.new_key
-    tx=[type: :spend]
+    tx=["type": "spend"]
     tx=Sign.sign_tx(tx, pub, priv)
     add_tx(tx)
     IO.puts inspect txs

@@ -1,4 +1,18 @@
 defmodule KV do
+  defp loop(map) do
+    receive do
+      {:keys, caller } ->
+        send caller, {:ok, Dict.keys(map)}
+        loop(map)
+      {:get, key, caller} ->
+        a = Dict.get(map, key)
+        if a == nil do a = Constants.empty_account end
+        send caller, {:ok, a}
+        loop(map)
+      {:put, key, value} ->
+        loop(Dict.put(map, key, value))
+    end
+  end
   def start do
     {:ok, pid}=Task.start_link(fn -> loop(%HashDict{}) end)
     Process.register(pid, :kv)
@@ -18,20 +32,6 @@ defmodule KV do
   end
   def put(k, v) do
     send(:kv, {:put, k, v})
-  end
-  defp loop(map) do
-    receive do
-      {:keys, caller } ->
-        send caller, {:ok, Dict.keys(map)}
-        loop(map)
-      {:get, key, caller} ->
-        a = Dict.get(map, key)
-        if a == nil do a = Accounts.empty end
-        send caller, {:ok, a}
-        loop(map)
-      {:put, key, value} ->
-        loop(Dict.put(map, key, value))
-    end
   end
   def forLoop(f, n) do
     f.(n)

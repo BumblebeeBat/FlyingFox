@@ -2,7 +2,9 @@ defmodule Tcp do
   def start(port, func) do
     tcp_options = [:binary, {:packet, 0}, {:active, false}]
     {:ok, socket} = :gen_tcp.listen(port, tcp_options)
-    new_peer(socket, func)
+    Task.start_link(fn ->
+      new_peer(socket, func)
+    end)
   end
   defp connect(host, port) do
     {:ok, s} = :gen_tcp.connect(:erlang.binary_to_list(host), port, [{:active, false}, {:packet, 0}])
@@ -10,14 +12,15 @@ defmodule Tcp do
   end
   defp new_peer(socket, func) do
     {:ok, conn} = :gen_tcp.accept(socket)
-    #fun=&(&1)
-    #if (type == :absorb) do fun=&(Blockchain.absorb(&1)) end
-    Task.start_link(fn -> ms(conn, func.(listen(conn, ""))) end)
-    new_peer(socket, type)		
+    out= func.(listen(conn, ""))
+    Task.start_link(fn -> ms(conn, out) end)
+    new_peer(socket, func)		
   end
   defp ms(socket, string) do
-    m=MessagePack.pack!(string)
-    :ok = :gen_tcp.send(socket, m)
+    m=PackWrap.pack(string)
+    s=byte_size(m)
+    a=<<s::size(32)>>
+    :ok = :gen_tcp.send(socket, a <> m)
   end
   def talk(host, port, msg) do
     s=connect(host, port)
@@ -43,10 +46,22 @@ defmodule Tcp do
         IO.puts "error"
     end
   end
-  defp done_listening?(conn, data) do
-    {state, da}=MessagePack.unpack(data)
+  defp done(data) do
     cond do
-      state == :ok -> da
+      byte_size(data)<4 -> false
+      true ->
+        <<a::size(32), b::binary>>=data
+        cond do
+          byte_size(b)==a -> true
+          true -> false
+        end
+    end
+  end
+  defp done_listening?(conn, data) do
+    cond do
+      done(data) -> 
+        <<a::size(32), data::binary>> = data
+        PackWrap.unpack(data)
       true -> listen(conn, data)
     end
   end
