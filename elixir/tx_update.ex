@@ -71,7 +71,7 @@ defmodule TxUpdate do
     delta=-ExchangeRate.main*bond_size*w
     b=KV.get("tot_bonds")
     KV.put("tot_bonds", b+delta)
-    sym_increment(tx[:pub], :bond, delta+((b+delta)*w/1000/Constants.signers_per_block), d)
+    sym_increment(tx[:pub], :bond, delta, d)
     #loses some :bond money. total_money
     #Includes hash(entropy_bit+salt).
     #~100 bond-holders are selected every block. A block requires at least 67 of them to sign for it to be valid. The bond-money of each signer is shrunk to pay a safety deposit. They all pay the same amount. The amount they pay is based off how much money is spent in the spend txs in this block. Total safety deposits needs to be 1.5x as big as the total amount of money spent in spend-type txs. The most they could have to pay is as much bond-money as the poorest of them has.
@@ -81,8 +81,13 @@ defmodule TxUpdate do
   end
   def reveal(tx, d) do
     #lets change old_block somehow so that you cannot reveal the same secret twice.
+    old_block=VerifyTx.signed_block(tx)
+    bond_size=old_block[:bond_size]
+    w=length(tx[:data][:winners])
+    delta=-ExchangeRate.main(old_block[:height])*bond_size*w
+    reward=KV.get("tot_bonds")/:math.pow(1.001, Constants.epoch)*w/1000/Constants.signers_per_block
     sym_append(to_string(tx[:data][:signed_on]), [:meta, :revealed], tx[:pub], d)
-    sym_increment(tx[:pub], :amount, tx[:data][:amount], d)#during waiting period you are holding cash not bonds.
+    sym_increment(tx[:pub], :amount, tx[:data][:amount]+reward, d)#during waiting period you are holding cash not bonds.
     #After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
   end
   def tx_update(tx, d, bond_size) do

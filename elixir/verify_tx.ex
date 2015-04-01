@@ -15,7 +15,7 @@ defmodule VerifyTx do
     {a, h}=tx[:"data"][:"wait_money"]
     cond do
       {a, h}!=acc[:wait] -> false #{amount, height}
-      h>KV.get("height")+epoch -> false #wait 50 blocks
+      h>KV.get("height")+Constants.epoch -> false #wait 50 blocks
       true -> true
     end
   end
@@ -28,16 +28,16 @@ defmodule VerifyTx do
   end
   def winner?(balance, total, seed, pub, j) do#each address gets 200 chances.
     max=HashMath.hex2int("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
-    b=max*Constants.signers_per_block*balance/(200*total)
+    b=max*Constants.signers_per_block*balance/(Constants.chances_per_address*total)
     a=HashMath.hash2int(DetHash.doit({seed, pub, j}))
-    a<b and j>=0 and j<200 and is_integer(j)
+    a<b and j>=0 and j<Constants.chances_per_address and is_integer(j)
   end
   def first_bits(b, s) do
     <<c :: size(s), d :: bitstring>>=b
     c
   end
   def ran_block(height) do
-    txs = Blockchain.get_block(height)[:"txs"]
+    txs = BlockchainPure.get_block(height)[:"txs"]
     cond do
       is_nil(txs) -> 0
       true ->
@@ -48,7 +48,7 @@ defmodule VerifyTx do
   end
   def rng do
     h=KV.get("height")
-    Enum.map(0..epoch, &(ran_block(h-&1)))
+    Enum.map(0..Constants.epoch, &(ran_block(h-&1)))
   end
   def sign?(tx, txs) do
     #require hash(enropy+salt)
@@ -81,43 +81,43 @@ defmodule VerifyTx do
     #If you can prove that the same address signed on 2 different blocks at the same height, then you can take 1/3rd of the deposit, and destroy the rest.
     #make sure they cannot do this repeatedly
   end
+  def signed_block(tx) do KV.get(to_string(tx[:data][:signed_on]))[:data] end
+  def sign_tx(block, tx) do block[:txs] |> Enum.filter(&(&1[:pub]==tx[:pub]))  |> Enum.filter(&(&1[:data][:type]=="sign")) end
+  def wins(block, tx) do 
+  b=BlockchainPure.txs_filter(block[:txs], "sign") |> Enum.filter(&(tx[:pub]==&1[:pub])) 
+  length(hd(b)[:data][:winners]) 
+  end
   def reveal?(tx, txs) do
-    b=KV.get(to_string(tx[:"data"][:"signed_on"]))
-    old_block=b[:"data"]#Block.load_block(tx["signed_on"])
-    signed=old_block[:"txs"] 
-    signed = Enum.filter(signed, &(&1[:"pub"]==tx[:"pub"])) 
-    signed = Enum.filter(signed, &(&1[:"data"][:"type"]=="sign"))
-    bond_size = old_block[:"bond_size"]
-    winners = Blockchain.txs_filter(old_block[:"txs"], "sign")
-    winners = Enum.filter(winners, &(tx[:"pub"]==&1[:"pub"]))
-    winners = length(hd(winners)[:"data"][:"winners"])
+    old_block=signed_block(tx)
+    signed=sign_tx(old_block, tx)
+    bond_size = old_block[:bond_size]
+    winners = wins(old_block, tx)
     cond do
       #make sure old_block hasn't been revealed by this person before
       #secret_hash must match.
       length(signed)==0 -> 
         IO.puts "0"
         false
-      byte_size(tx[:"data"][:"secret"])!=10 -> 
+      byte_size(tx[:data][:secret])!=10 -> 
         IO.puts "tx #{inspect tx}"
         IO.puts "1"
         false
-      DetHash.doit(tx[:"data"][:"secret"]) != hd(signed)[:"data"][:"secret_hash"] -> 
+      DetHash.doit(tx[:data][:secret]) != hd(signed)[:data][:secret_hash] -> 
         IO.puts "2"
         false
-      tx[:"pub"] in b[:"meta"][:"revealed"] -> 
+      tx[:pub] in old_block[:meta][:revealed] -> 
         IO.puts "3"
         false
-      tx[:"data"][:"amount"]!=bond_size*length(tx[:"data"][:"winners"]) -> 
+      tx[:data][:amount]!=bond_size*length(tx[:data][:winners]) -> 
         IO.puts "4"
         false
-      KV.get("height")-epoch>tx[:"data"][:"signed_on"] -> 
+      KV.get("height")-Constants.epoch>tx[:data][:signed_on] -> 
         IO.puts "5"
         false
       true -> true
     end
     #After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
   end
-  def epoch do 100 end
   def check_tx(tx, txs) do
     f=[spend: &(spend?(&1, &2)),
        spend2wait: &(spend2wait?(&1, &2)),
@@ -134,9 +134,9 @@ defmodule VerifyTx do
     end
   end
   def check_txs(txs) do
-    spending=Blockchain.being_spent(txs)
-    winners=Blockchain.txs_filter(txs, "sign")
-    winners=Enum.map(winners, fn(t) -> length(t[:"data"][:"winners"])end)
+    spending=BlockchainPure.being_spent(txs)
+    winners=BlockchainPure.txs_filter(txs, "sign")
+    winners=Enum.map(winners, fn(t) -> length(t[:data][:winners])end)
     winners=Enum.reduce(winners, 0, &(&1+&2))
     #IO.puts("spending #{inspect spending}")
     #IO.puts("winner #{inspect winners}")

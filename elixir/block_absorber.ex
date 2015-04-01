@@ -10,9 +10,8 @@ defmodule BlockAbsorber do
             IO.puts("block is not binary")
             true=false
           true ->
-            IO.puts("attempting to absorb block")
             Blockchain.absorb(b)
-            send(s, {:ok, :succ})
+            send(s, [:ok])
             looper
         end
       true ->
@@ -29,7 +28,7 @@ defmodule BlockAbsorber do
   def talk(s) do 
     send(key, s)
     receive do
-      {:ok, k} -> k
+      [:ok] -> :ok
     end    
   end
   def absorb(block) do talk(["block", block, self()]) end

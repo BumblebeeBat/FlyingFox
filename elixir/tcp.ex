@@ -39,7 +39,7 @@ defmodule Tcp do
     end
   end
   defp listen(conn, data) do
-    case :gen_tcp.recv(conn, 0) do
+   case :gen_tcp.recv(conn, 0) do
       {:ok, d} ->
         done_listening?(conn, data<>to_bytes(d))
       {:error, :closed} ->

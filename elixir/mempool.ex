@@ -1,35 +1,50 @@
 defmodule Mempool do
   def looper(mem) do
     receive do
-      {:dump} ->
+      [_, "dump"] ->
         looper([])
-      {:add_tx, tx, s} ->
-        send(s, :ok)
+      [s, ["add_tx", tx]] ->
+        send(s, ["ok", :ok])
         looper([tx|mem])
-      {:txs, s} ->
-        send(s, {:ok, mem})
+      [s, ["txs"]] ->
+        send(s, ["ok", mem])
+        looper(mem)
+      _ -> 
         looper(mem)
     end
   end
+  def key do :txs end
+  def port do 6667 end
   def start do
     {:ok, pid}=Task.start_link(fn -> looper([]) end)
-    Process.register(pid, :txs)
+    Process.register(pid, key)
     :ok
   end
-  def txs do
-    send(:txs, {:txs, self()})
+  def talk(s) do 
+    send(key, [self(), s])
     receive do
-      {:ok, mem} -> mem
+      ["ok", x] -> x
+    end    
+  end
+  def txs do
+    send(key, [self(), ["txs"]])
+    receive do
+      ["ok", mem] -> 
+        mem
     end
   end
   def add_tx(tx) do
     cond do
-      VerifyTx.check_tx(tx, txs) -> send(:txs, {:add_tx, tx, self()})
+      VerifyTx.check_tx(tx, txs) -> 
+        send(key, [self(), ["add_tx", tx]])
+        receive do
+          ["ok", mem] -> mem
+        end
       true -> "bad tx"
     end
   end
   def dump do
-    send(:txs, {:dump})
+    send(key, [self(), :dump])
   end
   def test do
     :ok=start
