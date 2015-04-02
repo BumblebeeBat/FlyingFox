@@ -5,4 +5,5 @@ defmodule Constants do
   def empty_account do [amount: 0, bond: 0, wait: {0, 0}] end #wait={amount, height}
   def epoch do 100 end#amount of time until reveal
   def chances_per_address do 200 end
+  def default_peers do [] end
 end

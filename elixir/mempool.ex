@@ -1,17 +1,20 @@
 defmodule Mempool do
   def looper(mem) do
+    IO.puts("mempool looper #{inspect mem}")
     receive do
-      [_, "dump"] ->
-        looper([])
+      ["dump"] -> mem=[]
       [s, ["add_tx", tx]] ->
-        send(s, ["ok", :ok])
-        looper([tx|mem])
+        cond do
+          VerifyTx.check_tx(tx, txs) -> 
+            send(s, ["ok", "ok"])
+            mem=[tx|mem]
+          true -> send(s, ["ok", "bad tx"])
+        end
       [s, ["txs"]] ->
         send(s, ["ok", mem])
-        looper(mem)
-      _ -> 
-        looper(mem)
+      x -> IO.puts("looper weird #{inspect x}")
     end
+    looper(mem)
   end
   def key do :txs end
   def port do 6667 end
@@ -21,39 +24,31 @@ defmodule Mempool do
     :ok
   end
   def talk(s) do 
+    IO.puts("talk #{inspect [self(), s]}")
     send(key, [self(), s])
     receive do
       ["ok", x] -> x
     end    
   end
-  def txs do
-    send(key, [self(), ["txs"]])
-    receive do
-      ["ok", mem] -> 
-        mem
-    end
+  def txs do talk(["txs"]) end
+  def add_tx(tx) do 
+    IO.puts("add tx")
+    talk(["add_tx", tx]) 
   end
-  def add_tx(tx) do
-    cond do
-      VerifyTx.check_tx(tx, txs) -> 
-        send(key, [self(), ["add_tx", tx]])
-        receive do
-          ["ok", mem] -> mem
-        end
-      true -> "bad tx"
-    end
-  end
-  def dump do
-    send(key, [self(), :dump])
-  end
+  def dump do send(key, ["dump"]) end
   def test do
     :ok=start
+    IO.puts("0")
     {pub, priv}=Sign.new_key
+    IO.puts("1")
     tx=["type": "spend"]
     tx=Sign.sign_tx(tx, pub, priv)
+    IO.puts("2")
     add_tx(tx)
+    IO.puts("3")
     IO.puts inspect txs
     dump
+    IO.puts("4")
     IO.puts inspect txs		
   end
 end

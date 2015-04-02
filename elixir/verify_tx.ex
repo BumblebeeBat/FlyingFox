@@ -48,7 +48,12 @@ defmodule VerifyTx do
   end
   def rng do
     h=KV.get("height")
-    Enum.map(0..Constants.epoch, &(ran_block(h-&1)))
+    Enum.map(h-Constants.epoch..h, fn(x) ->
+      cond do
+        x<0 -> 0
+        true -> ran_block(x)
+      end 
+    end)
   end
   def sign?(tx, txs) do
     #require hash(enropy+salt)
@@ -58,7 +63,8 @@ defmodule VerifyTx do
     tot_bonds = KV.get("tot_bonds")
     prev = prev-1
     prev = KV.get(prev)
-    l=Enum.map(tx[:"data"][:"winners"], fn(x)->winner?(acc[:bond], tot_bonds, rng, tx[:"pub"], x) end)
+    ran=rng
+    l=Enum.map(tx[:"data"][:"winners"], fn(x)->winner?(acc[:bond], tot_bonds, ran, tx[:"pub"], x) end)
     l=Enum.reduce(l, true, fn(x, y) -> x and y end)
     #IO.puts "txs #{ inspect txs}"
     m = length(Enum.filter(txs, fn(t)-> t[:"data"][:"type"] == "sign" end))

@@ -14,12 +14,12 @@ defmodule BlockAbsorber do
             send(s, [:ok])
             looper
         end
-      true ->
+      _ ->
         IO.puts("block absorber fail")
         looper
     end
   end
-  def port do 5556 end
+  def port do 6665 end
   def key do :absorber end
   def start do
     {:ok, pid} = Task.start_link(fn->looper end)
