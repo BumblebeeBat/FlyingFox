@@ -1,25 +1,27 @@
 defmodule Listener do
   #the purpose of this module is to accept connections from multiple peers, and to be able to respond to their messages in parallel
   def looper(mem) do
-    out = receive do    
+    receive do    
       ["add_peer", peer, s] -> 
-        Peers.add_peer(peer)
+        out = Peers.add_peer(peer)
         s=s
       ["add_block", block, s] -> 
-        BlockAbsorber.absorb(block)
+        out = BlockAbsorber.absorb(block)
         s=s
       ["pushtx", tx, s] -> 
-        Mempool.add_tx(tx)
+        out = Mempool.add_tx(tx)
         s=s
       ["txs", s] -> 
-        Mempool.txs
+        out = Mempool.txs
         s=s
       ["height", s] -> 
-        KV.get("height")
+        out = KV.get("height")
         s=s
       ["block", n, s] -> 
-        KV.get(to_string(n))
+        out = KV.get(to_string(n))
         s=s
+      x ->
+        IO.puts("listener error: #{inspect x}")
     end
     send s, ["ok", out]
     looper mem
@@ -32,11 +34,18 @@ defmodule Listener do
     :ok    
   end
   def talk(k) do
+    k=k++[self()]
     send(key, k)
     receive do
-      [:ok, s] -> s
+      ["ok", s] -> s
     end
   end
-
+  def add_block(block) do
+    talk(["add_block", block])
+  end
+  def test do#test is failing!!!
+    Main.start
+    add_block(BlockchainPure.buy_block)
+  end
 end
 

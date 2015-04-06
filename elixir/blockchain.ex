@@ -5,30 +5,23 @@ defmodule Blockchain do
     KV.put("0", new)
   end
   def sign_reveal do
-    IO.puts("SR")
     TxCreator.create_sign
-    IO.puts("SR")
     TxCreator.create_reveal
-    IO.puts("SR")
   end
   def absorb(b) do
     add_block(b)
     sign_reveal
   end
   def genesis_state do
-    IO.puts("genesis state 0")
     genesis_block
     a=Constants.empty_account
     bonds =                    100_000_000_000_000
     a = Dict.put(a, :amount, 2_000_000_000_000_000)
     a = Dict.put(a, :bond, bonds)     
-    IO.puts("genesis state 1")
     {creator_pub, creator_priv} = {"BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc=", "pRxnT/38wyd6lSbwfCEVvchAL7m7AMYuZeQKrJW/RO0="}
     KV.put(creator_pub, a)
     KV.put("tot_bonds", bonds)
-    IO.puts("genesis state 3")
     sign_reveal
-    IO.puts("genesis state 4")
   end
   def remove_block do
     h=KV.get("height")

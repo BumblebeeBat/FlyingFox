@@ -3,7 +3,6 @@ defmodule BlockAbsorber do
     receive do
       {:ping, p} ->
         send(p, {:ok, :pong})
-        looper
       ["block", b, s] ->
         cond do
           is_binary(b) ->
@@ -12,12 +11,11 @@ defmodule BlockAbsorber do
           true ->
             Blockchain.absorb(b)
             send(s, [:ok])
-            looper
         end
       _ ->
         IO.puts("block absorber fail")
-        looper
     end
+    looper
   end
   def port do 6665 end
   def key do :absorber end
@@ -32,13 +30,13 @@ defmodule BlockAbsorber do
     end    
   end
   def absorb(block) do talk(["block", block, self()]) end
-  def buy_block do absorb(Blockchain.buy_block) end
+  def buy_block do absorb(BlockchainPure.buy_block) end
   def ping do talk({:ping, self()}) end
   def test do
     KV.start
     Mempool.start
     Blockchain.genesis_state
     start
-    talk(["block", Blockchain.buy_block, self()])
+    buy_block
   end
 end

@@ -7,8 +7,11 @@ defmodule Tcp do
     end)
   end
   defp connect(host, port) do
-    {:ok, s} = :gen_tcp.connect(:erlang.binary_to_list(host), port, [{:active, false}, {:packet, 0}])
-    s
+    {x, s} = :gen_tcp.connect(:erlang.binary_to_list(host), port, [{:active, false}, {:packet, 0}])
+    cond do
+      x==:ok -> s
+      true -> "error"
+    end
   end
   defp new_peer(socket, func) do
     {:ok, conn} = :gen_tcp.accept(socket)
@@ -17,6 +20,9 @@ defmodule Tcp do
     new_peer(socket, func)		
   end
   defp ms(socket, string) do
+    if is_pid(string) do
+      true=false
+    end
     m=PackWrap.pack(string)
     s=byte_size(m)
     a=<<s::size(32)>>
@@ -64,5 +70,10 @@ defmodule Tcp do
         PackWrap.unpack(data)
       true -> listen(conn, data)
     end
+  end
+  def test do
+    port=6666
+    start(port, &(&1))
+    IO.puts(inspect talk("localhost", port, [a: [b: 3, d: "e"]]))
   end
 end

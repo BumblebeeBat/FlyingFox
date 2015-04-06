@@ -10,14 +10,15 @@ def control_block_probability(clique, total=Decimal(78), p=Decimal('0.6666666666
     rounds=Decimal(500000)
     for i in range(rounds):
         a+=control_block_trial(total, clique, p)
-    print("a: " +str(a))
+    #print("a: " +str(a))
     return(Decimal(a)/rounds)
 def frequency_half_control(x): return Decimal(1)/control_block_probability(x/2, x)
 def test():
     #We are aiming for a clique of 50% of the bonded validators to be able to verify 4% of the blocks. verification requres 2/3 of all signatures.
     j=54
-    print(str(j)+" : " +str(frequency_half_control(Decimal(j))))
-    print("this shows that if there are 54 validators on average, then an attacking group with 50% of bonded stake would control 1 block in 25.7 on average")
+    hc=str(frequency_half_control(Decimal(j)))))
+    print(str(j)+" : " +hc)
+    print("this shows that if there are "+str(j)+" validators on average, then an attacking group with 50% of bonded stake would control 1 block in "+hc+" on average")
 def proof_gap():
     #gap is given by numpy.random.gamma(1, 50)
     import random

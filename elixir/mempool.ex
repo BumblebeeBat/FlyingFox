@@ -1,16 +1,16 @@
 defmodule Mempool do
   def looper(mem) do
-    IO.puts("mempool looper #{inspect mem}")
     receive do
       ["dump"] -> mem=[]
-      [s, ["add_tx", tx]] ->
+      ["add_tx", tx, s] ->
         cond do
-          VerifyTx.check_tx(tx, txs) -> 
+          VerifyTx.check_tx(tx, mem) -> 
             send(s, ["ok", "ok"])
             mem=[tx|mem]
-          true -> send(s, ["ok", "bad tx"])
+          true -> 
+            send(s, ["ok", "bad tx"])
         end
-      [s, ["txs"]] ->
+      ["txs", s] ->
         send(s, ["ok", mem])
       x -> IO.puts("looper weird #{inspect x}")
     end
@@ -24,17 +24,13 @@ defmodule Mempool do
     :ok
   end
   def talk(s) do 
-    IO.puts("talk #{inspect [self(), s]}")
-    send(key, [self(), s])
+    send(key, s)
     receive do
       ["ok", x] -> x
     end    
   end
-  def txs do talk(["txs"]) end
-  def add_tx(tx) do 
-    IO.puts("add tx")
-    talk(["add_tx", tx]) 
-  end
+  def txs do talk(["txs", self()]) end
+  def add_tx(tx) do talk(["add_tx", tx, self()]) end
   def dump do send(key, ["dump"]) end
   def test do
     :ok=start
