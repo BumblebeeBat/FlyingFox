@@ -2,7 +2,7 @@ defmodule BlockAbsorber do
   def looper do
     receive do
       {:ping, p} ->
-        send(p, {:ok, :pong})
+        send(p, [:ok])
       ["block", b, s] ->
         cond do
           is_binary(b) ->

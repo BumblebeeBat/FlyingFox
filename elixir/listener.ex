@@ -1,5 +1,25 @@
 defmodule Listener do
   #the purpose of this module is to accept connections from multiple peers, and to be able to respond to their messages in parallel
+  def flip(x, y \\ []) do 
+    cond do
+      x==[] -> y
+      true -> flip(tl(x), [hd(x)|y])
+    end
+  end
+  def max do 5000 end
+  def blocks(start, finish, out \\ []) do
+    finish = min(finish, KV.get("height"))
+    blocks_helper(start, finish, out)
+  end
+  def blocks_helper(start, finish, out) do
+    #IO.puts("blocks #{inspect out}")
+    cond do
+      byte_size(PackWrap.pack(out)) > max -> tl(out)
+      start < 0 -> blocks(1, finish, out)
+      start > finish -> out
+      true -> blocks_helper(start+1, finish, [KV.get(to_string(start))|out])
+    end
+  end
   def looper(mem) do
     receive do    
       ["add_peer", peer, s] -> 
@@ -19,6 +39,9 @@ defmodule Listener do
         s=s
       ["block", n, s] -> 
         out = KV.get(to_string(n))
+        s=s
+      ["blocks", start, finish, s] -> 
+        out = flip(blocks(start, finish))#KV.get(to_string(n))
         s=s
       x ->
         IO.puts("listener error: #{inspect x}")
