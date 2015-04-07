@@ -17,7 +17,6 @@ defmodule BlockAbsorber do
     end
     looper
   end
-  def port do 6665 end
   def key do :absorber end
   def start do
     {:ok, pid} = Task.start_link(fn->looper end)
@@ -33,10 +32,7 @@ defmodule BlockAbsorber do
   def buy_block do absorb(BlockchainPure.buy_block) end
   def ping do talk({:ping, self()}) end
   def test do
-    KV.start
-    Mempool.start
-    Blockchain.genesis_state
-    start
+    Main.start
     buy_block
   end
 end

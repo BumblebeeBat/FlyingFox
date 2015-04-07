@@ -11,7 +11,6 @@ defmodule Peers do#this module is a database of who your peers are, and other da
     looper mem
   end
   def key do :peers end
-  def port do 6669 end
   def start do
     {:ok, pid}=Task.start_link(fn -> looper(%HashDict{}) end)
     Process.register(pid, key)

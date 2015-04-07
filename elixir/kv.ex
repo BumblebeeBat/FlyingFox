@@ -1,22 +1,21 @@
 defmodule KV do
-  defp loop(map) do
+  defp looper(map) do
     receive do
       [keys, caller] ->
         send caller, [:ok, Dict.keys(map)]
-        loop(map)
+        looper(map)
       ["get", key, caller] ->
         a = Dict.get(map, key)
         if a == nil do a = Constants.empty_account end
         send caller, [:ok, a]
-        loop(map)
+        looper(map)
       [:put, key, value] ->
-        loop(Dict.put(map, key, value))
+        looper(Dict.put(map, key, value))
     end
   end
   def key do :kv end
-  def port do 6668 end
   def start do
-    {:ok, pid}=Task.start_link(fn -> loop(%HashDict{}) end)
+    {:ok, pid}=Task.start_link(fn -> looper(%HashDict{}) end)
     Process.register(pid, key)
     :ok
   end

@@ -17,7 +17,6 @@ defmodule Mempool do
     looper(mem)
   end
   def key do :txs end
-  def port do 6667 end
   def start do
     {:ok, pid}=Task.start_link(fn -> looper([]) end)
     Process.register(pid, key)

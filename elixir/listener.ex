@@ -20,11 +20,8 @@ defmodule Listener do
       true -> blocks_helper(start+1, finish, [KV.get(to_string(start))|out])
     end
   end
-  def looper(mem) do
+  def looper do
     receive do    
-      ["add_peer", peer, s] -> 
-        out = Peers.add_peer(peer)
-        s=s
       ["add_block", block, s] -> 
         out = BlockAbsorber.absorb(block)
         s=s
@@ -43,11 +40,17 @@ defmodule Listener do
       ["blocks", start, finish, s] -> 
         out = flip(blocks(start, finish))#KV.get(to_string(n))
         s=s
+      ["add_peer", peer, s] -> 
+        out = Peers.add_peer(peer)
+        s=s
+      ["all_peers", s] -> 
+        out = Peers.get_all
+        s=s
       x ->
         IO.puts("listener error: #{inspect x}")
     end
     send s, ["ok", out]
-    looper mem
+    looper
   end
   def key do :listen end
   def port do 6664 end

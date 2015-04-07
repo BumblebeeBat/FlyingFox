@@ -26,8 +26,9 @@ defmodule Blockchain do
   def remove_block do
     h=KV.get("height")
     block=BlockchainPure.get_block(h)
-    n=BlockchainPure.num_signers(BlockchainPure.txs_filter(block[:txs], "sign"))
-    TxUpdate.txs_updates(block[:txs], -1, div(block[:bond_size], n))
+    txs=block[:data][:txs]
+    n=BlockchainPure.num_signers(BlockchainPure.txs_filter(txs, "sign"))
+    TxUpdate.txs_updates(txs, -1, div(block[:data][:bond_size], n))
     #give block creator his fee back.
     KV.put("height", h-1)
   end
@@ -38,25 +39,13 @@ defmodule Blockchain do
         false
       true ->
         h=KV.get("height")
-        h2=block[:data][:height]
-        txs=block[:data][:txs]
         #block creator needs to pay a fee. he needs to have signed so we can take his fee.
         #make sure it has enough signers.
-        sign_txs=BlockchainPure.txs_filter(txs, "sign")
-        spending=BlockchainPure.being_spent(txs)
-        ns = BlockchainPure.num_signers(sign_txs)
-        signers = Enum.map(sign_txs, &(&1[:pub]))
-        accs = Enum.map(signers, &(KV.get(&1)))
-        balances = Enum.map(accs, &(&1[:bond]))
-        signer_bond=block[:data][:bond_size]/ns
-        sb = Enum.reduce(balances, nil, &(min(&1, &2)))
-        {p, q}=Local.address
-        KV.put(to_string(h2), block)
-        txs = block[:data][:txs] 
-        txs = Enum.filter(txs, fn(t) -> t[:data][:type]=="sign" end)
-        bs=block[:data][:bond_size]
-        TxUpdate.txs_updates(block[:data][:txs], 1, signer_bond)
-        KV.put("height", h2)
+        txs=block[:data][:txs]
+        KV.put(to_string(h+1), block)
+        n=BlockchainPure.num_signers(BlockchainPure.txs_filter(txs, "sign"))
+        TxUpdate.txs_updates(txs, 1, div(block[:data][:bond_size], n))
+        KV.put("height", h+1)
         Mempool.dump    
     end
   end
