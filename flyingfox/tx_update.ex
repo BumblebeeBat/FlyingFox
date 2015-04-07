@@ -1,5 +1,9 @@
 defmodule TxUpdate do
   #d is 1 when adding blocks, -1 when removing.
+  def exchange_rate(n \\ 0) do#how many bonds is a cash worth?
+    b=KV.get("height")-n
+    :math.pow(1.001, KV.get("height"))
+  end  
   def sym_replace(pub, key, old, new, d) do
     acc=KV.get(pub)
     cond do
@@ -51,8 +55,8 @@ defmodule TxUpdate do
   def wait2bond(tx, d) do
     {a, h}=tx[:data][:wait_money]
     b=KV.get("tot_bonds")
-    KV.put("tot_bonds", b+(a*ExchangeRate.main*d))
-    sym_increment(tx[:pub], :bond, a*ExchangeRate.main, d)
+    KV.put("tot_bonds", b+(a*exchange_rate*d))
+    sym_increment(tx[:pub], :bond, a*exchange_rate, d)
     sym_replace(tx[:pub], :wait, {a, h}, {0,0}, d)
     #If a user wants to take part in the consensus process, they would use this transaction type to turn some of their wait-money into bond-money. The price for bond-money changes continuously over time, and more bond-money is printed and given to the people who participate. If you participate, then the value of your bond-money will slowly grow. If you dont participate, then the value will quickly shrink. 
     #There is a minimum size for purchasing bond-money, priced in spend-money. 
@@ -62,13 +66,13 @@ defmodule TxUpdate do
     a=tx[:data][:amount]
     b=KV.get("tot_bonds")
     KV.put("tot_bonds", b-(a*d))
-    sym_increment(tx[:pub], :amount, a/ExchangeRate.main-tx[:data][:fee], d)
+    sym_increment(tx[:pub], :amount, a/exchange_rate-tx[:data][:fee], d)
     sym_increment(tx[:pub], :bond, -a, d)
     #Users can take their money out of the bond at any time. 
   end
   def sign(tx, d, bond_size) do#0.1% of total bonds is given out as rewards on every block, which changes the exchange rate.
     w=length(tx[:data][:winners])
-    delta=-ExchangeRate.main*bond_size*w
+    delta=-exchange_rate*bond_size*w
     b=KV.get("tot_bonds")
     KV.put("tot_bonds", b+delta)
     sym_increment(tx[:pub], :bond, delta, d)
@@ -84,7 +88,7 @@ defmodule TxUpdate do
     old_block=VerifyTx.signed_block(tx)
     bond_size=old_block[:bond_size]
     w=length(tx[:data][:winners])
-    delta=-ExchangeRate.main(old_block[:height])*bond_size*w
+    delta=-exchange_rate(old_block[:height])*bond_size*w
     reward=KV.get("tot_bonds")/:math.pow(1.001, Constants.epoch)*w/1000/Constants.signers_per_block
     sym_append(to_string(tx[:data][:signed_on]), [:meta, :revealed], tx[:pub], d)
     sym_increment(tx[:pub], :amount, tx[:data][:amount]+reward, d)#during waiting period you are holding cash not bonds.
