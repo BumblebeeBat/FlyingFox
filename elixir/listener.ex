@@ -55,7 +55,7 @@ defmodule Listener do
   def key do :listen end
   def port do 6664 end
   def start do#instead of starting once, have a seperate thread for each connection.
-    {:ok, pid}=Task.start_link(fn -> looper(%HashDict{}) end)
+    {:ok, pid}=Task.start_link(fn -> looper end)
     Process.register(pid, key)
     :ok    
   end
