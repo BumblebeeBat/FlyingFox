@@ -4,17 +4,15 @@ defmodule TxCreator do
     acc = KV.get(pub)
     prev = KV.get("height")
     tot_bonds = KV.get("tot_bonds")
-    prev = prev-1
-    prev = KV.get(prev)
+    prev = KV.get(to_string(prev))
     w=Enum.filter(0..Constants.chances_per_address, fn(x) -> VerifyTx.winner?(acc[:bond], tot_bonds, VerifyTx.rng, pub, x) end) 
     ran=:crypto.rand_bytes(10)
     h=KV.get("height")+1
     KV.put("secret #{inspect h}", ran)
     secret=DetHash.doit(ran)
-    tx=[type: "sign", prev_hash: prev[:hash], winners: w, secret_hash: secret]
+    tx=[type: "sign", prev_hash: prev[:data][:hash], winners: w, secret_hash: secret]
     tx=Sign.sign_tx(tx, pub, priv)
-    Mempool.add_tx(tx)#####
-    w
+    Mempool.add_tx(tx)
   end
   def create_reveal do
     {pub, priv}=Local.address

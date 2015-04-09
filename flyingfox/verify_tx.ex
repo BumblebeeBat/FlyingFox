@@ -58,28 +58,39 @@ defmodule VerifyTx do
   def sign?(tx, txs) do
     #require hash(enropy+salt)
     #limit 1 sign per block
+    #IO.puts("check sign tx")
     acc = KV.get(tx[:"pub"])
     prev = KV.get("height") 
     tot_bonds = KV.get("tot_bonds")
-    prev = prev-1
-    prev = KV.get(prev)
+    prev = KV.get(to_string(prev))
     ran=rng
     l=Enum.map(tx[:"data"][:"winners"], fn(x)->winner?(acc[:bond], tot_bonds, ran, tx[:"pub"], x) end)
+    l1=l
     l=Enum.reduce(l, true, fn(x, y) -> x and y end)
     #IO.puts "txs #{ inspect txs}"
     m = length(Enum.filter(txs, fn(t)-> t[:"data"][:"type"] == "sign" end))
     cond do
-      acc[:bond] < Constants.minbond -> false
-      not is_binary(tx[:"data"][:"secret_hash"]) -> false
-      not l -> false
-      length(tx[:"data"][:"winners"])<1 -> false
+      acc[:bond] < Constants.minbond -> 
+        IO.puts("not enough bond")
+        false
+      not is_binary(tx[:data][:secret_hash]) -> 
+        IO.puts("should have been binary")
+        false
+      not l -> 
+        IO.puts("not l")
+        IO.puts("l1 #{inspect l1}")
+        false
+      length(tx[:data][:winners])<1 -> false
       m != 0 -> false
-      tx[:"data"][:"prev_hash"]!=prev[:"hash"] -> false
+                tx[:data][:prev_hash]!=prev[:data][:hash] -> 
+        IO.puts("prev #{inspect prev}")
+        IO.puts("hash not match #{inspect tx[:data][:prev_hash]} #{inspect prev[:data][:hash]}")
+        false
       true -> true
     end
     #Includes hash(entropy_bit+salt).
     #includes hash of previous block.
-    #~64 bond-holders are selected every block. A block requires at least 43 of them to sign for it to be valid. The bond-money of each signer is shrunk to pay a safety deposit. They all pay the same amount. The amount they pay is based off how much money is spent in the spend txs in this block. Total safety deposits needs to be 1.5x as big as the total amount of money spent in spend-type txs. The most they could have to pay is as much bond-money as the poorest of them has.
+    #~100 bond-holders are selected every block. A block requires at least 67 of them to sign for it to be valid. The bond-money of each signer is shrunk to pay a safety deposit. They all pay the same amount. The amount they pay is based off how much money is spent in the spend txs in this block. Total safety deposits needs to be 3x as big as the total amount of money spent in spend-type txs. The most they could have to pay is as much bond-money as the poorest of them has.
   end
   def slasher?(tx, txs) do
     {pub, _, tx}=tx
@@ -105,7 +116,6 @@ defmodule VerifyTx do
         IO.puts "0"
         false
       byte_size(tx[:data][:secret])!=10 -> 
-        IO.puts "tx #{inspect tx}"
         IO.puts "1"
         false
       DetHash.doit(tx[:data][:secret]) != hd(signed)[:data][:secret_hash] -> 
@@ -134,8 +144,10 @@ defmodule VerifyTx do
        reveal: &(reveal?(&1, &2))]
     default = fn(a, b) -> false end
     cond do
-      not Dict.get(f, String.to_atom(tx[:data][:type]), default).(tx, txs) -> false
-      not Sign.verify_tx(tx) -> false
+      not Dict.get(f, String.to_atom(tx[:data][:type]), default).(tx, txs) ->  false
+      not Sign.verify_tx(tx) -> 
+        IO.puts("bad signature")
+        false
       true -> true
     end
   end
@@ -144,8 +156,6 @@ defmodule VerifyTx do
     winners=BlockchainPure.txs_filter(txs, "sign")
     winners=Enum.map(winners, fn(t) -> length(t[:data][:winners])end)
     winners=Enum.reduce(winners, 0, &(&1+&2))
-    #IO.puts("spending #{inspect spending}")
-    #IO.puts("winner #{inspect winners}")
     cond do
       txs==[] -> 
         IO.puts("no empty blocks")

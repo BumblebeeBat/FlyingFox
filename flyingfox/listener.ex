@@ -6,7 +6,7 @@ defmodule Listener do
       true -> flip(tl(x), [hd(x)|y])
     end
   end
-  def max do 5000 end
+  def max do 10000 end
   def blocks(start, finish, out \\ []) do
     finish = min(finish, KV.get("height"))
     blocks_helper(start, finish, out)
@@ -41,10 +41,21 @@ defmodule Listener do
         out = flip(blocks(start, finish))#KV.get(to_string(n))
         s=s
       ["add_peer", peer, s] -> 
+        #don't re-add peers that are already in the system. Attacker could delete all our peers that way.
         out = Peers.add_peer(peer)
         s=s
       ["all_peers", s] -> 
         out = Peers.get_all
+        s=s
+      ["status", s] -> 
+        h = KV.get("height")
+        if (h<1) do
+          out = [height: 0, hash: ""]
+        else
+          block = KV.get(to_string(h))
+          out = [height: h, 
+                 hash: block[:data][:hash]]
+        end
         s=s
       x ->
         IO.puts("listener error: #{inspect x}")
@@ -69,7 +80,7 @@ defmodule Listener do
   def add_block(block) do
     talk(["add_block", block])
   end
-  def test do#test is failing!!!
+  def test do
     Main.start
     add_block(BlockchainPure.buy_block)
   end

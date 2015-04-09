@@ -16,19 +16,23 @@ defmodule BlockchainPure do
     send_txs=Enum.reduce(send_txs, 0, &(&1+&2))
   end
   def valid_block?(block) do
+    #IO.puts("valid block? #{inspect block}")
     h=KV.get("height")
     h2=block[:data][:height]
     cond do
+      not is_list(block) -> 
+        IO.puts("block should be a dict")
+        false
+      block[:data][:height] != h+1 ->
+        IO.puts("incorrect height")
+        false
       not Sign.verify_tx(block) -> 
         IO.puts("bad signature #{inspect block}")
         false
-      h2 != h+1 ->
-        IO.puts("incorrect height")
-        false
-      true -> valid_block_2?(block, h2, h)
+      true -> valid_block_2?(block, h)
     end
   end
-  def valid_block_2?(block, h2, h) do
+  def valid_block_2?(block, h) do
     txs=block[:data][:txs]
     #true=VerifyTx.check_txs(txs)
     #run more checks

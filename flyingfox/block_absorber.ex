@@ -3,15 +3,11 @@ defmodule BlockAbsorber do
     receive do
       {:ping, p} ->
         send(p, [:ok])
-      ["block", b, s] ->
-        cond do
-          is_binary(b) ->
-            IO.puts("block is not binary")
-            true=false
-          true ->
-            Blockchain.absorb(b)
-            send(s, [:ok])
-        end
+      ["buy_blocks", b] ->
+        Enum.map(b, fn(x) -> 
+          Blockchain.buy_block(x) end)
+      ["blocks", b] ->
+        Enum.map(b, fn(x) -> Blockchain.add_block(x) end)
       _ ->
         IO.puts("block absorber fail")
     end
@@ -28,8 +24,19 @@ defmodule BlockAbsorber do
       [:ok] -> :ok
     end    
   end
-  def absorb(block) do talk(["block", block, self()]) end
-  def buy_block do absorb(BlockchainPure.buy_block) end
+  #def absorb(block) do talk(["block", block, self()]) end
+  def poly_absorb(blocks) do
+    send(key, ["blocks", blocks])
+  end
+  def buy_block do 
+    send(key, ["buy_blocks", [BlockchainPure.buy_block]]) end
+  #Blockchain.sign_reveal
+  #poly_absorb([BlockchainPure.buy_block]) end
+  def buy_blocks(n) do
+    Enum.map(0..n, fn(x) -> 
+      :timer.sleep(1000)
+      buy_block end)
+  end
   def ping do talk({:ping, self()}) end
   def test do
     Main.start

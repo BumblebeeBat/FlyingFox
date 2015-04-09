@@ -6,6 +6,9 @@ defmodule Main do
     BlockAbsorber.start
     Peers.start
     Listener.start
-    Tcp.start(n+Listener.port, &(Listener.talk(&1)))
+    p=n+Listener.port
+    KV.put("port", p)
+    Tcp.start(p, &(Listener.talk(&1)))
+    Talker.start
   end
 end

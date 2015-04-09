@@ -14,10 +14,12 @@ defmodule Tcp do
     end
   end
   defp new_peer(socket, func) do
-    {:ok, conn} = :gen_tcp.accept(socket)
-    out= func.(listen(conn, ""))
-    Task.start_link(fn -> ms(conn, out) end)
-    new_peer(socket, func)		
+    {x, conn} = :gen_tcp.accept(socket)
+    if x==:ok do
+      out= func.(listen(conn, ""))
+      Task.start_link(fn -> ms(conn, out) end)
+    end
+      new_peer(socket, func)		
   end
   defp ms(socket, string) do
     if is_pid(string) do
@@ -26,12 +28,18 @@ defmodule Tcp do
     m=PackWrap.pack(string)
     s=byte_size(m)
     a=<<s::size(32)>>
-    :ok = :gen_tcp.send(socket, a <> m)
+    :gen_tcp.send(socket, a <> m)
   end
   def talk(host, port, msg) do
     s=connect(host, port)
-    ms(s, msg)
-    listen(s, "")
+    if s=="error" do
+      {:error, "peer is off"}
+    else
+      case ms(s, msg) do
+        :ok -> {:ok, listen(s, "")}
+        x -> {:error, x}
+      end
+    end
   end
   def ping(host, port) do
     s=connect(host, port)

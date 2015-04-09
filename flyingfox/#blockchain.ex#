@@ -45,7 +45,7 @@ defmodule Blockchain do
         txs=block[:data][:txs]
         KV.put(to_string(h+1), block)
         n=BlockchainPure.num_signers(txs)
-        TxUpdate.txs_updates(txs, 1, div(block[:data][:bond_size], n))
+        TxUpdate.txs_updates(txs, 1, div(block[:data][:bond_size],n))
         KV.put("height", h+1)
         Mempool.dump    
         true
