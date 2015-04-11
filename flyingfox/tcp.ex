@@ -1,7 +1,8 @@
 defmodule Tcp do
+  def open(port) do :gen_tcp.listen(port, [:binary, {:packet, 0}, {:active, false}]) end
+  def close(socket) do :gen_tcp.close(socket) end
   def start(port, func) do
-    tcp_options = [:binary, {:packet, 0}, {:active, false}]
-    {:ok, socket} = :gen_tcp.listen(port, tcp_options)
+    {:ok, socket} = open(port)
     Task.start_link(fn ->
       new_peer(socket, func)
     end)

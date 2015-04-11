@@ -40,8 +40,7 @@ defmodule TxUpdate do
     KV.put(pub, acc)
   end
   def spend(tx, d) do
-    {pub, _, tx}=tx
-    sym_increment(pub, :amount, -tx[:data][:amount]-tx[:data][:fee], d)
+    sym_increment(tx[:pub], :amount, -tx[:data][:amount]-tx[:data][:fee], d)
     sym_increment(tx[:data][:to], :amount, tx[:data][:amount], d)
     #For users to give money to each other. Balances must stay positive. Creator of the tx has a fee which is >=0. The fee pays the creator of the block.
   end
@@ -95,6 +94,9 @@ defmodule TxUpdate do
     #After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
   end
   def tx_update(tx, d, bond_size) do
+    acc=KV.get(tx[:pub])
+    acc=Dict.put(acc, :nonce, acc[:nonce]+1)
+    KV.put(tx[:pub], acc)
     case Dict.get(tx[:data], :type) do
       "spend" ->      spend(tx, d)
       "spend2wait" -> spend2wait(tx, d)

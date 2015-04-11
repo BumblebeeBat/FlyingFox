@@ -11,21 +11,26 @@ defmodule Talker do
    [ip: "localhost", port: 6666]]
   end
   def add_peers(x) do Enum.map(x, fn(x) -> Peers.add_peer(x) end) end
-  def check_peer(p, my_status) do #validating mode
+  def check_peer(p) do #validating mode
     status = Api.status(p[:port], p[:ip])
-    IO.puts("status #{inspect status}")
     cond do
       status == :ok -> ":ok error"
       :error in Dict.keys(status) -> status[:error]
-      true -> check_peer_2(p, status, my_status)
+      true -> check_peer_2(p, status)
     end
   end
-  def check_peer_2(p, status, my_status) do
-    txs=Api.txs
+  def check_peer_2(p, status) do
+    my_peers = Api.all_peers
+    peers = Api.all_peers(p[:port], p[:ip])
+    not_yours = Enum.filter(my_peers, &(not &1 in peers))
+    not_mine = Enum.filter(peers, &(not &1 in my_peers))
+    Enum.map(not_yours, &(Api.add_peer(elem(&1, 1),p[:port],p[:ip])))
+    Enum.map(not_mine, &(Peers.add_peer(elem(&1, 1))))
+    txs=Api.txs(p[:port], p[:ip])
     peer=Peers.get(p)
     peer = Dict.put(peer, :height, status[:height])
     peer = Dict.put(peer, :hash, status[:hash])
-    Peers.update(peer)
+    Peers.add_peer(peer)
     u=status[:height]
     i=KV.get("height")
     cond do
@@ -43,17 +48,13 @@ defmodule Talker do
     end
   end
   def check_peers do
-    my_status = Api.status(KV.get("port"), "localhost")
-    prs = Peers.get_all
-    #IO.puts("prs: #{inspect prs}")
-    Enum.map(prs, fn(p) -> Task.start_link(fn -> 
-      {a, b} = p
-      check_peer(b, my_status) end) 
-    end)
+    #my_status = Api.status(KV.get("port"), "localhost")
+    prs = Enum.map(Peers.get_all, &(elem(&1,1)))
+    Enum.map(prs, &(Task.start_link(fn -> check_peer(&1) end)))
   end
   def looper do
     check_peers
-    :timer.sleep(3000)
+    :timer.sleep(5000)
     looper
   end
   def start do

@@ -1,8 +1,9 @@
 defmodule Peers do#this module is a database of who your peers are, and other data useful for networking that isn't under consensus.
+  def to_tuple_list(dict) do Dict.keys(dict) |> Enum.map(&({&1, dict[&1]})) end
   def peer_key(peer) do to_string(peer[:port]) <>"$"<> peer[:ip] end
   def looper(mem) do
     receive do    
-      ["get_all", s] -> send s, [:ok, mem]
+      ["get_all", s] -> send s, [:ok, to_tuple_list(mem)]
       ["get", peer,s] -> send s, [:ok, Dict.get(mem, peer_key(peer))]
       ["update", peer, s] ->
         send s, [:ok, :ok]
@@ -30,9 +31,12 @@ defmodule Peers do#this module is a database of who your peers are, and other da
     peer |> Dict.put(:time, timestamp) |> Dict.put(:height, 0) |> Dict.put(:hash, "") end
   def update(peer) do talk(["update", new_peer(peer)]) end
   def add_peer(peer) do 
-    if not(peer_key(peer) in Dict.keys(get_all)) do
-      update(peer)
-    end 
+    cond do
+      is_binary(peer) -> false
+      is_integer(peer) -> false
+      peer_key(peer) in Dict.keys(get_all) -> false
+      true -> update(peer)
+    end
   end
   def get(peer) do talk(["get", peer]) end
   def get_all do talk(["get_all"]) end

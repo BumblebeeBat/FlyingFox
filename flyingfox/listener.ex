@@ -20,13 +20,19 @@ defmodule Listener do
       true -> blocks_helper(start+1, finish, [KV.get(to_string(start))|out])
     end
   end
+  def fee_filter(tx) do
+    cond do
+      tx[:data][:fee]<10000 -> "low-fee tx are blocked on this node"
+      true -> Mempool.add_tx(tx)
+    end
+  end
   def looper do
     receive do    
       ["add_block", block, s] -> 
         out = BlockAbsorber.absorb(block)
         s=s
       ["pushtx", tx, s] -> 
-        out = Mempool.add_tx(tx)
+        out = fee_filter(tx)
         s=s
       ["txs", s] -> 
         out = Mempool.txs

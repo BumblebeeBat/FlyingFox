@@ -9,7 +9,7 @@ defmodule BlockchainTests do
     end
   end
   def test_reveal do
-    {pub, priv}=Local.address
+    {pub, priv}=Keys.address
     w=TxCreator.create_sign
     Blockchain.add_block(BlockchainPure.buy_block)
     Enum.map(1..5, fn(x) -> TxCreator.create_sign
@@ -33,7 +33,7 @@ defmodule BlockchainTests do
   end
   def test_add_remove do
     TxCreator.create_sign
-    {pub, priv}=Local.address#Sign.new_key
+    {pub, priv}=Keys.address#Sign.new_key
     tx=[type: "spend", amount: 55, to: "abcdefg", fee: 100]
     tx=Sign.sign_tx(tx, pub, priv)
     Mempool.add_tx(tx)
@@ -49,18 +49,18 @@ defmodule BlockchainTests do
     pub |> KV.get |> inspect |> IO.puts
   end
   def test_moneys do
-    {pub, priv}=Local.address#Sign.new_key
+    {pub, priv}=Keys.address#Sign.new_key
     tx=[type: "spend2wait", amount: 300, fee: 100]
     #tx=[type: :spend, amount: 55, to: "abcdefg", fee: 100]
     tx=Sign.sign_tx(tx, pub, priv)
     Mempool.add_tx(tx)
-    Enum.map(1..VerifyTx.epoch, fn(x) -> TxCreator.create_sign
+    Enum.map(1..VerifyTx.epoch, fn(x) -> TxCreator.sign
                              Blockchain.add_block(BlockchainPure.buy_block) end)
     acc=KV.get(pub)
     tx=[type: "wait2bond", wait_money: acc[:wait]]
     tx=Sign.sign_tx(tx, pub, priv)
     Mempool.add_tx(tx)
-    TxCreator.create_sign
+    TxCreator.sign
     Blockchain.add_block(BlockchainPure.buy_block)
     acc=KV.get(pub)
     f=&(Blockchain.get_block(&1))
@@ -73,7 +73,7 @@ defmodule BlockchainTests do
     tx=[type: "bond2spend", amount: 179, fee: 100]
     tx=Sign.sign_tx(tx, pub, priv)
     Mempool.add_tx(tx)
-    TxCreator.create_sign
+    TxCreator.sign
     Blockchain.add_block(BlockchainPure.buy_block)
     56 |> Blockchain.get_block |> inspect |> IO.puts
     pub |> KV.get |> inspect |> IO.puts

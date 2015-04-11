@@ -5,8 +5,8 @@ defmodule Blockchain do
     KV.put("0", new)
   end
   def sign_reveal do
-    TxCreator.create_sign
-    TxCreator.create_reveal
+    TxCreator.sign
+    TxCreator.reveal
   end
   def buy_block(b) do
     a = add_block(b)
@@ -16,12 +16,13 @@ defmodule Blockchain do
   def genesis_state do
     genesis_block
     a=Constants.empty_account
-    bonds =                    100_000_000_000_000
-    a = Dict.put(a, :amount, 2_000_000_000_000_000)
-    a = Dict.put(a, :bond, bonds)     
-    {creator_pub, creator_priv} = {"BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc=", "pRxnT/38wyd6lSbwfCEVvchAL7m7AMYuZeQKrJW/RO0="}
+    ac=Constants.initial_coins
+    b = ac/21
+    a = Dict.put(a, :amount, 20*b)
+    a = Dict.put(a, :bond, b)
+    {creator_pub, creator_priv} = Keys.master_keys
     KV.put(creator_pub, a)
-    KV.put("tot_bonds", bonds)
+    KV.put("tot_bonds", b)
     sign_reveal
   end
   def remove_block do
@@ -45,7 +46,7 @@ defmodule Blockchain do
         txs=block[:data][:txs]
         KV.put(to_string(h+1), block)
         n=BlockchainPure.num_signers(txs)
-        TxUpdate.txs_updates(txs, 1, div(block[:data][:bond_size],n))
+        TxUpdate.txs_updates(txs, 1, round(block[:data][:bond_size] / n))
         KV.put("height", h+1)
         Mempool.dump    
         true

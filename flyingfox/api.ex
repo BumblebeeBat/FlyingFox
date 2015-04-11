@@ -1,6 +1,6 @@
 defmodule Api do
   defp lh do "localhost" end
-  defp lp do Listener.port end
+  defp lp do KV.get("port") end
   defp talk(msg, port, ip) do 
     case Tcp.talk(ip, port, msg) do
       {:ok, x} -> x

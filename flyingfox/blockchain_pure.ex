@@ -10,11 +10,7 @@ defmodule BlockchainPure do
     |> Enum.map(fn(t) -> length(t[:data][:winners]) end) 
     |> Enum.reduce(0, &(&1+&2))
   end
-  def being_spent(txs) do
-    send_txs = txs_filter(txs, "spend")
-    send_txs=Enum.map(send_txs, fn(t) -> t[:tx][:amount] end)
-    send_txs=Enum.reduce(send_txs, 0, &(&1+&2))
-  end
+  def being_spent(txs) do txs |> txs_filter("spend") |> Enum.map(fn(t) -> t[:data][:amount] end) |> Enum.reduce(0, &(&1+&2)) end
   def valid_block?(block) do
     #IO.puts("valid block? #{inspect block}")
     h=KV.get("height")
@@ -29,45 +25,40 @@ defmodule BlockchainPure do
       not Sign.verify_tx(block) -> 
         IO.puts("bad signature #{inspect block}")
         false
-      true -> valid_block_2?(block, h)
+      true ->
+        valid_block_2?(block)
     end
   end
-  def valid_block_2?(block, h) do
-    txs=block[:data][:txs]
-    #true=VerifyTx.check_txs(txs)
-    #run more checks
-    #safety deposit per signer must be the same for each.
-    #make sure block_hash matches previous block.
-    #block creator needs to pay a fee. he needs to have signed so we can take his fee.
-    #make sure it has enough signers.
+  def valid_block_2?(block) do
+    winners = block[:data][:txs] |> txs_filter("sign") |> Enum.map(&(length(&1[:data][:winners]))) |> Enum.reduce(0, &(&1+&2))
+    cond do
+      winners < Constants.signers_per_block*2/3 -> 
+        IO.puts("not enough signers")
+        false
+      not VerifyTx.check_txs(block[:data][:txs]) ->
+        IO.puts("invalid tx")
+        false
+      true -> valid_block_3?(block, winners) 
+    end
+  end
+  def valid_block_3?(block, ns) do
+    txs = block[:data][:txs] 
     sign_txs=txs_filter(txs, "sign")
-    spending=being_spent(txs)
     signers = Enum.map(sign_txs, fn(t) -> t[:pub] end)
     accs = Enum.map(signers, fn(s) -> KV.get(s) end)
     balances = Enum.map(accs, fn(s) -> s[:bond] end)
-    ns=num_signers(sign_txs)
-    cond do
-      not VerifyTx.check_txs(txs) ->
-           IO.puts("invalid tx")
-           false
-      ns <= Constants.signers_per_block*2/3 -> 
-        IO.puts("not enough signers")
-        false
-      true -> valid_block_3?(block, ns, balances, spending)
-    end
-  end
-  def valid_block_3?(block, ns, balances, spending) do
-    {p, q}=Local.address
-    signer_bond=block[:data][:bond_size]/ns
-    sb = Enum.reduce(balances, nil, &(min(&1, &2)))
-    txs = block[:data][:txs] 
+    IO.puts("address #{inspect Keys.address}")
+    {p, q}=Keys.address
+    #signer_bond=block[:data][:bond_size]/ns
+    poorest_balance = Enum.reduce(balances, nil, &(min(&1, &2)))
+    spending=being_spent(txs)
     bs=block[:data][:bond_size]
     txs = Enum.filter(txs, fn(t) -> t[:data][:type]=="sign" end)
     cond do
-      sb < signer_bond -> 
-        IO.puts("poorest signer can afford")
+      poorest_balance < bs -> 
+        IO.puts("poorest signer cant afford")
         false
-      bs<spending*3 -> 
+      bs*ns<spending*3 -> 
         IO.puts("not enough bonds to spend that much")
         false
       block[:meta][:revealed] != [] -> 
@@ -82,10 +73,10 @@ defmodule BlockchainPure do
   end
   def buy_block do
     height=KV.get("height")
-    {pub, priv}=Local.address
-    txs=Mempool.txs
+    {pub, priv}=Keys.address
+    txs=Mempool.txs#remove expensive txs until we can afford it.
     bh=blockhash(height, txs)
-    new=[height: height+1, txs: txs, hash: bh, bond_size: 100_000]
+    new=[height: height+1, txs: txs, hash: bh, bond_size: 10_000_000_000_000/Constants.signers_per_block*3/2]
     new=Sign.sign_tx(new, pub, priv)
     Dict.put(new, :meta, [revealed: []])
   end

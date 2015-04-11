@@ -1,6 +1,14 @@
 defmodule VerifyTx do
   def spend?(tx, txs) do
-    true
+    cond do
+      tx[:data][:fee] < Constants.min_tx_fee ->
+        IO.puts("fee too low")
+        false
+      tx[:data][:amount]+tx[:data][:fee] > Constants.max_bond_block ->
+        IO.puts("too much money at once")
+        false
+      true -> true
+    end
   end
   def spend2wait?(tx, txs) do
     #convert some money from the spendable variety into the kind that is locked up for a long time. transforms money into wait-money.
@@ -67,7 +75,6 @@ defmodule VerifyTx do
     l=Enum.map(tx[:"data"][:"winners"], fn(x)->winner?(acc[:bond], tot_bonds, ran, tx[:"pub"], x) end)
     l1=l
     l=Enum.reduce(l, true, fn(x, y) -> x and y end)
-    #IO.puts "txs #{ inspect txs}"
     m = length(Enum.filter(txs, fn(t)-> t[:"data"][:"type"] == "sign" end))
     cond do
       acc[:bond] < Constants.minbond -> 
@@ -135,6 +142,15 @@ defmodule VerifyTx do
     #After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
   end
   def check_tx(tx, txs) do
+    cond do
+      not check_logic(tx, txs) ->
+        #IO.puts("bad tx for this type #{inspect tx[:data][:type]}")
+        false
+      not check_([tx|txs]) -> false
+      true -> true
+    end
+  end
+  def check_logic(tx, txs) do
     f=[spend: &(spend?(&1, &2)),
        spend2wait: &(spend2wait?(&1, &2)),
        wait2bond: &(wait2bond?(&1, &2)),
@@ -151,34 +167,71 @@ defmodule VerifyTx do
       true -> true
     end
   end
-  def check_txs(txs) do
-    spending=BlockchainPure.being_spent(txs)
-    winners=BlockchainPure.txs_filter(txs, "sign")
-    winners=Enum.map(winners, fn(t) -> length(t[:data][:winners])end)
-    winners=Enum.reduce(winners, 0, &(&1+&2))
+  def remove_repeats(l) do
     cond do
+      l==[] -> l
+      hd(l) in tl(l) -> remove_repeats(tl(l))
+      true -> [hd(l)|remove_repeats(tl(l))]
+    end
+  end
+  def consecutive?(l) do#input is a list of numbers
+    cond do
+      length(l) < 2 -> true
+      hd(l)+1 == hd(tl(l)) -> consecutive?(tl(l))
+      true -> false
+    end
+  end
+  def check_nonces(txs) do
+    have_nonce = Enum.map(txs, fn(tx) -> tx[:data][:nonce]!=nil end)
+    all_have_nonce = Enum.reduce(have_nonce, true, &(&1 and &2))
+    pubs = txs |> Enum.map(fn(tx) -> tx[:pub] end) |> remove_repeats
+    sorted_txs = Enum.map(pubs, fn(pub) -> Enum.filter(txs,  &(&1[:pub]==pub)) end)
+    #after here.
+    f = (fn(x) -> Enum.reduce(x, true, &(&1 and &2)) end)
+    just_nonces = Enum.map(sorted_txs, fn(ts) -> 
+      Enum.map(ts, &(&1[:data][:nonce])) |> Enum.sort 
+    end)
+    consecutive = just_nonces |> Enum.map(&(consecutive?(&1))) |> f.()
+    current_nonce = Enum.map(pubs, fn(pub) -> KV.get(pub)[:nonce] end)
+    starts_right = Enum.zip(current_nonce, just_nonces) |> Enum.map(fn(x)-> elem(x, 0)==hd(elem(x, 1)) end) |> f.()
+     #do each person's tx nonces start on the right nonce, and then continue consecutively upward from there?
+    (starts_right and consecutive) and all_have_nonce
+   end
+   def check_(txs) do
+    spending=BlockchainPure.being_spent(txs)
+    winners = txs |> BlockchainPure.txs_filter("sign") 
+    winners = winners |> Enum.map(fn(t) -> t[:data][:winners]end) 
+    winners = winners |> Enum.map(fn(w) -> length(w) end)
+    winners = winners |> Enum.reduce(0, &(&1+&2))
+     cond do
+       not check_nonces(txs) -> 
+         IO.puts("bad nonce")
+         false
+       not VerifyBalances.positive_balances(txs,spending*3/max(winners, Constants.signers_per_block*2/3))->
+         IO.puts("someone spent more money than how much they have")
+         false         
+       true -> true
+     end
+  end
+  def check_txs(txs) do
+    cond do
+      not check_logics(txs, [])  ->
+        IO.puts("bad logic")
+        false
       txs==[] -> 
         IO.puts("no empty blocks")
         false
-      winners < Constants.signers_per_block*2/3 -> 
-        IO.puts("not enough signers")
-        false
-      not check_logic(txs, [])  ->
-        IO.puts("bad logic")
-        false
-      not VerifyBalances.positive_balances(txs, spending*3/winners) ->
-        IO.puts("someone spent more money than how much they have")
-        false
-      true ->
-        true
+      not check_(txs) -> false
+      true -> true
     end
   end
-  def check_logic(new, old \\ []) do
+  def check_logics(new, old \\ []) do
     cond do
       length(new) ==0 -> true
-      check_tx(hd(new), old) -> 
-        check_logic(tl(new),[hd(new)|old])
+      check_logic(hd(new), old) -> 
+        check_logics(tl(new),[hd(new)|old])
       true -> false
     end
   end
 end
+

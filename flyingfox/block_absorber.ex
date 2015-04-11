@@ -15,6 +15,7 @@ defmodule BlockAbsorber do
   end
   def key do :absorber end
   def start do
+    Blockchain.genesis_state              
     {:ok, pid} = Task.start_link(fn->looper end)
     Process.register(pid, key)
   end
