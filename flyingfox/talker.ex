@@ -11,6 +11,16 @@ defmodule Talker do
    [ip: "localhost", port: 6666]]
   end
   def add_peers(x) do Enum.map(x, fn(x) -> Peers.add_peer(x) end) end
+  def download_blocks(i, u, p) do
+    cond do
+      u>i and same_branch -> #only download in the direction we are currently searching. Depth first search.
+        IO.puts("im behind")
+        blocks=Api.blocks(i+1, i+100, p[:port], p[:ip])
+        IO.puts("blocks #{inspect blocks}")
+        BlockAbsorber.poly_absorb(blocks)
+      u>i and off_branch ->
+    end
+  end
   def check_peer(p) do #validating mode
     status = Api.status(p[:port], p[:ip])
     cond do
@@ -19,6 +29,7 @@ defmodule Talker do
       true -> check_peer_2(p, status)
     end
   end
+  def 
   def check_peer_2(p, status) do
     my_peers = Api.all_peers
     peers = Api.all_peers(p[:port], p[:ip])
@@ -38,11 +49,7 @@ defmodule Talker do
       (txs != []) and length(txs)>0 and is_tuple(hd(txs)) -> 
         IO.puts('tx error')
         txs[:error]
-      u>i -> 
-        IO.puts("im behind")
-        blocks=Api.blocks(i+1, i+100, p[:port], p[:ip])
-        IO.puts("blocks #{inspect blocks}")
-        BlockAbsorber.poly_absorb(blocks)
+      u>i -> download_blocks(i, u, p)
       u==i -> Enum.map(txs, &(Mempool.add_tx(&1)))
       true -> true
     end
@@ -52,7 +59,9 @@ defmodule Talker do
     prs = Enum.map(Peers.get_all, &(elem(&1,1)))
     Enum.map(prs, &(Task.start_link(fn -> check_peer(&1) end)))
   end
-  def looper do
+  def looper do#change this so that the program has enough memory to search the tree of block-chains without retracing its steps too much.
+    #if below the weak subjectivity hash, then head towards it.
+    #otherwise find the highest valid node without leaving the weakly subjective part of the tree.
     check_peers
     :timer.sleep(5000)
     looper

@@ -47,8 +47,7 @@ defmodule BlockchainPure do
     signers = Enum.map(sign_txs, fn(t) -> t[:pub] end)
     accs = Enum.map(signers, fn(s) -> KV.get(s) end)
     balances = Enum.map(accs, fn(s) -> s[:bond] end)
-    IO.puts("address #{inspect Keys.address}")
-    {p, q}=Keys.address
+    #{p, q}=Keys.address
     #signer_bond=block[:data][:bond_size]/ns
     poorest_balance = Enum.reduce(balances, nil, &(min(&1, &2)))
     spending=being_spent(txs)
@@ -73,11 +72,10 @@ defmodule BlockchainPure do
   end
   def buy_block do
     height=KV.get("height")
-    {pub, priv}=Keys.address
     txs=Mempool.txs#remove expensive txs until we can afford it.
     bh=blockhash(height, txs)
     new=[height: height+1, txs: txs, hash: bh, bond_size: 10_000_000_000_000/Constants.signers_per_block*3/2]
-    new=Sign.sign_tx(new, pub, priv)
+    new = Keys.sign(new)
     Dict.put(new, :meta, [revealed: []])
   end
 end
