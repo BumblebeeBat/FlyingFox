@@ -1,7 +1,0 @@
-defmodule Monitor do
-  def start(pids) do
-    :timer.sleep(5000)
-    pids |> Enum.map(&(IO.puts(Process.alive?(&1))))
-    start(pids)
-  end
-end
