@@ -3,10 +3,7 @@ defmodule Tcp do
   def close(socket) do :gen_tcp.close(socket) end
   def start(port, func) do
     {:ok, socket} = open(port)
-    {:ok, pid} = Task.start_link(fn ->
-      new_peer(socket, func)
-    end)
-    pid
+    spawn_link(fn -> new_peer(socket, func) end)
   end
   defp connect(host, port) do
     {x, s} = :gen_tcp.connect(:erlang.binary_to_list(host), port, [{:active, false}, {:packet, 0}])
@@ -18,12 +15,17 @@ defmodule Tcp do
   defp new_peer(socket, func) do
     {x, conn} = :gen_tcp.accept(socket)
     if x==:ok do
-      out= func.(listen(conn, ""))
-      Task.start_link(fn -> ms(conn, out) end)
+      spawn_link(fn -> :timer.sleep(100)
+                       new_peer(socket, func) end)
+      conn |> listen |> func.() |> ms(conn) #these threads need a timer or something to kill them, otherwise we end up having too many.
+    else
+      IO.puts "failed to connect #{inspect conn}" #emfile error!
+      :timer.sleep(2000)
+      spawn_link(fn -> new_peer(socket, func) end)
     end
-      new_peer(socket, func)		
+    #new_peer(socket, func)		
   end
-  defp ms(socket, string) do
+  defp ms(string, socket) do
     if is_pid(string) do
       true=false
     end
@@ -37,7 +39,7 @@ defmodule Tcp do
     if s=="error" do
       {:error, "peer is off"}
     else
-      case ms(s, msg) do
+      case ms(msg, s) do
         :ok -> {:ok, listen(s, "")}
         x -> {:error, x}
       end
@@ -45,7 +47,7 @@ defmodule Tcp do
   end
   def ping(host, port) do
     s=connect(host, port)
-    ms(s, "ping")
+    ms("ping", s)
   end
   defp to_bytes(list) do
     cond do
@@ -54,7 +56,7 @@ defmodule Tcp do
       true -> <<hd(list)>> <> to_bytes(tl(list))
     end
   end
-  defp listen(conn, data) do
+  defp listen(conn, data \\ "") do
    case :gen_tcp.recv(conn, 0) do
       {:ok, d} ->
         done_listening?(conn, data<>to_bytes(d))

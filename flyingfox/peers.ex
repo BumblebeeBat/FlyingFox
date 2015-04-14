@@ -13,7 +13,7 @@ defmodule Peers do#this module is a database of who your peers are, and other da
   end
   def key do :peers end
   def start do
-    {:ok, pid}=Task.start_link(fn -> looper(%HashDict{}) end)
+    pid=spawn_link(fn -> looper(%HashDict{}) end)
     Process.register(pid, key)
     :ok    
   end

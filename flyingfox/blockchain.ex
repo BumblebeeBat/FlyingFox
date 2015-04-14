@@ -35,7 +35,6 @@ defmodule Blockchain do
         #give block creator his fee back.
         KV.put("height", h-1)
         Mempool.dump
-        sign_reveal
         true 
     end
   end

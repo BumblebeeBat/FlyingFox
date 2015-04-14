@@ -29,7 +29,7 @@ defmodule Keys do
   def master_keys do {"BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc=", "pRxnT/38wyd6lSbwfCEVvchAL7m7AMYuZeQKrJW/RO0="} end#{pub, priv}
   def master do load(master_keys) end
   def start do
-    {:ok, pid}=Task.start_link(fn -> looper({}) end)
+    pid=spawn_link(fn -> looper({}) end)
     Process.register(pid, key)
     new
   end

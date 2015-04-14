@@ -159,7 +159,8 @@ defmodule VerifyTx do
        reveal: &(reveal?(&1, &2))]
     default = fn(_, _) -> false end
     cond do
-      not Dict.get(f, String.to_atom(tx[:data][:type]), default).(tx, txs) ->  false
+      tx[:data][:type] == nil -> false
+      not Dict.get(f, String.to_atom(tx[:data][:type]), default).(tx, txs) ->  false #to_atom is DANGEROUS
       not Sign.verify_tx(tx) -> 
         IO.puts("bad signature")
         false

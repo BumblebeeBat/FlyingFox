@@ -7,6 +7,6 @@ defmodule Monitor do
   end
   def start(pids) do
     IO.puts(inspect pids)
-    Task.start_link(fn -> doit(pids) end)
+    spawn_link(fn -> doit(pids) end)
   end
 end

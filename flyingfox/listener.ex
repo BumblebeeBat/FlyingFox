@@ -63,8 +63,7 @@ defmodule Listener do
                  hash: block[:data][:hash]]
         end
         s=s
-      x ->
-        IO.puts("listener error: #{inspect x}")
+      x -> IO.puts("listener error: #{inspect x}")
     end
     send s, ["ok", out]
     looper
@@ -72,13 +71,12 @@ defmodule Listener do
   def key do :listen end
   def port do 6664 end
   def start do#instead of starting once, have a seperate thread for each connection.
-    {:ok, pid}=Task.start_link(fn -> looper end)
+    pid=spawn_link(fn -> looper end)
     Process.register(pid, key)
     :ok    
   end
   def talk(k) do
-    k=k++[self()]
-    send(key, k)
+    send(key, k++[self()])
     receive do
       ["ok", s] -> s
     end

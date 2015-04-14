@@ -30,6 +30,7 @@ defmodule BlockAbsorber do
     send(key, ["blocks", blocks])
   end
   def buy_block do 
+    Blockchain.sign_reveal
     send(key, ["buy_blocks", [BlockchainPure.buy_block]]) end
   #Blockchain.sign_reveal
   #poly_absorb([BlockchainPure.buy_block]) end

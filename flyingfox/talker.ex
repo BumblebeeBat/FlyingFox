@@ -9,8 +9,6 @@ defmodule Talker do
   def download_blocks(i, u, p) do
     blocks=Api.blocks(i, i+100, p[:port], p[:ip])
     my_block=Api.blocks(i, i)
-    IO.puts("my_block: #{inspect my_block}")
-    IO.puts("blocks: #{inspect blocks}")
     cond do
       my_block == :ok or blocks == :ok or (is_tuple(hd(blocks)) and :error in Dict.keys(blocks)) or (is_tuple(hd(my_block)) and :error in Dict.keys(my_block)) ->
         IO.puts("peer died")
@@ -69,7 +67,7 @@ defmodule Talker do
     #my_status = Api.status(KV.get("port"), "localhost")
     Peers.get_all 
     |> Enum.map(&(elem(&1,1))) 
-    |> Enum.map(&(Task.start_link(fn -> check_peer(&1) end)))
+    |> Enum.map(&(spawn_link(fn -> check_peer(&1) end)))
    end
   def looper do#change this so that the program has enough memory to search the tree of block-chains without retracing its steps too much.
     #if below the weak subjectivity hash, then head towards it.
@@ -78,6 +76,7 @@ defmodule Talker do
     Enum.map(1..x, fn(_) ->
       check_peers
       :timer.sleep(3000)
+      spawn_link(fn() -> Blockchain.sign_reveal end)
     end)
     Enum.map(1..Constants.epoch, fn(_)-> Blockchain.remove_block end)
     looper
@@ -85,7 +84,7 @@ defmodule Talker do
   def start do
     peers = Enum.map(0..2, &([ip: "localhost", port: 6664+&1]))
     add_peers(peers)
-    {:ok, pid} = Task.start_link(fn() -> looper end)
+    pid = spawn_link(fn() -> looper end)
     pid
   end
 end

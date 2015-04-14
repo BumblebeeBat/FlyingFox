@@ -15,7 +15,7 @@ defmodule KV do
   end
   def key do :kv end
   def start do
-    {:ok, pid}=Task.start_link(fn -> looper(%HashDict{}) end)
+    pid=spawn_link(fn -> looper(%HashDict{}) end)
     Process.register(pid, key)
     :ok
   end

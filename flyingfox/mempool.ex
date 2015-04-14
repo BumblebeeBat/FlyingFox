@@ -18,7 +18,7 @@ defmodule Mempool do
   end
   def key do :txs end
   def start do
-    {:ok, pid}=Task.start_link(fn -> looper([]) end)
+    pid = spawn_link(fn -> looper([]) end)
     Process.register(pid, key)
     :ok
   end
