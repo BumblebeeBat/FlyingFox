@@ -14,7 +14,6 @@ defmodule BlockchainPure do
   def valid_block?(block) do
     #IO.puts("valid block? #{inspect block}")
     h=KV.get("height")
-    h2=block[:data][:height]
     cond do
       not is_list(block) -> 
         IO.puts("block should be a dict")
@@ -52,7 +51,6 @@ defmodule BlockchainPure do
     poorest_balance = Enum.reduce(balances, nil, &(min(&1, &2)))
     spending=being_spent(txs)
     bs=block[:data][:bond_size]
-    txs = Enum.filter(txs, fn(t) -> t[:data][:type]=="sign" end)
     cond do
       poorest_balance < bs -> 
         IO.puts("poorest signer cant afford")

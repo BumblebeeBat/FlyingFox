@@ -1,7 +1,8 @@
 defmodule DetHash do
   def hash(s) do :crypto.hmac(:sha256, to_string(s), "") |> Base.encode64 end
   def collect(l) do Enum.reduce(l, "", fn element, acc -> element<>acc end) end #list of strings -> string
-  def hash_list(l) do hash(collect(Enum.map(Enum.sort(l), fn x -> inspect(x) end))) end
+  def hash_list(l) do 
+    hash(collect(Enum.map(Enum.sort(l), fn x -> inspect(x) end))) end
   def hash_dict(s) do
     keys = Dict.keys(s)
     keys = Enum.sort(keys)

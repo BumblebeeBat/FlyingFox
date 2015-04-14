@@ -6,7 +6,7 @@ defmodule VerifyBalances do
     end
   end
   def all_positive_1(addresses) do
-    [{h, t}|tail] = addresses
+    [{_, t}|tail] = addresses
     cond do
       t<0 -> false
       tail==[] -> true

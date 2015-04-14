@@ -41,7 +41,7 @@ defmodule VerifyTx do
     a<b and j>=0 and j<Constants.chances_per_address and is_integer(j)
   end
   def first_bits(b, s) do
-    <<c :: size(s), d :: bitstring>>=b
+    <<c :: size(s), _ :: bitstring>>=b
     c
   end
   def ran_block(height) do
@@ -67,15 +67,15 @@ defmodule VerifyTx do
     #require hash(enropy+salt)
     #limit 1 sign per block
     #IO.puts("check sign tx")
-    acc = KV.get(tx[:"pub"])
+    acc = KV.get(tx[:pub])
     prev = KV.get("height") 
     tot_bonds = KV.get("tot_bonds")
     prev = KV.get(to_string(prev))
     ran=rng
-    l=Enum.map(tx[:"data"][:"winners"], fn(x)->winner?(acc[:bond], tot_bonds, ran, tx[:"pub"], x) end)
+    l=Enum.map(tx[:data][:winners], fn(x)->winner?(acc[:bond], tot_bonds, ran, tx[:pub], x) end)
     l1=l
     l=Enum.reduce(l, true, fn(x, y) -> x and y end)
-    m = length(Enum.filter(txs, fn(t)-> t[:"data"][:"type"] == "sign" end))
+    m = length(Enum.filter(txs, fn(t)-> t[:pub]==tx[:pub] and t[:data][:type] == "sign" end))
     cond do
       acc[:bond] < Constants.minbond -> 
         IO.puts("not enough bond")
@@ -88,10 +88,9 @@ defmodule VerifyTx do
         IO.puts("l1 #{inspect l1}")
         false
       length(tx[:data][:winners])<1 -> false
-      m != 0 -> false
-                tx[:data][:prev_hash]!=prev[:data][:hash] -> 
-        IO.puts("prev #{inspect prev}")
-        IO.puts("hash not match #{inspect tx[:data][:prev_hash]} #{inspect prev[:data][:hash]}")
+      m != 0 -> false#already havethis tx
+      tx[:data][:prev_hash]!=prev[:data][:hash] -> 
+        IO.puts("hash not match")#{inspect tx[:data][:prev_hash]} #{inspect prev[:data][:hash]}")
         false
       true -> true
     end
@@ -115,7 +114,7 @@ defmodule VerifyTx do
     old_block=signed_block(tx)
     signed=sign_tx(old_block, tx)
     bond_size = old_block[:bond_size]
-    winners = wins(old_block, tx)
+    #winners = wins(old_block, tx)
     cond do
       #make sure old_block hasn't been revealed by this person before
       #secret_hash must match.
@@ -158,7 +157,7 @@ defmodule VerifyTx do
        sign: &(sign?(&1, &2)),
        slasher: &(slasher?(&1, &2)),
        reveal: &(reveal?(&1, &2))]
-    default = fn(a, b) -> false end
+    default = fn(_, _) -> false end
     cond do
       not Dict.get(f, String.to_atom(tx[:data][:type]), default).(tx, txs) ->  false
       not Sign.verify_tx(tx) -> 

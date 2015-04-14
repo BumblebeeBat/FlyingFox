@@ -43,3 +43,4 @@ minimum amount of money per address (maybe a new tx type for deleting addresses 
 
 mini-blockchain proposal
 
+maybe we should charge proof of work for creating blocks, and have it increase exponentially depending how many blocks are being skipped.

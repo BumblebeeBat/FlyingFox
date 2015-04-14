@@ -3,9 +3,10 @@ defmodule Tcp do
   def close(socket) do :gen_tcp.close(socket) end
   def start(port, func) do
     {:ok, socket} = open(port)
-    Task.start_link(fn ->
+    {:ok, pid} = Task.start_link(fn ->
       new_peer(socket, func)
     end)
+    pid
   end
   defp connect(host, port) do
     {x, s} = :gen_tcp.connect(:erlang.binary_to_list(host), port, [{:active, false}, {:packet, 0}])
@@ -75,7 +76,7 @@ defmodule Tcp do
   defp done_listening?(conn, data) do
     cond do
       done(data) -> 
-        <<a::size(32), data::binary>> = data
+        <<_::size(32), data::binary>> = data
         PackWrap.unpack(data)
       true -> listen(conn, data)
     end

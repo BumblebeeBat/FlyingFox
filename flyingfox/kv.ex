@@ -1,7 +1,7 @@
 defmodule KV do
   defp looper(map) do
     receive do
-      [keys, caller] ->
+      [:keys, caller] ->
         send caller, [:ok, Dict.keys(map)]
         looper(map)
       ["get", key, caller] ->

@@ -24,18 +24,20 @@ defmodule Peers do#this module is a database of who your peers are, and other da
     end
   end
   def timestamp do 
-    {a, b, c} = :os.timestamp
+    {_, b, c} = :os.timestamp
     b*1000+div(c, 1000)
   end
-  def new_peer(peer) do 
-    peer |> Dict.put(:time, timestamp) |> Dict.put(:height, 0) |> Dict.put(:hash, "") end
-  def update(peer) do talk(["update", new_peer(peer)]) end
+  def new_peer(peer) do update(peer, 0, "") end
+  def update(peer, height, hash) do 
+    p = peer |> Dict.put(:time, timestamp) |> Dict.put(:height, height) |> Dict.put(:hash, hash) 
+    talk(["update", p]) 
+  end
   def add_peer(peer) do 
-    cond do
-      is_binary(peer) -> false
-      is_integer(peer) -> false
-      peer_key(peer) in Dict.keys(get_all) -> false
-      true -> update(peer)
+  cond do
+    is_binary(peer) -> false
+    is_integer(peer) -> false
+    peer_key(peer) in Dict.keys(get_all) -> false
+    true -> new_peer(peer)
     end
   end
   def get(peer) do talk(["get", peer]) end

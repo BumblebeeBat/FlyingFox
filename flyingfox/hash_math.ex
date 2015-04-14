@@ -40,7 +40,6 @@ defmodule HashMath do
     #IO.puts "upper lower f #{inspect upper}, #{inspect lower}, #{inspect f}"
     mid=div((lower+upper), 2)
     odd=rem((lower+upper), 2)
-    gap=upper-lower
     cond do
       lower>=upper-1 -> 
         cond do

@@ -20,21 +20,26 @@ defmodule Blockchain do
     b = ac/21
     a = Dict.put(a, :amount, 20*b)
     a = Dict.put(a, :bond, b)
-    {creator_pub, creator_priv} = Keys.master_keys
+    {creator_pub, _} = Keys.master_keys
     KV.put(creator_pub, a)
     KV.put("tot_bonds", b)
     sign_reveal
   end
-  def remove_block do
+  def remove_block do      
     h=KV.get("height")
-    block=BlockchainPure.get_block(h)
-    txs=block[:data][:txs]
-    n=BlockchainPure.num_signers(BlockchainPure.txs_filter(txs, "sign"))
-    TxUpdate.txs_updates(txs, -1, div(block[:data][:bond_size], n))
-    #give block creator his fee back.
-    KV.put("height", h-1)
+    if h>0 do
+        block=BlockchainPure.get_block(h)
+        txs=block[:txs]
+        n=BlockchainPure.num_signers(BlockchainPure.txs_filter(txs, "sign"))
+        TxUpdate.txs_updates(txs, -1, round(block[:bond_size] / n))
+        #give block creator his fee back.
+        KV.put("height", h-1)
+        Mempool.dump
+        sign_reveal
+        true 
+    end
   end
-  def add_block(block) do
+  def add_block(block) do#walking through blocks, and adding blocks to the database should be different functions.
     cond do
       not BlockchainPure.valid_block?(block) -> 
         IO.puts("invalid block")

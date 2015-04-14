@@ -19,10 +19,10 @@ defmodule BlockAbsorber do
     {:ok, pid} = Task.start_link(fn->looper end)
     Process.register(pid, key)
   end
-  def talk(s) do 
-    send(key, s)
+  def ping do 
+    send(key, {:ping, self()})
     receive do
-      [:ok] -> :ok
+      [:ok] -> {:ok, :pong}
     end    
   end
   #def absorb(block) do talk(["block", block, self()]) end
@@ -34,11 +34,10 @@ defmodule BlockAbsorber do
   #Blockchain.sign_reveal
   #poly_absorb([BlockchainPure.buy_block]) end
   def buy_blocks(n) do
-    Enum.map(0..n, fn(x) -> 
+    Enum.map(0..n, fn(_) -> 
       :timer.sleep(1000)
       buy_block end)
   end
-  def ping do talk({:ping, self()}) end
   def test do
     Main.start
     buy_block
