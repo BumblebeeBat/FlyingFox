@@ -1,4 +1,3 @@
-#:kv :address :txs :absorber :peers :listen
 defmodule Main do
   def start(n \\ 0) do
     p=n+Listener.port
@@ -11,7 +10,6 @@ defmodule Main do
         pids = [:kv, :address, :txs, :absorber, :peers, :listen]
         |> Enum.map(&(Process.whereis(&1)))
         pids = pids ++ [Tcp.start(p, &(Listener.talk(&1))), Talker.start]
-        #Monitor.start(pids)
         Peers.add_peer([port: p, ip: "localhost"])# :inet.getifaddrs #"wlan0" the first "addr"
       true ->
         IO.puts("this port is already being used on this machine")

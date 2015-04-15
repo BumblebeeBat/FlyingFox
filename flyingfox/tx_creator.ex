@@ -14,17 +14,19 @@ defmodule TxCreator do
   def sign do
     pub = Keys.pubkey
     acc = KV.get(pub)
-    prev = KV.get("height")
-    tot_bonds = KV.get("tot_bonds")
-    prev = KV.get(to_string(prev))
-    w=Enum.filter(0..Constants.chances_per_address, fn(x) -> VerifyTx.winner?(acc[:bond], tot_bonds, VerifyTx.rng, pub, x) end) 
-    ran=:crypto.rand_bytes(10)
-    h=KV.get("height")+1
-    KV.put("secret #{inspect h}", ran)
-    secret=DetHash.doit(ran)
-    tx = [type: "sign", prev_hash: prev[:data][:hash], winners: w, secret_hash: secret, nonce: nonce(pub)]
-    tx = Keys.sign(tx)
-    Mempool.add_tx(tx)
+    if acc[:bond] > Constants.minbond do
+      prev = KV.get("height")
+      tot_bonds = KV.get("tot_bonds")
+      prev = KV.get(to_string(prev))
+      w=Enum.filter(0..Constants.chances_per_address, fn(x) -> VerifyTx.winner?(acc[:bond], tot_bonds, VerifyTx.rng, pub, x) end) 
+      ran=:crypto.rand_bytes(10)
+      h=KV.get("height")+1
+      KV.put("secret #{inspect h}", ran)
+      secret=DetHash.doit(ran)
+      tx = [type: "sign", prev_hash: prev[:data][:hash], winners: w, secret_hash: secret, nonce: nonce(pub)]
+      tx = Keys.sign(tx)
+      Mempool.add_tx(tx)
+    end
   end
   def reveal do
     pub = Keys.pubkey

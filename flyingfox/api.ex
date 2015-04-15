@@ -20,5 +20,5 @@ defmodule Api do
   def all_peers(port \\ lp, ip \\ lh) do 
   talk(["all_peers"], port, ip) end
   def status(port \\ lp, ip \\ lh) do
-    talk(["status"], port, ip) end
+  talk(["status"], port, ip) end
 end

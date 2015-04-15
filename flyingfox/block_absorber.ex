@@ -35,7 +35,7 @@ defmodule BlockAbsorber do
   #Blockchain.sign_reveal
   #poly_absorb([BlockchainPure.buy_block]) end
   def buy_blocks(n) do
-    Enum.map(0..n, fn(_) -> 
+    Enum.map(1..n, fn(_) -> 
       :timer.sleep(1000)
       buy_block end)
   end

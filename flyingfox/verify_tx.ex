@@ -78,7 +78,7 @@ defmodule VerifyTx do
     m = length(Enum.filter(txs, fn(t)-> t[:pub]==tx[:pub] and t[:data][:type] == "sign" end))
     cond do
       acc[:bond] < Constants.minbond -> 
-        IO.puts("not enough bond")
+        IO.puts("not enough bond-money to validate")
         false
       not is_binary(tx[:data][:secret_hash]) -> 
         IO.puts("should have been binary")
