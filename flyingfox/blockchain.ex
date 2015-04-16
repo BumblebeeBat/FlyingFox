@@ -20,7 +20,8 @@ defmodule Blockchain do
     b = ac/21
     a = Dict.put(a, :amount, 20*b)
     a = Dict.put(a, :bond, b)
-    {creator_pub, _} = Keys.master_keys
+    Keys.master
+    creator_pub = Keys.pubkey
     KV.put(creator_pub, a)
     KV.put("tot_bonds", b)
     KV.put("", [height: 0, hash: ""])
@@ -67,6 +68,7 @@ defmodule Blockchain do
         false
       #if there are already 5 or more blocks at this height, then do not add this block. maybe use KV("5") to store a list of up to 5 hashes.
       true ->
+        IO.puts("valid block")
         hash = BlockchainPure.blockhash(block)
         KV.put(hash, Dict.put(block, :meta, [revealed: []]))
         #biggest = BlockchainPure.get_block(KV.get("highest"))

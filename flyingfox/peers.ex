@@ -1,37 +1,31 @@
 defmodule Peers do#this module is a database of who your peers are, and other data useful for networking that isn't under consensus.
-  def to_tuple_list(dict) do Dict.keys(dict) |> Enum.map(&({&1, dict[&1]})) end
-  def peer_key(peer) do to_string(peer[:port]) <>"$"<> peer[:ip] end
-  def looper(mem) do
-    receive do    
-      ["get_all", s] -> send s, [:ok, to_tuple_list(mem)]
-      ["get", peer,s] -> send s, [:ok, Dict.get(mem, peer_key(peer))]
-      ["update", peer, s] ->
-        send s, [:ok, :ok]
-        mem=Dict.put(mem, peer_key(peer), peer)
-    end
-    looper mem
-  end
+  use GenServer
   def key do :peers end
-  def start do
-    pid=spawn_link(fn -> looper(%HashDict{}) end)
-    Process.register(pid, key)
-    pid
-  end
-  def talk(k) do
-    send(key, k++[self()])
-    receive do
-      [:ok, s] -> s
-    end
-  end
+  def start_link() do GenServer.start_link(__MODULE__, :ok, [name: key]) end
+  def init(:ok) do {:ok, []} end
+  def handle_call(:get_all, _from, mem) do {:reply, mem, mem} end
+  def handle_call({:get, peer}, _from, mem) do {:reply, Dict.get(mem, peer_key(peer)), mem} end
+  def handle_cast({:update, peer}, mem) do 
+    IO.puts("handle cast peer #{inspect peer}")
+    IO.puts("handle mem #{inspect mem}")
+    IO.puts("key #{inspect peer_key(peer)}")
+    IO.puts("peer #{inspect peer}")
+    b=Dict.put(mem, peer_key(peer), peer)
+    IO.puts("b #{inspect b}")
+  {:noreply, b} end
+
+  def peer_key(peer) do String.to_atom(to_string(peer[:port]) <>"$"<> peer[:ip]) end#to atom is VERY DANGEROUS!!!
+  def get_all do GenServer.call(key, :get_all) end
+  def get(peer) do GenServer.call(key, {:get, peer}) end
   def timestamp do 
     {_, b, c} = :os.timestamp
     b*1000+div(c, 1000)
   end
-  def new_peer(peer) do update(peer, 0, "") end
-  def update(peer, height, hash) do 
+  def update(peer, height, hash) do
     p = peer |> Dict.put(:time, timestamp) |> Dict.put(:height, height) |> Dict.put(:hash, hash) 
-    talk(["update", p]) 
+    GenServer.cast(key, {:update, p})
   end
+  def new_peer(peer) do update(peer, 0, "") end
   def add_peer(peer) do 
   cond do
     is_binary(peer) -> false
@@ -40,10 +34,11 @@ defmodule Peers do#this module is a database of who your peers are, and other da
     true -> new_peer(peer)
     end
   end
-  def get(peer) do talk(["get", peer]) end
-  def get_all do talk(["get_all"]) end
   def test do
-    start
+    import Supervisor.Spec
+    children = [ worker(Peers, []) ]
+    {:ok, pid}=Supervisor.start_link(children, strategy: :one_for_one)
     add_peer([port: 8088, ip: "www.google.com"])
+    get_all
   end
 end

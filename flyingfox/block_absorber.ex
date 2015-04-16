@@ -1,47 +1,31 @@
-defmodule BlockAbsorber do
-  def looper do
-    receive do
-      {:ping, p} ->
-        send(p, [:ok])
-      ["buy_blocks", b] ->
-        Enum.map(b, fn(x) -> 
-          Blockchain.buy_block(x) end)
-      ["blocks", b] ->
-        Enum.map(b, fn(x) -> Blockchain.add_block(x) end)
-      _ ->
-        IO.puts("block absorber fail")
-    end
-    looper
-  end
+defmodule BlockAbsorber do#this doesn't actually have memory. so I used "x" to fill in spaces.
+  use GenServer
   def key do :absorber end
-  def start do
-    Blockchain.genesis_state              
-    {:ok, pid} = Task.start_link(fn->looper end)
-    Process.register(pid, key)
-    pid
+  def start_link() do GenServer.start_link(__MODULE__, :ok, [name: key]) end
+  def init(:ok) do {:ok, []} end
+  def handle_call({:blocks, blocks}, _from, x) do 
+    Enum.map(blocks, fn(b) -> Blockchain.add_block(b) end)
+    {:reply, :ok, x}
   end
-  def ping do 
-    send(key, {:ping, self()})
-    receive do
-      [:ok] -> {:ok, :pong}
-    end    
-  end
-  #def absorb(block) do talk(["block", block, self()]) end
-  def poly_absorb(blocks) do
-    send(key, ["blocks", blocks])
-  end
-  def buy_block do 
-    Blockchain.sign_reveal
-    send(key, ["buy_blocks", [BlockchainPure.buy_block]]) end
-  #Blockchain.sign_reveal
-  #poly_absorb([BlockchainPure.buy_block]) end
-  def buy_blocks(n) do
-    Enum.map(1..n, fn(_) -> 
-      :timer.sleep(1000)
-      buy_block end)
+  def absorb(blocks) do GenServer.call(key, {:blocks, blocks}) end
+  def buy_block do GenServer.call(key, {:blocks, [BlockchainPure.buy_block]}) end
+  def buy_blocks(n) do Enum.map(1..n, fn(_) -> 
+        :timer.sleep(1000)
+        buy_block 
+        TxCreator.sign
+        TxCreator.reveal
+      end) 
   end
   def test do
-    Main.start
-    buy_block
-  end
+    import Supervisor.Spec
+    children = [ worker(KV, []),
+                 worker(Keys, []),
+                 worker(Mempool, []),
+                 worker(BlockAbsorber, [])]
+    {:ok, pid}=Supervisor.start_link(children, strategy: :one_for_one)
+    Blockchain.genesis_state
+    Keys.master
+    TxCreator.sign
+    absorb([BlockchainPure.buy_block])
+  end  
 end

@@ -8,7 +8,7 @@ defmodule Talker do
   def add_peers(x) do Enum.map(x, fn(x) -> Peers.add_peer(x) end) end
   def absorb(p, i) do
     blocks=Api.blocks(i+1, i+100, p[:port], p[:ip])
-    BlockAbsorber.poly_absorb(blocks)
+    BlockAbsorber.absorb(blocks)
   end
   def still_on(blocks) do blocks == :ok or (is_tuple(hd(blocks)) and :error in Dict.keys(blocks)) end
   def download_blocks(i, u, p) do
@@ -19,7 +19,7 @@ defmodule Talker do
         absorb(p, i)
         [status: :first_blocks]
       still_on(my_block) -> IO.puts("thread died")
-      still_on(blocks) -> IO.puts("peer died")
+      still_on(blocks) -> IO.puts("peer died 0")
       hd(my_block)[:data][:hash] == hd(blocks)[:data][:hash] ->
         absorb(p, i)
         [status: :ahead]
@@ -32,7 +32,7 @@ defmodule Talker do
     my_peers = Api.all_peers
     peers = Api.all_peers(p[:port], p[:ip])
     if my_peers == :ok or peers == :ok do
-      IO.puts("peer died")
+      IO.puts("peer died 1")
     else
       not_yours = Enum.filter(my_peers, &(not &1 in peers))
       not_mine = Enum.filter(peers, &(not &1 in my_peers))
@@ -43,9 +43,8 @@ defmodule Talker do
   def check_peer(p) do #validating mode
     status = Api.status(p[:port], p[:ip])
     cond do
-      status == :ok -> IO.puts("peer died")
+      status == :ok or status == "ok"-> IO.puts("peer died 2")
       :error in Dict.keys(status) ->
-        #IO.puts("check peer error #{inspect status}")
         status[:error]
       true -> 
         Peers.get(p) |> Dict.put(:height, status[:height]) |> Dict.put(:hash, status[:hash]) |> Peers.add_peer
