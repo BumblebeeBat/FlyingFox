@@ -17,7 +17,7 @@ defmodule KV do
   def start do
     pid=spawn_link(fn -> looper(%HashDict{}) end)
     Process.register(pid, key)
-    :ok
+    pid
   end
   def talk(k) do
     send(key, k)

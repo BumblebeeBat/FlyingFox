@@ -12,12 +12,13 @@ defmodule Listener do
     blocks_helper(start, finish, out)
   end
   def blocks_helper(start, finish, out) do
-    #IO.puts("blocks #{inspect out}")
+    block = BlockchainPure.get_block(start)
     cond do
       byte_size(PackWrap.pack(out)) > max -> tl(out)
       start < 0 -> blocks(1, finish, out)
       start > finish -> out
-      true -> blocks_helper(start+1, finish, [KV.get(to_string(start))|out])
+      block == Constants.empty_account -> blocks_helper(start+1, finish, out)
+      true -> blocks_helper(start+1, finish, [block|out])
     end
   end
   def fee_filter(tx) do
@@ -26,63 +27,53 @@ defmodule Listener do
       true -> Mempool.add_tx(tx)
     end
   end
+  def main(type, args) do
+    case type do
+      "add_block" -> BlockAbsorber.absorb(hd(args))
+      "pushtx" -> fee_filter(hd(args))
+      "txs" -> Mempool.txs
+      "height" -> KV.get("height")
+      "block" -> BlockchainPure.get_block(hd(args))
+      "blocks" -> flip(blocks(hd(args), hd(tl(args))))
+      "add_peer" -> Peers.add_peer(hd(args))
+      "all_peers" -> Peers.get_all
+      "status" ->
+          h = KV.get("height")
+          block = BlockchainPure.get_block(h)
+          if block[:data]==nil do block = [data: 1] end
+          [height: h, hash: DetHash.doit(block[:data])]
+      x -> IO.puts("is not a command #{inspect x}")
+    end
+  end
+  def spawn_send(s, f) do
+    spawn_link(fn() ->
+      send s, ["ok", f.()]
+    end)
+  end
   def looper do
-    receive do    
-      ["add_block", block, s] -> 
-        out = BlockAbsorber.absorb(block)
-        s=s
-      ["pushtx", tx, s] -> 
-        out = fee_filter(tx)
-        s=s
-      ["txs", s] -> 
-        out = Mempool.txs
-        s=s
-      ["height", s] -> 
-        out = KV.get("height")
-        s=s
-      ["block", n, s] -> 
-        out = KV.get(to_string(n))
-        s=s
-      ["blocks", start, finish, s] -> 
-        out = flip(blocks(start, finish))#KV.get(to_string(n))
-        s=s
-      ["add_peer", peer, s] -> 
-        #don't re-add peers that are already in the system. Attacker could delete all our peers that way.
-        out = Peers.add_peer(peer)
-        s=s
-      ["all_peers", s] -> 
-        out = Peers.get_all
-        s=s
-      ["status", s] -> 
-        h = KV.get("height")
-        if (h<1) do
-          out = [height: 0, hash: ""]
-        else
-          block = KV.get(to_string(h))
-          out = [height: h, 
-                 hash: block[:data][:hash]]
-        end
-        s=s
+    receive do
+      [type, s, args] -> spawn_send(s, (fn() -> main(type, args) end))
       x -> IO.puts("listener error: #{inspect x}")
     end
-    send s, ["ok", out]
     looper
   end
+  def talk(type, args) do
+    send(key, [type, self(), args])
+    receive do
+      ["ok", s] -> s
+    end
+  end
+  def export(x) do talk(hd(x), tl(x)) end
   def key do :listen end
   def port do 6664 end
   def start do#instead of starting once, have a seperate thread for each connection.
     pid=spawn_link(fn -> looper end)
     Process.register(pid, key)
-    :ok    
-  end
-  def talk(k) do
-    send(key, k++[self()])
-    receive do
-      ["ok", s] -> s
-    end
+    pid
   end
   def add_block(block) do
-    talk(["add_block", block])
+    talk("add_block", [block])
+    #talk(["add_block", block])
   end
   def test do
     Main.start

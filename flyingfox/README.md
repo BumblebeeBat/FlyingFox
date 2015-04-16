@@ -18,8 +18,8 @@ iex(1)>Main.start
 
 {:ok, #PID<0.63.0>}
 
-iex(2)> BlockAbsorber.buy_block
+iex(2)> Keys.master
 
-:ok
+iex(3)> Cli.buy_blocks(3)
 
-iex(3)> KV.get("1")
+iex(3)> Cli.block(2)

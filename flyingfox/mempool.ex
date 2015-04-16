@@ -20,7 +20,7 @@ defmodule Mempool do
   def start do
     pid = spawn_link(fn -> looper([]) end)
     Process.register(pid, key)
-    :ok
+    pid
   end
   def talk(s) do 
     send(key, s)

@@ -6,17 +6,22 @@ defmodule Talker do
   #don't ignore any peer much longer than the others.
   #download blocks and peers.
   def add_peers(x) do Enum.map(x, fn(x) -> Peers.add_peer(x) end) end
+  def absorb(p, i) do
+    blocks=Api.blocks(i+1, i+100, p[:port], p[:ip])
+    BlockAbsorber.poly_absorb(blocks)
+  end
+  def still_on(blocks) do blocks == :ok or (is_tuple(hd(blocks)) and :error in Dict.keys(blocks)) end
   def download_blocks(i, u, p) do
     blocks=Api.blocks(i, i+100, p[:port], p[:ip])
     my_block=Api.blocks(i, i)
     cond do
-      my_block == :ok or blocks == :ok or (is_tuple(hd(blocks)) and :error in Dict.keys(blocks)) or (is_tuple(hd(my_block)) and :error in Dict.keys(my_block)) ->
-        IO.puts("peer died")
+      my_block == [] ->
+        absorb(p, i)
+        [status: :first_blocks]
+      still_on(my_block) -> IO.puts("thread died")
+      still_on(blocks) -> IO.puts("peer died")
       hd(my_block)[:data][:hash] == hd(blocks)[:data][:hash] ->
-        IO.puts("im behind")
-        blocks=Api.blocks(i+1, i+100, p[:port], p[:ip])
-        IO.puts("download blocks #{inspect blocks}")
-        BlockAbsorber.poly_absorb(blocks)
+        absorb(p, i)
         [status: :ahead]
       true -> 
         IO.puts("off branch")
@@ -76,9 +81,8 @@ defmodule Talker do
     Enum.map(1..x, fn(_) ->
       check_peers
       :timer.sleep(3000)
-      spawn_link(fn() -> Blockchain.sign_reveal end)
+      #spawn_link(fn() -> Blockchain.sign_reveal end)
     end)
-    Enum.map(1..Constants.epoch, fn(_)-> Blockchain.remove_block end)
     looper
   end
   def start do

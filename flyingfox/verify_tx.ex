@@ -70,7 +70,7 @@ defmodule VerifyTx do
     acc = KV.get(tx[:pub])
     prev = KV.get("height") 
     tot_bonds = KV.get("tot_bonds")
-    prev = KV.get(to_string(prev))
+    prev = BlockchainPure.get_block(prev)
     ran=rng
     l=Enum.map(tx[:data][:winners], fn(x)->winner?(acc[:bond], tot_bonds, ran, tx[:pub], x) end)
     l1=l
@@ -104,20 +104,21 @@ defmodule VerifyTx do
     #If you can prove that the same address signed on 2 different blocks at the same height, then you can take 1/3rd of the deposit, and destroy the rest.
     #make sure they cannot do this repeatedly
   end
-  def signed_block(tx) do KV.get(to_string(tx[:data][:signed_on]))[:data] end
-  def sign_tx(block, tx) do block[:txs] |> Enum.filter(&(&1[:pub]==tx[:pub]))  |> Enum.filter(&(&1[:data][:type]=="sign")) end
+  def signed_block(tx) do BlockchainPure.get_block(tx[:data][:signed_on]) end
+  def sign_tx(block, pub) do block[:data][:txs] |> Enum.filter(&(&1[:pub]==pub))  |> Enum.filter(&(&1[:data][:type]=="sign")) end
   def wins(block, tx) do 
   b=BlockchainPure.txs_filter(block[:txs], "sign") |> Enum.filter(&(tx[:pub]==&1[:pub])) 
   length(hd(b)[:data][:winners]) 
   end
   def reveal?(tx, txs) do
     old_block=signed_block(tx)
-    signed=sign_tx(old_block, tx)
-    bond_size = old_block[:bond_size]
-    #winners = wins(old_block, tx)
+    revealed = txs |> Enum.filter(&(&1[:data][:type] == "reveal")) |> Enum.filter(&(&1[:pub]==tx[:pub]))
+    signed=sign_tx(old_block, tx[:pub])
+    bond_size = old_block[:data][:bond_size]
     cond do
       #make sure old_block hasn't been revealed by this person before
       #secret_hash must match.
+      length(revealed) > 0 -> false
       length(signed)==0 -> 
         IO.puts "0"
         false
@@ -125,9 +126,11 @@ defmodule VerifyTx do
         IO.puts "1"
         false
       DetHash.doit(tx[:data][:secret]) != hd(signed)[:data][:secret_hash] -> 
+        IO.puts("tx: #{inspect tx}")
+        IO.puts("signed: #{inspect signed}")
         IO.puts "2"
         false
-      tx[:pub] in old_block[:meta][:revealed] -> 
+      tx[:pub] in old_block[:meta][:revealed] ->
         IO.puts "3"
         false
       tx[:data][:amount]!=bond_size*length(tx[:data][:winners]) -> 

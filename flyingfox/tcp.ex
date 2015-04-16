@@ -15,11 +15,11 @@ defmodule Tcp do
   defp new_peer(socket, func) do
     {x, conn} = :gen_tcp.accept(socket)
     if x==:ok do
-      spawn_link(fn -> :timer.sleep(100)
+      spawn_link(fn -> :timer.sleep(10)
                        new_peer(socket, func) end)
       conn |> listen |> func.() |> ms(conn) #these threads need a timer or something to kill them, otherwise we end up having too many.
     else
-      IO.puts "failed to connect #{inspect conn}" #emfile error!
+      IO.puts "failed to connect #{inspect conn}" 
       :timer.sleep(2000)
       spawn_link(fn -> new_peer(socket, func) end)
     end

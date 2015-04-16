@@ -18,6 +18,7 @@ defmodule BlockAbsorber do
     Blockchain.genesis_state              
     {:ok, pid} = Task.start_link(fn->looper end)
     Process.register(pid, key)
+    pid
   end
   def ping do 
     send(key, {:ping, self()})

@@ -19,7 +19,6 @@ defmodule Keys do
   end
   def load(keys) do 
     send(key, ["load", keys])
-    Blockchain.sign_reveal
   end
   def sign(x) do
     send(key, ["sign", x, self()])
@@ -32,5 +31,6 @@ defmodule Keys do
     pid=spawn_link(fn -> looper({}) end)
     Process.register(pid, key)
     new
+    pid
   end
 end
