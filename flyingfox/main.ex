@@ -5,11 +5,11 @@ defmodule Main do
     cond do
       x==:ok ->
         Tcp.close(socket)
-        [Keys, KV, Mempool, BlockAbsorber, Peers, Listener] |> Enum.map(fn(x) -> supervisor(fn() -> x.start end) end)
+        [Keys, KV, Mempool, BlockAbsorber, Peers, Listener] |> Enum.map(fn(x) -> x.start end)
         KV.put("port", p)
         pids = [:address, :kv, :txs, :absorber, :peers, :listen]
         |> Enum.map(&(Process.whereis(&1)))
-        pids = pids ++ [supervisor(fn() -> Tcp.start(p, &(Listener.export(&1)))), supervisor(Talker.start)]
+        pids = pids ++ [(fn() -> Tcp.start(p, &(Listener.export(&1))) end), Talker.start]
         Peers.add_peer([port: p, ip: "localhost"])# :inet.getifaddrs #"wlan0" the first "addr"
       true ->
         IO.puts("this port is already being used on this machine")
