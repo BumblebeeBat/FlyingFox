@@ -93,7 +93,6 @@ defmodule Blockchain do
       hash = BlockchainPure.blockhash(my_block)
     end
     add_block = hd(last_blocks)[:data]
-
     cond do
       my_block == :genesis or add_block[:hash] == hash -> 
         IO.puts("add blocks: #{inspect last_blocks}")

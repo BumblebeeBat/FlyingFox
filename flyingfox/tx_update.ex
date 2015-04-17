@@ -42,14 +42,12 @@ defmodule TxUpdate do
   def spend(tx, d) do
     sym_increment(tx[:pub], :amount, -tx[:data][:amount]-tx[:data][:fee], d)
     sym_increment(tx[:data][:to], :amount, tx[:data][:amount], d)
-    #For users to give money to each other. Balances must stay positive. Creator of the tx has a fee which is >=0. The fee pays the creator of the block.
   end
   def spend2wait(tx, d) do
     #can only have 1 wait-money at a time.
     h=KV.get("height")
     sym_increment(tx[:pub], :amount, -tx[:data][:amount]-tx[:data][:fee], d)
     sym_replace(tx[:pub], :wait, {0,0}, {tx[:data][:amount], h}, d)
-    #convert some money from the spendable variety into the kind that is locked up for a long time. transforms money into wait-money.
   end
   def wait2bond(tx, d) do
     {a, h}=tx[:data][:wait_money]
@@ -59,7 +57,6 @@ defmodule TxUpdate do
     sym_replace(tx[:pub], :wait, {a, h}, {0,0}, d)
     #If a user wants to take part in the consensus process, they would use this transaction type to turn some of their wait-money into bond-money. The price for bond-money changes continuously over time, and more bond-money is printed and given to the people who participate. If you participate, then the value of your bond-money will slowly grow. If you dont participate, then the value will quickly shrink. 
     #There is a minimum size for purchasing bond-money, priced in spend-money. 
-    #Every several hundred blocks we divide everyones bond-coins in half, and cut the exchange rate in half. That way the numbers dont get too big. Anyone who has less than the minimum is forced to unbond at that time.
   end
   def bond2spend(tx, d) do
     a=tx[:data][:amount]
@@ -76,8 +73,7 @@ defmodule TxUpdate do
     KV.put("tot_bonds", b+delta*d)
     sym_increment(tx[:pub], :bond, delta, d)
     #loses some :bond money. total_money
-    #Includes hash(entropy_bit+salt).
-    #~100 bond-holders are selected every block. A block requires at least 67 of them to sign for it to be valid. The bond-money of each signer is shrunk to pay a safety deposit. They all pay the same amount. The amount they pay is based off how much money is spent in the spend txs in this block. Total safety deposits needs to be 1.5x as big as the total amount of money spent in spend-type txs. The most they could have to pay is as much bond-money as the poorest of them has.
+    #The most they could have to pay is as much bond-money as the poorest of them has.
   end
   def slasher(tx, d) do
     #If you can prove that the same address signed on 2 different blocks at the same height, then you can take 1/3rd of the deposit, and destroy the rest.

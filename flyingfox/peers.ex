@@ -13,7 +13,6 @@ defmodule Peers do#this module is a database of who your peers are, and other da
     b=Dict.put(mem, peer_key(peer), peer)
     IO.puts("b #{inspect b}")
   {:noreply, b} end
-
   def peer_key(peer) do String.to_atom(to_string(peer[:port]) <>"$"<> peer[:ip]) end#to atom is VERY DANGEROUS!!!
   def get_all do GenServer.call(key, :get_all) end
   def get(peer) do GenServer.call(key, {:get, peer}) end
@@ -33,12 +32,5 @@ defmodule Peers do#this module is a database of who your peers are, and other da
     peer_key(peer) in Dict.keys(get_all) -> false
     true -> new_peer(peer)
     end
-  end
-  def test do
-    import Supervisor.Spec
-    children = [ worker(Peers, []) ]
-    {:ok, pid}=Supervisor.start_link(children, strategy: :one_for_one)
-    add_peer([port: 8088, ip: "www.google.com"])
-    get_all
   end
 end

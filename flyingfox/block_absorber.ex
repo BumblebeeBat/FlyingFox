@@ -16,16 +16,4 @@ defmodule BlockAbsorber do#this doesn't actually have memory. so I used "x" to f
         TxCreator.reveal
       end) 
   end
-  def test do
-    import Supervisor.Spec
-    children = [ worker(KV, []),
-                 worker(Keys, []),
-                 worker(Mempool, []),
-                 worker(BlockAbsorber, [])]
-    {:ok, pid}=Supervisor.start_link(children, strategy: :one_for_one)
-    Blockchain.genesis_state
-    Keys.master
-    TxCreator.sign
-    absorb([BlockchainPure.buy_block])
-  end  
 end

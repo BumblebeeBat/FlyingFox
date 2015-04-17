@@ -13,7 +13,6 @@ defmodule HashMath do
   def hash2int(h) do
     {:ok, h}=Base.decode64(h)
     h=Base.encode16(h)
-    #IO.puts("base 16 #{inspect h}")
     hex2int(h)
   end 
   def size(i, j \\ 0, base \\ 16) do
@@ -23,9 +22,7 @@ defmodule HashMath do
     end
   end
   def pow(a, b) do
-    #IO.puts "a, b #{inspect a} #{inspect b}"
     b=f2i(b)
-    #IO.puts "2a, b #{inspect a*a} #{inspect f2i(b/2)}"
     cond do
       b==1 -> a
       rem(b, 2)==0 -> 
@@ -50,11 +47,9 @@ defmodule HashMath do
       f<mid -> f2i(f, lower, mid)
     end
   end
-  def to16(i, s) do#  6*6*6 
+  def to16(i, s) do
     ten=["10": "A", "11": "B", "12": "C", "13": "D", "14": "E", "15": "F"]
-    #IO.puts "#{inspect i} # #{inspect s}"
     p=pow(16, s)
-    #IO.puts "#{inspect p}"
     n=div(i, p)
     r=rem(i, p)
     rest = fn() -> to16(r, s-1) end
@@ -71,10 +66,7 @@ defmodule HashMath do
     end
   end
   def int2hash(i) do 
-  #s=size(i)
-    #IO.puts s
     s=to16(i, size(i))  
-    #IO.puts inspect s
     {:ok, s}=Base.decode16(s)
     Base.encode64(s)
   end

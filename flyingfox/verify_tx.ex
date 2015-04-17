@@ -11,7 +11,6 @@ defmodule VerifyTx do
     end
   end
   def spend2wait?(tx, txs) do
-    #convert some money from the spendable variety into the kind that is locked up for a long time. transforms money into wait-money.
     acc=KV.get(tx[:"pub"])
     cond do
       {0,0}!=acc[:wait] -> false
@@ -22,16 +21,14 @@ defmodule VerifyTx do
     acc=KV.get(tx[:"pub"])    
     {a, h}=tx[:"data"][:"wait_money"]
     cond do
-      {a, h}!=acc[:wait] -> false #{amount, height}
-      h>KV.get("height")+Constants.epoch -> false #wait 50 blocks
+      {a, h}!=acc[:wait] -> false 
+      h>KV.get("height")+Constants.epoch -> false 
       true -> true
     end
   end
     #If a user wants to take part in the consensus process, they would use this transaction type to turn some of their wait-money into bond-money. The price for bond-money changes continuously over time, and more bond-money is printed and given to the people who participate. If you participate, then the value of your bond-money will slowly grow. If you dont participate, then the value will quickly shrink. 
-    #If you purchase less than 1/10000th of all the money as a bond, then your profit margin is very risky. Small chance of big reward. Maybe mining pools can fix this.
     #There is a moving exchange rate. Bond-coins are constantly losing value.
   def bond2spend?(tx, txs) do
-    #acc=KV.get(tx[:pub])    
     true
   end
   def winner?(balance, total, seed, pub, j) do#each address gets 200 chances.
@@ -64,9 +61,6 @@ defmodule VerifyTx do
     end)
   end
   def sign?(tx, txs) do
-    #require hash(enropy+salt)
-    #limit 1 sign per block
-    #IO.puts("check sign tx")
     acc = KV.get(tx[:pub])
     prev = KV.get("height") 
     tot_bonds = KV.get("tot_bonds")
@@ -88,15 +82,12 @@ defmodule VerifyTx do
         IO.puts("l1 #{inspect l1}")
         false
       length(tx[:data][:winners])<1 -> false
-      m != 0 -> false#already havethis tx
+      m != 0 -> false
       tx[:data][:prev_hash]!=prev[:data][:hash] -> 
-        IO.puts("hash not match")#{inspect tx[:data][:prev_hash]} #{inspect prev[:data][:hash]}")
+        IO.puts("hash not match")
         false
       true -> true
     end
-    #Includes hash(entropy_bit+salt).
-    #includes hash of previous block.
-    #~100 bond-holders are selected every block. A block requires at least 67 of them to sign for it to be valid. The bond-money of each signer is shrunk to pay a safety deposit. They all pay the same amount. The amount they pay is based off how much money is spent in the spend txs in this block. Total safety deposits needs to be 3x as big as the total amount of money spent in spend-type txs. The most they could have to pay is as much bond-money as the poorest of them has.
   end
   def slasher?(tx, txs) do
     {pub, _, tx}=tx
@@ -116,8 +107,6 @@ defmodule VerifyTx do
     signed=sign_tx(old_block, tx[:pub])
     bond_size = old_block[:data][:bond_size]
     cond do
-      #make sure old_block hasn't been revealed by this person before
-      #secret_hash must match.
       length(revealed) > 0 -> false
       length(signed)==0 -> 
         IO.puts "0"
@@ -146,7 +135,6 @@ defmodule VerifyTx do
   def check_tx(tx, txs) do
     cond do
       not check_logic(tx, txs) ->
-        #IO.puts("bad tx for this type #{inspect tx[:data][:type]}")
         false
       not check_([tx|txs]) -> false
       true -> true
@@ -177,7 +165,7 @@ defmodule VerifyTx do
       true -> [hd(l)|remove_repeats(tl(l))]
     end
   end
-  def consecutive?(l) do#input is a list of numbers
+  def consecutive?(l) do# l is a list of numbers
     cond do
       length(l) < 2 -> true
       hd(l)+1 == hd(tl(l)) -> consecutive?(tl(l))
@@ -189,7 +177,6 @@ defmodule VerifyTx do
     all_have_nonce = Enum.reduce(have_nonce, true, &(&1 and &2))
     pubs = txs |> Enum.map(fn(tx) -> tx[:pub] end) |> remove_repeats
     sorted_txs = Enum.map(pubs, fn(pub) -> Enum.filter(txs,  &(&1[:pub]==pub)) end)
-    #after here.
     f = (fn(x) -> Enum.reduce(x, true, &(&1 and &2)) end)
     just_nonces = Enum.map(sorted_txs, fn(ts) -> 
       Enum.map(ts, &(&1[:data][:nonce])) |> Enum.sort 
@@ -197,7 +184,6 @@ defmodule VerifyTx do
     consecutive = just_nonces |> Enum.map(&(consecutive?(&1))) |> f.()
     current_nonce = Enum.map(pubs, fn(pub) -> KV.get(pub)[:nonce] end)
     starts_right = Enum.zip(current_nonce, just_nonces) |> Enum.map(fn(x)-> elem(x, 0)==hd(elem(x, 1)) end) |> f.()
-     #do each person's tx nonces start on the right nonce, and then continue consecutively upward from there?
     (starts_right and consecutive) and all_have_nonce
    end
    def check_(txs) do

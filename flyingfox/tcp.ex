@@ -20,10 +20,9 @@ defmodule Tcp do
       conn |> listen |> func.() |> ms(conn) #these threads need a timer or something to kill them, otherwise we end up having too many.
     else
       IO.puts "failed to connect #{inspect conn}" 
-      :timer.sleep(2000)
+      :timer.sleep(10)
       spawn_link(fn -> new_peer(socket, func) end)
     end
-    #new_peer(socket, func)		
   end
   defp ms(string, socket) do
     if is_pid(string) do

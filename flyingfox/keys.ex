@@ -17,13 +17,4 @@ defmodule Keys do
   def new do GenServer.cast(key, :new) end
   def load(pub, priv) do GenServer.cast(key, {:load, pub, priv}) end
   def master do load("BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc=", "pRxnT/38wyd6lSbwfCEVvchAL7m7AMYuZeQKrJW/RO0=") end
-  def test do
-    import Supervisor.Spec
-    children = [ worker(Keys, []) ]
-    {:ok, pid}=Supervisor.start_link(children, strategy: :one_for_one)
-    new
-    master
-    IO.puts(pubkey)
-    sign("abc")
-  end
 end

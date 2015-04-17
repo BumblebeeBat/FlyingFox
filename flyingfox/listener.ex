@@ -10,19 +10,8 @@ defmodule Listener do
   end
   def export(l) do 
     GenServer.cast(key, {hd(l), self(), tl(l)}) 
-    receive do
-      [:ok, x] -> x
-    end
+    receive do [:ok, x] -> x end
   end
-  #def export(x) do GenServer.call(key, {:api, hd(x), tl(x)}) end
-  #def add_block(block) do export([:add_block, block]) end
-  #def pushtx(tx) do export([:pushtx, tx]) end
-  #def txs do export([:txs]) end
-  #def height do export([:height]) end
-  #def block(n) do export([:block, n]) end
-  #def add_peer(peer) do export([:add_peer, peer]) end
-  #def all_peers do export([:all_peers]) end
-  #def status do export([:status])
   def main(type, args) do
     case type do
       "add_blocks" -> BlockAbsorber.absorb(hd(args))
@@ -72,19 +61,5 @@ defmodule Listener do
       block == Constants.empty_account -> blocks_helper(start+1, finish, out)
       true -> blocks_helper(start+1, finish, [block|out])
     end
-  end
-  def test do
-    import Supervisor.Spec
-    children = [ worker(KV, []),
-                 worker(Keys, []),
-                 worker(Mempool, []), 
-                 worker(BlockAbsorber, []),                 
-                 worker(Listener, []) ]
-    {:ok, pid}=Supervisor.start_link(children, strategy: :one_for_one)
-    Blockchain.genesis_state
-    Keys.master
-    TxCreator.sign
-    b=BlockchainPure.buy_block
-    export(["add_blocks", [b]])
   end
 end

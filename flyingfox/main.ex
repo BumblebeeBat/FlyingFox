@@ -23,7 +23,3 @@ defmodule Main do
     end
   end
 end
-#keys and kv and peers and talker depend on nothing.
-#mempool and block_absorber depend on keys and kv.
-#listener depends on everything
-#listener.talk depends on listener
