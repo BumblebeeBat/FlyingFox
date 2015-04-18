@@ -12,12 +12,13 @@ defmodule Main do
                      worker(BlockAbsorber, []),                 
                      worker(Peers, []),                 
                      worker(Listener, []) ]
-        {:ok, pid} = Supervisor.start_link(children, strategy: :one_for_one)
+        {:ok, pid} = Supervisor.start_link(children, strategy: :rest_for_one)
         KV.put("port", p)
         Blockchain.genesis_state
         Keys.master
         Tcp.start(p, &(Listener.export(&1)))
         Talker.start
+        Peers.add_peer([ip: "localhost", port: p])
       true ->
         IO.puts("this port is already being used on this machine")
     end

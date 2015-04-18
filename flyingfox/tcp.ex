@@ -3,7 +3,7 @@ defmodule Tcp do
   def close(socket) do :gen_tcp.close(socket) end
   def start(port, func) do
     {:ok, socket} = open(port)
-    spawn_link(fn -> new_peer(socket, func) end)
+    spawn_link(fn -> new_peer(socket, port, func) end)
   end
   defp connect(host, port) do
     {x, s} = :gen_tcp.connect(:erlang.binary_to_list(host), port, [{:active, false}, {:packet, 0}])
@@ -12,16 +12,17 @@ defmodule Tcp do
       true -> "error"
     end
   end
-  defp new_peer(socket, func) do
+  defp new_peer(socket, port, func) do
     {x, conn} = :gen_tcp.accept(socket)
     if x==:ok do
       spawn_link(fn -> :timer.sleep(10)
-                       new_peer(socket, func) end)
+                       new_peer(socket, port, func) end)
       conn |> listen |> func.() |> ms(conn) #these threads need a timer or something to kill them, otherwise we end up having too many.
     else
       IO.puts "failed to connect #{inspect conn}" 
-      :timer.sleep(10)
-      spawn_link(fn -> new_peer(socket, func) end)
+      :timer.sleep(500)
+      close(socket)
+      spawn_link(fn -> start(port, func) end)
     end
   end
   defp ms(string, socket) do

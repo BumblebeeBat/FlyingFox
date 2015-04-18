@@ -4,7 +4,7 @@ defmodule BlockAbsorber do#this doesn't actually have memory. so I used "x" to f
   def start_link() do GenServer.start_link(__MODULE__, :ok, [name: key]) end
   def init(:ok) do {:ok, []} end
   def handle_call({:blocks, blocks}, _from, x) do 
-    Enum.map(blocks, fn(b) -> Blockchain.add_block(b) end)
+    Blockchain.add_blocks(blocks)
     {:reply, :ok, x}
   end
   def absorb(blocks) do GenServer.call(key, {:blocks, blocks}) end

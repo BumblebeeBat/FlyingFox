@@ -5,7 +5,11 @@ defmodule Mempool do
   def init(:ok) do {:ok, []} end
   def handle_cast(:dump, x) do {:noreply, []} end
   def handle_cast({:add_tx, tx}, x) do 
-  if VerifyTx.check_tx(tx, x) do x=[tx|x] end
+    h = KV.get("height")
+    if h<1 do prev_hash=nil else 
+    prev_hash = BlockchainPure.blockhash(BlockchainPure.get_block(h))
+    end
+  if VerifyTx.check_tx(tx, x, prev_hash) do x=[tx|x] end
   {:noreply, x}
   end
   def handle_call(:txs, _from, x) do {:reply, x, x} end

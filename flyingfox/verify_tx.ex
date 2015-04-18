@@ -60,11 +60,9 @@ defmodule VerifyTx do
       end 
     end)
   end
-  def sign?(tx, txs) do
+  def sign?(tx, txs, prev_hash) do#block = [data: [hash: block_hash]]
     acc = KV.get(tx[:pub])
-    prev = KV.get("height") 
     tot_bonds = KV.get("tot_bonds")
-    prev = BlockchainPure.get_block(prev)
     ran=rng
     l=Enum.map(tx[:data][:winners], fn(x)->winner?(acc[:bond], tot_bonds, ran, tx[:pub], x) end)
     l1=l
@@ -83,8 +81,10 @@ defmodule VerifyTx do
         false
       length(tx[:data][:winners])<1 -> false
       m != 0 -> false
-      tx[:data][:prev_hash]!=prev[:data][:hash] -> 
+      not(KV.get("height")==0) and tx[:data][:prev_hash]!=prev_hash -> 
         IO.puts("hash not match")
+        IO.puts("prev hash: #{inspect prev_hash}")
+        IO.puts("tx: #{inspect tx}")
         false
       true -> true
     end
@@ -132,20 +132,20 @@ defmodule VerifyTx do
     end
     #After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
   end
-  def check_tx(tx, txs) do
+  def check_tx(tx, txs, prev_hash) do
+    IO.puts("check tx #{inspect prev_hash}")
     cond do
-      not check_logic(tx, txs) ->
-        false
+      not check_logic(tx, txs, prev_hash) -> false
       not check_([tx|txs]) -> false
       true -> true
     end
   end
-  def check_logic(tx, txs) do
+  def check_logic(tx, txs, prev_hash) do
     f=[spend: &(spend?(&1, &2)),
        spend2wait: &(spend2wait?(&1, &2)),
        wait2bond: &(wait2bond?(&1, &2)),
        bond2spend: &(bond2spend?(&1, &2)),
-       sign: &(sign?(&1, &2)),
+       sign: &(sign?(&1, &2, prev_hash)),
        slasher: &(slasher?(&1, &2)),
        reveal: &(reveal?(&1, &2))]
     default = fn(_, _) -> false end
@@ -202,9 +202,12 @@ defmodule VerifyTx do
        true -> true
      end
   end
-  def check_txs(txs) do
+  def check_txs(block) do#accept block as input
+    txs = block[:data][:txs]
+    prev_hash = block[:data][:hash]
+    IO.puts("check txs #{inspect prev_hash}")
     cond do
-      not check_logics(txs, [])  ->
+      not check_logics(txs, prev_hash, [])  ->
         IO.puts("bad logic")
         false
       txs==[] -> 
@@ -214,11 +217,11 @@ defmodule VerifyTx do
       true -> true
     end
   end
-  def check_logics(new, old \\ []) do
+  def check_logics(new, prev_hash, old \\ []) do
     cond do
       length(new) ==0 -> true
-      check_logic(hd(new), old) -> 
-        check_logics(tl(new),[hd(new)|old])
+      check_logic(hd(new), old, prev_hash) -> 
+        check_logics(tl(new), prev_hash, [hd(new)|old])
       true -> false
     end
   end

@@ -1,5 +1,4 @@
-import math, numpy
-from cdecimal import Decimal
+import numpy
 def control_block_trial(total, clique, p):
     if numpy.random.poisson(clique)>p*total:
         return 1

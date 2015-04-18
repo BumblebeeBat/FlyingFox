@@ -2,14 +2,15 @@ defmodule Blockchain do
   def genesis_block do
     new=[meta: [revealed: []], data: [height: 0, txs: []]]
     KV.put("height", 0)
-    KV.put("0", new)
+    KV.put("0", ["genesis"])
+    KV.put("genesis", new)
   end
   def sign_reveal do
     TxCreator.sign
     TxCreator.reveal
   end
   def buy_block(b) do
-    a = add_block(b)
+    a = add_blocks([b])
     if a do sign_reveal end
     a
   end
@@ -28,7 +29,6 @@ defmodule Blockchain do
     sign_reveal
   end
   def back do
-    IO.puts("back!!!")
     h=KV.get("height")
     if h>0 do
         block=BlockchainPure.get_block(h)
@@ -41,64 +41,93 @@ defmodule Blockchain do
         true 
     end
   end
-  def forward(block) do
+  def forward(block) do#while walking forward this needs to reorder the hashes used for get_block so that the block we are using is on top. I thought we only store one of the blockhashes...
+    IO.puts("forward block #{inspect block}")
     if not is_list(block) do block = KV.get(block) end
     h = KV.get("height")
     cond do
-      block == Constants.empty_account ->
-        [error: "sub-zero block"]
-      block == nil ->
-        [error: "nil block"]
-      h + 1 != block[:data][:height] ->
+      not is_list(block) -> [error: "blocks should be lists"]
+      KV.get(BlockchainPure.blockhash(block)) == Constants.empty_account -> [error: "don't have this block"]
+      h + 1 != block[:data][:height] -> 
+        IO.puts("block #{inspect block}")
         [error: "bad height"]
+      not BlockchainPure.valid_block?(block) -> 
+        IO.puts("invalid block")
+        false      
       true ->
         #block creator needs to pay a fee. he needs to have signed so we can take his fee.
         txs=block[:data][:txs]
-        KV.put(to_string(h+1), BlockchainPure.blockhash(block))
+        IO.puts("store hash: #{inspect BlockchainPure.blockhash(block)}")
+        BlockchainPure.put_block(block)
         n=BlockchainPure.num_signers(txs)
         TxUpdate.txs_updates(txs, 1, round(block[:data][:bond_size]/n))
         KV.put("height", h+1)
         Mempool.dump
     end
   end
-  def add_block(block) do
+  def enough_validated(blocks, n) do
     cond do
-      not BlockchainPure.valid_block?(block) -> 
-        IO.puts("invalid block")
+      n == 0 -> true
+      blocks == [] -> false
+      hd(blocks) == [meta: [revealed: []], data: [height: 0, txs: []]] -> enough_validated(tl(blocks), n) 
+      BlockchainPure.winners(hd(blocks)) > Constants.signers_per_block*19/30 -> enough_validated(tl(blocks), n-1)
+      true ->
+        IO.puts("enough validated #{inspect n} #{inspect blocks}")
+        IO.puts("how many #{inspect BlockchainPure.winners(hd(blocks))}")
         false
-      #if there are already 5 or more blocks at this height, then do not add this block. maybe use KV("5") to store a list of up to 5 hashes.
+    end
+  end
+  def add_blocks(blocks) do#this is doing fork_case every time. that is wrong. only do that sometimes...
+    add_blocks_helper(blocks)
+    
+  end
+  def add_blocks_helper(blocks) do#make sure the networking nodes can pass >30 blocks before calling this function.
+    IO.puts("add blocks #{inspect blocks}")
+    cond do
+      blocks == [] -> []
+      not enough_validated(blocks, round(length(BlockchainPure.get_block(hd(blocks)[:data][:height]))/3)) ->
+         IO.puts("double-signing everywhere")
+         false
+      KV.get(BlockchainPure.blockhash(hd(blocks))) != Constants.empty_account ->
+        IO.puts("already have this block")
+        false
       true ->
         IO.puts("valid block")
-        hash = BlockchainPure.blockhash(block)
-        KV.put(hash, Dict.put(block, :meta, [revealed: []]))
-        #biggest = BlockchainPure.get_block(KV.get("highest"))
-        h = block[:data][:height]
+        block_hash = BlockchainPure.put_block(hd(blocks))
         current_height = KV.get("height")
-        if h > current_height do
-          goto(hash)
-        end
+        if hd(blocks)[:data][:height]>current_height do goto(block_hash) end
+        add_blocks_helper(tl(blocks))
     end
   end
   def goto(hash) do
+    IO.puts("in goto")
     h = hash |> BlockchainPure.get_block
+    IO.puts("h #{inspect h}")
     goto_helper([h])
   end
   def goto_helper(last_blocks, my_block \\ []) do
+    IO.puts("goto helper")
     h = KV.get("height")
     if h==0 do 
-      my_block = :genesis 
+      my_block = [height: 0]
       hash = ""
     else
+      IO.puts("my bock #{inspect my_block}")
+      IO.puts("h #{inspect h}")
       if my_block==[] do my_block=BlockchainPure.get_block(h)[:data] end
+      IO.puts("my bock #{inspect my_block}")
       hash = BlockchainPure.blockhash(my_block)
     end
     add_block = hd(last_blocks)[:data]
     cond do
-      my_block == :genesis or add_block[:hash] == hash -> 
+      add_block[:height] > my_block[:height] + 1 ->
+        IO.puts("add block #{inspect add_block}")
+        IO.puts("last_blocsk #{inspect last_blocks}")
+        #if length(last_blocks)>1 do 1=2 end
+        goto_helper([BlockchainPure.get_block(add_block[:hash])|last_blocks])#hit this row every time. infinite loop.
+      my_block[:height] == 0 or add_block[:hash] == hash -> 
         IO.puts("add blocks: #{inspect last_blocks}")
         Enum.map(last_blocks, &(forward(&1)))
-      add_block[:height] > my_block[:height] + 1 ->
-        goto_helper(last_blocks)
       true ->
         IO.puts("back")
         back

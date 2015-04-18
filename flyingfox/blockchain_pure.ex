@@ -1,7 +1,18 @@
 defmodule BlockchainPure do
+  def get_helper(h) do KV.get(to_string(h)) end
   def get_block(h) do
-    if is_integer(h) do h=KV.get(to_string(h)) end
+    if is_integer(h) do h=hd(get_helper(h)) end
     KV.get(h)
+  end
+  def put_block(block) do
+    height = block[:data][:height] 
+    block_hash = blockhash(block)
+    block_hashes = height |> get_helper
+    if block_hashes ==Constants.empty_account do block_hashes = [] end
+    block_hashes = block_hashes++[block_hash]
+    KV.put(to_string(height), block_hashes)
+    KV.put(block_hash, Dict.put(block, :meta, [revealed: []]))
+    block_hash
   end
   def txs_filter(txs, type) do 
     Enum.filter(txs, fn(t) -> t[:data][:type]==type end)
@@ -12,14 +23,20 @@ defmodule BlockchainPure do
     |> Enum.reduce(0, &(&1+&2))
   end
   def being_spent(txs) do txs |> txs_filter("spend") |> Enum.map(fn(t) -> t[:data][:amount] end) |> Enum.reduce(0, &(&1+&2)) end
-  def valid_block?(block) do
+  def prev_block(block) do KV.get(block[:data][:hash]) end
+  def valid_block?(block) do 
     #block creator needs to pay a fee. he needs to have signed so we can take his fee.
-    h=KV.get("height")
+    prev = prev_block(block)
+    ngenesis = block[:data][:height]!=1
     cond do
       not is_list(block) -> 
         IO.puts("block should be a dict #{inspect block}")
         false
-      block[:data][:height] != h+1 ->
+      ngenesis and prev == Constants.empty_account ->
+        IO.puts("blocks come from parents: #{inspect block}")
+        IO.puts(inspect block[:data][:height])
+        false
+      ngenesis and prev[:data][:height]+1 != block[:data][:height] ->
         IO.puts("incorrect height")
         false
       not Sign.verify_tx(block) -> 
@@ -29,16 +46,18 @@ defmodule BlockchainPure do
         valid_block_2?(block)
     end
   end
+  def winners(block) do block[:data][:txs] |> txs_filter("sign") |> Enum.map(&(length(&1[:data][:winners]))) |> Enum.reduce(0, &(&1+&2)) end
   def valid_block_2?(block) do
-    winners = block[:data][:txs] |> txs_filter("sign") |> Enum.map(&(length(&1[:data][:winners]))) |> Enum.reduce(0, &(&1+&2))
+    wins = winners(block)
     cond do
-      winners < Constants.signers_per_block*2/3 -> 
-        IO.puts("not enough signers")
+      wins < Constants.signers_per_block*2/3 -> 
+        IO.puts("not enough signers #{inspect wins}")
+        IO.puts("block: #{inspect block}")
         false
-      not VerifyTx.check_txs(block[:data][:txs]) ->
+      not VerifyTx.check_txs(block) ->
         IO.puts("invalid tx")
         false
-      true -> valid_block_3?(block, winners) 
+      true -> valid_block_3?(block, wins) 
     end
   end
   def valid_block_3?(block, ns) do
@@ -66,9 +85,11 @@ defmodule BlockchainPure do
   end
   def buy_block do
     height=KV.get("height")
-    block = get_block(KV.get("height"))
+    prev_block = get_block(KV.get("height"))
     txs=Mempool.txs#remove expensive txs until we can afford it. packing problem.
-    bh=blockhash(block)
+    if prev_block==Constants.empty_account do bh=nil else
+      bh=blockhash(prev_block)
+    end
     new=[height: height+1, txs: txs, hash: bh, bond_size: 10_000_000_000_000/Constants.signers_per_block*3]
     new = Keys.sign(new)
     Dict.put(new, :meta, [revealed: []])

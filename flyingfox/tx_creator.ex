@@ -15,7 +15,10 @@ defmodule TxCreator do
     pub = Keys.pubkey
     acc = KV.get(pub)
     if acc[:bond] > Constants.minbond do
-      prev = BlockchainPure.get_block(KV.get("height"))
+      h=KV.get("height")
+      if h<1 do prev_hash=nil else
+        prev_hash = BlockchainPure.blockhash(BlockchainPure.get_block(h))
+      end
       tot_bonds = KV.get("tot_bonds")
       w=Enum.filter(0..Constants.chances_per_address, fn(x) -> VerifyTx.winner?(acc[:bond], tot_bonds, VerifyTx.rng, pub, x) end) 
       h=KV.get("height")+1
@@ -25,7 +28,7 @@ defmodule TxCreator do
         KV.put("secret #{inspect h}", ran)
       end
       secret=DetHash.doit(ran)
-      tx = [type: "sign", prev_hash: prev[:data][:hash], winners: w, secret_hash: secret, nonce: nonce(pub)]
+      tx = [type: "sign", prev_hash: prev_hash, winners: w, secret_hash: secret, nonce: nonce(pub)]
       tx = Keys.sign(tx)
       Mempool.add_tx(tx)
     end
