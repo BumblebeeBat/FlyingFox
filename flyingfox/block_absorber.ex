@@ -2,7 +2,11 @@ defmodule BlockAbsorber do#this doesn't actually have memory. so I used "x" to f
   use GenServer
   def key do :absorber end
   def start_link() do GenServer.start_link(__MODULE__, :ok, [name: key]) end
-  def init(:ok) do {:ok, []} end
+  def init(:ok) do 
+    Blockchain.genesis_state
+    Keys.master  
+    {:ok, []} 
+  end
   def handle_call({:blocks, blocks}, _from, x) do 
     Blockchain.add_blocks(blocks)
     {:reply, :ok, x}

@@ -3,6 +3,7 @@ defmodule Talker do
   def key do :talker end
   def start_link() do GenServer.start_link(__MODULE__, :ok, [name: key]) end
   def init(:ok) do 
+    start
     Enum.map(0..2, &([ip: "localhost", port: 6666+&1])) |> Enum.map(&(Peers.add_peer(&1)))
     {:ok, []} 
   end
@@ -11,6 +12,12 @@ defmodule Talker do
     {:noreply, []} 
   end
   def doit do GenServer.cast(key, :doit) end
+  def timer do
+    :timer.sleep(3000)#using a timer to stop crash on boot
+    doit
+    timer
+  end  
+  def start do spawn_link(fn() -> timer end) end
   #this module creates and maintains connections with multiple peers. It downloads blocks from them.
   #grabs the list of peers from peers thread.
   #has ability to black-list peers who are bad?

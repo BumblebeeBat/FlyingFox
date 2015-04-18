@@ -115,8 +115,6 @@ defmodule VerifyTx do
         IO.puts "1"
         false
       DetHash.doit(tx[:data][:secret]) != hd(signed)[:data][:secret_hash] -> 
-        IO.puts("tx: #{inspect tx}")
-        IO.puts("signed: #{inspect signed}")
         IO.puts "2"
         false
       tx[:pub] in old_block[:meta][:revealed] ->
@@ -133,7 +131,6 @@ defmodule VerifyTx do
     #After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
   end
   def check_tx(tx, txs, prev_hash) do
-    IO.puts("check tx #{inspect prev_hash}")
     cond do
       not check_logic(tx, txs, prev_hash) -> false
       not check_([tx|txs]) -> false
@@ -205,7 +202,6 @@ defmodule VerifyTx do
   def check_txs(block) do#accept block as input
     txs = block[:data][:txs]
     prev_hash = block[:data][:hash]
-    IO.puts("check txs #{inspect prev_hash}")
     cond do
       not check_logics(txs, prev_hash, [])  ->
         IO.puts("bad logic")
