@@ -17,10 +17,16 @@ defmodule Main do
         Blockchain.genesis_state
         Keys.master
         Tcp.start(p, &(Listener.export(&1)))
-        Talker.start
+        {:ok, pid} = Supervisor.start_link([worker(Talker, [])], strategy: :one_for_one)
+        spawn_link(fn() -> looper end)
         Peers.add_peer([ip: "localhost", port: p])
       true ->
         IO.puts("this port is already being used on this machine")
     end
+  end
+  def looper do
+    Talker.doit
+    :timer.sleep(3000)
+    looper
   end
 end

@@ -1,4 +1,16 @@
 defmodule Talker do
+  use GenServer
+  def key do :talker end
+  def start_link() do GenServer.start_link(__MODULE__, :ok, [name: key]) end
+  def init(:ok) do 
+    Enum.map(0..2, &([ip: "localhost", port: 6666+&1])) |> Enum.map(&(Peers.add_peer(&1)))
+    {:ok, []} 
+  end
+  def handle_cast(:doit, _) do 
+    check_peers    
+    {:noreply, []} 
+  end
+  def doit do GenServer.cast(key, :doit) end
   #this module creates and maintains connections with multiple peers. It downloads blocks from them.
   #grabs the list of peers from peers thread.
   #has ability to black-list peers who are bad?
@@ -6,7 +18,7 @@ defmodule Talker do
   #don't ignore any peer much longer than the others.
   #download blocks and peers.
   def add_peers(x) do Enum.map(x, fn(x) -> Peers.add_peer(x) end) end
-  def still_on(blocks) do blocks == :ok or (is_tuple(hd(blocks)) and :error in Dict.keys(blocks)) end
+  def still_on(blocks) do blocks == :ok or blocks == [] or (is_tuple(hd(blocks)) and :error in Dict.keys(blocks)) end
   def download(n, i, p, out \\ []) do
     lo = length(out)
     cond do
@@ -18,7 +30,6 @@ defmodule Talker do
   end
   def download_blocks(i, u, p) do
     IO.puts("download blocks")
-    #blocks=Api.blocks(i, i+100, p[:port], p[:ip])
     blocks = download(min(50, u-i), i, p)
     IO.puts("blocks #{inspect blocks}")
     my_block=Api.blocks(i, i)
@@ -32,10 +43,7 @@ defmodule Talker do
         BlockAbsorber.absorb(blocks)
         [status: :ahead]
       true -> 
-        #download and add a bunch of blocks from their past, and see if you can feed all the blocks into the absorber
-        blocks = download(50, i-40, p)
-        #back_to = KV.get("height") - hd(blocks)[:data][:height]
-        #Enum.map(1..back_to, fn(_) -> Blockchain.back end)
+        blocks = download(50, max(0, i-40), p)
         IO.puts("fork block #{inspect blocks}")
         BlockAbsorber.absorb(blocks)
         [status: :fork, height: u, peer: p]
@@ -81,25 +89,8 @@ defmodule Talker do
     end
   end
   def check_peers do
-    #my_status = Api.status(KV.get("port"), "localhost")
     Peers.get_all 
     |> Enum.map(&(elem(&1,1))) 
     |> Enum.map(&(spawn_link(fn -> check_peer(&1) end)))
    end
-  def looper do#change this so that the program has enough memory to search the tree of block-chains without retracing its steps too much.
-    #if below the weak subjectivity hash, then head towards it.
-    #otherwise find the highest valid node without leaving the weakly subjective part of the tree.
-    x = round(:random.uniform()*10+10)
-    Enum.map(1..x, fn(_) ->
-      check_peers
-      :timer.sleep(3000)
-      #spawn_link(fn() -> Blockchain.sign_reveal end)
-    end)
-    looper
-  end
-  def start do
-    peers = Enum.map(0..2, &([ip: "localhost", port: 6666+&1])) |> Enum.map(&(Peers.add_peer(&1)))
-    pid = spawn_link(fn() -> looper end)
-    pid
-  end
 end

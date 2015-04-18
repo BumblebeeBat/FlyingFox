@@ -90,7 +90,7 @@ defmodule Blockchain do
          false
       KV.get(BlockchainPure.blockhash(hd(blocks))) != Constants.empty_account ->
         IO.puts("already have this block")
-        false
+        add_blocks_helper(tl(blocks))
       true ->
         IO.puts("valid block")
         block_hash = BlockchainPure.put_block(hd(blocks))
