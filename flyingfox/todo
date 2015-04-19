@@ -35,6 +35,5 @@ mini-blockchain proposal
 
 maybe we should charge proof of work for creating blocks, and have it increase exponentially depending how many blocks are being skipped.n
 
-Amount of money burned per block cannot change to quickly! Security issue.
 
-Charge the block-creator a fee for creating the block.
+

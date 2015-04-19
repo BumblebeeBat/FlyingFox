@@ -26,11 +26,19 @@ defmodule BlockchainPure do
   def prev_block(block) do KV.get(block[:data][:hash]) end
   def valid_block?(block) do 
     #block creator needs to pay a fee. he needs to have signed so we can take his fee.
+    f = fn(x) -> x[:data][:bond_size] end
     prev = prev_block(block)
+    prev2 = prev_block(prev)
+    prev3 = prev_block(prev2)
+    min_bond = max(f.(prev), max(f.(prev2), f.(prev3)))
+    if min_bond == nil do min_bond = 100000 end
     ngenesis = block[:data][:height]!=1
     cond do
       not is_list(block) -> 
         IO.puts("block should be a dict #{inspect block}")
+        false
+      min_bond*2/3>f.(block) ->#if the amount of money bonded per block changes too quickly, then it makes it more likely for double-spends to happen.
+        IO.puts("not enough bonded")
         false
       ngenesis and prev == Constants.empty_account ->
         IO.puts("blocks come from parents: #{inspect block}")
