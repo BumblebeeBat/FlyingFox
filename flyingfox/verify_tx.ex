@@ -41,29 +41,29 @@ defmodule VerifyTx do
     <<c :: size(s), _ :: bitstring>>=b
     c
   end
-  def ran_block(height) do
-    txs = BlockchainPure.get_block(height)[:"txs"]
+  def ran_block(block) do
+    #txs = BlockchainPure.get_block(height)[:"txs"]
+    txs = block[:data][:txs]
     cond do
       is_nil(txs) -> 0
       true ->
         txs=Enum.filter(txs, &(&1[:"data"][:"type"]=="reveal"))
-        txs=Enum.map(txs, &(first_bits(&1[:"data"][:"secret"], length(&1[:"data"][:"winners"]))))
-        txs
+        txs=Enum.map(txs, &(first_bits(&1[:"data"][:"secret"], length(&1[:"data"][:"winners"])))) |> Enum.reduce("", &(&1 <> &2))
     end
   end
-  def rng do
-    h=KV.get("height")
-    Enum.map(h-Constants.epoch..h, fn(x) ->
-      cond do
-        x<0 -> 0
-        true -> ran_block(x)
-      end 
-    end)
+  def rng(hash, counter \\ 26, entropy \\ "" ) do #this needs to be memoized so bad.
+    block = KV.get(hash)
+    hash = block[:data][:hash]
+    cond do
+      hash == nil -> DetHash.doit(entropy)
+      counter < 1 -> DetHash.doit(entropy)
+      true -> rng(hash, counter - 1, ran_block(block) <> entropy)
+    end
   end
   def sign?(tx, txs, prev_hash) do#block = [data: [hash: block_hash]]
     acc = KV.get(tx[:pub])
     tot_bonds = KV.get("tot_bonds")
-    ran=rng
+    ran=rng(prev_hash)
     l=Enum.map(tx[:data][:winners], fn(x)->winner?(acc[:bond], tot_bonds, ran, tx[:pub], x) end)
     l1=l
     l=Enum.reduce(l, true, fn(x, y) -> x and y end)
@@ -131,9 +131,10 @@ defmodule VerifyTx do
     #After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
   end
   def check_tx(tx, txs, prev_hash) do
+    cost = Constants.block_creation_fee
     cond do
       not check_logic(tx, txs, prev_hash) -> false
-      not check_([data: [txs: [tx|txs]]]) -> false
+      not check_([data: [txs: [tx|txs]]], cost) -> false
       true -> true
     end
   end
@@ -183,7 +184,7 @@ defmodule VerifyTx do
     starts_right = Enum.zip(current_nonce, just_nonces) |> Enum.map(fn(x)-> elem(x, 0)==hd(elem(x, 1)) end) |> f.()
     (starts_right and consecutive) and all_have_nonce
    end
-   def check_(block) do
+   def check_(block, cost) do
      txs = block[:data][:txs]
      spending=BlockchainPure.being_spent(txs)
      winners = txs |> BlockchainPure.txs_filter("sign") 
@@ -194,13 +195,13 @@ defmodule VerifyTx do
        not check_nonces(txs) -> 
          IO.puts("bad nonce")
          false
-       not VerifyBalances.positive_balances(txs,spending*3/max(winners, Constants.signers_per_block*2/3), block[:pub])->
+       not VerifyBalances.positive_balances(txs,spending*3/max(winners, Constants.signers_per_block*2/3), block[:pub], cost)->
          IO.puts("someone spent more money than how much they have")
          false         
        true -> true
      end
   end
-  def check_txs(block) do#accept block as input
+  def check_txs(block, cost) do#accept block as input
     txs = block[:data][:txs]
     prev_hash = block[:data][:hash]
     cond do
@@ -210,7 +211,7 @@ defmodule VerifyTx do
       txs==[] -> 
         IO.puts("no empty blocks")
         false
-      not check_(block) -> false
+      not check_(block, cost) -> false
       true -> true
     end
   end

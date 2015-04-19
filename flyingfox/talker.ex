@@ -36,9 +36,7 @@ defmodule Talker do
     end
   end
   def download_blocks(i, u, p) do
-    IO.puts("download blocks")
     blocks = download(min(50, u-i), i, p)
-    IO.puts("blocks #{inspect blocks}")
     my_block=Api.blocks(i, i)
     cond do
       my_block == [] ->
@@ -47,6 +45,7 @@ defmodule Talker do
       still_on(my_block) -> IO.puts("thread died")
       still_on(blocks) -> IO.puts("peer died 0")
       hd(my_block)[:data][:hash] == hd(blocks)[:data][:hash] ->
+        IO.puts("4")
         BlockAbsorber.absorb(blocks)
         [status: :ahead]
       true -> 

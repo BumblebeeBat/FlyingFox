@@ -11,7 +11,7 @@ defmodule TxCreator do
     tx = Keys.sign(tx)
     Mempool.add_tx(tx)    
   end
-  def sign do #the problem is that I sign again after I made the signature that is used for the block. I save the secret from the wrong time. I need to reuse my secret, if I already made one for this height.
+  def sign do
     pub = Keys.pubkey
     acc = KV.get(pub)
     if acc[:bond] > Constants.minbond do
@@ -20,7 +20,7 @@ defmodule TxCreator do
         prev_hash = BlockchainPure.blockhash(BlockchainPure.get_block(h))
       end
       tot_bonds = KV.get("tot_bonds")
-      w=Enum.filter(0..Constants.chances_per_address, fn(x) -> VerifyTx.winner?(acc[:bond], tot_bonds, VerifyTx.rng, pub, x) end) 
+      w=Enum.filter(0..Constants.chances_per_address, fn(x) -> VerifyTx.winner?(acc[:bond], tot_bonds, VerifyTx.rng(prev_hash), pub, x) end) 
       h=KV.get("height")+1
       ran = KV.get("secret #{inspect h}")
       if ran == Constants.empty_account do

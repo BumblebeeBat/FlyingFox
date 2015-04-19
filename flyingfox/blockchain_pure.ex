@@ -24,7 +24,7 @@ defmodule BlockchainPure do
   end
   def being_spent(txs) do txs |> txs_filter("spend") |> Enum.map(fn(t) -> t[:data][:amount] end) |> Enum.reduce(0, &(&1+&2)) end
   def prev_block(block) do KV.get(block[:data][:hash]) end
-  def valid_block?(block) do 
+  def valid_block?(block, cost) do 
     #block creator needs to pay a fee. he needs to have signed so we can take his fee.
     f = fn(x) -> x[:data][:bond_size] end
     prev = prev_block(block)
@@ -44,25 +44,25 @@ defmodule BlockchainPure do
         IO.puts("blocks come from parents: #{inspect block}")
         IO.puts(inspect block[:data][:height])
         false
-      ngenesis and prev[:data][:height]+1 != block[:data][:height] ->
-        IO.puts("incorrect height")
+      ngenesis and block[:data][:height] - prev[:data][:height] < 1 ->
+        IO.puts("cannot redo history")
         false
       not Sign.verify_tx(block) -> 
         IO.puts("bad signature #{inspect block}")
         false
       true ->
-        valid_block_2?(block)
+        valid_block_2?(block, cost)
     end
   end
   def winners(block) do block[:data][:txs] |> txs_filter("sign") |> Enum.map(&(length(&1[:data][:winners]))) |> Enum.reduce(0, &(&1+&2)) end
-  def valid_block_2?(block) do
+  def valid_block_2?(block, cost) do
     wins = winners(block)
     cond do
       wins < Constants.signers_per_block*2/3 -> 
         IO.puts("not enough signers #{inspect wins}")
         IO.puts("block: #{inspect block}")
         false
-      not VerifyTx.check_txs(block) ->
+      not VerifyTx.check_txs(block, cost) ->
         IO.puts("invalid tx")
         false
       true -> valid_block_3?(block, wins) 
@@ -91,14 +91,15 @@ defmodule BlockchainPure do
     if :data in Dict.keys(block) do block=block[:data] end
     DetHash.doit(block)
   end
-  def buy_block do
+  def buy_block(n \\ 1) do
+    true = n>0
     height=KV.get("height")
     prev_block = get_block(KV.get("height"))
     txs=Mempool.txs#remove expensive txs until we can afford it. packing problem.
     if prev_block==Constants.empty_account do bh=nil else
       bh=blockhash(prev_block)
     end
-    new=[height: height+1, txs: txs, hash: bh, bond_size: 10_000_000_000_000/Constants.signers_per_block*3]
+    new=[height: height+n, txs: txs, hash: bh, bond_size: 10_000_000_000_000/Constants.signers_per_block*3]
     new = Keys.sign(new)
     Dict.put(new, :meta, [revealed: []])
   end

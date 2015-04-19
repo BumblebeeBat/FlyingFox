@@ -32,7 +32,7 @@ defmodule VerifyBalances do
   def lose_bond(address, pub, amount) do
     lose_key(address, pub, amount, "bond")
   end
-  def positive_balances(txs, bond_size, block_creator, addresses \\ []) do
+  def positive_balances(txs, bond_size, block_creator, cost, addresses \\ []) do
     if block_creator != nil and not(block_creator in Dict.keys(addresses)) do
       acc = KV.get(block_creator)
       balance = [cash: acc[:amount], bond: acc[:bond]]      
@@ -40,12 +40,12 @@ defmodule VerifyBalances do
     end
     cond do
       txs==[] -> 
-        if block_creator != nil do addresses = lose_cash(addresses, block_creator, Constants.block_creation_fee) end
+        if block_creator != nil do addresses = lose_cash(addresses, block_creator, cost) end
         all_positive(addresses)
-      true -> positive_balances_1(txs, bond_size, block_creator, addresses)
+      true -> positive_balances_1(txs, bond_size, block_creator, cost, addresses)
     end
   end
-  def positive_balances_1(txs, bond_size, block_creator, addresses) do
+  def positive_balances_1(txs, bond_size, block_creator, cost, addresses) do
     [tx|txs]=txs
     pub=tx[:pub]
     type=tx[:data][:type]
@@ -71,6 +71,6 @@ defmodule VerifyBalances do
         IO.puts("no function with that name")
         true
     end
-    positive_balances(txs, bond_size, block_creator, addresses)
+    positive_balances(txs, bond_size, block_creator, cost, addresses)
   end
 end
