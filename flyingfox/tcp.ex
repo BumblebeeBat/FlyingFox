@@ -49,7 +49,7 @@ defmodule Tcp do
     s=connect(host, port)
     ms("ping", s)
   end
-  defp to_bytes(list) do
+  defp to_bytes(list) do#141,000 times in first 2 blocks
     cond do
       is_binary(list) -> list
       list==[] -> <<>>

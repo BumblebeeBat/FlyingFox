@@ -1,4 +1,5 @@
 import numpy
+from cdecimal import Decimal
 def control_block_trial(total, clique, p):
     if numpy.random.poisson(clique)>p*total:
         return 1
@@ -15,7 +16,7 @@ def frequency_half_control(x): return Decimal(1)/control_block_probability(x/2, 
 def test():
     #We are aiming for a clique of 50% of the bonded validators to be able to verify 4% of the blocks. verification requres 2/3 of all signatures.
     j=54
-    hc=str(frequency_half_control(Decimal(j)))))
+    hc=str(frequency_half_control(Decimal(j)))
     print(str(j)+" : " +hc)
     print("this shows that if there are "+str(j)+" validators on average, then an attacking group with 50% of bonded stake would control 1 block in "+hc+" on average")
 def proof_gap():

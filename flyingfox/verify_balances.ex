@@ -14,11 +14,13 @@ defmodule VerifyBalances do
     end
   end
   def modify_balance(addresses, pub, f) do
-    balance=Dict.get(addresses, pub)
+    key = String.to_atom(pub)
+    balance=Dict.get(addresses, key)
     balance=f.(balance)
-    Dict.put(addresses, pub, balance)
+    Dict.put(addresses, key, balance)
   end
   def lose_key(address, pub, amount, key) do
+    if is_binary(key) do key = String.to_atom(key) end
     f = fn(balance) ->
       Dict.put(balance, key, Dict.get(balance, key)-amount) 
     end
@@ -30,20 +32,29 @@ defmodule VerifyBalances do
   def lose_bond(address, pub, amount) do
     lose_key(address, pub, amount, "bond")
   end
-  def positive_balances(txs, bond_size, addresses \\ []) do
+  def positive_balances(txs, bond_size, block_creator, addresses \\ []) do
+    if block_creator != nil and not(block_creator in Dict.keys(addresses)) do
+      acc = KV.get(block_creator)
+      balance = [cash: acc[:amount], bond: acc[:bond]]      
+      addresses = [{String.to_atom(block_creator), balance}|addresses]#to_atom is dangerous!!
+    end
     cond do
-      txs==[] -> all_positive(addresses)
-      true -> positive_balances_1(txs, bond_size, addresses)
+      txs==[] -> 
+        if block_creator != nil do addresses = lose_cash(addresses, block_creator, Constants.block_creation_fee) end
+        all_positive(addresses)
+      true -> positive_balances_1(txs, bond_size, block_creator, addresses)
     end
   end
-  def positive_balances_1(txs, bond_size, addresses) do
+  def positive_balances_1(txs, bond_size, block_creator, addresses) do
     [tx|txs]=txs
     pub=tx[:pub]
     type=tx[:data][:type]
+    if not pub in Dict.keys(addresses) do
+      acc = KV.get(pub)
+      balance = [cash: acc[:amount], bond: acc[:bond]]
+      addresses = [{String.to_atom(pub), balance}|addresses]#to_atom is dangerous!!!
+    end
     cond do
-      not pub in Dict.keys(addresses) -> 
-        acc = KV.get(pub)
-        balance = [cash: acc[:amount], bond: acc[:bond]]
       type == "spend" ->
         addresses = lose_cash(addresses, pub, tx[:data][:amount]+tx[:data][:fee])
       type == "spend2wait" ->
@@ -60,6 +71,6 @@ defmodule VerifyBalances do
         IO.puts("no function with that name")
         true
     end
-    positive_balances(txs, bond_size, addresses)
+    positive_balances(txs, bond_size, block_creator, addresses)
   end
 end

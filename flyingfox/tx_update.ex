@@ -85,6 +85,8 @@ defmodule TxUpdate do
     w=length(tx[:data][:winners])
     delta=exchange_rate(old_block[:data][:height])*bond_size*w
     reward=KV.get("tot_bonds")/:math.pow(1.001, Constants.epoch)*w/1000/Constants.signers_per_block
+    IO.puts("kv #{inspect KV.get(to_string(tx[:data][:signed_on]))}")
+    IO.puts("tx #{inspect tx}")
     sym_append(KV.get(to_string(tx[:data][:signed_on])), [:meta, :revealed], tx[:pub], d)
     sym_increment(tx[:pub], :amount, tx[:data][:amount]+reward+delta, d)#during waiting period you are holding cash not bonds.
     #After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.

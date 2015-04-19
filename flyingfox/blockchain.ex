@@ -35,6 +35,7 @@ defmodule Blockchain do
         txs=block[:data][:txs]
         n=BlockchainPure.num_signers(BlockchainPure.txs_filter(txs, "sign"))
         TxUpdate.txs_updates(txs, -1, round(block[:data][:bond_size] / n))
+        TxUpdate.sym_increment(block[:pub], :amount, -Constants.block_creation_fee, -1)        
         #give block creator his fee back.
         KV.put("height", h-1)
         Mempool.dump
@@ -54,6 +55,7 @@ defmodule Blockchain do
         false      
       true ->
         #block creator needs to pay a fee. he needs to have signed so we can take his fee.
+        TxUpdate.sym_increment(block[:pub], :amount, -Constants.block_creation_fee, 1)
         txs=block[:data][:txs]
         BlockchainPure.put_block(block)
         n=BlockchainPure.num_signers(txs)

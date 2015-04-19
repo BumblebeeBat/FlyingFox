@@ -133,7 +133,7 @@ defmodule VerifyTx do
   def check_tx(tx, txs, prev_hash) do
     cond do
       not check_logic(tx, txs, prev_hash) -> false
-      not check_([tx|txs]) -> false
+      not check_([data: [txs: [tx|txs]]]) -> false
       true -> true
     end
   end
@@ -183,17 +183,18 @@ defmodule VerifyTx do
     starts_right = Enum.zip(current_nonce, just_nonces) |> Enum.map(fn(x)-> elem(x, 0)==hd(elem(x, 1)) end) |> f.()
     (starts_right and consecutive) and all_have_nonce
    end
-   def check_(txs) do
-    spending=BlockchainPure.being_spent(txs)
-    winners = txs |> BlockchainPure.txs_filter("sign") 
-    winners = winners |> Enum.map(fn(t) -> t[:data][:winners]end) 
-    winners = winners |> Enum.map(fn(w) -> length(w) end)
-    winners = winners |> Enum.reduce(0, &(&1+&2))
+   def check_(block) do
+     txs = block[:data][:txs]
+     spending=BlockchainPure.being_spent(txs)
+     winners = txs |> BlockchainPure.txs_filter("sign") 
+     winners = winners |> Enum.map(fn(t) -> t[:data][:winners]end) 
+     winners = winners |> Enum.map(fn(w) -> length(w) end)
+     winners = winners |> Enum.reduce(0, &(&1+&2))
      cond do
        not check_nonces(txs) -> 
          IO.puts("bad nonce")
          false
-       not VerifyBalances.positive_balances(txs,spending*3/max(winners, Constants.signers_per_block*2/3))->
+       not VerifyBalances.positive_balances(txs,spending*3/max(winners, Constants.signers_per_block*2/3), block[:pub])->
          IO.puts("someone spent more money than how much they have")
          false         
        true -> true
@@ -209,7 +210,7 @@ defmodule VerifyTx do
       txs==[] -> 
         IO.puts("no empty blocks")
         false
-      not check_(txs) -> false
+      not check_(block) -> false
       true -> true
     end
   end

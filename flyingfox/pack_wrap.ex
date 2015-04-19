@@ -1,6 +1,6 @@
 defmodule PackWrap do
   def pack(x) do MessagePack.pack!(x) end
-  def slow_get(json, key) do
+  def slow_get(json, key) do#16,000 times in first 2 blocks.
     cond do
       json == [] -> nil
       true ->

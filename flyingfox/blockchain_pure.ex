@@ -1,6 +1,6 @@
 defmodule BlockchainPure do
-  def get_helper(h) do KV.get(to_string(h)) end
-  def get_block(h) do
+  def get_helper(h) do KV.get(to_string(h)) end#ran 1444 times to add first 2 blocks?!?!
+  def get_block(h) do#ran 1444 times to add first 2 blocks?!?!
     if is_integer(h) do h=hd(get_helper(h)) end
     KV.get(h)
   end
