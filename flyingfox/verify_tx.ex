@@ -95,10 +95,10 @@ defmodule VerifyTx do
     #If you can prove that the same address signed on 2 different blocks at the same height, then you can take 1/3rd of the deposit, and destroy the rest.
     #make sure they cannot do this repeatedly
   end
-  def signed_block(tx) do BlockchainPure.get_block(tx[:data][:signed_on]) end
+  def signed_block(tx) do Blockchain.get_block(tx[:data][:signed_on]) end
   def sign_tx(block, pub) do block[:data][:txs] |> Enum.filter(&(&1[:pub]==pub))  |> Enum.filter(&(&1[:data][:type]=="sign")) end
   def wins(block, tx) do 
-  b=BlockchainPure.txs_filter(block[:txs], "sign") |> Enum.filter(&(tx[:pub]==&1[:pub])) 
+  b=Blockchain.txs_filter(block[:txs], "sign") |> Enum.filter(&(tx[:pub]==&1[:pub])) 
   length(hd(b)[:data][:winners]) 
   end
   def reveal?(tx, txs) do
@@ -186,11 +186,12 @@ defmodule VerifyTx do
    end
    def check_(block, cost) do
      txs = block[:data][:txs]
-     spending=BlockchainPure.being_spent(txs)
-     winners = txs |> BlockchainPure.txs_filter("sign") 
-     winners = winners |> Enum.map(fn(t) -> t[:data][:winners]end) 
-     winners = winners |> Enum.map(fn(w) -> length(w) end)
-     winners = winners |> Enum.reduce(0, &(&1+&2))
+     spending = Blockchain.being_spent(txs)
+     winners = txs 
+     |> Blockchain.txs_filter("sign") 
+     |> Enum.map(fn(t) -> t[:data][:winners] end) 
+     |> Enum.map(fn(w) -> length(w) end)
+     |> Enum.reduce(0, &(&1+&2))
      cond do
        not check_nonces(txs) -> 
          IO.puts("bad nonce")

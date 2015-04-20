@@ -17,7 +17,7 @@ defmodule TxCreator do
     if acc[:bond] > Constants.minbond do
       h=KV.get("height")
       if h<1 do prev_hash=nil else
-        prev_hash = BlockchainPure.blockhash(BlockchainPure.get_block(h))
+        prev_hash = Blocktree.blockhash(Blockchain.get_block(h))
       end
       tot_bonds = KV.get("tot_bonds")
       w=Enum.filter(0..Constants.chances_per_address, fn(x) -> VerifyTx.winner?(acc[:bond], tot_bonds, VerifyTx.rng(prev_hash), pub, x) end) 
@@ -43,7 +43,7 @@ defmodule TxCreator do
   end
   def reveal_2(h) do
     pub = Keys.pubkey
-    old_block=BlockchainPure.get_block(h)
+    old_block=Blockchain.get_block(h)
     old_tx = old_block[:data][:txs] |> Enum.filter(&(&1[:data][:type]=="sign")) |> Enum.filter(&(&1[:pub]==pub)) |> hd
     w=old_tx[:data][:winners]
     bond_size=old_block[:data][:bond_size]

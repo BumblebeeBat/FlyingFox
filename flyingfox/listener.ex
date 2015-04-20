@@ -18,13 +18,13 @@ defmodule Listener do
       "pushtx" -> fee_filter(hd(args))
       "txs" -> Mempool.txs
       "height" -> KV.get("height")
-      "block" -> BlockchainPure.get_block(hd(args))
+      "block" -> Blockchain.get_block(hd(args))
       "blocks" -> flip(blocks(hd(args), hd(tl(args))))
       "add_peer" -> Peers.add_peer(hd(args))
       "all_peers" -> Peers.get_all
       "status" ->
           h = KV.get("height")
-          block = BlockchainPure.get_block(h)
+          block = Blockchain.get_block(h)
           if block[:data]==nil do block = [data: 1] end
           [height: h, hash: DetHash.doit(block[:data])]
       x -> IO.puts("is not a command #{inspect x}")
@@ -53,7 +53,7 @@ defmodule Listener do
     blocks_helper(start, finish, out)
   end
   def blocks_helper(start, finish, out) do
-    block = BlockchainPure.get_block(start)
+    block = Blockchain.get_block(start)
     cond do
       byte_size(PackWrap.pack(out)) > max -> tl(out)
       start < 0 -> blocks(1, finish, out)
