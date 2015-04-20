@@ -8,11 +8,13 @@ defmodule BlockchainPure do
     height = block[:data][:height] 
     block_hash = blockhash(block)
     block_hashes = height |> get_helper
-    if block_hashes ==Constants.empty_account do block_hashes = [] end
-    block_hashes = block_hashes++[block_hash]
-    KV.put(to_string(height), block_hashes)
-    KV.put(block_hash, Dict.put(block, :meta, [revealed: []]))
-    block_hash
+    if block_hash in block_hashes do false else
+      if block_hashes ==Constants.empty_account do block_hashes = [] end
+      block_hashes = block_hashes++[block_hash]
+      KV.put(to_string(height), block_hashes)
+      KV.put(block_hash, Dict.put(block, :meta, [revealed: []]))
+      block_hash
+    end
   end
   def txs_filter(txs, type) do 
     Enum.filter(txs, fn(t) -> t[:data][:type]==type end)

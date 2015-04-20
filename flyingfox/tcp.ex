@@ -20,8 +20,8 @@ defmodule Tcp do
       conn |> listen |> func.() |> ms(conn) #these threads need a timer or something to kill them, otherwise we end up having too many.
     else
       IO.puts "failed to connect #{inspect conn}" 
-      :timer.sleep(500)
       close(socket)
+      :timer.sleep(500)
       spawn_link(fn -> start(port, func) end)
     end
   end

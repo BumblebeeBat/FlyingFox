@@ -46,6 +46,8 @@ defmodule Talker do
       still_on(blocks) -> IO.puts("peer died 0")
       hd(my_block)[:data][:hash] == hd(blocks)[:data][:hash] ->
         IO.puts("4")
+        IO.puts("blocks #{inspect blocks}")
+        IO.puts("my b #{inspect my_block}")
         BlockAbsorber.absorb(blocks)
         [status: :ahead]
       true -> 

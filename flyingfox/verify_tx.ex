@@ -121,7 +121,7 @@ defmodule VerifyTx do
         IO.puts "3"
         false
       tx[:data][:amount]!=bond_size*length(tx[:data][:winners]) -> 
-        IO.puts "4"
+        IO.puts "4 slfjksd"
         false
       KV.get("height")-Constants.epoch>tx[:data][:signed_on] -> 
         IO.puts "5"
