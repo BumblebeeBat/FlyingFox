@@ -10,4 +10,5 @@ defmodule Constants do
   def epoch do 50 end#amount of time until reveal
   def chances_per_address do 200 end #23,000 in first 2 blocks.
   def default_peers do [] end
+  def tcp_thread_time do 5_000 end
 end
