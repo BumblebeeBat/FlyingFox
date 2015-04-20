@@ -42,7 +42,6 @@ defmodule VerifyTx do
     c
   end
   def ran_block(block) do
-    #txs = BlockchainPure.get_block(height)[:"txs"]
     txs = block[:data][:txs]
     cond do
       is_nil(txs) -> 0

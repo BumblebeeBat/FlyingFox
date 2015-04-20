@@ -13,15 +13,10 @@ defmodule Blocktree do
     TxCreator.sign
     TxCreator.reveal
   end
-  def get_helper(h) do KV.get(to_string(h)) end
-  def get_block(h) do#ran 1444 times to add first 2 blocks?!?!
-    if is_integer(h) do h=hd(get_helper(h)) end
-    KV.get(h)
-  end
   def put_block(block) do
     height = block[:data][:height] 
     block_hash = blockhash(block)
-    block_hashes = height |> get_helper
+    block_hashes = height |> Blockchain.get_helper
     if block_hash in block_hashes do false else
       if block_hashes ==Constants.empty_account do block_hashes = [] end
       block_hashes = block_hashes++[block_hash]

@@ -1,7 +1,5 @@
 defmodule Blockchain do#the part the blocktree we care about is the blockchain, it ends in the most recent valid block.
-  def txs_filter(txs, type) do 
-    Enum.filter(txs, fn(t) -> t[:data][:type]==type end)
-  end
+  def txs_filter(txs, type) do Enum.filter(txs, fn(t) -> t[:data][:type]==type end) end
   def being_spent(txs) do txs |> txs_filter("spend") |> Enum.map(fn(t) -> t[:data][:amount] end) |> Enum.reduce(0, &(&1+&2)) end
   def prev_block(block) do KV.get(block[:data][:hash]) end
   def valid_block?(block, cost) do 
@@ -68,7 +66,7 @@ defmodule Blockchain do#the part the blocktree we care about is the blockchain, 
     end
   end
   def get_helper(h) do KV.get(to_string(h)) end#ran 1444 times to add first 2 blocks?!?!
-  def get_block(h) do#ran 1444 times to add first 2 blocks?!?!
+  def get_block(h) do
     if is_integer(h) do h=hd(get_helper(h)) end
     KV.get(h)
   end
