@@ -28,7 +28,7 @@ defmodule TxCreator do
         KV.put("secret #{inspect h}", ran)
       end
       secret=DetHash.doit(ran)
-      tx = [type: "sign", prev_hash: prev_hash, winners: w, secret_hash: secret, nonce: nonce(pub)]
+      tx = [type: "sign", prev_hash: prev_hash, winners: w, secret_hash: secret, nonce: nonce(pub), height: h-1]
       tx = Keys.sign(tx)
       Mempool.add_tx(tx)
     end
@@ -36,7 +36,7 @@ defmodule TxCreator do
   def reveal do
     h=KV.get("height")-Constants.epoch
     cond do
-      h<1 -> nil
+      h<2 -> nil
       true ->
         reveal_2(h)
     end
@@ -54,4 +54,7 @@ defmodule TxCreator do
       Mempool.add_tx(tx)
     end
   end  
+  def slasher(tx1, tx2) do
+    
+  end
 end

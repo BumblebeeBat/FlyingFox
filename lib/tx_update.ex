@@ -75,19 +75,25 @@ defmodule TxUpdate do
     #loses some :bond money. total_money
     #The most they could have to pay is as much bond-money as the poorest of them has.
   end
+  def common(tx, d, old_block, signer) do
+    bond_size = old_block[:data][:bond_size]
+    w = length(tx[:data][:winners])
+    delta = exchange_rate(old_block[:data][:height])*bond_size*w
+    reward = KV.get("tot_bonds")/:math.pow(1.001, Constants.epoch)*w/1000/Constants.signers_per_block
+    sym_append(hd(KV.get(to_string(tx[:data][:signed_on]))), [:meta, :revealed], signer, d)
+    {reward, delta}
+  end
   def slasher(tx, d) do
     #If you can prove that the same address signed on 2 different blocks at the same height, then you can take 1/3rd of the deposit, and destroy the rest.
+    a=tx[:data]
+    old_block = Blockchain.get_block(a[:tx1][:data][:height])
+    {reward, delta} = common(tx, d, old_block, a[:tx1][:pub])
+    sym_increment(tx[:pub], :amount, tx[:data][:amount]+reward+delta/3, d)
   end
   def reveal(tx, d) do
     #lets change old_block somehow so that you cannot reveal the same secret twice.
-    old_block=VerifyTx.signed_block(tx)
-    bond_size=old_block[:data][:bond_size]
-    w=length(tx[:data][:winners])
-    delta=exchange_rate(old_block[:data][:height])*bond_size*w
-    reward=KV.get("tot_bonds")/:math.pow(1.001, Constants.epoch)*w/1000/Constants.signers_per_block
-    IO.puts("kv #{inspect KV.get(to_string(tx[:data][:signed_on]))}")
-    IO.puts("tx #{inspect tx}")
-    sym_append(KV.get(to_string(tx[:data][:signed_on])), [:meta, :revealed], tx[:pub], d)
+    old_block = Blockchain.get_block(tx[:data][:signed_on])
+    {reward, delta} = common(tx, d, old_block, tx[:pub])
     sym_increment(tx[:pub], :amount, tx[:data][:amount]+reward+delta, d)#during waiting period you are holding cash not bonds.
     #After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
   end
@@ -110,4 +116,3 @@ defmodule TxUpdate do
     Enum.map(txs, &(tx_update(&1, d, bond_size)))
   end
 end
-

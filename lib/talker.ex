@@ -4,7 +4,7 @@ defmodule Talker do
   def start_link() do GenServer.start_link(__MODULE__, :ok, [name: key]) end
   def init(:ok) do 
     start
-    Enum.map(0..2, &([ip: "localhost", port: 6666+&1])) |> Enum.map(&(Peers.add_peer(&1)))
+    Enum.map(0..2, &([ip: "localhost", port: Constants.port+&1])) |> Enum.map(&(Peers.add_peer(&1)))
     {:ok, []} 
   end
   def handle_cast(:doit, _) do 

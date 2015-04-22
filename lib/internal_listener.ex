@@ -7,8 +7,8 @@ defmodule InternalListener do
     spawn_send(s, (fn() -> main(type, args) end))
     {:noreply, []}
   end
-  def export(l) do 
-    GenServer.cast(key, {hd(l), self(), tl(l)}) 
+  def export(l, parent) do 
+    GenServer.cast(key, {hd(l), self(), tl(l)++[parent]}) 
     receive do [:ok, x] -> x end
   end
   def buy_block do
@@ -23,7 +23,11 @@ defmodule InternalListener do
                                   buy_block
                                   :timer.sleep(1000) end)
       "spend" -> TxCreator.spend(hd(args), hd(tl(args)))
-      x -> IO.puts("is not a command #{inspect x}")
+      "stop" -> 
+        IO.puts("stopping args")
+        send(hd(args), :kill)
+      x -> 
+        IO.puts("is not a command #{inspect x}")
     end
   end
   def spawn_send(s, f) do

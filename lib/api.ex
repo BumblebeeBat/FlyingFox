@@ -22,15 +22,18 @@ defmodule Api do
   def status(port \\ lp, ip \\ lh) do
   talk([:status], port, ip) end
 
-  def buy_block(port \\ 6667, ip \\ lh) do
+  def buy_block(port \\ lp+1, ip \\ lh) do
   talk([:buy_block], port, ip) end
-  def buy_blocks(n, port \\ 6667, ip \\ lh) do
+  def buy_blocks(n, port \\ lp+1, ip \\ lh) do
   talk([:buy_blocks, n], port, ip) end
-  def spend(amount, to, port \\ 6667, ip \\ lh) do
+  def spend(amount, to, port \\ lp+1, ip \\ lh) do
   talk([:spend, String.to_integer(amount), to], port, ip) end
+  def stop(port \\ lp+1, ip \\ lh) do
+  talk([:stop], port, ip) end
 
   def help do IO.puts "Help examples
 ./ff start
+./ff stop
 ./ff buy_block
 ./ff buy_blocks 4
 ./ff block 5 #loads the fifth block
@@ -50,13 +53,14 @@ defmodule Api do
     case hd(args) do
       "-h" -> help
       "--help" -> help
-      "buy_block" -> buy_block |> inspect |> IO.puts
-      "buy_blocks" -> buy_blocks(String.to_integer(hd(tl(args)))) |> inspect |> IO.puts
-      "spend" -> spend(String.to_integer(hd(tl(args))), hd(tl(tl(args)))) |> inspect |> IO.puts
+      "buy_block" -> buy_block(6667) |> inspect |> IO.puts
+      "buy_blocks" -> buy_blocks(String.to_integer(hd(tl(args))), 6667) |> inspect |> IO.puts
+      "spend" -> spend(String.to_integer(hd(tl(args))), hd(tl(tl(args))), 6667) |> inspect |> IO.puts
       "status" -> status(6666) |> inspect |> IO.puts
+      "stop" -> stop(6667) |> inspect |> IO.puts
       "txs" -> txs(6666) |> inspect |> IO.puts
       "all_peers" -> all_peers(6666) |> inspect |> IO.puts
-      "start" ->  IO.puts Main.start(0)
+      "start" ->  Main.start(0) |> inspect |> IO.puts
       x -> IO.puts("#{inspect x} is not defined"); help
     end
   end

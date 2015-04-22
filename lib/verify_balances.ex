@@ -54,22 +54,17 @@ defmodule VerifyBalances do
       balance = [cash: acc[:amount], bond: acc[:bond]]
       addresses = [{String.to_atom(pub), balance}|addresses]#to_atom is dangerous!!!
     end
-    cond do
-      type == "spend" ->
-        addresses = lose_cash(addresses, pub, tx[:data][:amount]+tx[:data][:fee])
-      type == "spend2wait" ->
-        addresses = lose_cash(addresses, pub, tx[:data][:amount]+tx[:data][:fee])
-      type == "wait2bond" ->
-        addresses = lose_cash(addresses, pub, tx[:data][:fee])
-      type == "bond2spend" ->
-        addresses = lose_bond(addresses, pub, tx[:data][:amount])
-        addresses = lose_cash(addresses, pub, tx[:data][:fee])
-      type == "sign" ->
-        addresses = lose_bond(addresses, pub, bond_size*length(tx[:data][:winners]))
-      type in [:slasher, :reveal, :sign] -> true
-      true -> 
-        IO.puts("no function with that name")
-        true
+    case type do
+      "spend" -> addresses = lose_cash(addresses, pub, tx[:data][:amount]+tx[:data][:fee])
+      "spend2wait" -> addresses = lose_cash(addresses, pub, tx[:data][:amount]+tx[:data][:fee])
+      "wait2bond" -> addresses = lose_cash(addresses, pub, tx[:data][:fee])
+      "bond2spend" -> addresses = lose_bond(addresses, pub, tx[:data][:amount]) |> lose_cash(pub, tx[:data][:fee])
+      "sign" -> addresses = lose_bond(addresses, pub, bond_size*length(tx[:data][:winners]))
+      "slasher" -> true
+      "reveal" -> true
+      _ -> 
+        IO.puts("no function with that name #{inspect type}")
+        false
     end
     positive_balances(txs, bond_size, block_creator, cost, addresses)
   end

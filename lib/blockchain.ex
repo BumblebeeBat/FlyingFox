@@ -29,14 +29,14 @@ defmodule Blockchain do#the part the blocktree we care about is the blockchain, 
         IO.puts("bad signature #{inspect block}")
         false
       true ->
-        valid_block_2?(block, cost)
+        valid_block_2?(block, cost, ngenesis)
     end
   end
   def winners(block) do block[:data][:txs] |> txs_filter("sign") |> Enum.map(&(length(&1[:data][:winners]))) |> Enum.reduce(0, &(&1+&2)) end
-  def valid_block_2?(block, cost) do
+  def valid_block_2?(block, cost, ngenesis) do
     wins = winners(block)
     cond do
-      wins < Constants.signers_per_block*2/3 -> 
+      ngenesis and wins < Constants.signers_per_block*2/3 -> 
         IO.puts("not enough signers #{inspect wins}")
         IO.puts("block: #{inspect block}")
         false
@@ -117,16 +117,16 @@ defmodule Blockchain do#the part the blocktree we care about is the blockchain, 
         false      
       true ->
         #block creator needs to pay a fee. he needs to have signed so we can take his fee.
-        TxUpdate.sym_increment(block[:pub], :amount, -cost, 1)#if I skip blocks, charge more
-        txs=block[:data][:txs]
-        n=num_signers(txs)
-        TxUpdate.txs_updates(txs, 1, round(block[:data][:bond_size]/n))
-        KV.put("height", block[:data][:height])
-        Mempool.dump
-        hash = Blocktree.blockhash(block)
-        n = to_string(block[:data][:height])
-        bh = KV.get(n) |> Enum.filter(&(&1!=hash))
-        KV.put(n, [hash|bh])
+          TxUpdate.sym_increment(block[:pub], :amount, -cost, 1)
+          txs=block[:data][:txs]
+          n=num_signers(txs)
+          TxUpdate.txs_updates(txs, 1, round(block[:data][:bond_size]/n))
+          KV.put("height", block[:data][:height])
+          Mempool.dump
+          hash = Blocktree.blockhash(block)
+          n = to_string(block[:data][:height])
+          bh = KV.get(n) |> Enum.filter(&(&1!=hash))
+          KV.put(n, [hash|bh])
     end
   end
   def goto(hash) do

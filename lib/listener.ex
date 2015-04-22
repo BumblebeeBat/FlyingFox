@@ -1,7 +1,6 @@
 defmodule Listener do
   use GenServer
   def key do :listen end
-  def port do 6666 end
   def start_link() do GenServer.start_link(__MODULE__, :ok, [name: key]) end
   def init(:ok) do {:ok, []} end#
   def handle_cast({type, s, args}, _) do 

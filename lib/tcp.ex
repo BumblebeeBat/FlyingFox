@@ -3,7 +3,7 @@ defmodule Tcp do
   def close(socket) do :gen_tcp.close(socket) end
   def start(port, func) do
     {:ok, socket} = open(port)
-    pid = spawn(fn -> new_peer(socket, port, func) end)
+    spawn(fn -> new_peer(socket, port, func) end)
   end
   defp new_peer(socket, port, func) do
     {x, conn} = :gen_tcp.accept(socket)
@@ -87,8 +87,8 @@ defmodule Tcp do
     end
   end
   def test do
-    port=6666
+    port = 0
     start(port, &(&1))
-    IO.puts(inspect talk("localhost", port, [a: [b: 3, d: "e"]]))
+    IO.puts(inspect talk("localhost", Constants.port, [a: [b: 3, d: "e"]]))
   end
 end

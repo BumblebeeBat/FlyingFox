@@ -38,8 +38,9 @@ defmodule VerifyTx do
     a<b and j>=0 and j<Constants.chances_per_address and is_integer(j)
   end
   def first_bits(b, s) do
-    <<c :: size(s), _ :: bitstring>>=b
-    c
+    << c :: size(s), _ :: bitstring >> = b
+    s = s + 8 - rem(s, 8)#so that we have an integer number of bytes.
+    << c :: size(s) >>
   end
   def ran_block(block) do
     txs = block[:data][:txs]
@@ -47,7 +48,8 @@ defmodule VerifyTx do
       is_nil(txs) -> 0
       true ->
         txs=Enum.filter(txs, &(&1[:"data"][:"type"]=="reveal"))
-        txs=Enum.map(txs, &(first_bits(&1[:"data"][:"secret"], length(&1[:"data"][:"winners"])))) |> Enum.reduce("", &(&1 <> &2))
+        txs=Enum.map(txs, &(first_bits(&1[:"data"][:"secret"], length(&1[:"data"][:"winners"])))) 
+        txs |> Enum.reduce("", &(&1 <> &2))
     end
   end
   def rng(hash, counter \\ 26, entropy \\ "" ) do #this needs to be memoized so bad.
@@ -62,7 +64,8 @@ defmodule VerifyTx do
   def sign?(tx, txs, prev_hash) do#block = [data: [hash: block_hash]]
     acc = KV.get(tx[:pub])
     tot_bonds = KV.get("tot_bonds")
-    ran=rng(prev_hash)
+    ran = rng(prev_hash)
+    prev_block = KV.get(prev_hash)
     l=Enum.map(tx[:data][:winners], fn(x)->winner?(acc[:bond], tot_bonds, ran, tx[:pub], x) end)
     l1=l
     l=Enum.reduce(l, true, fn(x, y) -> x and y end)
@@ -74,23 +77,39 @@ defmodule VerifyTx do
       not is_binary(tx[:data][:secret_hash]) -> 
         IO.puts("should have been binary")
         false
+      tx[:data][:height] != prev_block[:data][:height]->
+        IO.puts("bad height")
+        false
       not l -> 
         IO.puts("not l")
-        IO.puts("l1 #{inspect l1}")
         false
       length(tx[:data][:winners])<1 -> false
       m != 0 -> false
-      not(KV.get("height")==0) and tx[:data][:prev_hash]!=prev_hash -> 
+      not(KV.get("height")==0) and tx[:data][:prev_hash]!=prev_hash-> 
         IO.puts("hash not match")
-        IO.puts("prev hash: #{inspect prev_hash}")
-        IO.puts("tx: #{inspect tx}")
         false
       true -> true
     end
   end
   def slasher?(tx, txs) do
-    {pub, _, tx}=tx
-    false
+    tx1 = tx[:data][:tx1]
+    tx2 = tx[:data][:tx2]
+    #did they already reveal?
+    #did I already slash?
+    cond do
+      tx1[:data][:prev_hash] == tx2[:data][:prev_hash] -> 
+        IO.puts("same tx_hash")
+        false
+      tx1[:data][:height] != tx2[:data][:height] ->
+        IO.puts("different height")
+        false
+      not Sign.verify_tx(tx1) ->
+        IO.puts("unsigned")
+        false
+      not Sign.verify_tx(tx2) ->
+        IO.puts("unsigned 2")
+        false
+    end
     #If you can prove that the same address signed on 2 different blocks at the same height, then you can take 1/3rd of the deposit, and destroy the rest.
     #make sure they cannot do this repeatedly
   end
