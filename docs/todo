@@ -1,3 +1,8 @@
+Every several hundred blocks we divide everyone's bond-coins in half, and cut the exchange rate in half. That way the numbers don't get too big. Anyone who has less than the minimum is forced to unbond at that time.
+
+
+Use onion routing to reveal transactions, it is critical that bond-holders don't reveal their IP address.
+
 maybe Make random number generator better with game to stop people from revealing:
 When you commit to a bet, you at the same time open up the opportunity for anyone to make a bet against you at a 2:1 ratio (eg. someone can claim "I think you'll be heads", and if it's heads they get 1 and if it's tails they lose 2, and similarly someone can claim "I think you'll be tails", and if it's tails they get 1 and if it's heads they lose 2). So if you reveal the bit to anyone else, even via a funky scheme like ZKP, they can anonymously take expected profit from you.
 
@@ -34,6 +39,8 @@ minimum amount of money per address (maybe a new tx type for deleting addresses 
 mini-blockchain proposal
 
 maybe we should charge proof of work for creating blocks, and have it increase exponentially depending how many blocks are being skipped.n
+
+
 
 
 

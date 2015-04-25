@@ -1,0 +1,22 @@
+flying fox docs
+=============
+
+Donations: 1GbpRPE83Vjg73KFvTVZ4EnS2qNkiLY5TT
+
+I give thanks to some people who contributed ideas in the influenced_by page.
+
+outline gives an overview of how the project works.
+
+security.py is where I calculate that 1/2 need to be byzantine in order to successfully attack.
+
+failure_modes.md explains verbally the attacks, and compares flying foxes defences to existing byzantine fault tolerant schemes.
+
+
+
+patricia is a database structure useful if we ever want computers to interact with the blockchain without downloading the blockchain. I may add it in the future.
+
+The python directory is the remains of an old project which I use for reference when making flying fox. 
+
+stablecoin has notes on how to use market mechanisms to create coins that maintain constant value against an external asset. Including a powerful scripting system that allows highly customized financial contracts without a turing complete scripting language.
+
+vm.ex is notes on how a virtual machine might work, if I added a virtual machine.

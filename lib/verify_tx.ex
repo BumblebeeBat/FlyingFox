@@ -92,6 +92,7 @@ defmodule VerifyTx do
     end
   end
   def slasher?(tx, txs) do
+		old_block = signed_block(tx)
     tx1 = tx[:data][:tx1]
     tx2 = tx[:data][:tx2]
     cond do

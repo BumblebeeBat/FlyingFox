@@ -69,6 +69,7 @@ defmodule Talker do
     status = Api.status(p[:port], p[:ip])
     cond do
       #status == :ok or status == "ok"-> IO.puts("peer died 2 #{inspect p}")
+			not is_list(status) -> IO.puts "status #{inspect status}"
       :error in Dict.keys(status) ->
         status[:error]
       true -> 

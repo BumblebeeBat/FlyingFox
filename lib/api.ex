@@ -1,4 +1,4 @@
-defmodule Api do
+odefmodule Api do
   defp lh do "localhost" end
   defp lp do KV.get("port") end
   defp talk(msg, port, ip) do 
