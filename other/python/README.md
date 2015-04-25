@@ -1,0 +1,1 @@
+This is some python code from an older blockchain I had made. I am using parts of it as reference while building the elixir one.

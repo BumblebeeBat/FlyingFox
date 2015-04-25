@@ -1,0 +1,1 @@
+This folder is for ideas to upgrade flying fox with stablecoin features.

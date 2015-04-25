@@ -94,9 +94,10 @@ defmodule VerifyTx do
   def slasher?(tx, txs) do
     tx1 = tx[:data][:tx1]
     tx2 = tx[:data][:tx2]
-    #did they already reveal?
-    #did I already slash?
     cond do
+      tx[:data][:tx1][:pub] in old_block[:meta][:revealed] ->
+        IO.puts "slasher reuse"
+        false
       tx1[:data][:prev_hash] == tx2[:data][:prev_hash] -> 
         IO.puts("same tx_hash")
         false
@@ -111,7 +112,6 @@ defmodule VerifyTx do
         false
     end
     #If you can prove that the same address signed on 2 different blocks at the same height, then you can take 1/3rd of the deposit, and destroy the rest.
-    #make sure they cannot do this repeatedly
   end
   def signed_block(tx) do Blockchain.get_block(tx[:data][:signed_on]) end
   def sign_tx(block, pub) do block[:data][:txs] |> Enum.filter(&(&1[:pub]==pub))  |> Enum.filter(&(&1[:data][:type]=="sign")) end
