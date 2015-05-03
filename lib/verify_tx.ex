@@ -149,6 +149,29 @@ defmodule VerifyTx do
     end
     #After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
   end
+	def to_channel?(tx, txs) do
+		#signed by one
+		#possibly creates the channel. If channel doesn't exist yet, you need to explicitly say. That way we can undo the tx later.
+		#only signer spends into channel at first.
+		#different part of code should check balances
+		#dont allow this any more after a channel_block has been published.
+		false
+	end
+	def channel_block?(tx, txs) do
+		#both need to have signed
+		#must contain the entire current state of the channel.
+		#nlocktime
+		#has a hash of a secret that is signed into it with the first signature. The secret needs to be revealed before this tx is valid. the secret is part of the signature. maybe store it in :meta
+		#is there enough money in the channel to afford this?
+		#fee can be paid by either or both.
+		#different part of code should check balances
+		#channels use nonces different. if a channel block is proposed, then any higher-nonced block can replace the proposed final state.
+		false
+	end
+	def close_channel?(tx, txs) do 
+		#2 people could be closing it. Either the person who proposed a channel block is, in which case it needs to have been a long enough waiting period since his proposal. If the other person made this tx, then they are proposing an alternative final state. If they have a valid state with a higher channel-nonce then they win.
+		false
+	end
   def check_tx(tx, txs, prev_hash) do
     cost = Constants.block_creation_fee
     cond do
@@ -164,7 +187,11 @@ defmodule VerifyTx do
        bond2spend: &(bond2spend?(&1, &2)),
        sign: &(sign?(&1, &2, prev_hash)),
        slasher: &(slasher?(&1, &2)),
-       reveal: &(reveal?(&1, &2))]
+       reveal: &(reveal?(&1, &2)),
+			 to_channel: &(new_channel?(&1, &2)),
+			 channel_block: &(channel_block?(&1, &2)),
+			 close_channel: &(close_channel?(&1, &2)),
+			]
     default = fn(_, _) -> false end
     cond do
       tx[:data][:type] == nil -> false

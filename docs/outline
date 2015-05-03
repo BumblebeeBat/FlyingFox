@@ -47,8 +47,12 @@ After you sign, you wait a while, and eventually are able to make this tx. This 
 
 Transaction types for phase 2:
 
-Create channel:
-This creates a 2-way channel between 2 people. It allows them to give money to each other without writing anything onto the blockchain.
+New channel:
+This creates a 2-way channel between 2 people. It allows them to give money to each other without writing anything onto the blockchain. It must be signed by both of them.
+It moves money from either or both accounts into the channel.
 
-Channel spend:
-This is how you spend money without writing on the blockchain.
+Channel:
+This is how you spend money without writing on the blockchain. both need to sign. It has a nonce.
+You can update to higher nonces, but you can never publish a tx with a lower nonce.
+The tx includes the entire current state of the channel.
+The fee can come from either or both.

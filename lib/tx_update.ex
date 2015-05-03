@@ -97,19 +97,31 @@ defmodule TxUpdate do
     sym_increment(tx[:pub], :amount, tx[:data][:amount]+reward+delta, d)#during waiting period you are holding cash not bonds.
     #After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
   end
+	def to_channel(tx, d) do
+		#take money from sender's address, and puts it into the channel.
+	end
+	def channel_block(tx, d) do
+		#proposes a final state for this channel.
+	end
+	def close_channel(tx, d) do
+		#deletes the channel, and gives it's money to users.
+	end
   def tx_update(tx, d, bond_size) do
     acc=KV.get(tx[:pub])
     acc=Dict.put(acc, :nonce, acc[:nonce]+1*d)
     KV.put(tx[:pub], acc)
     case Dict.get(tx[:data], :type) do
-      "spend" ->      spend(tx, d)
-      "spend2wait" -> spend2wait(tx, d)
-      "wait2bond" ->  wait2bond(tx, d)
-      "bond2spend" -> bond2spend(tx, d)
-      "sign" ->       sign(tx, d, bond_size)
-      "slasher" ->    slasher(tx, d)
-      "reveal" ->     reveal(tx, d)
-      _	->            false			
+      "sign" -> sign(tx, d, bond_size)
+      "spend" ->               spend(tx, d)
+      "spend2wait" ->     spend2wait(tx, d)
+      "wait2bond" ->       wait2bond(tx, d)
+      "bond2spend" ->     bond2spend(tx, d)
+      "slasher" ->           slasher(tx, d)
+      "reveal" ->             reveal(tx, d)
+      "to_channel" ->     to_channel(tx, d)
+      "channel_block"->channel_block(tx, d)
+      "close_channel"->close_channel(tx, d)
+      _	-> false			
     end
   end
   def txs_updates(txs, d, bond_size) do
