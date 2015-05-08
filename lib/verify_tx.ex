@@ -18,8 +18,8 @@ defmodule VerifyTx do
     end
   end 
   def wait2bond?(tx, txs) do
-    acc=KV.get(tx[:"pub"])    
-    {a, h}=tx[:"data"][:"wait_money"]
+    acc=KV.get(tx[:pub])    
+    {a, h}=tx[:data][:wait_money]
     cond do
       {a, h}!=acc[:wait] -> false 
       h>KV.get("height")+Constants.epoch -> false 
@@ -149,28 +149,37 @@ defmodule VerifyTx do
     end
     #After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
   end
+  #maybe we should stop any channel tx of different types from coexisting in the same block.
 	def to_channel?(tx, txs) do
-		#signed by one
-		#possibly creates the channel. If channel doesn't exist yet, you need to explicitly say. That way we can undo the tx later.
-		#only signer spends into channel at first.
-		#different part of code should check balances
-		#dont allow this any more after a channel_block has been published.
-		false
+    channel = KV.get(tx[:channel])
+    cond do
+      not tx[:data][:tx] in [:pub, :pub2] -> false
+      (channel == nil) and (tx[:new] != true) -> false
+      (channel != nil) and (tx[:new] == true) -> false
+      true -> true
+    end
+		#dont allow this any more after a channel_block has been published, or if there is a channel_block tx in the mempool.
 	end
+  def check_sig2(tx) do tx |> Dict.put(:sig, tx[:sig2]) |> Dict.put(:pub, tx[:pub2]) |> Sign.verify_tx() end
 	def channel_block?(tx, txs) do
-		#both need to have signed
+    channel = KV.get(tx[:channel])    
+    cond do
+      not check_sig2(tx) -> false
+      tx[:data][:amount]+tx[:data][:amount2] > channel[tx[:data][:pub]]+channel[tx[:data][:pub2]] -> false
+      tx[:secret_hash] != nil and tx[:secret_hash] != DetHash.doit(tx[:meta][:secret]) -> false
+      true -> true
+    end
 		#must contain the entire current state of the channel.
-		#nlocktime
-		#has a hash of a secret that is signed into it with the first signature. The secret needs to be revealed before this tx is valid. the secret is part of the signature. maybe store it in :meta
-		#is there enough money in the channel to afford this?
 		#fee can be paid by either or both.
-		#different part of code should check balances
-		#channels use nonces different. if a channel block is proposed, then any higher-nonced block can replace the proposed final state.
-		false
 	end
 	def close_channel?(tx, txs) do 
-		#2 people could be closing it. Either the person who proposed a channel block is, in which case it needs to have been a long enough waiting period since his proposal. If the other person made this tx, then they are proposing an alternative final state. If they have a valid state with a higher channel-nonce then they win.
-		false
+    #only one per block per channel. be careful.
+    channel = KV.get(tx[:channel])
+    case tx[:data][:type] do
+      "fast" -> if check_sig2(tx) do channel_block?(tx, txs) end
+      "slash" -> if channel[:nonce] < tx[:nonce] do channel_block?(tx, txs) end
+      "timeout" -> channel[:time] < KV.get("height") - channel[:delay]
+    end
 	end
   def check_tx(tx, txs, prev_hash) do
     cost = Constants.block_creation_fee
@@ -188,7 +197,7 @@ defmodule VerifyTx do
        sign: &(sign?(&1, &2, prev_hash)),
        slasher: &(slasher?(&1, &2)),
        reveal: &(reveal?(&1, &2)),
-			 to_channel: &(new_channel?(&1, &2)),
+			 to_channel: &(to_channel?(&1, &2)),
 			 channel_block: &(channel_block?(&1, &2)),
 			 close_channel: &(close_channel?(&1, &2)),
 			]

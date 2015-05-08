@@ -57,7 +57,7 @@ defmodule Listener do
       byte_size(PackWrap.pack(out)) > max -> tl(out)
       start < 0 -> blocks(1, finish, out)
       start > finish -> out
-      block == Constants.empty_account -> blocks_helper(start+1, finish, out)
+      block == nil -> blocks_helper(start+1, finish, out)
       true -> blocks_helper(start+1, finish, [block|out])
     end
   end

@@ -23,7 +23,7 @@ defmodule TxCreator do
       w=Enum.filter(0..Constants.chances_per_address, fn(x) -> VerifyTx.winner?(acc[:bond], tot_bonds, VerifyTx.rng(prev_hash), pub, x) end) 
       h=KV.get("height")+1
       ran = KV.get("secret #{inspect h}")
-      if ran == Constants.empty_account do
+      if ran == nil do
         ran=:crypto.rand_bytes(10)
         KV.put("secret #{inspect h}", ran)
       end
@@ -48,7 +48,7 @@ defmodule TxCreator do
     w=old_tx[:data][:winners]
     bond_size=old_block[:data][:bond_size]
     secret = KV.get("secret #{inspect h}")
-    if secret != Constants.empty_account do
+    if secret != nil do
       tx=[type: "reveal", signed_on: h, winners: w, amount: length(w)*bond_size, secret: KV.get("secret #{inspect h}"), nonce: nonce(pub)]
       tx = Keys.sign(tx)
       Mempool.add_tx(tx)

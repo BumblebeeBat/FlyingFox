@@ -18,7 +18,7 @@ defmodule Blockchain do#the part the blocktree we care about is the blockchain, 
       min_bond*2/3>f.(block) ->#if the amount of money bonded per block changes too quickly, then it makes it more likely for double-spends to happen.
         IO.puts("not enough bonded")
         false
-      ngenesis and prev == Constants.empty_account ->
+      ngenesis and prev == nil ->
         IO.puts("blocks come from parents: #{inspect block}")
         IO.puts(inspect block[:data][:height])
         false
@@ -76,7 +76,7 @@ defmodule Blockchain do#the part the blocktree we care about is the blockchain, 
     prev_block = get_block(KV.get("height"))
     txs=Mempool.txs#remove expensive txs until we can afford it. packing problem.
     bh=nil 
-    if prev_block != Constants.empty_account do 
+    if prev_block != nil do 
       bh=Blocktree.blockhash(prev_block)
     end
     new=[height: height+n, txs: txs, hash: bh, bond_size: 10_000_000_000_000/Constants.signers_per_block*3]#instead of fixed bond size, we shoul look at how big of a bond the txs need.
@@ -110,7 +110,7 @@ defmodule Blockchain do#the part the blocktree we care about is the blockchain, 
     cost = Constants.block_creation_fee*round(:math.pow(2, gap))
     cond do
       not is_list(block) -> [error: "blocks should be lists"]
-      KV.get(Blocktree.blockhash(block)) == Constants.empty_account -> [error: "don't have this block"]
+      KV.get(Blocktree.blockhash(block)) == nil -> [error: "don't have this block"]
       gap < 1 -> [error: "cannot redo history"]
       not valid_block?(block, cost) -> 
         IO.puts("invalid block")

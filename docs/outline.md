@@ -19,6 +19,9 @@ bond2spend
 sign
 slasher
 reveal
+to_channel
+channel_block
+close_channel
 
 spend:
 For users to give money to each other. Creator of the tx has a fee which is >=0. The fee pays the creator of the block.
@@ -41,18 +44,26 @@ slasher:
 If you can prove that the same address signed on 2 different blocks at the same height, then you can take 1/3rd of the deposit, and destroy the rest.
 
 reveal:
-After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
+After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims the safety deposit given in the sign tx. (upgrade? If your bit is in the minority, then your prize is bigger.)
+
+to_channel:
+Spends money into a channel. Possibly creates new channel.
+take money from sender's address, and puts it into the channel.
+
+channel_block:
+proposes a final state for this channel. no longer possible to to_channel. Needs to include entire channel state.
+
+close_channel:
+deletes the channel, and gives it's money to users
 
 
+##update types for phase 2:
 
-Transaction types for phase 2:
+channel_block:
+Should be possible to update the channel state so some of the money is decided by the outcome of a contract + contract_state + oracle_id. The merkelized hash of the contract and contract state and oracle_id are recorded in the channel state.
+Normally users give the correct money to the correct person before publishing the channel-block. If the channel-block still contains contracts when it is published, then the oracles are in charge of that money.
+In the event of disagreement, the correct oracle judges over the outcome of the decision.
 
-New channel:
-This creates a 2-way channel between 2 people. It allows them to give money to each other without writing anything onto the blockchain. It must be signed by both of them.
-It moves money from either or both accounts into the channel.
+Allow creation of oracles. 
 
-Channel:
-This is how you spend money without writing on the blockchain. both need to sign. It has a nonce.
-You can update to higher nonces, but you can never publish a tx with a lower nonce.
-The tx includes the entire current state of the channel.
-The fee can come from either or both.
+Allow oracles to make transaction which determine where funds being gambled upon in a channel state go. Users need to send the channel-code, and channel-state to the correct oracle who can then send the money to the correct person.

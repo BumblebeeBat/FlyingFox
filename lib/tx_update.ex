@@ -91,24 +91,32 @@ defmodule TxUpdate do
     sym_increment(tx[:pub], :amount, tx[:data][:amount]+reward+delta/3, d)
   end
   def reveal(tx, d) do
-    #lets change old_block somehow so that you cannot reveal the same secret twice.
     old_block = Blockchain.get_block(tx[:data][:signed_on])
     {reward, delta} = common(tx, d, old_block, tx[:pub])
     sym_increment(tx[:pub], :amount, tx[:data][:amount]+reward+delta, d)#during waiting period you are holding cash not bonds.
-    #After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
   end
 	def to_channel(tx, d) do
-		#take money from sender's address, and puts it into the channel.
+    sym_increment(tx[:pub], :amount, -tx[:data][:amount]-tx[:data][:fee], d)
+    cond do
+      tx[:new] and d==1 -> KV.put(tx[:channel], [pub: tx[:pub], pub2: tx[:data][:pub2], amount: tx[:data][:amount], amount2: 0, time: 0, nonce: 0, delay: tx[:delay]])
+      tx[:new] -> KV.put(tx[:channel], nil)
+      true -> sym_increment(tx[:channel], tx[:to], tx[:data][:amount], d)
+    end
 	end
 	def channel_block(tx, d) do
-		#proposes a final state for this channel.
+    #need to make a timestamp now for possible refund tx. Also, we should record the nonce for this channel state, so we only update one way.
+    sym_replace(tx[:channel], :time, 0, KV.get("height"), d)
+    sym_replace(tx[:channel], :nonce, 0, tx[:nonce], d)
+    #update state to stop production of to_channel tx. starts timer.
 	end
 	def close_channel(tx, d) do
-		#deletes the channel, and gives it's money to users.
+    sym_increment(tx[:pub], :amount, tx[:amount], d)
+    sym_increment(tx[:pub2], :amount, tx[:amount2], d)
+		#needs to delete the channel
 	end
   def tx_update(tx, d, bond_size) do
     acc=KV.get(tx[:pub])
-    acc=Dict.put(acc, :nonce, acc[:nonce]+1*d)
+    acc=Dict.put(acc, :nonce, acc[:nonce]+d)
     KV.put(tx[:pub], acc)
     case Dict.get(tx[:data], :type) do
       "sign" -> sign(tx, d, bond_size)

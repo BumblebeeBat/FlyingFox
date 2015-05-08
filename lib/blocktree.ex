@@ -19,10 +19,11 @@ defmodule Blocktree do
   end
   def put_block(block) do
     height = block[:data][:height] 
+    IO.puts("height #{inspect height}")
     block_hash = blockhash(block)
     block_hashes = height |> Blockchain.get_helper
+    if block_hashes == nil do block_hashes = [] end
     if block_hash in block_hashes do false else
-      if block_hashes ==Constants.empty_account do block_hashes = [] end
       block_hashes = block_hashes++[block_hash]
       KV.put(to_string(height), block_hashes)
       KV.put(block_hash, Dict.put(block, :meta, [revealed: []]))
@@ -75,14 +76,19 @@ defmodule Blocktree do
         enough_validated(tl(blocks), n-1)
     end
   end
+  def get_height(h) do 
+  a = KV.get(h)
+  if a == nil do a = [] end
+  a
+  end
   def add_blocks(blocks) do#make sure the networking nodes can pass >30 blocks before calling this function.
     cond do
       blocks == [] -> []
       not :pub in Dict.keys(hd(blocks)) -> add_blocks(tl(blocks))
-      not enough_validated(blocks, round(length(KV.get(hd(blocks)[:data][:height]))/3)) ->#should say "KV.get" in this line!!
+      not enough_validated(blocks, round(length(get_height(hd(blocks)[:data][:height]))/3)) ->#should say "KV.get" in this line!!
          IO.puts("double-signing everywhere")
          false
-      KV.get(blockhash(hd(blocks))) != Constants.empty_account ->
+      KV.get(blockhash(hd(blocks))) != nil ->
         IO.puts("already have this block")
         add_blocks(tl(blocks))
       true ->

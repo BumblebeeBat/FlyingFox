@@ -6,7 +6,6 @@ defmodule KV do
   def handle_call(:keys, _from, dict) do {:reply, Dict.keys(dict), dict} end
   def handle_call({:get, v}, _from, dict) do
     out = dict[v]
-    if out == nil do out = Constants.empty_account end
     {:reply, out, dict}
   end
   def handle_cast({:put, k, v}, dict) do {:noreply, Dict.put(dict, k, v)} end

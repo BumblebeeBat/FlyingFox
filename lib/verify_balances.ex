@@ -62,6 +62,9 @@ defmodule VerifyBalances do
       "sign" -> addresses = lose_bond(addresses, pub, bond_size*length(tx[:data][:winners]))
       "slasher" -> true
       "reveal" -> true
+      "to_channel" -> addresses = lose_cash(addresses, pub, tx[:data][:amount]+tx[:data][:fee])
+      "channel_block" -> true
+      "close_channel" -> true
       _ -> 
         IO.puts("no function with that name #{inspect type}")
         false
