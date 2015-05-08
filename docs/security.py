@@ -1,3 +1,4 @@
+#this file is for running simulations to help properly tune the constants in flying fox. If the constants are optimally tuned, then flying fox is secure against up to 1/2 byzantine.
 import numpy
 from cdecimal import Decimal
 def control_block_trial(total, clique, p):

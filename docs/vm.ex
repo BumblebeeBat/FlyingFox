@@ -1,3 +1,4 @@
+#an example of the kind of VM that oracles might use.
 defmodule VM do
   def out_of_gas do IO.puts "you ran out of gas" end
   def run(db) do

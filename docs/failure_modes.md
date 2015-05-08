@@ -18,6 +18,6 @@ Forking in flying fox happens when more than 1/2 of the validator stake is contr
 
 Bribe failure in BFT systems is not often discussed. Tendermint requires each validator to keep timestamps and evidence from their communications with the other nodes. The evidence can later be used to discover who was byzantine. Since the programmers are the ones who create the new protocol after failures, probably the programmers would be the ones being bribed. This situation needs to be experimented on.
 
-Bribe failures in flying fox never happen because the people who disagree can use the burn mechanism to fight. If 2 people want contradictory valid state-changes, then they take turns undoing each other's transactions until the cost exceeds the benefit. The money that would have gone to bribe someone instead gets burned.
+Bribe failures in flying fox never happen because the people who disagree can use the jumping a gap mechanism to fight. If 2 people want contradictory valid state-changes, then they take turns undoing each other's transactions until the cost exceeds the benefit. The money that would have gone to bribe someone instead gets burned.
 
 I talk more about flying foxes 1/2 vs BFT 1/3 in the file security.py

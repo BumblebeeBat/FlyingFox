@@ -1,22 +1,17 @@
-Every several hundred blocks we divide everyone's bond-coins in half, and cut the exchange rate in half. That way the numbers don't get too big. Anyone who has less than the minimum is forced to unbond at that time.
+I am not very confident in the decisions on this todo list, and I may make different decisions later.
 
+weak subjectivity and faster syncing
 
-Use onion routing to reveal transactions, it is critical that bond-holders don't reveal their IP address.
+Use onion routing to reveal transactions, it is better if bond-holders don't reveal their IP address.
 
-maybe Make random number generator better with game to stop people from revealing:
+maybe make random number generator better with game to stop people from revealing:
 When you commit to a bet, you at the same time open up the opportunity for anyone to make a bet against you at a 2:1 ratio (eg. someone can claim "I think you'll be heads", and if it's heads they get 1 and if it's tails they lose 2, and similarly someone can claim "I think you'll be tails", and if it's tails they get 1 and if it's heads they lose 2). So if you reveal the bit to anyone else, even via a funky scheme like ZKP, they can anonymously take expected profit from you.
 
 Make random number generator to decentivize collusion:
 People who choose the minority bit have to pay less fee.
 
-Steal idea from tendermint: *Problem- what if more than 1/3rd of money is in computers that are powered off?
-
-
-
-
 Instead of storing signatures in each block, only store a max of one signature per address. A signature over a recent block is also a signature over the entire chain, because the block contains a hash of the previous block.
 
-weak subjectivity
 
 
 
@@ -32,15 +27,6 @@ reward is 20%
 12 signers
 reward is 40%
 
-Explain all the attack scenarios that you imagined while writing the code, post it on #bitcoin-wizards
-
 minimum amount of money per address (maybe a new tx type for deleting addresses would be useful?)
 
-mini-blockchain proposal
-
-maybe we should charge proof of work for creating blocks, and have it increase exponentially depending how many blocks are being skipped.n
-
-
-
-
-
+maybe we should charge proof of work for creating blocks, and have it increase exponentially depending how many blocks are being skipped.

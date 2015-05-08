@@ -15,6 +15,8 @@ stablecoin has notes on how to use market mechanisms to create coins that mainta
 
 patricia is a database structure useful if we ever want computers to interact with the blockchain without downloading the blockchain. I may add it in the future.
 
-vm.ex is notes on how a virtual machine might work, if I added a virtual machine.
+SMPC.py explains a secure multi-party computation mechanism that will be used to maximize how often the oracles give accurate answers.
 
 The python directory is the remains of an old project which I use for reference when making flying fox. 
+
+todo is a list of changes I am considering doing to flying fox source.

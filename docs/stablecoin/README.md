@@ -1,1 +1,1 @@
-This folder is for ideas to upgrade flying fox with stablecoin features.
+This folder is for ideas to upgrade flying fox with stablecoin features. Much of it is outdated because it is based on LMSR. It needs to be adjusted for CFDs.
