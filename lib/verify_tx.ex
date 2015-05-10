@@ -154,19 +154,19 @@ defmodule VerifyTx do
     channel = KV.get(tx[:channel])
     cond do
       not tx[:data][:tx] in [:pub, :pub2] -> false
-      (channel == nil) and (tx[:new] != true) -> false
-      (channel != nil) and (tx[:new] == true) -> false
+      (channel == nil) and (tx[:data][:new] != true) -> false
+      (channel != nil) and (tx[:data][:new] == true) -> false
       true -> true
     end
 		#dont allow this any more after a channel_block has been published, or if there is a channel_block tx in the mempool.
 	end
   def check_sig2(tx) do tx |> Dict.put(:sig, tx[:sig2]) |> Dict.put(:pub, tx[:pub2]) |> Sign.verify_tx() end
 	def channel_block?(tx, txs) do
-    channel = KV.get(tx[:channel])    
+    channel = KV.get(tx[:data][:channel])    
     cond do
       not check_sig2(tx) -> false
       tx[:data][:amount]+tx[:data][:amount2] > channel[tx[:data][:pub]]+channel[tx[:data][:pub2]] -> false
-      tx[:secret_hash] != nil and tx[:secret_hash] != DetHash.doit(tx[:meta][:secret]) -> false
+      tx[:data][:secret_hash] != nil and tx[:data][:secret_hash] != DetHash.doit(tx[:meta][:secret]) -> false
       true -> true
     end
 		#must contain the entire current state of the channel.
@@ -174,7 +174,7 @@ defmodule VerifyTx do
 	end
 	def close_channel?(tx, txs) do 
     #only one per block per channel. be careful.
-    channel = KV.get(tx[:channel])
+    channel = KV.get(tx[:data][:channel])
     case tx[:data][:type] do
       "fast" -> if check_sig2(tx) do channel_block?(tx, txs) end
       "slash" -> if channel[:nonce] < tx[:nonce] do channel_block?(tx, txs) end

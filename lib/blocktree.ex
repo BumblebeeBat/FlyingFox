@@ -4,10 +4,6 @@ defmodule Blocktree do
     DetHash.doit(block)
   end
   def genesis_block do
-    new=[meta: [revealed: []], data: [height: 0, txs: []]]
-    KV.put("height", 0)
-    KV.put("0", ["genesis"])
-    KV.put("genesis", new)
     genesis_block = [meta: [revealed: []], pub: "BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc=", sig: "MEYCIQCu3JqIcIn3jqBhH0nqF8ZTJmdV9GzlJ6WpSq66PA20sAIhAINAuEyCyl2x/iK3BRJM0JGXcd8epnzv0kTX6iHOMAeW", data: [height: 1, txs: [], hash: "z5cVID5hEmZcWNVRmVPRUtSN7e2Z5nXecc+8KWbxk+4=", bond_size: 3.0e11]]
     put_block(genesis_block)
     KV.put("height", 1)
