@@ -1,8 +1,12 @@
 FlyingFox
 =========
 
-[![Join the chat at https://gitter.im/zack-bitcoin/FlyingFox](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/zack-bitcoin/FlyingFox?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
+<<<<<<< HEAD
+[![Join the chat at https://gitter.im/BumblebeeBat/FlyingFox](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/zack-bitcoin/FlyingFox?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
+
+=======
+>>>>>>> b81051b942bffe70355c826544f9da8b6ca1b97f
 
 Donations: 1GbpRPE83Vjg73KFvTVZ4EnS2qNkiLY5TT
 
@@ -13,3 +17,6 @@ you need to install elixir to run this code http://elixir-lang.org/install.html
 to compile FlyingFox run in terminal: ./install.sh
 to turn on FlyingFox read this file: RUN.md 
 to talk to FlyingFox run in terminal: ./flyingfox
+
+Code of conduct, development guidelines:
+Submit pull request. If I like, I will accept.
