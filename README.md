@@ -2,7 +2,7 @@ FlyingFox
 =========
 
 
-[![Join the chat at https://gitter.im/BumblebeeBat/FlyingFox](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/zack-bitcoin/FlyingFox?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
+[![Join the chat at https://gitter.im/BumblebeeBat/FlyingFox](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/BumblebeeBat/FlyingFox?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
 
 Donations: 1GbpRPE83Vjg73KFvTVZ4EnS2qNkiLY5TT
 
