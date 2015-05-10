@@ -2,11 +2,7 @@ FlyingFox
 =========
 
 
-<<<<<<< HEAD
 [![Join the chat at https://gitter.im/BumblebeeBat/FlyingFox](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/zack-bitcoin/FlyingFox?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
-
-=======
->>>>>>> b81051b942bffe70355c826544f9da8b6ca1b97f
 
 Donations: 1GbpRPE83Vjg73KFvTVZ4EnS2qNkiLY5TT
 
