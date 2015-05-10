@@ -21,11 +21,12 @@ defmodule Sign do
   def sign_tx(tx, pub, priv) do
     h=DetHash.doit(tx)
     sig=sign(h, priv)
-    [pub: pub, sig: sig, data: tx, meta: []]
+    %Signed{pub: pub, sig: sig, data: tx, meta: []}
   end
   def verify_tx(signed_tx) do
-    h=DetHash.doit(signed_tx[:data])
-    verify(h, signed_tx[:sig], signed_tx[:pub])
+    %{sig: sig, pub: pub, data: data} = signed_tx
+    h=DetHash.doit(data)
+    verify(h, sig, pub)
   end
   def test do
     {pub, priv}=new_key

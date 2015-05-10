@@ -7,7 +7,7 @@ defmodule Block do
 end
 
 defmodule RevealTx do
-  defstruct nonce: 0, signed_on: 0, winners: [], amount: 0, secret: nil, bond_size: 0,
+  defstruct nonce: 0, signed_on: 0, winners: [], amount: 0, secret: nil, bond_size: 0
 end
 
 defmodule SpendTx do
