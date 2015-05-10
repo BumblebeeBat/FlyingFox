@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/BumblebeeBat/FlyingFox.png?label=ready&title=Ready)](https://waffle.io/BumblebeeBat/FlyingFox)
 FlyingFox
 =========
 
