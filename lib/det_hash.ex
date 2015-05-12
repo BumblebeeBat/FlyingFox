@@ -3,8 +3,8 @@ defmodule DetHash do
   def hash_list(l) do Enum.sort(l) |> Enum.map(&(det_string(&1))) |> collect |> det_string end
   def map_hash(s) do
     keys = Map.keys(s) |> Enum.sort()
-    values = Enum.map( keys, fn x -> Map.get(s, x) end)
-    hash_list( keys ++ values )
+    values = Enum.map(keys, fn x -> Map.get(s, x) end)
+    hash_list(keys ++ values)
   end
   def det_string(a) do
     cond do

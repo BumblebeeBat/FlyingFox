@@ -59,7 +59,7 @@ defmodule Api do
       "stop" -> stop(6667) |> inspect |> IO.puts
       "txs" -> txs(6666) |> inspect |> IO.puts
       "all_peers" -> all_peers(6666) |> inspect |> IO.puts
-      "start" ->  Main.start(0) |> inspect |> IO.puts
+      "start" ->  FlyingFox.start(0) |> inspect |> IO.puts
       x -> IO.puts("#{inspect x} is not defined"); help
     end
   end

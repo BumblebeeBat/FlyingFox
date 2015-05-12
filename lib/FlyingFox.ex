@@ -1,4 +1,26 @@
-defmodule Main do
+defmodule FlyingFox do
+  use Application
+
+  #####
+  # API
+
+  def start(_type, _args) do
+    import Supervisor.Spec, warn: false
+
+    children = [worker(KV, []),
+                worker(Keys, []),
+                worker(Mempool, []), 
+                worker(BlockAbsorber, []),                 
+                worker(Peers, []),                 
+                worker(Listener, []),
+                worker(InternalListener, []) ]
+
+  end
+  def stop(_state), do: :ok
+end
+
+"""
+defmodule FlyingFox do
   import Supervisor.Spec
   def start(n \\ 0) do
     p=n+Constants.port
@@ -35,3 +57,4 @@ defmodule Main do
   end
 end
 
+"""

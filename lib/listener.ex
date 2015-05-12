@@ -2,13 +2,13 @@ defmodule Listener do
   use GenServer
   def key do :listen end
   def start_link() do GenServer.start_link(__MODULE__, :ok, [name: key]) end
-  def init(:ok) do {:ok, []} end#
-  def handle_cast({type, s, args}, _) do 
+  def init(:ok) do {:ok, []} end
+  def handle_cast({type, s, args}, _) do
     spawn_send(s, (fn() -> main(type, args) end))
     {:noreply, []}
   end
-  def export(l) do 
-    GenServer.cast(key, {hd(l), self(), tl(l)}) 
+  def export(l) do
+    GenServer.cast(key, {hd(l), self(), tl(l)})
     receive do [:ok, x] -> x end
   end
   def main(type, args) do
@@ -40,7 +40,7 @@ defmodule Listener do
       true -> Mempool.add_tx(tx)
     end
   end
-  def flip(x, y \\ []) do 
+  def flip(x, y \\ []) do
     cond do
       x==[] -> y
       true -> flip(tl(x), [hd(x)|y])

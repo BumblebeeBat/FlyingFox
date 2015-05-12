@@ -1,4 +1,3 @@
-#these variables can be different on every node
 defmodule Keys do
   use GenServer
   def key do :address end
