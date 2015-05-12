@@ -21,7 +21,6 @@ defmodule Api do
   talk([:all_peers], port, ip) end
   def status(port \\ lp, ip \\ lh) do
   talk([:status], port, ip) end
-
   def buy_block(port \\ lp+1, ip \\ lh) do
   talk([:buy_block], port, ip) end
   def buy_blocks(n, port \\ lp+1, ip \\ lh) do

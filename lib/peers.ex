@@ -9,7 +9,7 @@ defmodule Peers do#this module is a database of who your peers are, and other da
     b=Dict.put(mem, peer_key(peer), peer)
     {:noreply, b} 
   end
-  def peer_key(peer) do String.to_atom(to_string(peer[:port]) <>"$"<> peer[:ip]) end#to atom is VERY DANGEROUS!!!
+  def peer_key(peer) do String.to_atom(to_string(peer.port) <>"$"<> peer.ip) end#to atom is VERY DANGEROUS!!!
   def get_all do GenServer.call(key, :get_all) end
   def get(peer) do GenServer.call(key, {:get, peer}) end
   def timestamp do 
@@ -17,7 +17,7 @@ defmodule Peers do#this module is a database of who your peers are, and other da
     b*1000+div(c, 1000)
   end
   def update(peer, height, hash) do
-    p = peer |> Dict.put(:time, timestamp) |> Dict.put(:height, height) |> Dict.put(:hash, hash) 
+    p = %Peer{peer | time: timestamp, height: height, hash: hash}
     GenServer.cast(key, {:update, p})
   end
   def new_peer(peer) do update(peer, 0, "") end

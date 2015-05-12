@@ -4,7 +4,7 @@ defmodule Talker do
   def start_link() do GenServer.start_link(__MODULE__, :ok, [name: key]) end
   def init(:ok) do 
     start
-    Enum.map(0..2, &([ip: "localhost", port: Constants.port+&1])) |> Enum.map(&(Peers.add_peer(&1)))
+    Enum.map(0..2, &(%Peer{ip: "localhost", port: Constants.port+&1})) |> Enum.map(&(Peers.add_peer(&1)))
     {:ok, []} 
   end
   def handle_cast(:doit, _) do 
@@ -31,7 +31,7 @@ defmodule Talker do
     cond do
       lo >= n -> out
       true -> 
-        out = out++Api.blocks(i+lo, i+n, p[:port], p[:ip])
+        out = out++Api.blocks(i+lo, i+n, p.port, p.ip)
         download(n-1, i, p, out)
     end
   end
@@ -44,7 +44,7 @@ defmodule Talker do
         [status: :first_blocks]
       still_on(my_block) -> IO.puts("thread died")
       still_on(blocks) -> IO.puts("peer died 0")
-      hd(my_block)[:data][:hash] == hd(blocks)[:data][:hash] ->
+      hd(my_block).data.hash == hd(blocks).data.hash ->
         BlockAbsorber.absorb(blocks)
         [status: :ahead]
       true -> 
@@ -55,18 +55,18 @@ defmodule Talker do
   end
   def trade_peers(p) do
     my_peers = Api.all_peers
-    peers = Api.all_peers(p[:port], p[:ip])
+    peers = Api.all_peers(p.port, p.ip)
     if my_peers == :ok or peers == :ok do
       IO.puts("peer died 1")
     else
       not_yours = Enum.filter(my_peers, &(not &1 in peers))
       not_mine = Enum.filter(peers, &(not &1 in my_peers))
-      Enum.map(not_yours,&(Api.add_peer(elem(&1, 1),p[:port],p[:ip])))
+      Enum.map(not_yours,&(Api.add_peer(elem(&1, 1),p.port,p.ip)))
       Enum.map(not_mine, &(Peers.add_peer(elem(&1, 1))))
     end
   end
   def check_peer(p) do #validating mode
-    status = Api.status(p[:port], p[:ip])
+    status = Api.status(p.port, p.ip)
     cond do
       #status == :ok or status == "ok"-> IO.puts("peer died 2 #{inspect p}")
 			not is_list(status) -> IO.puts "status #{inspect status}"
@@ -79,8 +79,8 @@ defmodule Talker do
   end
   def check_peer_2(p, status) do
     trade_peers(p)
-    txs=Api.txs(p[:port], p[:ip])
-    u=status[:height]
+    txs=Api.txs(p.port, p.ip)
+    u=status.height
     i=KV.get("height")
     cond do
       txs == :ok -> IO.puts("txs shouldn't be :ok")

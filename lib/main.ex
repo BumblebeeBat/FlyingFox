@@ -18,7 +18,7 @@ defmodule Main do
         pid3 = Tcp.start(p+1, &(InternalListener.export(&1, self())))
         {:ok, pid4} = Supervisor.start_link([worker(Talker, [])], strategy: :one_for_one)
         KV.put("port", p)
-        Peers.add_peer([ip: "localhost", port: p])
+        Peers.add_peer(%Peer{ip: "localhost", port: p})
         spawn_link(fn() -> killer([pid1, pid2, pid3, pid4, self()]) end)
       true ->
         IO.puts("this port is already being used on this machine. wait ~60 seconds and try again.")
