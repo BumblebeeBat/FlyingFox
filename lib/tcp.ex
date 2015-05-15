@@ -1,7 +1,6 @@
 defmodule Tcp do
-
-  @tcp_thread_time 500
-  @Tcp_port Application.get_env :flying_fox, :tcp_port
+  #use Application
+  use Supervisor
 
   def open(port) do
     :gen_tcp.listen(port, [:binary, {:packet, 0}, {:active, false}])
@@ -9,25 +8,34 @@ defmodule Tcp do
   def close(socket) do
     :gen_tcp.close(socket)
   end
-  def start(port, func) do
-    {:ok, socket} = open(port)
-    spawn(fn -> new_peer(socket, port, func) end)
+  def start(_type, _args) do
+    import Supervisor.Spec
+    children = [
+      supervisor(Task.Supervisor, [[name: Tcp.TaskSupervisor]]),
+      worker(Task, [Tcp, :accept, _args])
+    ]
+    opts = [strategy: :one_for_one, name: TcpServer.Supervisor]
+    Supervisor.start_link(children, opts)
   end
-  defp new_peer(socket, port, func) do
+  def accept(port, func) do
+    {:ok, socket} = open(port)
+    IO.puts "Accepting connections on port #{port}"
+    loop_acceptor(socket, port, func)
+  end
+  def loop_acceptor(socket, port, func) do
     {x, conn} = :gen_tcp.accept(socket)
-    if x == :ok do
-      spawn(fn -> :timer.sleep(10)
-        pid = spawn(fn -> new_peer(socket, port, func) end)
-        :timer.sleep(@tcp_thread_time)
-        Process.exit(self(), :kill)
-      end)
-      conn |> listen |> func.() |> ms(conn) #these threads need a timer or something to kill them, otherwise we end up having too many.
-    else
-      IO.puts "failed to connect #{inspect conn}"
-      close(socket)
-      :timer.sleep(500)
-      spawn(fn -> start(port, func) end)
+    cond do
+      x == :ok -> Task.Supervisor.start_child(Tcp.TaskSupervisor, fn -> serve(conn, func) end)
+      true ->
+        IO.puts("failed to connect #{inspect conn}")
+        close(socket)
+        :timer.sleep(500)
+        spawn(fn -> accept(port, func) end)
+    loop_acceptor(socket, port, func)
     end
+  end
+  def serve(client, func) do
+    client |> listen |> func.() |> ms(conn)
   end
   defp ms(string, socket) do
     if is_pid(string) do

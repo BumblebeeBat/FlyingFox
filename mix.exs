@@ -14,7 +14,7 @@ defmodule Flyingfox.Mixfile do
      escript: escript_config,
      deps: deps,
      description: "Proof of take blockchain",
-     "build_embedded: Mix.env == :prod,
+     build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      package: package]
   end
@@ -35,7 +35,7 @@ defmodule Flyingfox.Mixfile do
   defp package do
     [files: ~W(lib mix.exs README.md test),
     author: "Zack Hess",
-    contributors: ["Ricardo Lanziano"]
+    contributors: ["Ricardo Lanziano"],
     licenses: ["Something"],
     links: %{"GitHub" => @repo,
     	     "GitHub issues" => @issues}]

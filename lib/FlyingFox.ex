@@ -5,15 +5,23 @@ defmodule FlyingFox do
   # API
 
   def start(_type, _args) do
-    import Supervisor.Spec, warn: false
-
+    import Supervisor.Spec #, warn: false
+    p=6666
     children = [worker(KV, []),
                 worker(Keys, []),
                 worker(Mempool, []), 
                 worker(BlockAbsorber, []),                 
                 worker(Peers, []),                 
                 worker(Listener, []),
-                worker(InternalListener, []) ]
+                worker(InternalListener, []),
+                supervisor(Tcp, [p, &(Listener.export(&1))]),
+                supervisor(Tcp, [p+111, &(InternalListener.export(&1))]),
+                worker(Talker, []),
+               ]
+    {:ok, pid1} = Supervisor.start_link(children, strategy: :rest_for_one)
+    KV.put("port", p)
+    Peers.add_peer(%Peer{ip: "localhost", port: p})
+    
 
   end
   def stop(_state), do: :ok

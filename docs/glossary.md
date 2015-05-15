@@ -25,3 +25,5 @@ channel state - a contract explaining who owns which parts of the money in a cha
 validator - On every block a random sample of bond holders is selected. This group of bond holders has the privelege of selecting the next block for the blockchain. They are called validators.
 
 contract for difference - betting in flying fox uses contract for difference (CFD). It is a type of betting that happens between pairs of people. The pair of people promise to trade an amount of money based upon some future price. It is useful for hedging your risk, for example if you own 3 tons of onions and want to be protected from the possibility of onion price dropping.
+
+sidechain - a channel that has more than 2 participants
