@@ -35,6 +35,7 @@ defmodule Blocktree do
   def genesis_state do
     genesis_block
     ac = @initial_coins
+    IO.puts("ac: #{inspect ac}")
     b = ac/21
     a = %Account{amount: 20*b, bond: b}
     Keys.master
@@ -77,7 +78,7 @@ defmodule Blocktree do
   end
   def get_height(h) do
     a = KV.get(h)
-    if a == nil do: a = []
+    if a == nil do a = [] end
     a
   end
   def add_blocks([]) do [] end

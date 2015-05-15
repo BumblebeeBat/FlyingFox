@@ -13,7 +13,7 @@ defmodule TxCreator do
   def spend(amount, to) do
     pub = Keys.pubkey
     balance = KV.get(pub).amount
-    if balance<amount do: IO.puts("warning, you cannot afford to spend this tx, so it wont be valid")
+    if balance<amount do IO.puts("warning, you cannot afford to spend this tx, so it wont be valid") end
     %SpendTx{to: to, amount: amount, nonce: nonce(pub), fee: 10000} 
     |> Keys.sign 
     |> Mempool.add_tx
@@ -27,7 +27,7 @@ defmodule TxCreator do
         prev_hash = Blocktree.blockhash(Blockchain.get_block(h))
       end
       tot_bonds = KV.get("tot_bonds")
-      w= E num.filter(0..@chances_per_address, fn(x) -> VerifyTx.winner?(acc.bond, tot_bonds, VerifyTx.rng(prev_hash), pub, x) end) 
+      w= Enum.filter(0..@chances_per_address, fn(x) -> VerifyTx.winner?(acc.bond, tot_bonds, VerifyTx.rng(prev_hash), pub, x) end) 
       h = KV.get("height") + 1
       ran = KV.get("secret #{inspect h}")
       if ran == nil do

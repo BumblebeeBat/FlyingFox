@@ -27,7 +27,7 @@ defmodule HashMath do
         helper(b, acc * 16 + abc[String.to_atom(a)])
     end
   end
-  def hex2int(h) do: helper(h, 0)
+  def hex2int(h) do helper(h, 0) end
   def hash2int(h) do
     {:ok, h} = Base.decode64(h)
     h = Base.encode16(h)

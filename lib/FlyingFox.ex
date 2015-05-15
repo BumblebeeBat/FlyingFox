@@ -1,12 +1,10 @@
 defmodule FlyingFox do
   use Application
 
-  #####
-  # API
-
   def start(_type, _args) do
     import Supervisor.Spec #, warn: false
     p=6666
+    IO.puts("1")
     children = [worker(KV, []),
                 worker(Keys, []),
                 worker(Mempool, []), 
@@ -14,17 +12,29 @@ defmodule FlyingFox do
                 worker(Peers, []),                 
                 worker(Listener, []),
                 worker(InternalListener, []),
-                supervisor(Tcp, [p, &(Listener.export(&1))]),
-                supervisor(Tcp, [p+111, &(InternalListener.export(&1))]),
+                #supervisor(Tcp, [p, &(Listener.export(&1))], id: :tcp1), #this needs to be turned on.
+                supervisor(Tcp, [p+111, &(InternalListener.export(&1))], id: :tcp2),
                 worker(Talker, []),
                ]
+    IO.puts("2")
     {:ok, pid1} = Supervisor.start_link(children, strategy: :rest_for_one)
     KV.put("port", p)
     Peers.add_peer(%Peer{ip: "localhost", port: p})
-    
-
+    IO.puts("3")
+    {:ok, pid1}
   end
-  def stop(_state), do: :ok
+  def stop(_state) do :ok end
+  def main(args) do
+    if args == [] do args=["aa"] end
+    case hd(args) do
+      "start" -> start(1, 2)
+      "buy_block" -> BlockAbsorber.buy_blocks(1)
+      "spend" -> TxCreator.spend(hd(tl(args)), hd(tl(tl(args))))
+      "block" -> 1#Blockchain.get_block(hd(tl(args)))
+      "txs" -> Mempool.txs
+      x -> IO.puts("undefined #{inspect x}")
+    end
+  end
 end
 
 """

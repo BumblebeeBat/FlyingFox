@@ -8,6 +8,7 @@ defmodule Tcp do
   def close(socket) do
     :gen_tcp.close(socket)
   end
+  def start_link(a, b) do start(a, b) end
   def start(_type, _args) do
     import Supervisor.Spec
     children = [
@@ -35,7 +36,7 @@ defmodule Tcp do
     end
   end
   def serve(client, func) do
-    client |> listen |> func.() |> ms(conn)
+    client |> listen |> func.() |> ms(client)
   end
   defp ms(string, socket) do
     if is_pid(string) do

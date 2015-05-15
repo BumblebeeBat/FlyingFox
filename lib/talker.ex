@@ -7,12 +7,12 @@ defmodule Talker do
   #download blocks and peers.
   use GenServer
   @name __MODULE__
-  @tcp_port Application.get_env :flying_fox, :tcp_portn
+  @tcp_port Application.get_env :flying_fox, :tcp_port
   def start_link() do
-    GenServer.start_link(__MODULE__, :ok, [name: key])
+    GenServer.start_link(__MODULE__, :ok, [name: @name])
   end
   def doit do
-    GenServer.cast(key, :doit)
+    GenServer.cast(@name, :doit)
   end
   def start do spawn_link(fn() -> timer end) end
   def still_on(blocks) do

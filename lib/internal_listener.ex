@@ -9,8 +9,8 @@ defmodule InternalListener do
   def start_link() do
     GenServer.start_link(__MODULE__, :ok, [name: key])
   end
-  def init(args) do: {:ok, args}
-  def key do: :internal_listen
+  def init(args) do {:ok, args} end
+  def key do :internal_listen end
   def handle_cast({type, s, args}, _) do 
     spawn_send(s, (fn() -> main(type, args) end))
     {:noreply, []}

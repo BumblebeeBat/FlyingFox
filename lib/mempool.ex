@@ -4,16 +4,16 @@ defmodule Mempool do
   @name __MODULE__
 
   def start_link() do
-    GenServer.start_link(__MODULE__, :ok, [name: key])
+    GenServer.start_link(__MODULE__, :ok, [name: @name])
   end
   def dump do
-    GenServer.cast(key, :dump)
+    GenServer.cast(@name, :dump)
   end
   def add_tx(tx) do
-    GenServer.cast(key, {:add_tx, tx})
+    GenServer.cast(@name, {:add_tx, tx})
   end
   def txs do
-    GenServer.call(key, :txs)
+    GenServer.call(@name, :txs)
   end
   def init(:ok) do
     {:ok, []}
