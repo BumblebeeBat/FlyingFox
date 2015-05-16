@@ -1,11 +1,15 @@
 defmodule Blocktree do
 
-  @initial_coins Application.get_env :flying_fox, :initial_coins
-  @signers_per_block Application.get_env :flying_fox, :signers_per_block
+  #@initial_coins Application.get_env :flying_fox, :initial_coins
+  #@signers_per_block Application.get_env :flying_fox, :signers_per_block
 
   def blockhash(block) do
+    case block do
+      %Signed{} -> block = block.data
+      _ -> 1
+    end
     %Block{} = block
-    DetHash.doit(%{block | meta: nil})
+    DetHash.doit(block)
   end
 
   def genesis_block do
@@ -28,13 +32,13 @@ defmodule Blocktree do
     if block_hash in block_hashes do false else
       block_hashes = block_hashes++[block_hash]
       KV.put(to_string(height), block_hashes)
-      KV.put(block_hash, %{block | meta: [revealed: []]})
+      KV.put(block_hash, %{signed | meta: [revealed: []]})
       block_hash
     end
   end
   def genesis_state do
     genesis_block
-    ac = @initial_coins
+    ac = Constants.initial_coins
     IO.puts("ac: #{inspect ac}")
     b = ac/21
     a = %Account{amount: 20*b, bond: b}
@@ -56,10 +60,10 @@ defmodule Blocktree do
       end)
     end) |> Enum.reduce([], &(&1++&2)) |> Enum.map(&(if(&1) do 1 else 0 end)) |> Enum.reduce(0, &(&1+&2))
     cond do
-      Blockchain.winners(block) <= @signers_per_block*2/3 -> 
+      Blockchain.winners(block) <= Constants.signers_per_block*2/3 -> 
         IO.puts("not enough winners")
         false
-      l <= @signers_per_block*1/2 -> 
+      l <= Constants.signers_per_block*1/2 -> 
         IO.puts("not enough")
         false
       true -> true

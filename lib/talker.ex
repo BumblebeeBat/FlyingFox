@@ -7,7 +7,7 @@ defmodule Talker do
   #download blocks and peers.
   use GenServer
   @name __MODULE__
-  @tcp_port Application.get_env :flying_fox, :tcp_port
+  #@tcp_port Application.get_env :flying_fox, :tcp_port
   def start_link() do
     GenServer.start_link(__MODULE__, :ok, [name: @name])
   end
@@ -98,7 +98,7 @@ defmodule Talker do
    end
   def init(args) do
     start
-    Enum.map(0..2, &(%Peer{ip: "localhost", port: @tcp_port+&1})) 
+    Enum.map(0..2, &(%Peer{ip: "localhost", port: Constants.tcp_port+&1})) 
     |> Enum.map(&(Peers.add_peer(&1)))
     {:ok, []}
   end

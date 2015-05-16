@@ -1,7 +1,7 @@
 defmodule TxUpdate do
   #d is 1 when adding blocks, -1 when removing.
-  @signers_per_block Application.get_env :flying_fox, :signers_per_block
-  @epoch             Application.get_env :flying_fox, :epoch
+  #@signers_per_block Application.get_env :flying_fox, :signers_per_block
+  #@epoch             Application.get_env :flying_fox, :epoch
 
   def exchange_rate(n \\ 0) do
     #how many bonds is a cash worth?
@@ -86,7 +86,7 @@ defmodule TxUpdate do
     bond_size = old_block.data.bond_size
     w = length(tx.data.winners)
     delta = exchange_rate(old_block.data.height) * bond_size * w
-    reward = KV.get("tot_bonds") / :math.pow(1.001, @epoch) * w / 1000 / @signers_per_block
+    reward = KV.get("tot_bonds") / :math.pow(1.001, Constants.epoch) * w / 1000 / Constants.signers_per_block
     sym_append(hd(KV.get(to_string(tx.data.signed_on))), [:meta, :revealed], signer, d)
     {reward, delta}
   end

@@ -1,8 +1,8 @@
 defmodule TxCreator do
   
-  @min_bond            Application.get_env :flying_fox, :min_bond
-  @epoch               Application.get_env :flying_fox, :epoch
-  @chances_per_address Application.get_env :flying_fox, :chances_per_address
+  #@min_bond            Application.get_env :flying_fox, :min_bond
+  #@epoch               Application.get_env :flying_fox, :epoch
+  #@chances_per_address Application.get_env :flying_fox, :chances_per_address
 
   def nonce(pub) do
     a=Mempool.txs
@@ -21,13 +21,13 @@ defmodule TxCreator do
   def sign do
     pub = Keys.pubkey
     acc = KV.get(pub)
-    if acc.bond > @min_bond do
+    if acc.bond > Constants.min_bond do
       h=KV.get("height")
       if h<1 do prev_hash=nil else
         prev_hash = Blocktree.blockhash(Blockchain.get_block(h))
       end
       tot_bonds = KV.get("tot_bonds")
-      w= Enum.filter(0..@chances_per_address, fn(x) -> VerifyTx.winner?(acc.bond, tot_bonds, VerifyTx.rng(prev_hash), pub, x) end) 
+      w= Enum.filter(0..Constants.chances_per_address, fn(x) -> VerifyTx.winner?(acc.bond, tot_bonds, VerifyTx.rng(prev_hash), pub, x) end) 
       h = KV.get("height") + 1
       ran = KV.get("secret #{inspect h}")
       if ran == nil do
@@ -41,7 +41,7 @@ defmodule TxCreator do
     end
   end
   def reveal do
-    h = KV.get("height") - @epoch
+    h = KV.get("height") - Constants.epoch
     cond do
       h < 2 -> nil
       true -> reveal_2(h)

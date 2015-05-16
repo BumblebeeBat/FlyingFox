@@ -1,8 +1,8 @@
 defmodule Blockchain do
   #The part of the blocktree we care about is the blockchain.
   #it ends in the most recent valid block.
-  @signers_per_block Application.get_env :flying_fox, :signers_per_block
-  @block_creation_fee Application.get_env :flying_fox, :block_creation_fee
+  #@signers_per_block Application.get_env :flying_fox, :signers_per_block
+  #@block_creation_fee Application.get_env :flying_fox, :block_creation_fee
   def txs_filter(txs, type) do Enum.filter(txs, fn(t) -> t.data.__struct__ == type end) end
   def being_spent(txs) do txs |> txs_filter(:Elixir.SpendTx) |> Enum.map(fn(t) -> t.data.amount end) |> Enum.reduce(0, &(&1+&2)) end
   def prev_block(block) do KV.get(block.data.hash) end
@@ -47,7 +47,7 @@ defmodule Blockchain do
   def valid_block_2?(block, cost, ngenesis) do
     wins = winners(block)
     cond do
-      ngenesis and wins < @signers_per_block*2/3 ->
+      ngenesis and wins < Constants.signers_per_block*2/3 ->
         IO.puts("not enough signers #{inspect wins}")
         IO.puts("block: #{inspect block}")
         false
@@ -90,7 +90,7 @@ defmodule Blockchain do
     if prev_block != nil do
       bh = Blocktree.blockhash(prev_block)
     end
-    new = %Block{height: height+n, txs: txs, hash: bh, bond_size: 10_000_000_000_000/@signers_per_block*3}#instead of fixed bond size, we shoul look at how big of a bond the txs need.
+    new = %Block{height: height+n, txs: txs, hash: bh, bond_size: 10_000_000_000_000/Constants.signers_per_block*3}#instead of fixed bond size, we shoul look at how big of a bond the txs need.
     |> Keys.sign
     |> Map.put(:meta, [revealed: []])
   end
@@ -107,7 +107,7 @@ defmodule Blockchain do
       txs = block.data.txs
       n = num_signers(txs)
       TxUpdate.txs_updates(txs, -1, round(block.data.bond_size/n))
-      TxUpdate.sym_increment(block.pub, :amount, -@block_creation_fee, -1)
+      TxUpdate.sym_increment(block.pub, :amount, -Constants.block_creation_fee, -1)
       b = prev.data.height
       if b == nil do b = 0 end
       KV.put("height", b)
@@ -116,9 +116,11 @@ defmodule Blockchain do
     end
   end
   def forward(block) do#while walking forward this needs to reorder the hashes used for get_block so that the block we are using is on top.
-    if not is_list(block) do block = KV.get(block) end
+    IO.puts("forward block #{inspect block}")
+    if not is_map(block) do block = KV.get(block) end
+    IO.puts("forward block #{inspect block}")
     gap = block.data.height-KV.get("height")
-    cost = @block_creation_fee * round(:math.pow(2, gap))
+    cost = Constants.block_creation_fee * round(:math.pow(2, gap))
     cond do
       not is_list(block) -> [error: "blocks should be lists"]
       KV.get(Blocktree.blockhash(block)) == nil -> [error: "don't have this block"]
@@ -150,7 +152,8 @@ defmodule Blockchain do
       my_block = [height: 0]
       hash = ""
     else
-      my_block=get_block(h).data
+      IO.puts("get block #{inspect get_block(h)}")
+      my_block = get_block(h).data
       hash = Blocktree.blockhash(my_block)
     end
     add_block = hd(last_blocks).data

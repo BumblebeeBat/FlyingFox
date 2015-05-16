@@ -4,11 +4,11 @@ defmodule Account do
 end
 
 defmodule Signed do
-  defstruct sig: nil, pub: nil, data: nil, meta: []
+  defstruct sig: nil, pub: nil, data: nil, meta: nil
 end
 
 defmodule Block do
-  defstruct height: 0, txs: [], hash: "", bond_size: 3.0e11, meta: nil
+  defstruct height: 0, txs: [], hash: "", bond_size: 3.0e11
 end
 
 defmodule Channel do

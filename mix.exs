@@ -54,7 +54,6 @@ defmodule Flyingfox.Mixfile do
     [{:message_pack, "~> 0.1.4"},
      {:ex_doc, "~> 0.7", only: :dev},
      {:earmark, "~> 0.1", only: :dev},
-     {:poolboy, "~> 1.5"},
      {:ranch, "~> 1.0.0"},
     ]
   end

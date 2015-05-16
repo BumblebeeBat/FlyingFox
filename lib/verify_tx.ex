@@ -1,21 +1,21 @@
 defmodule VerifyTx do
 
-  @min_tx_fee          Application.get_env :flying_fox, :min_tx_fee
-  @max_bond_block      Application.get_env :flying_fox, :max_bond_block
-  @epoch               Application.get_env :flying_fox, :epoch
-  @signers_per_block   Application.get_env :flying_fox, :signers_per_block
-  @chances_per_address Application.get_env :flying_fox, :chances_per_address
-  @min_bond            Application.get_env :flying_fox, :min_bond
+  #@min_tx_fee          Application.get_env :flying_fox, :min_tx_fee
+  #@max_bond_block      Application.get_env :flying_fox, :max_bond_block
+  #@epoch               Application.get_env :flying_fox, :epoch
+  #@signers_per_block   Application.get_env :flying_fox, :signers_per_block
+  #@chances_per_address Application.get_env :flying_fox, :chances_per_address
+  #@min_bond            Application.get_env :flying_fox, :min_bond
 
   def spend?(tx, txs) do
     block = tx.data
     fee = block.fee
     amount = block.amount
     cond do
-      fee < @min_tx_fee ->
+      fee < Constants.min_tx_fee ->
         IO.puts("fee too low")
         false
-      amount+fee > @max_bond_block ->
+      amount+fee > Constants.max_bond_block ->
         IO.puts("too much money at once")
         false
       true -> true
@@ -35,7 +35,7 @@ defmodule VerifyTx do
     {a, h} = tx.data.wait_money
     cond do
       {a, h} != acc.wait -> false 
-      h > KV.get("height") + @epoch -> false 
+      h > KV.get("height") + Constants.epoch -> false 
       true -> true
     end
   end
@@ -44,9 +44,9 @@ defmodule VerifyTx do
   def bond2spend?(tx, txs) do true end
   def winner?(balance, total, seed, pub, j) do#each address gets 200 chances.
     max = HashMath.hex2int("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
-    b = max * @signers_per_block * balance / (@chances_per_address * total)
+    b = max * Constants.signers_per_block * balance / (Constants.chances_per_address * total)
     a = HashMath.hash2int(DetHash.doit({seed, pub, j}))
-    a < b and j >= 0 and j < @chances_per_address and is_integer(j)
+    a < b and j >= 0 and j < Constants.chances_per_address and is_integer(j)
   end
   def first_bits(b, s) do
     << c :: size(s), _ :: bitstring >> = b
@@ -54,7 +54,7 @@ defmodule VerifyTx do
     << c :: size(s) >>
   end
   def ran_block(block) do
-    txs = block.txs
+    txs = block.data.txs
     cond do
       is_nil(txs) -> 0
       true ->
@@ -69,7 +69,7 @@ defmodule VerifyTx do
     cond do
       block == nil -> DetHash.doit(entropy)
       counter < 1 -> DetHash.doit(entropy)
-      true -> rng(block.hash, counter - 1, ran_block(block) <> entropy)
+      true -> rng(block.data.hash, counter - 1, ran_block(block) <> entropy)
     end
   end
   def sign?(tx, txs, prev_hash) do
@@ -85,13 +85,13 @@ defmodule VerifyTx do
     height = KV.get("height")
     tx_prev = tx.data.prev_hash
     cond do
-      acc.bond < @minbond -> 
+      acc.bond < Constants.min_bond -> 
         IO.puts("not enough bond-money to validate")
         false
       not is_binary(tx.data.secret_hash) ->
         IO.puts("should have been binary")
         false
-      tx.data.height != prev_block.height->
+      tx.data.height != prev_block.data.height->
         IO.puts("bad height")
         false
       not l ->
@@ -160,7 +160,7 @@ defmodule VerifyTx do
       amount != blen ->
         IO.puts "4 slfjksd"
         false
-      KV.get("height") - @epoch > tx.data.signed_on ->
+      KV.get("height") - Constants.epoch > tx.data.signed_on ->
         IO.puts "5"
         false
       true -> true
@@ -210,7 +210,7 @@ defmodule VerifyTx do
   def check_tx(tx, txs, prev_hash) do
     cond do
       not check_logic(tx, txs, prev_hash) -> false
-      not check_(%{pub: nil, data: %Block{txs: [tx|txs]}}, @block_creation_fee) -> false
+      not check_(%{pub: nil, data: %Block{txs: [tx|txs]}}, Constants.block_creation_fee) -> false
       true -> true
     end
   end
@@ -283,7 +283,7 @@ defmodule VerifyTx do
        not check_nonces(txs) ->
          IO.puts("bad nonce")
          false
-       not VerifyBalances.positive_balances(txs,spending*3/max(winners, @signers_per_block*2/3), block.pub, cost)->
+       not VerifyBalances.positive_balances(txs,spending*3/max(winners, Constants.signers_per_block*2/3), block.pub, cost)->
          IO.puts("someone spent more money than how much they have")
          false
        true -> true
