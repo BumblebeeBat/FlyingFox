@@ -3,13 +3,13 @@ defmodule Listener do
   def key do :listen end
   def start_link() do GenServer.start_link(__MODULE__, :ok, [name: key]) end
   def init(:ok) do {:ok, []} end
-  def handle_cast({type, s, args}, _) do
-    spawn_send(s, (fn() -> main(type, args) end))
+  def handle_call({type, s, args}, _from, _) do
+    IO.puts("listener cast")
+    spawn(fn() -> GenServer.reply(_from, main(type, args)) end)
     {:noreply, []}
   end
   def export(l) do
-    GenServer.cast(key, {hd(l), self(), tl(l)})
-    receive do [:ok, x] -> x end
+    GenServer.call(key, {hd(l), self(), tl(l)})
   end
   def main(type, args) do
     case type do

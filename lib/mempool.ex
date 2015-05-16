@@ -27,10 +27,10 @@ defmodule Mempool do
     if VerifyTx.check_tx(tx, x, prev_hash) do x=[tx|x] end
     {:noreply, x}
   end
-  def handle_call(:txs, _from, x) do
-    {:reply, x, x}
-  end
   def handle_cast(:dump, x) do
     {:noreply, []}
+  end
+  def handle_call(:txs, _from, x) do
+    {:reply, x, x}
   end
 end

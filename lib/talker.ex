@@ -108,6 +108,7 @@ defmodule Talker do
   end
   def timer do
     :timer.sleep(3000)#using a timer to stop crash on boot
+    IO.puts("talker")
     doit
     timer
   end

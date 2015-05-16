@@ -10,13 +10,16 @@ defmodule Tcp do
   end
   def start_link(a, b) do start(a, b) end
   def start(_type, _args) do
-    import Supervisor.Spec
+    Supervisor.start_link(__MODULE__, _args)
+  end
+  def init(x) do
+    x=String.to_atom(to_string(Tcp.TaskSupervisor) <> to_string(__MODULE__))
     children = [
-      supervisor(Task.Supervisor, [[name: Tcp.TaskSupervisor]]),
-      worker(Task, [Tcp, :accept, _args])
+      supervisor(Task.Supervisor, [[name: x]]),
+    worker(Task, [Tcp, :accept, x])
     ]
     opts = [strategy: :one_for_one, name: TcpServer.Supervisor]
-    Supervisor.start_link(children, opts)
+    supervise(children, opts)
   end
   def accept(port, func) do
     {:ok, socket} = open(port)
@@ -104,6 +107,6 @@ defmodule Tcp do
   def test do
     port = 0
     start(port, &(&1))
-    IO.puts(inspect talk("localhost", @tcp_port, [a: [b: 3, d: "e"]]))
+    IO.puts(inspect talk("localhost", 6777, ["spend"]))
   end
 end

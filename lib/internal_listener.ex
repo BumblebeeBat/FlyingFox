@@ -1,23 +1,17 @@
 defmodule InternalListener do
   use GenServer
-
   @name __MODULE__
-
-  #####
-  # API
-
   def start_link() do
     GenServer.start_link(__MODULE__, :ok, [name: key])
   end
   def init(args) do {:ok, args} end
   def key do :internal_listen end
-  def handle_cast({type, s, args}, _) do 
-    spawn_send(s, (fn() -> main(type, args) end))
+  def handle_call({type, args}, _from, _) do 
+    spawn(fn() -> GenServer.reply(_from, main(type, args)) end)
     {:noreply, []}
   end
-  def export(l, parent) do #this shoule be removed maybe?
-    GenServer.cast(key, {hd(l), self(), tl(l) ++ [parent]}) 
-    receive do [:ok, x] -> x end
+  def export(l) do 
+    GenServer.call(key, {hd(l), tl(l)}) 
   end
   def buy_block do
     BlockAbsorber.buy_block
@@ -36,10 +30,5 @@ defmodule InternalListener do
       x ->
         IO.puts("is not a command #{inspect x}")
     end
-  end
-  def spawn_send(s, f) do
-    spawn_link(fn() ->
-      send s, [:ok, f.()]
-    end)
   end
 end

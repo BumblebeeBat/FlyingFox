@@ -1,7 +1,7 @@
 defmodule TxCreator do
   
-  @epoch               Application.get_env :flying_fox, :epoch
   @min_bond            Application.get_env :flying_fox, :min_bond
+  @epoch               Application.get_env :flying_fox, :epoch
   @chances_per_address Application.get_env :flying_fox, :chances_per_address
 
   def nonce(pub) do
@@ -21,7 +21,7 @@ defmodule TxCreator do
   def sign do
     pub = Keys.pubkey
     acc = KV.get(pub)
-    if acc.bond > @minbond do
+    if acc.bond > @min_bond do
       h=KV.get("height")
       if h<1 do prev_hash=nil else
         prev_hash = Blocktree.blockhash(Blockchain.get_block(h))

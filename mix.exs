@@ -11,7 +11,7 @@ defmodule Flyingfox.Mixfile do
      homepage_url: @repo,
      version: "0.0.1",
      elixir: "~> 1.0",
-     escript: escript_config,
+     #escript: escript_config,
      deps: deps,
      description: "Proof of take blockchain",
      build_embedded: Mix.env == :prod,
@@ -28,9 +28,9 @@ defmodule Flyingfox.Mixfile do
      registered: [:flyingfox]]
   end
 
-  defp escript_config do
-    [ main_module: FlyingFox ]
-  end
+  #defp escript_config do
+  #  [ main_module: FlyingFox ]
+  #end
   
   defp package do
     [files: ~W(lib mix.exs README.md test),
@@ -52,8 +52,10 @@ defmodule Flyingfox.Mixfile do
   # Type `mix help deps` for more examples and options
   defp deps do
     [{:message_pack, "~> 0.1.4"},
-    {:ex_doc, "~> 0.7", only: :dev},
-    {:earmark, "~> 0.1", only: :dev},
-    {:poolboy, "~> 1.5"}]
+     {:ex_doc, "~> 0.7", only: :dev},
+     {:earmark, "~> 0.1", only: :dev},
+     {:poolboy, "~> 1.5"},
+     {:ranch, "~> 1.0.0"},
+    ]
   end
 end

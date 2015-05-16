@@ -47,7 +47,7 @@ defmodule Blockchain do
   def valid_block_2?(block, cost, ngenesis) do
     wins = winners(block)
     cond do
-      ngenesis and wins < Constants.signers_per_block*2/3 ->
+      ngenesis and wins < @signers_per_block*2/3 ->
         IO.puts("not enough signers #{inspect wins}")
         IO.puts("block: #{inspect block}")
         false
@@ -90,7 +90,7 @@ defmodule Blockchain do
     if prev_block != nil do
       bh = Blocktree.blockhash(prev_block)
     end
-    new = %Block{height: height+n, txs: txs, hash: bh, bond_size: 10_000_000_000_000/Constants.signers_per_block*3}#instead of fixed bond size, we shoul look at how big of a bond the txs need.
+    new = %Block{height: height+n, txs: txs, hash: bh, bond_size: 10_000_000_000_000/@signers_per_block*3}#instead of fixed bond size, we shoul look at how big of a bond the txs need.
     |> Keys.sign
     |> Map.put(:meta, [revealed: []])
   end

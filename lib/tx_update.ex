@@ -1,6 +1,5 @@
 defmodule TxUpdate do
   #d is 1 when adding blocks, -1 when removing.
-
   @signers_per_block Application.get_env :flying_fox, :signers_per_block
   @epoch             Application.get_env :flying_fox, :epoch
 

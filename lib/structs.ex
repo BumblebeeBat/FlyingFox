@@ -12,7 +12,8 @@ defmodule Block do
 end
 
 defmodule Channel do
-  defstruct pub: nil, pub2: nil, amount: 0, amount2: 0, time: 0, nonce: 0, delay: Constants.epoch
+  @epoch Application.get_env :flying_fox, :epoch  
+  defstruct pub: nil, pub2: nil, amount: 0, amount2: 0, time: 0, nonce: 0, delay: @epoch
 end
 
 defmodule RevealTx do
