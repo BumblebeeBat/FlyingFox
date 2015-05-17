@@ -13,8 +13,8 @@ defmodule Main do
                 worker(Peers, []),                 
                 worker(Listener, []),
                 worker(InternalListener, []),
-                supervisor(Tcp, [p, &(Listener.export(&1))], id: :tcp1),
-                #supervisor(Tcp, [p+111, &(InternalListener.export(&1))], id: :tcp2),
+                supervisor(Tcp, [{p, :tcp1}, &(Listener.export(&1))], id: :tcp1),
+                supervisor(Tcp, [{p+111, :tcp2}, &(InternalListener.export(&1))], id: :tcp2),
                 worker(Talker, []),
                ]
     #KV.put("port", p)
