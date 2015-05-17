@@ -50,8 +50,6 @@ defmodule VerifyBalances do
 			block_creator == nil -> acc = %Account{amount: Constants.initial_coins}
 			true -> acc = KV.get(block_creator)
 		end
-		IO.puts("acc #{inspect acc}")
-		IO.puts("cre #{inspect block_creator}")
     balance = [cash: acc.amount, bond: acc.bond]
     addresses = [{block_creator, balance}]
     positive_balances_2(txs, bond_size, block_creator, cost, addresses)

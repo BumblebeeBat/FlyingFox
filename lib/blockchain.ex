@@ -126,9 +126,9 @@ defmodule Blockchain do
     end
   end
   def forward(block) do#while walking forward this needs to reorder the hashes used for get_block so that the block we are using is on top.
-    IO.puts("forward block #{inspect block}")
+    #IO.puts("forward block #{inspect block}")
     if not is_map(block) do block = KV.get(block) end
-    IO.puts("forward block #{inspect block}")
+    #IO.puts("forward block #{inspect block}")
     gap = block.data.height-KV.get("height")
     cost = Constants.block_creation_fee * round(:math.pow(2, gap))
     cond do
@@ -157,13 +157,11 @@ defmodule Blockchain do
     goto_helper([h])
   end
   def goto_helper(last_blocks) do
-		IO.puts("goto helper")
     h = KV.get("height")
     if h==0 do
       my_block = [height: 0]
       hash = ""
     else
-      IO.puts("get block #{inspect get_block(h)}")
       my_block = get_block(h).data
       hash = Blocktree.blockhash(my_block)
     end
@@ -175,10 +173,8 @@ defmodule Blockchain do
         IO.puts("error 2 #{inspect last_blocks}")
         Enum.map(tl(last_blocks), &(forward(&1)))
       my_block.height == 0 or add_block.hash == hash ->
-				IO.puts("goto helper here")
         Enum.map(last_blocks, &(forward(&1)))
       add_block.height > my_block.height ->
-        IO.puts("always here")
         goto_helper([get_block(add_block.hash)|last_blocks])
       true ->
         IO.puts("back")

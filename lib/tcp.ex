@@ -30,6 +30,7 @@ defmodule Tcp do
     supervise(children, opts)
   end
   def accept(port, func, id) do
+		:timer.sleep(100)
     {x, socket} = open(port)
 		IO.puts("tcp accept #{inspect x}")
 		case x do
@@ -43,8 +44,8 @@ defmodule Tcp do
   end
 	def reset_acceptor(socket, port, func, id) do
     close(socket)
-    :timer.sleep(5000)
-    spawn(fn -> accept(port, func, id) end)
+    :timer.sleep(8000)
+    spawn_link(fn -> accept(port, func, id) end)
 	end
   def loop_acceptor(socket, port, func, id) do
     {x, conn} = :gen_tcp.accept(socket)
@@ -90,15 +91,21 @@ defmodule Tcp do
     s = connect(host, port)
     ms("ping", s)
   end
-  defp to_bytes(list) do#141,000 times in first 2 blocks
-    cond do
-      is_binary(list) -> list
-      list == [] -> <<>>
-      true -> <<hd(list)>> <> to_bytes(tl(list))
-    end
-  end
+	defp to_bytes(list) do
+		cond do
+			is_binary(list) -> list
+			true -> to_bytes(list, "")
+		end
+	end
+	defp to_bytes(list, out) do
+		cond do
+			list == [] -> out
+			true -> to_bytes(tl(list), out <> <<hd(list)>>)
+		end
+	end
   defp listen(conn, data \\ "") do
-   case :gen_tcp.recv(conn, 0) do
+		:timer.sleep(20)
+		case :gen_tcp.recv(conn, 0) do
       {:ok, d} -> done_listening?(conn, data <> to_bytes(d))
       {:error, :closed} -> IO.puts "error"
     end

@@ -79,7 +79,7 @@ defmodule Talker do
   def check_peer_2(p, status) do
     trade_peers(p)
     txs = Api.txs(p.port, p.ip)
-		IO.puts("status: #{inspect status}")
+		#IO.puts("status: #{inspect status}")
     u = status[:height]
     i = KV.get("height")
     cond do

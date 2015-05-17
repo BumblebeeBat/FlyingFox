@@ -58,13 +58,12 @@ defmodule VerifyTx do
     cond do
       is_nil(txs) -> 0
       true ->
-        txs |> Enum.filter(&(&1.data._struct_=="reveal"))
+        txs |> Enum.filter(&(&1.data.__struct__=="reveal"))
         |> Enum.map(&(first_bits(&1.data.secret, length(&1.data.winners))))
         |> Enum.reduce("", &(&1 <> &2))
     end
   end
   def rng(hash, counter \\ 26, entropy \\ "" ) do 
-    #todo memoize
     block = KV.get(hash)
     cond do
       block == nil -> DetHash.doit(entropy)
@@ -73,8 +72,6 @@ defmodule VerifyTx do
     end
   end
   def sign?(tx, txs, prev_hash) do
-    #block = [data: [hash: block_hash]]
-		IO.puts("sign? top")
     acc = KV.get(tx.pub)
     tot_bonds = KV.get("tot_bonds")
     ran = rng(prev_hash)
@@ -86,7 +83,7 @@ defmodule VerifyTx do
     height = KV.get("height")
     tx_prev = tx.data.prev_hash
     cond do
-      acc.bond < Constants.min_bond -> 
+      acc.bond < Constants.min_bond ->
         IO.puts("not enough bond-money to validate")
         false
       not is_binary(tx.data.secret_hash) ->
@@ -98,8 +95,12 @@ defmodule VerifyTx do
       not l ->
         IO.puts("not l")
         false
-      length(tx.data.winners) < 1 -> false
-      m != 0 -> false
+      length(tx.data.winners) < 1 ->
+				IO.puts("too short")
+				false
+      m != 0 ->
+				#IO.puts("already signed")
+				false
       not(height == 0) and tx_prev != prev_hash ->
         IO.puts("hash not match")
         false
@@ -210,12 +211,7 @@ defmodule VerifyTx do
 	end
   def check_tx(tx, txs, prev_hash) do
     cond do
-      not check_logic(tx, txs, prev_hash) ->
-				IO.puts("bad logic")
-				false
-			#not check_nonces([tx|txs]) ->
-			#	IO.puts("bad nonces")
-			#	false
+      not check_logic(tx, txs, prev_hash) -> false
       not check_(%{pub: nil, data: %Block{txs: [tx|txs]}}, Constants.block_creation_fee) -> false
       true -> true
     end
@@ -234,8 +230,6 @@ defmodule VerifyTx do
       {:Elixir.CloseChannelTx, &(close_channel?(&1, &2))},
     ]
     default = fn(_, _) -> false end
-		IO.puts("f: #{inspect f}")
-		IO.puts("tx #{inspect tx.data.__struct__}")
     cond do
       not Dict.get(f, tx.data.__struct__, default).(tx, txs) -> false
       not Sign.verify_tx(tx) ->
@@ -287,7 +281,7 @@ defmodule VerifyTx do
      |> Enum.map(fn(t) -> t.data.winners end)
      |> Enum.map(fn(w) -> length(w) end)
      |> Enum.reduce(0, &(&1+&2))
-		 IO.puts("check_ #{inspect block}")
+		 #IO.puts("check_ #{inspect block}")
      cond do
        not check_nonces(txs) ->
          IO.puts("bad nonce")
@@ -304,7 +298,7 @@ defmodule VerifyTx do
     prev_hash = da.hash
     cond do
       not check_logics(txs, prev_hash, []) ->
-        IO.puts("bad logic")
+        #IO.puts("bad logic")
         false
       txs == [] ->
         IO.puts("no empty blocks")

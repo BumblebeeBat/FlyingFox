@@ -1,8 +1,5 @@
 defmodule Blocktree do
 
-  #@initial_coins Application.get_env :flying_fox, :initial_coins
-  #@signers_per_block Application.get_env :flying_fox, :signers_per_block
-
   def blockhash(block) do
     case block do
       %Signed{} -> block = block.data
@@ -39,7 +36,6 @@ defmodule Blocktree do
   def genesis_state do
     genesis_block
     ac = Constants.initial_coins
-    IO.puts("ac: #{inspect ac}")
     b = ac/21
     a = %Account{amount: 20*b, bond: b}
     Keys.master
@@ -49,7 +45,6 @@ defmodule Blocktree do
     sign_reveal
   end
   def quick_validation(block) do
-    #IO.puts("block #{inspect block}")
     ran = VerifyTx.rng(block.data.hash)
     tot_bonds = KV.get("tot_bonds")
     l = Blockchain.txs_filter(block.data.txs, :Elixir.SignTx)
@@ -87,20 +82,17 @@ defmodule Blocktree do
   end
   def add_blocks([]) do [] end
   def add_blocks([head|tail]) do
-		IO.puts("add_blocks")
-    #make sure the networking nodes can pass >30 blocks before calling this function.
     block = head.data
     height = block.height
     cond do
       not enough_validated([head|tail], round(length(get_height(height))/3)) ->
-         IO.puts("double-signing everywhere")
-         false
+        IO.puts("double-signing everywhere")
+        false
       KV.get(blockhash(head)) != nil ->
         IO.puts("already have this block: #{inspect head}")
         IO.puts("already: #{inspect KV.get(blockhash(head))}")
         add_blocks(tail)
       true ->
-				IO.puts("add block #{inspect height}")
         block_hash = put_block(head)
         current_height = KV.get("height")
         if height > current_height do Blockchain.goto(block_hash) end
