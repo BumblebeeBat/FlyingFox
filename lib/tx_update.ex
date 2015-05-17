@@ -17,8 +17,8 @@ defmodule TxUpdate do
     KV.put(pub, Map.put(acc, key, word))
   end
   def sym_increment(pub, key, amount, d) do
-    acc = KV.get(pub)
-    acc = Map.put(acc, key, acc[key]+(amount*d))
+		acc = KV.get(pub)
+    acc = Map.put(acc, key, Map.get(acc, key)+(amount*d))
     KV.put(pub, acc)
   end
   def deep_get(dict, keys) do
@@ -130,7 +130,7 @@ defmodule TxUpdate do
   def tx_update(tx, d, bond_size) do
     pub = tx.pub
     acc = KV.get(pub)
-    acc = Map.put(acc, :nonce, acc[:nonce] + d)
+    acc = Map.put(acc, :nonce, acc.nonce + d)
     KV.put(pub, acc)
     case tx.data.__struct__ do
       :Elixir.SignTx -> sign(tx, d, bond_size)

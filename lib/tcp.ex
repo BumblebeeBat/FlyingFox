@@ -8,34 +8,53 @@ defmodule Tcp do
   def close(socket) do
     :gen_tcp.close(socket)
   end
-  def start_link(a, b) do start(a, b) end
-  def start(_type, _args) do
-    Supervisor.start_link(__MODULE__, _args)
-  end
+  def start_link(port, func) do
+		#IO.puts("tcp start_link")
+		#start(a, b) end
+		Supervisor.start_link(__MODULE__, [port, func])
+	end
+	def sup_name do String.to_atom(to_string(Tcp.TaskSupervisor) <> to_string(__MODULE__)) end
   def init(x) do
-    x=String.to_atom(to_string(Tcp.TaskSupervisor) <> to_string(__MODULE__))
+		[port, func] = x
+		IO.puts("port, func #{inspect port}, #{inspect func}")
+		IO.puts("tcp init")
+		y=sup_name
+    #y=String.to_atom(to_string(Tcp.TaskSupervisor) <> to_string(__MODULE__))
     children = [
-      supervisor(Task.Supervisor, [[name: x]]),
+      supervisor(Task.Supervisor, [[name: y]]),
     worker(Task, [Tcp, :accept, x])
     ]
     opts = [strategy: :one_for_one, name: TcpServer.Supervisor]
     supervise(children, opts)
   end
   def accept(port, func) do
-    {:ok, socket} = open(port)
-    IO.puts "Accepting connections on port #{port}"
-    loop_acceptor(socket, port, func)
+    {x, socket} = open(port)
+		IO.puts("tcp accept #{inspect x}")
+		case x do
+			:ok -> 
+				IO.puts "Accepting connections on port #{port}"
+				loop_acceptor(socket, port, func)
+			_ ->
+				IO.puts("failed to connect 2")
+				reset_acceptor(socket, port, func)
+		end
   end
+	def reset_acceptor(socket, port, func) do
+    close(socket)
+    :timer.sleep(5000)
+    spawn(fn -> accept(port, func) end)
+	end
   def loop_acceptor(socket, port, func) do
+		#IO.puts("loop acceptor")
     {x, conn} = :gen_tcp.accept(socket)
     cond do
-      x == :ok -> Task.Supervisor.start_child(Tcp.TaskSupervisor, fn -> serve(conn, func) end)
+      x == :ok ->
+				Task.Supervisor.start_child(sup_name, fn -> serve(conn, func) end)
+				:timer.sleep(10)
+				loop_acceptor(socket, port, func)
       true ->
         IO.puts("failed to connect #{inspect conn}")
-        close(socket)
-        :timer.sleep(500)
-        spawn(fn -> accept(port, func) end)
-    loop_acceptor(socket, port, func)
+				reset_acceptor(socket, port, func)
     end
   end
   def serve(client, func) do
@@ -45,6 +64,7 @@ defmodule Tcp do
     if is_pid(string) do
       true = false
     end
+		#IO.puts("pack #{inspect string}")
     m=PackWrap.pack(string)
     s=byte_size(m)
     a=<<s::size(32)>>
@@ -105,8 +125,8 @@ defmodule Tcp do
     end
   end
   def test do
-    port = 0
-    start(port, &(&1))
-    IO.puts(inspect talk("localhost", 6777, ["spend"]))
+    port = 6664
+    start_link(port, &(&1))
+    IO.puts(inspect talk("localhost", port, ["spend"]))
   end
 end

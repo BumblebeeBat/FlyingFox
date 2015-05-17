@@ -62,6 +62,7 @@ defmodule Talker do
   end
   def check_peer(p) do #validating mode
     status = Api.status(p.port, p.ip)
+		#IO.puts("status #{inspect status}")
     cond do
       #status == :ok or status == "ok"-> IO.puts("peer died 2 #{inspect p}")
 			not is_list(status) -> IO.puts "status #{inspect status}"
@@ -69,8 +70,8 @@ defmodule Talker do
         status[:error]
       true ->
         Peers.get(p)
-        |> Dict.put(:height, status[:height])
-        |> Dict.put(:hash, status[:hash])
+        |> Map.put(:height, status[:height])
+        |> Map.put(:hash, status[:hash])
         |> Peers.add_peer
         check_peer_2(p, status)
     end
@@ -78,7 +79,8 @@ defmodule Talker do
   def check_peer_2(p, status) do
     trade_peers(p)
     txs = Api.txs(p.port, p.ip)
-    u = status.height
+		IO.puts("status: #{inspect status}")
+    u = status[:height]
     i = KV.get("height")
     cond do
       txs == :ok -> IO.puts("txs shouldn't be :ok")
@@ -108,7 +110,7 @@ defmodule Talker do
   end
   def timer do
     :timer.sleep(3000)#using a timer to stop crash on boot
-    IO.puts("talker")
+    #IO.puts("talker")
     doit
     timer
   end

@@ -18,14 +18,18 @@ defmodule Mempool do
   def init(:ok) do
     {:ok, []}
   end
-  def handle_cast({:add_tx, tx}, x) do 
-    h = KV.get("height")
-    if h < 1 do prev_hash = nil
-    else
-      prev_hash = Blocktree.blockhash(Blockchain.get_block(h))
-    end
-    if VerifyTx.check_tx(tx, x, prev_hash) do x=[tx|x] end
-    {:noreply, x}
+  def handle_cast({:add_tx, tx}, x) do
+		cond do
+			is_map(tx) ->
+				h = KV.get("height")
+				if h < 1 do prev_hash = nil
+				else
+					prev_hash = Blocktree.blockhash(Blockchain.get_block(h))
+				end
+				if VerifyTx.check_tx(tx, x, prev_hash) do x=[tx|x] end
+			true -> :ok
+		end
+		{:noreply, x}
   end
   def handle_cast(:dump, x) do
     {:noreply, []}

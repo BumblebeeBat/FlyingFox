@@ -1,9 +1,10 @@
 defmodule Main do
   use Supervisor
-  def start_link(arg) do
-    Supervisor.start_link(__MODULE__, arg)
+	def start do start_link([]) end
+  def start_link(_arg) do
+    Supervisor.start_link(__MODULE__, [])
   end
-  def init(arg) do
+  def init(_) do
     p=6666
     children = [worker(KV, []),
                 worker(Keys, []),
@@ -12,12 +13,13 @@ defmodule Main do
                 worker(Peers, []),                 
                 worker(Listener, []),
                 worker(InternalListener, []),
-                #supervisor(Tcp, [p, &(Listener.export(&1))], id: :tcp1),
+                supervisor(Tcp, [p, &(Listener.export(&1))], id: :tcp1),
                 #supervisor(Tcp, [p+111, &(InternalListener.export(&1))], id: :tcp2),
                 worker(Talker, []),
                ]
     #KV.put("port", p)
     #Peers.add_peer(%Peer{ip: "localhost", port: p})
+		IO.puts("init")
     supervise(children, strategy: :rest_for_one)
   end
 

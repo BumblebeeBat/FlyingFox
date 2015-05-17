@@ -87,6 +87,7 @@ defmodule Blocktree do
   end
   def add_blocks([]) do [] end
   def add_blocks([head|tail]) do
+		IO.puts("add_blocks")
     #make sure the networking nodes can pass >30 blocks before calling this function.
     block = head.data
     height = block.height
@@ -95,9 +96,11 @@ defmodule Blocktree do
          IO.puts("double-signing everywhere")
          false
       KV.get(blockhash(head)) != nil ->
-        IO.puts("already have this block")
+        IO.puts("already have this block: #{inspect head}")
+        IO.puts("already: #{inspect KV.get(blockhash(head))}")
         add_blocks(tail)
       true ->
+				IO.puts("add block #{inspect height}")
         block_hash = put_block(head)
         current_height = KV.get("height")
         if height > current_height do Blockchain.goto(block_hash) end

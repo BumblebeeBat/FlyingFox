@@ -13,7 +13,7 @@ defmodule Flyingfox.Mixfile do
      elixir: "~> 1.0",
      #escript: escript_config,
      deps: deps,
-     description: "Proof of take blockchain",
+     description: "Proof of stake blockchain",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      package: package]

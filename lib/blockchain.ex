@@ -5,19 +5,29 @@ defmodule Blockchain do
   #@block_creation_fee Application.get_env :flying_fox, :block_creation_fee
   def txs_filter(txs, type) do Enum.filter(txs, fn(t) -> t.data.__struct__ == type end) end
   def being_spent(txs) do txs |> txs_filter(:Elixir.SpendTx) |> Enum.map(fn(t) -> t.data.amount end) |> Enum.reduce(0, &(&1+&2)) end
-  def prev_block(block) do KV.get(block.data.hash) end
-  def valid_block?(block, cost) do 
-    #block creator needs to pay a fee. he needs to have signed so we can take his fee.
-    f = fn(x) -> x.data.bond_size end
-    prev = prev_block(block)
+  def prev_block(block) do
+		cond do
+			block == nil -> nil
+			true ->KV.get(block.data.hash)
+		end
+	end
+  def valid_block?(block, cost) do
+		#block creator needs to pay a fee. he needs to have signed so we can take his fee.
+		f = fn(x) ->
+			cond do
+				x==nil -> 0
+				true ->	x.data.bond_size
+			end
+		end
+		prev = prev_block(block)
     prev2 = prev_block(prev)
     prev3 = prev_block(prev2)
     min_bond = max(f.(prev), max(f.(prev2), f.(prev3)))
     if min_bond == nil do min_bond = 100000 end
     ngenesis = block.data.height != 1
     cond do
-      not is_list(block) ->
-        IO.puts("block should be a dict #{inspect block}")
+      not is_map(block) ->
+        IO.puts("block should be a map #{inspect block}")
         false
       min_bond*2/3>f.(block) ->
         #if the amount of money bonded per block changes too quickly,
@@ -122,7 +132,7 @@ defmodule Blockchain do
     gap = block.data.height-KV.get("height")
     cost = Constants.block_creation_fee * round(:math.pow(2, gap))
     cond do
-      not is_list(block) -> [error: "blocks should be lists"]
+      not is_map(block) -> [error: "blocks should be maps"]
       KV.get(Blocktree.blockhash(block)) == nil -> [error: "don't have this block"]
       gap < 1 -> [error: "cannot redo history"]
       not valid_block?(block, cost) ->
@@ -147,6 +157,7 @@ defmodule Blockchain do
     goto_helper([h])
   end
   def goto_helper(last_blocks) do
+		IO.puts("goto helper")
     h = KV.get("height")
     if h==0 do
       my_block = [height: 0]
@@ -164,6 +175,7 @@ defmodule Blockchain do
         IO.puts("error 2 #{inspect last_blocks}")
         Enum.map(tl(last_blocks), &(forward(&1)))
       my_block.height == 0 or add_block.hash == hash ->
+				IO.puts("goto helper here")
         Enum.map(last_blocks, &(forward(&1)))
       add_block.height > my_block.height ->
         IO.puts("always here")
