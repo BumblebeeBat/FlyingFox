@@ -1,6 +1,6 @@
 defmodule Api do
   defp lh do "localhost" end
-  defp lp do KV.get("port") end
+  defp lp do 6666 end
   defp talk(msg, port, ip) do 
     case Tcp.talk(ip, port, msg) do
       {:ok, x} -> x
@@ -21,7 +21,6 @@ defmodule Api do
   talk([:all_peers], port, ip) end
   def status(port \\ lp, ip \\ lh) do
   talk([:status], port, ip) end
-
   def buy_block(port \\ lp+1, ip \\ lh) do
   talk([:buy_block], port, ip) end
   def buy_blocks(n, port \\ lp+1, ip \\ lh) do
@@ -60,7 +59,7 @@ defmodule Api do
       "stop" -> stop(6667) |> inspect |> IO.puts
       "txs" -> txs(6666) |> inspect |> IO.puts
       "all_peers" -> all_peers(6666) |> inspect |> IO.puts
-      "start" ->  Main.start(0) |> inspect |> IO.puts
+      "start" ->  FlyingFox.start(0) |> inspect |> IO.puts
       x -> IO.puts("#{inspect x} is not defined"); help
     end
   end

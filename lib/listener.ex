@@ -2,16 +2,17 @@ defmodule Listener do
   use GenServer
   def key do :listen end
   def start_link() do GenServer.start_link(__MODULE__, :ok, [name: key]) end
-  def init(:ok) do {:ok, []} end#
-  def handle_cast({type, s, args}, _) do 
-    spawn_send(s, (fn() -> main(type, args) end))
+  def init(:ok) do {:ok, []} end
+  def handle_call({type, s, args}, _from, _) do
+    #IO.puts("listener call")
+    spawn(fn() -> GenServer.reply(_from, main(type, args)) end)
     {:noreply, []}
   end
-  def export(l) do 
-    GenServer.cast(key, {hd(l), self(), tl(l)}) 
-    receive do [:ok, x] -> x end
+  def export(l) do
+    GenServer.call(key, {hd(l), self(), tl(l)})
   end
   def main(type, args) do
+		#IO.puts("listener #{inspect type}")
     case type do
       "add_blocks" -> BlockAbsorber.absorb(hd(args))
       "pushtx" -> fee_filter(hd(args))
@@ -24,8 +25,8 @@ defmodule Listener do
       "status" ->
           h = KV.get("height")
           block = Blockchain.get_block(h)
-          if block[:data]==nil do block = [data: 1] end
-          [height: h, hash: DetHash.doit(block[:data])]
+          if block.data==nil do block = %{data: 1} end
+          [height: h, hash: DetHash.doit(block.data)]
       x -> IO.puts("listner is not a command #{inspect x}")
     end
   end
@@ -40,7 +41,7 @@ defmodule Listener do
       true -> Mempool.add_tx(tx)
     end
   end
-  def flip(x, y \\ []) do 
+  def flip(x, y \\ []) do
     cond do
       x==[] -> y
       true -> flip(tl(x), [hd(x)|y])

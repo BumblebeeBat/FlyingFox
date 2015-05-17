@@ -11,8 +11,10 @@ This is a proof of stake blockchain written in elixir. It is not yet complete.
 you need to install elixir to run this code http://elixir-lang.org/install.html
 
 to compile FlyingFox run in terminal: ./install.sh
+
 to turn on FlyingFox read this file: RUN.md 
-to talk to FlyingFox run in terminal: ./flyingfox
+
+to talk to Flyin fox, use this: https://github.com/BumblebeeBat/flying_fox_cli
 
 Code of conduct, development guidelines:
 Submit pull request. If I like, I will accept.
