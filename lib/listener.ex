@@ -1,18 +1,14 @@
 defmodule Listener do
   use GenServer
-  def key do :listen end
-  def start_link() do GenServer.start_link(__MODULE__, :ok, [name: key]) end
+	@name __MODULE__
   def init(:ok) do {:ok, []} end
+  def start_link() do GenServer.start_link(__MODULE__, :ok, [name: @name]) end
+  def export(l) do    GenServer.call(@name, {hd(l), self(), tl(l)}) end
   def handle_call({type, s, args}, _from, _) do
-    #IO.puts("listener call")
-    spawn(fn() -> GenServer.reply(_from, main(type, args)) end)
+    spawn(fn() ->     GenServer.reply(_from, main(type, args)) end)
     {:noreply, []}
   end
-  def export(l) do
-    GenServer.call(key, {hd(l), self(), tl(l)})
-  end
   def main(type, args) do
-		#IO.puts("listener #{inspect type}")
     case type do
       "add_blocks" -> BlockAbsorber.absorb(hd(args))
       "pushtx" -> fee_filter(hd(args))
@@ -29,11 +25,6 @@ defmodule Listener do
           [height: h, hash: DetHash.doit(block.data)]
       x -> IO.puts("listner is not a command #{inspect x}")
     end
-  end
-  def spawn_send(s, f) do
-    spawn_link(fn() ->
-      send s, [:ok, f.()]
-    end)
   end
   def fee_filter(tx) do
     cond do

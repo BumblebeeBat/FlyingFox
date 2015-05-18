@@ -1,17 +1,11 @@
 defmodule Tcp do
-  #use Application
   use Supervisor
-
   def open(port) do
     :gen_tcp.listen(port, [:binary, {:packet, 0}, {:active, false}])
   end
-  def close(socket) do
-    :gen_tcp.close(socket)
-  end
+  def close(socket) do :gen_tcp.close(socket) end
   def start_link(x, func) do
 		{port, id} = x
-		#IO.puts("tcp start_link")
-		#start(a, b) end
 		Supervisor.start_link(__MODULE__, [port, func, id])
 	end
 	def atom_join(x, y) do

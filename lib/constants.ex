@@ -9,4 +9,5 @@ defmodule Constants do
   def epoch do 50 end
   def chances_per_address do 200 end
   def tcp_port do 6666 end
+	def internal_d do 111 end
 end

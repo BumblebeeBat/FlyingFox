@@ -1,23 +1,13 @@
 defmodule Mempool do
   use GenServer
-
   @name __MODULE__
-
-  def start_link() do
-    GenServer.start_link(__MODULE__, :ok, [name: @name])
-  end
-  def dump do
-    GenServer.cast(@name, :dump)
-  end
-  def add_tx(tx) do
-    GenServer.cast(@name, {:add_tx, tx})
-  end
-  def txs do
-    GenServer.call(@name, :txs)
-  end
-  def init(:ok) do
-    {:ok, []}
-  end
+  def init(:ok) do {:ok, []} end
+  def start_link() do GenServer.start_link(__MODULE__, :ok, [name: @name]) end
+  def dump do         GenServer.cast(@name, :dump) end
+  def add_tx(tx) do   GenServer.cast(@name, {:add_tx, tx}) end
+  def txs do          GenServer.call(@name, :txs) end
+  def handle_cast(:dump, x) do       {:noreply, []} end
+  def handle_call(:txs, _from, x) do {:reply, x, x} end
   def handle_cast({:add_tx, tx}, x) do
 		cond do
 			is_map(tx) ->
@@ -30,11 +20,5 @@ defmodule Mempool do
 			true -> :ok
 		end
 		{:noreply, x}
-  end
-  def handle_cast(:dump, x) do
-    {:noreply, []}
-  end
-  def handle_call(:txs, _from, x) do
-    {:reply, x, x}
   end
 end

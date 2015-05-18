@@ -7,12 +7,8 @@ defmodule Talker do
   #download blocks and peers.
   use GenServer
   @name __MODULE__
-  #@tcp_port Application.get_env :flying_fox, :tcp_port
-  def start_link() do
-    GenServer.start_link(__MODULE__, :ok, [name: @name])
-  end
-  def doit do
-    GenServer.cast(@name, :doit)
+  def start_link(arg) do
+    GenServer.start_link(__MODULE__, arg, [name: @name])
   end
   def start do spawn_link(fn() -> timer end) end
   def still_on(blocks) do
@@ -62,9 +58,7 @@ defmodule Talker do
   end
   def check_peer(p) do #validating mode
     status = Api.status(p.port, p.ip)
-		#IO.puts("status #{inspect status}")
     cond do
-      #status == :ok or status == "ok"-> IO.puts("peer died 2 #{inspect p}")
 			not is_list(status) -> IO.puts "status #{inspect status}"
       :error in Dict.keys(status) ->
         status[:error]
@@ -79,7 +73,6 @@ defmodule Talker do
   def check_peer_2(p, status) do
     trade_peers(p)
     txs = Api.txs(p.port, p.ip)
-		#IO.puts("status: #{inspect status}")
     u = status[:height]
     i = KV.get("height")
     cond do
@@ -102,15 +95,17 @@ defmodule Talker do
     start
     Enum.map(0..2, &(%Peer{ip: "localhost", port: Constants.tcp_port+&1})) 
     |> Enum.map(&(Peers.add_peer(&1)))
+		KV.put("port", args)
+		Peers.add_peer(%Peer{ip: "localhost", port: args;})
     {:ok, []}
   end
+  def doit do GenServer.cast(@name, :doit) end
   def handle_cast(:doit, state) do
     check_peers
     {:noreply, state}
   end
   def timer do
-    :timer.sleep(3000)#using a timer to stop crash on boot
-    #IO.puts("talker")
+    :timer.sleep(3000)
     doit
     timer
   end
