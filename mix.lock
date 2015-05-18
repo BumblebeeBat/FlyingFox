@@ -1,5 +1,7 @@
 %{"earmark": {:hex, :earmark, "0.1.16"},
   "ex_doc": {:hex, :ex_doc, "0.7.2"},
+  "flying_fox_cli": {:git, "https://github.com/BumblebeeBat/flying_fox_cli.git", "3a680bfb858eebde35c4119638b703bd8e2abaf8", []},
+  "flying_fox_socket": {:git, "https://github.com/BumblebeeBat/flying_fox_socket.git", "8d6370f37e8b128c457b2bb6bf74ffa552088107", []},
   "message_pack": {:hex, :message_pack, "0.1.4"},
   "poolboy": {:hex, :poolboy, "1.5.1"},
   "ranch": {:hex, :ranch, "1.0.0"}}

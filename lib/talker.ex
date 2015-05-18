@@ -22,13 +22,13 @@ defmodule Talker do
     cond do
       lo >= n -> out
       true ->
-        out = out ++ Api.blocks(i+lo, i+n, p.port, p.ip)
+        out = out ++ FlyingFoxCli.blocks(i+lo, i+n, p.port, p.ip)
         download(n - 1, i, p, out)
     end
   end
   def download_blocks(i, u, p) do
     blocks = download(min(50, u - i), i, p)
-    my_block=Api.blocks(i, i)
+    my_block=FlyingFoxCli.blocks(i, i)
     cond do
       my_block == [] ->
         BlockAbsorber.absorb(blocks)
@@ -45,19 +45,19 @@ defmodule Talker do
     end
   end
   def trade_peers(p) do
-    my_peers = Api.all_peers
-    peers = Api.all_peers(p.port, p.ip)
+    my_peers = FlyingFoxCli.all_peers
+    peers = FlyingFoxCli.all_peers(p.port, p.ip)
     if my_peers == :ok or peers == :ok do
       IO.puts("peer died 1")
     else
       not_yours = Enum.filter(my_peers, &(not &1 in peers))
       not_mine = Enum.filter(peers, &(not &1 in my_peers))
-      Enum.map(not_yours,&(Api.add_peer(elem(&1, 1),p.port,p.ip)))
+      Enum.map(not_yours,&(FlyingFoxCli.add_peer(elem(&1, 1),p.port,p.ip)))
       Enum.map(not_mine, &(Peers.add_peer(elem(&1, 1))))
     end
   end
   def check_peer(p) do #validating mode
-    status = Api.status(p.port, p.ip)
+    status = FlyingFoxCli.status(p.port, p.ip)
     cond do
 			not is_list(status) -> IO.puts "status #{inspect status}"
       :error in Dict.keys(status) ->
@@ -72,7 +72,7 @@ defmodule Talker do
   end
   def check_peer_2(p, status) do
     trade_peers(p)
-    txs = Api.txs(p.port, p.ip)
+    txs = FlyingFoxCli.txs(p.port, p.ip)
     u = status[:height]
     i = KV.get("height")
     cond do
@@ -96,7 +96,7 @@ defmodule Talker do
     Enum.map(0..2, &(%Peer{ip: "localhost", port: Constants.tcp_port+&1})) 
     |> Enum.map(&(Peers.add_peer(&1)))
 		KV.put("port", args)
-		Peers.add_peer(%Peer{ip: "localhost", port: args;})
+		Peers.add_peer(%Peer{ip: "localhost", port: args})
     {:ok, []}
   end
   def doit do GenServer.cast(@name, :doit) end

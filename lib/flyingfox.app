@@ -4,7 +4,7 @@
               {mod,{'Elixir.FlyingFox',[]}},
               {registered,[flyingfox]},
               {vsn,"0.0.1"},
-              {modules,['Elixir.Account','Elixir.Api','Elixir.Block',
+              {modules,['Elixir.Account','Elixir.Block',
                         'Elixir.BlockAbsorber','Elixir.Blockchain',
                         'Elixir.Blocktree','Elixir.Bond2SpendTx',
                         'Elixir.Channel','Elixir.ChannelBlockTx','Elixir.Cli',

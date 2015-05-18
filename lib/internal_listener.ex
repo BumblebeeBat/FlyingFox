@@ -14,6 +14,7 @@ defmodule InternalListener do
     TxCreator.reveal
   end
   def main(type, args) do
+		IO.puts("internal listener #{inspect type}")
     case type do
       "buy_block" -> buy_block
       #"buy_blocks" -> Enum.map(1..hd(args), fn(_)-> buy_block

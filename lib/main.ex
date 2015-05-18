@@ -1,8 +1,9 @@
 defmodule Main do
   use Supervisor
+	@name __MODULE__
 	def start(x \\ 0) do start_link(x) end
   def start_link(arg) do
-    Supervisor.start_link(__MODULE__, arg)
+		Supervisor.start_link(__MODULE__, arg, name: @name)
   end
   def init(arg) do
     p=arg+Constants.tcp_port
