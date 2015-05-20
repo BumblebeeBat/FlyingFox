@@ -1,12 +1,5 @@
 defmodule VerifyTx do
 
-  #@min_tx_fee          Application.get_env :flying_fox, :min_tx_fee
-  #@max_bond_block      Application.get_env :flying_fox, :max_bond_block
-  #@epoch               Application.get_env :flying_fox, :epoch
-  #@signers_per_block   Application.get_env :flying_fox, :signers_per_block
-  #@chances_per_address Application.get_env :flying_fox, :chances_per_address
-  #@min_bond            Application.get_env :flying_fox, :min_bond
-
   def spend?(tx, txs) do
     block = tx.data
     fee = block.fee

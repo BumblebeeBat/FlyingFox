@@ -1,8 +1,4 @@
 defmodule TxCreator do
-  
-  #@min_bond            Application.get_env :flying_fox, :min_bond
-  #@epoch               Application.get_env :flying_fox, :epoch
-  #@chances_per_address Application.get_env :flying_fox, :chances_per_address
 
   def nonce(pub) do
     a=Mempool.txs
@@ -68,5 +64,14 @@ defmodule TxCreator do
     end
   end
   def slasher(tx1, tx2) do
+  end
+  def to_channel do
+    %ToChannelTx{}
+  end
+  def channel_block do
+    %ChannelBlockTx{}
+  end
+  def close_channel do
+    %CloseChannelTx{}
   end
 end

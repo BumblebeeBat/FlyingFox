@@ -12,7 +12,9 @@ you need to install elixir to run this code http://elixir-lang.org/install.html
 
 to run: iex -S mix
 
-to talk to Flyin fox, use this: https://github.com/BumblebeeBat/flying_fox_cli
+to talk to FlyingFox, use this: https://github.com/BumblebeeBat/flying_fox_cli
 
 Code of conduct, development guidelines:
 Submit pull request. If I like, I will accept.
+I am interested in building custom versions of this blockchain.
+Github issues are used to decide what work needs to be done next.
