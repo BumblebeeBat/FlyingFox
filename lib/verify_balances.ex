@@ -83,6 +83,8 @@ defmodule VerifyBalances do
       :Elixir.ToChannelTx    -> addresses = lose_cash(addresses, pub, da.amount+da.fee)
       :Elixir.ChannelBlockTx -> true
       :Elixir.CloseChannelTx -> true
+      :Elixir.OracleTx       -> addresses = lose_cash(addresses, pub, Constants.oracle_fee) #maybe it is easiest if one person pays for the oracle.
+      :Elixir.JudgementTx    -> true
       x -> 
         IO.puts("no function with that name #{inspect x}")
         false

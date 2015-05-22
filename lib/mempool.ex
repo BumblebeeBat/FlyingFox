@@ -1,4 +1,6 @@
 defmodule Mempool do
+	#maybe this should be split into 2 threads. the lower one stores the mempool, and the upper one pre-checks txs to see if they are worth giving to the mempool.
+	#I am worried it is too easy for an attacker to empty the mempool by feeding in txs that make it crash.
   use GenServer
   @name __MODULE__
   def init(:ok) do {:ok, []} end
