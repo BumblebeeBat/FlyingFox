@@ -1,4 +1,8 @@
 defmodule TxCreator do
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3e54a32583accccb76b8aff71dbeaa1c4034c0c9
   def nonce(pub) do
     a=Mempool.txs
     |> Enum.filter(fn(tx) -> tx.pub == pub end)
@@ -63,5 +67,14 @@ defmodule TxCreator do
     end
   end
   def slasher(tx1, tx2) do
+  end
+  def to_channel do
+    %ToChannelTx{}
+  end
+  def channel_block do
+    %ChannelBlockTx{}
+  end
+  def close_channel do
+    %CloseChannelTx{}
   end
 end
