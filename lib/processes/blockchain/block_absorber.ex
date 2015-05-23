@@ -1,4 +1,4 @@
-defmodule BlockAbsorber do#this doesn't actually have memory. so I used "x" to fill in spaces.
+defmodule BlockAbsorber do
   use GenServer
   @name __MODULE__
   def init(_args) do 

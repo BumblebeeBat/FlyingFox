@@ -91,95 +91,49 @@ defmodule Blockchain do
     if is_integer(h) do h=hd(get_helper(h)) end
     KV.get(h)
   end
-  def buy_block(n \\ 1) do
-    true = n > 0
-    height = KV.get("height")
-    prev_block = get_block(KV.get("height"))
-    txs = Mempool.txs#remove expensive txs until we can afford it. packing problem.
-    bh = nil
-    if prev_block != nil do
-      bh = Blocktree.blockhash(prev_block)
+  def blockhash(block) do
+    case block do
+      %Signed{} -> block = block.data
+      _ -> 1
     end
-    new = %Block{height: height+n, txs: txs, hash: bh, bond_size: 10_000_000_000_000/Constants.signers_per_block*3}#instead of fixed bond size, we shoul look at how big of a bond the txs need.
-    |> Keys.sign
-    |> Map.put(:meta, [revealed: []])
+    %Block{} = block
+    DetHash.doit(block)
   end
-  def num_signers(txs) do
-    txs_filter(txs, :Elixir.SignTx)
-    |> Enum.map(fn(t) -> length(t.data.winners) end)
-    |> Enum.reduce(0, &(&1+&2))
-  end
-  def back do
-    h = KV.get("height")
-    if h>0 do
-      block = get_block(h)
-      prev = get_block(block.data.hash)
-      txs = block.data.txs
-      n = num_signers(txs)
-      TxUpdate.txs_updates(txs, -1, round(block.data.bond_size/n))
-      TxUpdate.sym_increment(block.pub, :amount, -Constants.block_creation_fee, -1)
-      b = prev.data.height
-      if b == nil do b = 0 end
-      KV.put("height", b)
-      Mempool.dump
-      true
-    end
-  end
-  def forward(block) do#while walking forward this needs to reorder the hashes used for get_block so that the block we are using is on top.
-    #IO.puts("forward block #{inspect block}")
-    if not is_map(block) do block = KV.get(block) end
-    #IO.puts("forward block #{inspect block}")
-    gap = block.data.height-KV.get("height")
-    cost = Constants.block_creation_fee * round(:math.pow(2, gap))
+	def quick_validation(block) do
+    ran = VerifyTx.rng(block.data.hash)
+    tot_bonds = KV.get("tot_bonds")
+    l = Blockchain.txs_filter(block.data.txs, :Elixir.SignTx)
+    |> Enum.map(fn(sign) ->
+      %{bond: bond} = KV.get(sign.pub)
+      Enum.map(sign.data.winners, fn(x)-> 
+        VerifyTx.winner?(bond, tot_bonds, ran, sign.pub, x) 
+      end)
+    end) |> Enum.reduce([], &(&1++&2)) |> Enum.map(&(if(&1) do 1 else 0 end)) |> Enum.reduce(0, &(&1+&2))
     cond do
-      not is_map(block) -> [error: "blocks should be maps"]
-      KV.get(Blocktree.blockhash(block)) == nil -> [error: "don't have this block"]
-      gap < 1 -> [error: "cannot redo history"]
-      not valid_block?(block, cost) ->
-        IO.puts("invalid block")
+      Blockchain.winners(block) <= Constants.signers_per_block*2/3 -> 
+        IO.puts("not enough winners")
+        false
+      l <= Constants.signers_per_block*1/2 -> 
+        IO.puts("not enough")
+        false
+      true -> true
+    end
+  end
+  def enough_validated(blocks, n) do
+    cond do
+      n == 0 -> true
+      blocks == [] -> false
+      not quick_validation(hd(blocks)) ->
+        IO.puts("bad block")
         false
       true ->
-        #block creator needs to pay a fee. he needs to have signed so we can take his fee.
-        TxUpdate.sym_increment(block.pub, :amount, -cost, 1)
-        txs = block.data.txs
-        n = num_signers(txs)
-        TxUpdate.txs_updates(txs, 1, round(block.data.bond_size/n))
-        KV.put("height", block.data.height)
-        Mempool.dump
-        hash = Blocktree.blockhash(block)
-        n = to_string(block.data.height)
-        bh = KV.get(n) |> Enum.filter(&(&1!=hash))
-        KV.put(n, [hash|bh])
+        enough_validated(tl(blocks), n-1)
     end
   end
-  def goto(hash) do
-    h = hash |> get_block
-    goto_helper([h])
+  def get_height(h) do
+    a = KV.get(h)
+    if a == nil do a = [] end
+    a
   end
-  def goto_helper(last_blocks) do
-    h = KV.get("height")
-    if h==0 do
-      my_block = [height: 0]
-      hash = ""
-    else
-      my_block = get_block(h).data
-      hash = Blocktree.blockhash(my_block)
-    end
-    add_block = hd(last_blocks).data
-    cond do
-      length(last_blocks)>60 ->
-        IO.puts("error!#! #{inspect last_blocks}")
-      hd(last_blocks) == nil ->
-        IO.puts("error 2 #{inspect last_blocks}")
-        Enum.map(tl(last_blocks), &(forward(&1)))
-      my_block.height == 0 or add_block.hash == hash ->
-        Enum.map(last_blocks, &(forward(&1)))
-      add_block.height > my_block.height ->
-        goto_helper([get_block(add_block.hash)|last_blocks])
-      true ->
-        IO.puts("back")
-        back
-        goto_helper(last_blocks)
-    end
-  end
+
 end
