@@ -130,10 +130,17 @@ defmodule Blockchain do
         enough_validated(tl(blocks), n-1)
     end
   end
-  def get_height(h) do
-    a = KV.get(h)
-    if a == nil do a = [] end
-    a
-  end
-
+  def buy_block(n \\ 1) do
+		true = n > 0
+		height = KV.get("height")
+		prev_block = get_block(KV.get("height"))
+		txs = Mempool.txs#remove expensive txs until we can afford it. packing problem.
+		bh = nil
+		if prev_block != nil do
+			bh = blockhash(prev_block)
+		end
+		new = %Block{height: height+n, txs: txs, hash: bh, bond_size: 10_000_000_000_000/Constants.signers_per_block*3}#instead of fixed bond size, we shoul look at how big of a bond the txs need.
+		|> Keys.sign
+		|> Map.put(:meta, [revealed: []])
+	end
 end

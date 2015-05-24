@@ -15,7 +15,7 @@ defmodule Listener do
       "txs" -> Mempool.txs
       "height" -> KV.get("height")
       "block" -> Blockchain.get_block(hd(args))
-      "blocks" -> flip(blocks(hd(args), hd(tl(args))))
+      "blocks" -> blocks(hd(args), hd(tl(args)))
       "add_peer" -> Peers.add_peer(hd(args))
       "all_peers" -> Peers.get_all
       "status" ->
@@ -28,26 +28,19 @@ defmodule Listener do
   end
   def fee_filter(tx) do
     cond do
-      tx[:data][:fee]<10000 -> "low-fee tx are blocked on this node"
+      tx.data.fee<10000 -> "low-fee tx are blocked on this node"
       true -> Mempool.add_tx(tx)
     end
   end
-  def flip(x, y \\ []) do
-    cond do
-      x==[] -> y
-      true -> flip(tl(x), [hd(x)|y])
-    end
-  end
-  def max do 10000 end
   def blocks(start, finish, out \\ []) do
-    finish = min(finish, KV.get("height"))
-    blocks_helper(start, finish, out)
+    finish |> min(KV.get("height")) |> blocks_helper(start, out)
   end
-  def blocks_helper(start, finish, out) do
+  def blocks_helper(finish, start, out) do
     block = Blockchain.get_block(start)
     cond do
-      byte_size(PackWrap.pack(out)) > max -> tl(out)
-      start < 0 -> blocks(1, finish, out)
+      #byte_size(PackWrap.pack(out)) > Constants.message_size -> Enum.reverse(tl(out)) #slower, but more accurate
+			byte_size(inspect out) > Constants.message_size/2 -> tl(out)
+      start < 0 -> blocks_helper(1, finish, out)
       start > finish -> out
       block == nil -> blocks_helper(start+1, finish, out)
       true -> blocks_helper(start+1, finish, [block|out])

@@ -1,8 +1,4 @@
 defmodule TxCreator do
-<<<<<<< HEAD
-=======
-
->>>>>>> 3e54a32583accccb76b8aff71dbeaa1c4034c0c9
   def nonce(pub) do
     a=Mempool.txs
     |> Enum.filter(fn(tx) -> tx.pub == pub end)
@@ -23,7 +19,7 @@ defmodule TxCreator do
     if acc.bond > Constants.min_bond do
       h=KV.get("height")
       if h<1 do prev_hash=nil else
-        prev_hash = Blocktree.blockhash(Blockchain.get_block(h))
+        prev_hash = Blockchain.blockhash(Blockchain.get_block(h))
       end
       tot_bonds = KV.get("tot_bonds")
       w= Enum.filter(0..Constants.chances_per_address, fn(x) -> SignTransaction.winner?(acc.bond, tot_bonds, SignTransaction.rng(prev_hash), pub, x) end) 

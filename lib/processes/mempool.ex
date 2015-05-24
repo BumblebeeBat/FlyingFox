@@ -16,7 +16,7 @@ defmodule Mempool do
 				h = KV.get("height")
 				if h < 1 do prev_hash = nil
 				else
-					prev_hash = Blocktree.blockhash(Blockchain.get_block(h))
+					prev_hash = Blockchain.blockhash(Blockchain.get_block(h))
 				end
 				if VerifyTx.check_tx(tx, x, prev_hash) do x=[tx|x] end
 			true -> :ok

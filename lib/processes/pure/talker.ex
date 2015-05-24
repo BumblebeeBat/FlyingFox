@@ -17,18 +17,9 @@ defmodule Talker do
   def add_peers(x) do
     Enum.map(x, fn(x) -> Peers.add_peer(x) end)
   end
-  def download(n, i, p, out \\ []) do
-    lo = length(out)
-    cond do
-      lo >= n -> out
-      true ->
-        out = out ++ FlyingFoxCli.blocks(i+lo, i+n, p.port, p.ip)
-        download(n - 1, i, p, out)
-    end
-  end
   def download_blocks(i, u, p) do
-    blocks = download(min(50, u - i), i, p)
-    my_block=FlyingFoxCli.blocks(i, i)
+    blocks = Cli.download_blocks(min(50, u - i), i, p)
+    my_block = Cli.blocks(i, i)
     cond do
       my_block == [] ->
         BlockAbsorber.absorb(blocks)
@@ -39,25 +30,25 @@ defmodule Talker do
         BlockAbsorber.absorb(blocks)
         [status: :ahead]
       true ->
-        blocks = download(50, max(0, i-40), p)
+        blocks = Cli.download_blocks(50, max(0, i-40), p)
         BlockAbsorber.absorb(blocks)
         [status: :fork, height: u, peer: p]
     end
   end
   def trade_peers(p) do
-    my_peers = FlyingFoxCli.all_peers
-    peers = FlyingFoxCli.all_peers(p.port, p.ip)
+    my_peers = Cli.all_peers
+    peers = Cli.all_peers(p.port, p.ip)
     if my_peers == :ok or peers == :ok do
       IO.puts("peer died 1")
     else
       not_yours = Enum.filter(my_peers, &(not &1 in peers))
       not_mine = Enum.filter(peers, &(not &1 in my_peers))
-      Enum.map(not_yours,&(FlyingFoxCli.add_peer(elem(&1, 1),p.port,p.ip)))
+      Enum.map(not_yours,&(Cli.add_peer(elem(&1, 1),p.port,p.ip)))
       Enum.map(not_mine, &(Peers.add_peer(elem(&1, 1))))
     end
   end
   def check_peer(p) do #validating mode
-    status = FlyingFoxCli.status(p.port, p.ip)
+    status = Cli.status(p.port, p.ip)
     cond do
 			not is_list(status) -> IO.puts "status #{inspect status}"
       :error in Dict.keys(status) ->
@@ -72,7 +63,7 @@ defmodule Talker do
   end
   def check_peer_2(p, status) do
     trade_peers(p)
-    txs = FlyingFoxCli.txs(p.port, p.ip)
+    txs = Cli.txs(p.port, p.ip)
     u = status[:height]
     i = KV.get("height")
     cond do

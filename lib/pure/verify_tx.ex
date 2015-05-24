@@ -1,6 +1,4 @@
 defmodule VerifyTx do
-<<<<<<< HEAD
-=======
 
   def spend?(tx, txs) do
     block = tx.data
@@ -166,7 +164,6 @@ defmodule VerifyTx do
     #This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims 
     #the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
   end
->>>>>>> 3e54a32583accccb76b8aff71dbeaa1c4034c0c9
   #maybe we should stop any channel tx of different types from coexisting in the same block.
   def check_sig2(tx) do tx |> Dict.put(:sig, tx.sig2) |> Dict.put(:pub, tx.pub2) |> Sign.verify_tx() end
   def check_tx(tx, txs, prev_hash) do

@@ -8,17 +8,9 @@ defmodule InternalListener do
     spawn(fn() ->     GenServer.reply(_from, main(type, args)) end)
     {:noreply, []}
   end
-  def buy_block do
-    BlockAbsorber.buy_block
-    TxCreator.sign
-    TxCreator.reveal
-  end
   def main(type, args) do
-		IO.puts("internal listener #{inspect type}")
     case type do
-      "buy_block" -> buy_block
-      #"buy_blocks" -> Enum.map(1..hd(args), fn(_)-> buy_block
-      #                                              :timer.sleep(1000) end)
+      "buy_block" -> BlockAbsorber.buy_block
       "spend" -> TxCreator.spend(hd(args), hd(tl(args)))
       "stop" -> 
         IO.puts("stopping args")

@@ -1,6 +1,4 @@
 defmodule Blocktree do
-
-
   def genesis_block do
     b = %Block{height: 1, txs: [], hash: "z5cVID5hEmZcWNVRmVPRUtSN7e2Z5nXecc+8KWbxk+4=", bond_size: 3.0e11}
     genesis_block = %Signed{meta: [revealed: []], pub: "BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc=", sig: "MEYCIQCu3JqIcIn3jqBhH0nqF8ZTJmdV9GzlJ6WpSq66PA20sAIhAINAuEyCyl2x/iK3BRJM0JGXcd8epnzv0kTX6iHOMAeW", data: b}
@@ -36,11 +34,12 @@ defmodule Blocktree do
     KV.put("tot_bonds", b)
     sign_reveal
   end
+	def num_signers(txs) do txs |> Enum.filter(&(&1.data.__struct__ == :Elixir.SignTx)) |> length end
 	def back do
     h = KV.get("height")
     if h>0 do
-      block = get_block(h)
-      prev = get_block(block.data.hash)
+      block = Blockchain.get_block(h)
+      prev = Blockchain.get_block(block.data.hash)
       txs = block.data.txs
       n = num_signers(txs)
       TxUpdate.txs_updates(txs, -1, round(block.data.bond_size/n))
@@ -62,7 +61,7 @@ defmodule Blocktree do
       not is_map(block) -> [error: "blocks should be maps"]
       KV.get(Blockchain.blockhash(block)) == nil -> [error: "don't have this block"]
       gap < 1 -> [error: "cannot redo history"]
-      not valid_block?(block, cost) ->
+      not Blockchain.valid_block?(block, cost) ->
         IO.puts("invalid block")
         false
       true ->
@@ -110,11 +109,17 @@ defmodule Blocktree do
     end
   end	
   def add_blocks([]) do [] end
+	def get_height(h) do
+    a = KV.get(h)
+    if a == nil do a = [] end
+    a
+  end
+
   def add_blocks([head|tail]) do
     block = head.data
     height = block.height
     cond do
-      not enough_validated([head|tail], round(length(get_height(height))/3)) ->
+      not Blockchain.enough_validated([head|tail], round(length(get_height(height))/3)) ->
         IO.puts("double-signing everywhere")
         false
       KV.get(Blockchain.blockhash(head)) != nil ->
