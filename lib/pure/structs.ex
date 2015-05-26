@@ -8,7 +8,7 @@ defmodule Signed do
 end
 
 defmodule Block do
-  defstruct height: 0, txs: [], hash: "", bond_size: 3.0e11
+  defstruct height: 0, txs: [], hash: "", bond_size: 1.0e10
 end
 
 defmodule Channel do

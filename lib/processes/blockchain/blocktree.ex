@@ -1,6 +1,6 @@
 defmodule Blocktree do
   def genesis_block do
-    b = %Block{height: 1, txs: [], hash: "z5cVID5hEmZcWNVRmVPRUtSN7e2Z5nXecc+8KWbxk+4=", bond_size: 3.0e11}
+    b = %Block{height: 1, txs: [], hash: "z5cVID5hEmZcWNVRmVPRUtSN7e2Z5nXecc+8KWbxk+4=", bond_size: 1_000_000}
     genesis_block = %Signed{meta: [revealed: []], pub: "BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc=", sig: "MEYCIQCu3JqIcIn3jqBhH0nqF8ZTJmdV9GzlJ6WpSq66PA20sAIhAINAuEyCyl2x/iK3BRJM0JGXcd8epnzv0kTX6iHOMAeW", data: b}
     put_block(genesis_block)
     KV.put("height", 1)
@@ -119,6 +119,9 @@ defmodule Blocktree do
     block = head.data
     height = block.height
     cond do
+			block.bond_size > Constants.max_bond ->
+				IO.puts("too much bond for one block")
+				false
       not Blockchain.enough_validated([head|tail], round(length(get_height(height))/3)) ->
         IO.puts("double-signing everywhere")
         false

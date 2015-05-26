@@ -1,7 +1,4 @@
 defmodule Bond2Spend do
-	def check(tx, txs) do
-		true
-	end
 	def update(tx, d) do
     a = tx.data.amount
     b = KV.get("tot_bonds")

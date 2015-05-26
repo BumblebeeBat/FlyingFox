@@ -32,10 +32,16 @@ defmodule Cli do
   def buy_block(port \\ lp, ip \\ lh) do
 		#spawn(fn -> talk([:buy_block], port+delt, ip) end)
 		talk([:buy_block], port+delt, ip)
+		cleanup
+	end
+	def cleanup do
+		TxCreator.sign
+		TxCreator.reveal
 	end
 	def buy_blocks_helper(n, port, ip) do
 		1..n |> Enum.map(fn(_) ->
 			talk([:buy_block], port, ip)
+			cleanup
 			:timer.sleep(1000)
 		end)
 	end

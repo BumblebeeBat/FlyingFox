@@ -4,7 +4,7 @@ defmodule Constants do
   def min_bond do 2_000_000_000 end
   def min_tx_fee do 5000 end
   def block_creation_fee do 31_000_000 end
-  def max_bond_block do 1000_000_000_000 end
+  def max_bond do 1_000_000_000 end
   def signers_per_block do 54 end
   def epoch do 50 end
   def chances_per_address do 200 end

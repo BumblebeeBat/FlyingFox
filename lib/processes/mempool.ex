@@ -6,11 +6,12 @@ defmodule Mempool do
   def init(:ok) do {:ok, []} end
   def start_link() do GenServer.start_link(__MODULE__, :ok, [name: @name]) end
   def dump do         GenServer.cast(@name, :dump) end
-  def add_tx(tx) do   GenServer.cast(@name, {:add_tx, tx}) end
+  def add_tx(tx) do GenServer.cast(@name, {:add_tx, tx}) end
   def txs do          GenServer.call(@name, :txs) end
   def handle_cast(:dump, x) do       {:noreply, []} end
   def handle_call(:txs, _from, x) do {:reply, x, x} end
   def handle_cast({:add_tx, tx}, x) do
+		IO.puts("add tx: #{inspect tx}")
 		cond do
 			is_map(tx) ->
 				h = KV.get("height")

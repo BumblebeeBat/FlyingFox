@@ -66,6 +66,7 @@ defmodule SignTransaction do
 	def update(tx, d, bond_size) do#0.1% of total bonds is given out as rewards on every block, which changes the exchange rate.
     w = length(tx.data.winners)
     delta = -TxUpdate.exchange_rate * bond_size * w
+		IO.puts("delta #{inspect delta}")
     b = KV.get("tot_bonds")
     KV.put("tot_bonds", b + delta * d)
     TxUpdate.sym_increment(tx.pub, :bond, delta, d)

@@ -53,7 +53,7 @@ defmodule Tcp do
     cond do
       x == :ok ->
 				Task.Supervisor.start_child(sup_name(id), fn -> serve(conn, func) end)
-				:timer.sleep(10)
+				:timer.sleep(20)
 				loop_acceptor(socket, port, func, id)
       true ->
         IO.puts("failed to connect #{inspect conn}")

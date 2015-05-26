@@ -15,7 +15,9 @@ defmodule Blockchain do
 		#block creator needs to pay a fee. he needs to have signed so we can take his fee.
 		f = fn(x) ->
 			cond do
-				x==nil -> 0
+				x == nil -> 0
+				x.data == nil -> 0
+				x.data.bond_size == nil -> 0
 				true ->	x.data.bond_size
 			end
 		end
@@ -30,6 +32,7 @@ defmodule Blockchain do
         IO.puts("block should be a map #{inspect block}")
         false
       min_bond*2/3>f.(block) ->
+				
         #if the amount of money bonded per block changes too quickly,
         #then it makes it more likely for double-spends to happen.
         IO.puts("not enough bonded")
@@ -139,7 +142,7 @@ defmodule Blockchain do
 		if prev_block != nil do
 			bh = blockhash(prev_block)
 		end
-		new = %Block{height: height+n, txs: txs, hash: bh, bond_size: 10_000_000_000_000/Constants.signers_per_block*3}#instead of fixed bond size, we shoul look at how big of a bond the txs need.
+		new = %Block{height: height+n, txs: txs, hash: bh, bond_size: 1_000_000_000}#instead of fixed bond size, we shoul look at how big of a bond the txs need.
 		|> Keys.sign
 		|> Map.put(:meta, [revealed: []])
 	end
