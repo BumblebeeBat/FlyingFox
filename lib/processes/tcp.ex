@@ -1,7 +1,6 @@
 defmodule Tcp do
   #use Application
   use Supervisor
-
   def open(port) do
     :gen_tcp.listen(port, [:binary, {:packet, 0}, {:active, false}])
   end
@@ -29,7 +28,7 @@ defmodule Tcp do
 		y=sup_name(id)
     children = [
       supervisor(Task.Supervisor, [[name: y]]),
-    worker(Task, [Tcp, :accept, x])
+			worker(Task, [Tcp, :accept, x])
     ]
     opts = [strategy: :one_for_one, name: TcpServer.Supervisor]
     supervise(children, opts)
@@ -44,20 +43,24 @@ defmodule Tcp do
 			x == :error and socket == :eaddrinuse ->
 				IO.puts "port is taken"
 				Port.next
-				reset_acceptor(socket, port+1, func, id)
+				reset_acceptor(socket, func, id)
 			x == :error and socket == :emfile ->
 				IO.puts("emfile error")
 			true ->
 				IO.puts("failed to connect 2 because #{inspect x} #{inspect socket}")
 				#Port.next
 				#reset_acceptor(socket, port+1, func, id)
-				reset_acceptor(socket, port, func, id)
+				reset_acceptor(socket, func, id)
 		end
   end
-	def reset_acceptor(socket, port, func, id) do
+	def reset_acceptor(socket, func, id) do
     close(socket)
     #spawn_link(fn -> accept(port, func, id) end)
-    accept(port, func, id)
+		cond do
+			id == :tcp1 -> accept(Port.external, func, id)
+			id == :tcp2 -> accept(Port.internal, func, id)
+			true -> IO.puts("tcp error")
+		end
 	end
   def loop_acceptor(socket, port, func, id) do
     {x, conn} = :gen_tcp.accept(socket)
@@ -68,7 +71,7 @@ defmodule Tcp do
 				loop_acceptor(socket, port, func, id)
       true ->
         IO.puts("failed to connect #{inspect conn}")
-				reset_acceptor(socket, port, func, id)
+				reset_acceptor(socket, func, id)
     end
   end
   def serve(client, func) do client |> listen |> func.() |> ms(client) end
