@@ -7,7 +7,9 @@ defmodule Main do
   end
   def init(arg) do
     p=arg+Constants.tcp_port
-    children = [worker(KV, []),
+		b=p+Constants.port_d
+    children = [worker(Port, [b, p]),
+								worker(KV, []),
                 worker(Keys, []),
                 worker(Mempool, []), 
                 worker(BlockAbsorber, []),                 
@@ -15,8 +17,8 @@ defmodule Main do
                 worker(Listener, []),
                 worker(InternalListener, []),
                 supervisor(Tcp, [{p, :tcp1}, &(Listener.export(&1))], id: :tcp1),
-                supervisor(Tcp, [{p+Constants.internal_d, :tcp2}, &(InternalListener.export(&1))], id: :tcp2),
-                worker(Talker, [p]),
+                supervisor(Tcp, [{b, :tcp2}, &(InternalListener.export(&1))], id: :tcp2),
+                worker(Talker, []),
                ]
     supervise(children, strategy: :rest_for_one)
   end

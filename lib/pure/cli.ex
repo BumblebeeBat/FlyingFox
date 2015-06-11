@@ -1,55 +1,70 @@
 defmodule Cli do
   defp lh do "localhost" end
-  defp lp do 6666 end
-	defp talk(msg, port, ip) do
+  defp lp do Port.external end
+	defp me do %Peer{port: lp, ip: lh} end
+	defp talk(msg, peer) do #port, ip) do
+		port = peer.port
+		ip = peer.ip
     case Tcp.talk(ip, port, msg) do
       {:ok, x} -> x
       {:error, x} -> [error: x, port: port, ip: ip]
     end
   end
-	def delt do Constants.internal_d end
-  def add_block(block, port \\ lp, ip \\ lh) do
-		talk([:add_block, block], port, ip ) end
-  def txs(port \\ lp, ip \\ lh) do
-		talk([:txs], port, ip) end
-  def pushtx(tx, port \\ lp, ip \\ lh) do
-		talk([:pushtx, tx], port, ip) end
-  def blocks(start, finish, port \\ lp, ip \\ lh) do#might not grab all blocks in he range.
-		talk([:blocks, start, finish], port, ip) end
-	def download_blocks(n, i, out \\ [], port \\ lp, ip \\ lh) do#grabs all blocks in the range.
-    lo = length(out)
+	defp sudo_talk(msg, peer) do
+		talk(msg, %{peer | port: Port.internal})
+	end
+  def add_block(block, peer \\ me) do
+		talk([:add_block, block], peer) end
+  def txs(peer \\ me) do
+		talk([:txs], peer) end
+  def pushtx(tx, peer \\ me) do
+		talk([:pushtx, tx], peer) end
+	def flip(l, out \\ []) do
+		cond do
+			l == [] -> out
+			is_list(l) -> flip(tl(l), [hd(l)|out])
+			true -> IO.puts("error #{inspect l}")
+							[]
+		end
+	end
+  def blocks(start, finish, peer \\ me) do #might not grab all blocks in he range.
+		flip(talk([:blocks, start, finish], peer)) end
+	
+	def download_blocks(n, i, peer \\ me, out \\ []) do#grabs all blocks in the range.
+		#IO.puts("download blocks #{inspect n} #{inspect i}")
+		#IO.puts("out #{inspect out}")
+    lo = length(out)#out should be :ok
     cond do
       lo >= n -> out
-      true -> download_blocks(n - 1, i, out ++ blocks(i+lo, i+n, port, ip), port, ip)
+      true -> download_blocks(n - 1, i, peer, out ++ blocks(i+lo, i+n, peer))
     end		
 	end
-  def add_peer(peer, port \\ lp, ip \\ lh) do
-		talk([:add_peer, peer], port, ip) end
-  def all_peers(port \\ lp, ip \\ lh) do
-		talk([:all_peers], port, ip) end
-  def status(port \\ lp, ip \\ lh) do
-		talk([:status], port, ip) end
-  def buy_block(port \\ lp, ip \\ lh) do
-		#spawn(fn -> talk([:buy_block], port+delt, ip) end)
-		talk([:buy_block], port+delt, ip)
+  def add_peer(peer, pr \\ me) do
+		talk([:add_peer, peer], pr) end
+  def all_peers(peer \\ me) do
+		talk([:all_peers], peer) end
+  def status(peer \\ me) do
+		talk([:status], peer) end
+  def buy_block(peer \\ me) do
+		sudo_talk([:buy_block], peer)
 		cleanup
 	end
 	def cleanup do
 		TxCreator.sign
 		TxCreator.reveal
 	end
-	def buy_blocks_helper(n, port, ip) do
+	def buy_blocks_helper(n, peer \\ me) do
 		1..n |> Enum.map(fn(_) ->
-			talk([:buy_block], port, ip)
+			sudo_talk([:buy_block], peer)
 			cleanup
 			:timer.sleep(1000)
 		end)
 	end
-  def buy_blocks(n, port \\ lp, ip \\ lh) do
-		spawn(fn -> buy_blocks_helper(n, port+delt, ip) end)
+  def buy_blocks(n, peer \\ me) do
+		spawn(fn -> buy_blocks_helper(n, peer) end)
 	end
-  def spend(amount, to, port \\ lp, ip \\ lh) do
-  talk([:spend, String.to_integer(amount), to], port+delt, ip) end
-  def stop(port \\ lp, ip \\ lh) do
-  talk([:stop], port+delt, ip) end
+  def spend(amount, to, peer \\ me) do
+		sudo_talk([:spend, String.to_integer(amount), to], peer) end
+  def stop(peer \\ me) do
+  talk([:stop], peer) end
 end

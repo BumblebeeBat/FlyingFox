@@ -7,7 +7,11 @@ defmodule Tcp do
   end
   def close(socket) do
     #:gen_tcp.close(socket)
-    :gen_tcp.shutdown(socket, :read_write)
+		spawn(fn() ->
+			:timer.sleep(100)
+			:gen_tcp.shutdown(socket, :read_write)
+		end)
+		:timer.sleep(2000)
   end
   def start_link(x, func) do
 		{port, id} = x
@@ -32,28 +36,35 @@ defmodule Tcp do
   end
   def accept(port, func, id) do
     {x, socket} = open(port)
-		IO.puts("tcp accept #{inspect x}")
-		case x do
-			:ok -> 
+		IO.puts("tcp accept #{inspect x} on port #{inspect port}")
+		cond do
+			x == :ok -> 
 				IO.puts "Accepting connections on port #{port}"
 				loop_acceptor(socket, port, func, id)
-			y ->
-				IO.puts("failed to connect 2 because #{inspect y}")
+			x == :error and socket == :eaddrinuse ->
+				IO.puts "port is taken"
+				Port.next
+				reset_acceptor(socket, port+1, func, id)
+			x == :error and socket == :emfile ->
+				IO.puts("emfile error")
+			true ->
+				IO.puts("failed to connect 2 because #{inspect x} #{inspect socket}")
+				#Port.next
+				#reset_acceptor(socket, port+1, func, id)
 				reset_acceptor(socket, port, func, id)
 		end
   end
 	def reset_acceptor(socket, port, func, id) do
-		:timer.sleep(100)
     close(socket)
-    :timer.sleep(2000)
-    spawn_link(fn -> accept(port, func, id) end)
+    #spawn_link(fn -> accept(port, func, id) end)
+    accept(port, func, id)
 	end
   def loop_acceptor(socket, port, func, id) do
     {x, conn} = :gen_tcp.accept(socket)
     cond do
       x == :ok ->
 				Task.Supervisor.start_child(sup_name(id), fn -> serve(conn, func) end)
-				:timer.sleep(20)
+				:timer.sleep(100)
 				loop_acceptor(socket, port, func, id)
       true ->
         IO.puts("failed to connect #{inspect conn}")

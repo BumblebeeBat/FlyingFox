@@ -11,7 +11,6 @@ defmodule Mempool do
   def handle_cast(:dump, x) do       {:noreply, []} end
   def handle_call(:txs, _from, x) do {:reply, x, x} end
   def handle_cast({:add_tx, tx}, x) do
-		IO.puts("add tx: #{inspect tx}")
 		cond do
 			is_map(tx) ->
 				h = KV.get("height")

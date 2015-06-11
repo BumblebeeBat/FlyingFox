@@ -65,5 +65,5 @@ defmodule JudgementTx do
 end
 
 defmodule Peer do
-  defstruct time: 0, height: 0, hash: nil, ip: nil, port: 6666
+  defstruct time: 0, height: 0, hash: nil, ip: nil, port: 0
 end

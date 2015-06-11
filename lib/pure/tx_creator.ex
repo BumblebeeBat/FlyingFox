@@ -14,7 +14,6 @@ defmodule TxCreator do
     |> Mempool.add_tx
   end
   def sign do
-		IO.puts("tx creator sign")
     pub = Keys.pubkey
     acc = KV.get(pub)
     if acc.bond > Constants.min_bond do
@@ -31,7 +30,7 @@ defmodule TxCreator do
         KV.put("secret #{inspect h}", ran)
       end
       secret = DetHash.doit(ran)
-			IO.puts("created sign tx #{inspect %SignTx{prev_hash: prev_hash, winners: w, secret_hash: secret, nonce: nonce(pub), height: h-1}}")
+			#IO.puts("created sign tx #{inspect %SignTx{prev_hash: prev_hash, winners: w, secret_hash: secret, nonce: nonce(pub), height: h-1}}")
       %SignTx{prev_hash: prev_hash, winners: w, secret_hash: secret, nonce: nonce(pub), height: h-1}
       |> Keys.sign
       |> Mempool.add_tx

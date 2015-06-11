@@ -2,8 +2,7 @@ defmodule Peers do#this module is a database of who your peers are, and other da
   use GenServer
   @name __MODULE__
   def init(args) do {:ok, args} end
-  def update(peer, height, hash) do
-		                  GenServer.cast(@name, {:update, %Peer{peer | time: timestamp, height: height, hash: hash}}) end
+  def update(peer) do GenServer.cast(@name, {:update, %Peer{peer | time: timestamp}}) end
   def get_all do      GenServer.call(@name, :get_all) end
   def get(peer) do    GenServer.call(@name, {:get, peer}) end
   def start_link() do GenServer.start_link(__MODULE__, [], name: @name) end
@@ -15,12 +14,11 @@ defmodule Peers do#this module is a database of who your peers are, and other da
     b * 1000 + div(c, 1000)
   end
   def peer_key(peer) do String.to_atom(to_string(peer.port) <>"$"<> peer.ip) end#to atom is VERY DANGEROUS!!!
-  def new_peer(peer) do update(peer, 0, "") end
+  def new_peer(peer) do update(peer) end
   def add_peer(peer) do 
   cond do
     is_binary(peer) -> false
     is_integer(peer) -> false
-    peer_key(peer) in Dict.keys(get_all) -> false
     true -> new_peer(peer)
     end
   end

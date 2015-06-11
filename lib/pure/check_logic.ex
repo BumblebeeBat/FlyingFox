@@ -182,16 +182,20 @@ defmodule CheckLogic do
 		a < b and j >= 0 and j < Constants.chances_per_address and is_integer(j)
 	end
 	def sign_transaction(tx, txs, prev_hash) do
+		#real_prev_hash = Blockchain.blockhash(Blockchain.get_block())
 		acc = KV.get(tx.pub)
     tot_bonds = KV.get("tot_bonds")
     ran = rng(prev_hash)
-    prev_block = KV.get(prev_hash)
+    #prev_block = KV.get(prev_hash)
+		#IO.puts("prev_hash #{inspect prev_hash}")
+		prev_block = Blockchain.get_block(prev_hash)
     l = Enum.map(tx.data.winners, fn(x)->winner?(acc.bond, tot_bonds, ran, tx.pub, x) end)
     l1 = l
     l = Enum.reduce(l, true, fn(x, y) -> x and y end)
     m = length(Enum.filter(txs, fn(t) -> t.pub == tx.pub and t.data.__struct__ == :Elixir.SignTx end))
     height = KV.get("height")
     tx_prev = tx.data.prev_hash
+		#IO.puts("sign tx #{inspect tx} #{inspect prev_block}")
     cond do
       acc.bond < Constants.min_bond ->
         IO.puts("not enough bond-money to validate")
@@ -199,7 +203,7 @@ defmodule CheckLogic do
       not is_binary(tx.data.secret_hash) ->
         IO.put("should have been binary")
         false
-      tx.data.height != prev_block.data.height->
+      height > 1 and tx.data.height != prev_block.data.height ->
         IO.puts("bad height")
         false
       not l ->
@@ -209,7 +213,7 @@ defmodule CheckLogic do
 				IO.puts("too short")
 				false
       m != 0 ->
-				IO.puts("m is not 0")
+				#IO.puts("m is not 0")
 				false
       not(height == 0) and tx_prev != prev_hash ->
         IO.puts("hash not match")
@@ -239,7 +243,7 @@ defmodule CheckLogic do
 			end
 		cond do
 			not f.(tx, txs) ->
-				IO.puts("bad tx")
+				#IO.puts("bad tx")
 				false
 			not Sign.verify_tx(tx) ->
 				IO.puts("bad signature")

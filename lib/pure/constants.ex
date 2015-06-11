@@ -9,7 +9,9 @@ defmodule Constants do
   def epoch do 50 end
   def chances_per_address do 200 end
   def tcp_port do 6666 end
-	def internal_d do 111 end
+	def port_d do 111 end
+	#def internal_port do 6777 end
 	def oracle_fee do 50_000_000 end
 	def message_size do 10000 end #in bytes
+	def max_nodes do 20 end
 end

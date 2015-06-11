@@ -32,7 +32,6 @@ defmodule Blockchain do
         IO.puts("block should be a map #{inspect block}")
         false
       min_bond*2/3>f.(block) ->
-				
         #if the amount of money bonded per block changes too quickly,
         #then it makes it more likely for double-spends to happen.
         IO.puts("not enough bonded")
@@ -91,9 +90,25 @@ defmodule Blockchain do
   end
   def get_helper(h) do KV.get(to_string(h)) end
   def get_block(h) do
-    if is_integer(h) do h=hd(get_helper(h)) end
-    KV.get(h)
-  end
+		cond do
+			is_integer(h) -> get_block_2(KV.get(to_string(h)))
+			true -> get_block_3(h)#KV.get(h)
+		end
+	end
+	def get_block_2(a) do
+		cond do
+			is_list(a) -> get_block_3(hd(a))#I guess the list should be another struct, and I should check it's struct type instead.
+			true -> null_block
+		end
+	end
+	def get_block_3(h) do
+		h = KV.get(h)
+		cond do
+			h==nil -> null_block
+			true -> h
+		end
+	end
+	def null_block do %Signed{data: %Block{}} end
   def blockhash(block) do
     case block do
       %Signed{} -> block = block.data

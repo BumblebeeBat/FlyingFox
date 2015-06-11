@@ -84,13 +84,8 @@ defmodule Blocktree do
   end
   def goto_helper(last_blocks) do
     h = KV.get("height")
-    if h==0 do
-      my_block = [height: 0]
-      hash = ""
-    else
-      my_block = Blockchain.get_block(h).data
-      hash = Blockchain.blockhash(my_block)
-    end
+    my_block = Blockchain.get_block(h).data
+    hash = Blockchain.blockhash(my_block)
     add_block = hd(last_blocks).data
     cond do
       length(last_blocks)>60 ->
@@ -98,7 +93,7 @@ defmodule Blocktree do
       hd(last_blocks) == nil ->
         IO.puts("error 2 #{inspect last_blocks}")
         Enum.map(tl(last_blocks), &(forward(&1)))
-      my_block.height == 0 or add_block.hash == hash ->
+      my_block.height == 1 or add_block.hash == hash ->
         Enum.map(last_blocks, &(forward(&1)))
       add_block.height > my_block.height ->
         goto_helper([Blockchain.get_block(add_block.hash)|last_blocks])
@@ -108,13 +103,12 @@ defmodule Blocktree do
         goto_helper(last_blocks)
     end
   end	
-  def add_blocks([]) do [] end
 	def get_height(h) do
     a = KV.get(h)
     if a == nil do a = [] end
     a
   end
-
+  def add_blocks([]) do [] end
   def add_blocks([head|tail]) do
     block = head.data
     height = block.height
@@ -126,10 +120,11 @@ defmodule Blocktree do
         IO.puts("double-signing everywhere")
         false
       KV.get(Blockchain.blockhash(head)) != nil ->
-        IO.puts("already have this block: #{inspect head}")
-        IO.puts("already: #{inspect KV.get(Blockchain.blockhash(head))}")
+        IO.puts("already have this block")#: #{inspect head}")
+        #IO.puts("already: #{inspect KV.get(Blockchain.blockhash(head))}")
         add_blocks(tail)
       true ->
+				IO.puts("adding block #{inspect height}")
         block_hash = put_block(head)
         current_height = KV.get("height")
         if height > current_height do goto(block_hash) end

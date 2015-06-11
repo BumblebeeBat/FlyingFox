@@ -23,7 +23,7 @@ defmodule Listener do
           block = Blockchain.get_block(h)
           if block.data==nil do block = %{data: 1} end
           [height: h, hash: DetHash.doit(block.data)]
-      x -> IO.puts("listner is not a command #{inspect x}")
+      x -> IO.puts("listener is not a command #{inspect x}")
     end
   end
   def fee_filter(tx) do
@@ -38,12 +38,11 @@ defmodule Listener do
   def blocks_helper(finish, start, out) do
     block = Blockchain.get_block(start)
     cond do
-      #byte_size(PackWrap.pack(out)) > Constants.message_size -> Enum.reverse(tl(out)) #slower, but more accurate
 			byte_size(inspect out) > Constants.message_size/2 -> tl(out)
-      start < 0 -> blocks_helper(1, finish, out)
+      start < 0 -> blocks_helper(finish, 1, out)
       start > finish -> out
-      block == nil -> blocks_helper(start+1, finish, out)
-      true -> blocks_helper(start+1, finish, [block|out])
+      block == nil -> blocks_helper(finish, start+1, out)
+      true -> blocks_helper(finish, start+1, [block|out])
     end
   end
 end

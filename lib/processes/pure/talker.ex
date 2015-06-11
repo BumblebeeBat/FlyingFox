@@ -7,8 +7,8 @@ defmodule Talker do
   #download blocks and peers.
   use GenServer
   @name __MODULE__
-  def start_link(arg) do
-    GenServer.start_link(__MODULE__, arg, [name: @name])
+  def start_link() do
+    GenServer.start_link(__MODULE__, :ok, [name: @name])
   end
   def start do spawn_link(fn() -> timer end) end
   def still_on(blocks) do
@@ -18,6 +18,7 @@ defmodule Talker do
     Enum.map(x, fn(x) -> Peers.add_peer(x) end)
   end
   def download_blocks(i, u, p) do
+		#IO.puts("in talker p is #{inspect p}")
     blocks = Cli.download_blocks(min(50, u - i), i, p)
     my_block = Cli.blocks(i, i)
     cond do
@@ -30,40 +31,53 @@ defmodule Talker do
         BlockAbsorber.absorb(blocks)
         [status: :ahead]
       true ->
-        blocks = Cli.download_blocks(50, max(0, i-40), p)
+        blocks = Cli.download_blocks(min(50, u), max(0, i-40), p)
         BlockAbsorber.absorb(blocks)
         [status: :fork, height: u, peer: p]
     end
   end
   def trade_peers(p) do
-    my_peers = Cli.all_peers
-    peers = Cli.all_peers(p.port, p.ip)
+		keys = fn(z) -> Enum.map(z, fn({x, y}) -> x end) end
+		my_peers = Cli.all_peers
+    peers = Cli.all_peers(p)
+		my_keys = keys.(my_peers)
+		#IO.puts("my_keys #{inspect my_keys}")
+		peers_keys = keys.(peers)
+		#IO.puts("peers_keys #{inspect peers_keys}")
     if my_peers == :ok or peers == :ok do
       IO.puts("peer died 1")
     else
-      not_yours = Enum.filter(my_peers, &(not &1 in peers))
-      not_mine = Enum.filter(peers, &(not &1 in my_peers))
-      Enum.map(not_yours,&(Cli.add_peer(elem(&1, 1),p.port,p.ip)))
+      not_yours = Enum.filter(my_peers, &(not elem(&1, 0) in peers_keys))
+      not_mine = Enum.filter(peers, &(not elem(&1, 0) in my_keys))
+			#IO.puts("not_mine #{inspect not_mine}")
+			#IO.puts("not_yours #{inspect not_yours}")
+      Enum.map(not_yours,&(Cli.add_peer(elem(&1, 1),p)))
       Enum.map(not_mine, &(Peers.add_peer(elem(&1, 1))))
     end
   end
   def check_peer(p) do #validating mode
-    status = Cli.status(p.port, p.ip)
+    status = Cli.status(p)
+		#IO.puts("status #{inspect status}")
     cond do
-			not is_list(status) -> IO.puts "status #{inspect status}"
+			not is_list(status) -> IO.puts "peer crashed"
       :error in Dict.keys(status) ->
-        status[:error]
-      true ->
-        Peers.get(p)
+        #IO.puts("error #{inspect status[:error]}")
+				false
+      status[:height] > 0 and is_number(status[:height]) ->
+        x = Peers.get(p)
         |> Map.put(:height, status[:height])
         |> Map.put(:hash, status[:hash])
-        |> Peers.add_peer
+        #|> Peers.add_peer
+				#IO.puts("add peer x #{inspect x}}")
+				Peers.add_peer(x)
         check_peer_2(p, status)
+			true -> IO.puts("nothing to do")
     end
   end
   def check_peer_2(p, status) do
+		#IO.puts("check peer 2 #{inspect p}")
     trade_peers(p)
-    txs = Cli.txs(p.port, p.ip)
+    txs = Cli.txs(p)
     u = status[:height]
     i = KV.get("height")
     cond do
@@ -82,12 +96,10 @@ defmodule Talker do
     |> Enum.map(&(elem(&1,1)))
     |> Enum.map(&(spawn_link(fn -> check_peer(&1) end)))
    end
-  def init(args) do
+  def init(_) do
     start
-    Enum.map(0..2, &(%Peer{ip: "localhost", port: Constants.tcp_port+&1})) 
+    Enum.map(0..Constants.max_nodes, &(%Peer{ip: "localhost", port: Constants.tcp_port+&1})) 
     |> Enum.map(&(Peers.add_peer(&1)))
-		KV.put("port", args)
-		Peers.add_peer(%Peer{ip: "localhost", port: args})
     {:ok, []}
   end
   def doit do GenServer.cast(@name, :doit) end
