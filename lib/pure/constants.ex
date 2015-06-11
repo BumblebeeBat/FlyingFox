@@ -12,5 +12,5 @@ defmodule Constants do
 	def port_d do 1111 end
 	def oracle_fee do 50_000_000 end
 	def message_size do 10000 end #in bytes
-	def max_nodes do 20 end
+	def max_nodes do 100 end
 end

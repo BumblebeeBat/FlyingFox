@@ -14,8 +14,6 @@ defmodule Tcp do
   end
   def start_link(x, func) do
 		{port, id} = x
-		#IO.puts("tcp start_link")
-		#start(a, b) end
 		Supervisor.start_link(__MODULE__, [port, func, id])
 	end
 	def atom_join(x, y) do
@@ -35,10 +33,9 @@ defmodule Tcp do
   end
   def accept(port, func, id) do
     {x, socket} = open(port)
-		IO.puts("tcp accept #{inspect x} on port #{inspect port}")
 		cond do
 			x == :ok -> 
-				IO.puts "Accepting connections on port #{port}"
+				IO.puts "Accepting connections on port #{inspect port}"
 				loop_acceptor(socket, port, func, id)
 			x == :error and socket == :eaddrinuse ->
 				IO.puts "port is taken"
@@ -48,14 +45,10 @@ defmodule Tcp do
 				IO.puts("emfile error")
 			true ->
 				IO.puts("failed to connect 2 because #{inspect x} #{inspect socket}")
-				#Port.next
-				#reset_acceptor(socket, port+1, func, id)
-				reset_acceptor(socket, func, id)
 		end
   end
 	def reset_acceptor(socket, func, id) do
     close(socket)
-    #spawn_link(fn -> accept(port, func, id) end)
 		cond do
 			id == :tcp1 -> accept(Port.external, func, id)
 			id == :tcp2 -> accept(Port.internal, func, id)
