@@ -1,5 +1,4 @@
-%{"earmark": {:hex, :earmark, "0.1.16"},
-  "ex_doc": {:hex, :ex_doc, "0.7.2"},
+%{"flying_fox_chat": {:git, "https://github.com/BumblebeeBat/flying_fox_chat.git", "de8ce95d31add2d00e31559436ca55fcf4ae8284", []},
+  "flying_fox_cli": {:git, "https://github.com/BumblebeeBat/flying_fox_cli.git", "d8d9a7458c457184661e34d3004bb206b3880bd6", []},
   "message_pack": {:hex, :message_pack, "0.1.4"},
-  "poolboy": {:hex, :poolboy, "1.5.1"},
-  "ranch": {:hex, :ranch, "1.0.0"}}
+  "security": {:git, "https://github.com/zack-bitcoin/security.git", "e4f2fa87506e56a03f3b1d8a35c95fd331a82f7a", []}}

@@ -1,5 +1,0 @@
-defmodule SMPC do
-  defp size do: 10007
-  def mul(x, y) do: (x*y)%size
-  def add(x, y) do: (x+y)%size
-end

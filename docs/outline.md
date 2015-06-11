@@ -62,8 +62,14 @@ deletes the channel, and gives it's money to users
 channel_block:
 Should be possible to update the channel state so some of the money is decided by the outcome of a contract + contract_state + oracle_id. The merkelized hash of the contract and contract state and oracle_id are recorded in the channel state.
 Normally users give the correct money to the correct person before publishing the channel-block. If the channel-block still contains contracts when it is published, then the oracles are in charge of that money.
-In the event of disagreement, the correct oracle judges over the outcome of the decision.
+In the event of disagreement, the oracle judges over the outcome of the decision.
+Re-using existing predictions should be free.
 
-Allow creation of oracles. 
+Oracle:
+Allow creation of oracles. The oracles come in 2 flavours: N or M, and Sztorc.
 
-Allow oracles to make transaction which determine where funds being gambled upon in a channel state go. Users need to send the channel-code, and channel-state to the correct oracle who can then send the money to the correct person.
+Judgement:
+Allow oracles to make transaction which determine who won the bet. Users need to send the mechanism and the channel-state to the correct oracle who can then send the money to the correct person.
+
+collect_winnings:
+After judgement, it is possible for the players to collect their winnings.
