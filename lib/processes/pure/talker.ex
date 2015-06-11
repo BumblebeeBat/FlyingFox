@@ -61,7 +61,6 @@ defmodule Talker do
     cond do
 			not is_list(status) -> IO.puts "peer crashed"
       :error in Dict.keys(status) ->
-        #IO.puts("error #{inspect status[:error]}")
 				false
       status[:height] > 0 and is_number(status[:height]) ->
         x = Peers.get(p)

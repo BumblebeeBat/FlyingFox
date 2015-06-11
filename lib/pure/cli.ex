@@ -46,8 +46,9 @@ defmodule Cli do
   def status(peer \\ me) do
 		talk([:status], peer) end
   def buy_block(peer \\ me) do
-		sudo_talk([:buy_block], peer)
+		out = sudo_talk([:buy_block], peer)
 		cleanup
+		out
 	end
 	def cleanup do
 		TxCreator.sign
