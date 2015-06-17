@@ -1,143 +1,80 @@
 defmodule Tcp do
-  #use Application
-  use Supervisor
-  def open(port) do
-    :gen_tcp.listen(port, [:binary, {:packet, 0}, {:active, false}])
-  end
-  def start_link(id, func) do
-		Supervisor.start_link(__MODULE__, [func, id])
-	end
+	use Supervisor
 	def atom_join(x, y) do
 		a=to_string(x) <> "." <> to_string(y)
 		String.to_atom(a)
 	end
-	def sup_name(i) do atom_join(Tcp.TaskSupervisor, i) end
-  def init(x) do
-		[func, id] = x
-		y=sup_name(id)
-    children = [
-      supervisor(Task.Supervisor, [[name: y]]),#
-			worker(Task, [Tcp, :accept, x])
-    ]
-    opts = [strategy: :one_for_one, name: TcpServer.Supervisor]
-    supervise(children, opts)
-  end
-  def accept(func, id) do
-		port = Port.port(id)
-    {x, socket} = open(port)
+	def start_link(id, func1, func2) do
+		import Supervisor.Spec, warn: false
+		children = [
+			worker(__MODULE__, [func1, id, "/:something", {0,0,0,0}], function: :run),
+			worker(__MODULE__, [func2, :tcp_internal, "/priv/:something", {127,0,0,1}], function: :run, id: :tcp_internal), #cannot share a port!!
+		]
+		opts = [strategy: :one_for_one, name: Tcp.Supervisor]
+		Supervisor.start_link(children, opts)
+	end
+	def run(func, id, r, ip) do
+		routes = [ {r, Tcp.Handler, [func, ip]}	]
+		dispatch = :cowboy_router.compile([{:_, routes}])
+		p = Port.port
+		if id == :tcp_internal do p = p+1000 end
+		opts = [port: p, ip: ip]
+		env = [env: [dispatch: dispatch]]
+		{:ok, _pid} = :cowboy.start_http(atom_join(:http, id), 100, opts, env)
+	end
+	def list2bin(x, out \\ "") do
 		cond do
-			x == :ok -> 
-				IO.puts "Accepting connections on port #{inspect port}"
-				loop_acceptor(socket, port, func, id)
-			x == :error and socket == :eaddrinuse ->
-				IO.puts "port #{inspect port}is taken"
-				IO.puts "id #{inspect id}"
-				Port.next(id)
-				:timer.sleep(500)
-				reset_acceptor(socket, func, id)
-			x == :error and socket == :emfile ->
-				IO.puts("emfile error")
+			x == [] -> out
+			true -> list2bin(tl(x), out <> <<hd(x)>>)
+		end
+	end
+	def de_list(x) do
+		Enum.reduce(tl(x), hd(x), &(to_string(&2) <> "&" <> to_string(&1)))
+	end
+	def get_local(ip, port, x) do get(ip, port, x, '/priv/') end
+	def get(ip, port, a, y \\ '/') do
+		if is_list(a) do
+			a = de_list(a)
+		end
+		false = is_tuple(a)
+		url = 'http://' ++ to_char_list(ip) ++ ':' ++ to_char_list(to_string(port)) ++ y ++ to_char_list(Base.encode64(PackWrap.pack(a)))
+		x = :httpc.request(url)
+		case x do
+			{:ok, z} ->  b = z |> elem(2) |> list2bin |> PackWrap.unpack
+			{:error, :socket_closed_remotely} -> get(ip, port, a, y)
+			_ -> {:error, :no_response}
+		end
+		#:jiffy.decode(x)
+	end
+end
+defmodule Tcp.Handler do
+	def init({:tcp, :http}, req, opts) do
+		{:ok, req, opts}
+	end
+	def re_list(x, next \\ "", out \\ []) do
+		cond do
+			x == "" -> out ++ [next]
 			true ->
-				IO.puts("failed to connect 2 because #{inspect x} #{inspect socket}")
-		end
-  end
-	def reset_acceptor(socket, func, id) do
-		spawn(fn() ->
-			:timer.sleep(100)
-			:gen_tcp.shutdown(socket, :read_write)
-		end)
-		:timer.sleep(1000)
-		accept(func, id)
-	end
-  def loop_acceptor(socket, port, func, id) do
-    {x, conn} = :gen_tcp.accept(socket)
-    cond do
-      x == :ok ->
-				Task.Supervisor.start_child(sup_name(id), fn -> serve(conn, func) end)
-				:timer.sleep(100)
-				loop_acceptor(socket, port, func, id)
-			#(x == :error and conn == :emfile) -> 
-			#	IO.puts("emfile error loop")
-			#	:timer.sleep(40)
-			#	loop_acceptor(socket, port, func, id)
-      true ->
-        IO.puts("failed to connect #{inspect conn}")
-				reset_acceptor(socket, func, id)
-    end
-  end
-  def serve(client, func) do client |> listen |> func.() |> ms(client) end
-  defp ms(string, socket) do
-    if is_pid(string) do
-      true = false
-    end
-    m=PackWrap.pack(string)
-    s=byte_size(m)
-    a=<<s::size(32)>>
-    :gen_tcp.send(socket, a <> m)
-  end
-  defp connect(host, port) do
-    {x, s} = :gen_tcp.connect(:erlang.binary_to_list(host), port, [{:active, false}, {:packet, 0}])
-    cond do
-      x == :ok -> s
-      true -> "error"
-    end
-  end
-  def talk(host, port, msg) do
-    s = connect(host, port)
-    if s == "error" do
-      {:error, "peer is off"}
-    else
-      case ms(msg, s) do
-        :ok -> {:ok, listen(s, "")}
-        x -> {:error, x}
-      end
-    end
-  end
-  def ping(host, port) do
-    s = connect(host, port)
-    ms("ping", s)
-  end
-	defp to_bytes(list) do
-		cond do
-			is_binary(list) -> list
-			true -> to_bytes(list, "")
+				<< a::size(8), b::binary >> = x
+				case <<a>> do
+					"&" -> re_list(b, "", out ++ [next])
+					y -> re_list(b, next <> y, out)
+				end
 		end
 	end
-	defp to_bytes(list, out) do
-		cond do
-			list == [] -> out
-			true -> to_bytes(tl(list), out <> <<hd(list)>>)
+	def handle(req, opts) do
+		[func, ip] = opts
+		f = fn(x) -> tl(x) end
+		if ip == {127,0,0,1} do
+			f = fn(x) -> tl(tl(tl(tl(tl(tl(x)))))) end
 		end
+		headers = [{"content-type", "text/plain"}]
+		body = elem(req, 11) |> to_char_list |> f.() |> to_string |> Base.decode64!	|> PackWrap.unpack |> re_list |> func.() |> PackWrap.pack
+		#body = :jiffy.encode(x)
+		{:ok, resp} = :cowboy_req.reply(200, headers, body, req)
+		{:ok, resp, func}
 	end
-  defp listen(conn, data \\ "") do
-		#:timer.sleep(20)
-		case :gen_tcp.recv(conn, 0) do
-      {:ok, d} -> done_listening?(conn, data <> to_bytes(d))
-      {:error, :closed} -> IO.puts "error"
-    end
-  end
-  defp done(data) do
-    cond do
-      byte_size(data) < 4 -> false
-      true ->
-        <<a::size(32), b::binary>> = data
-        cond do
-          byte_size(b) == a -> true
-          true -> false
-        end
-    end
-  end
-  defp done_listening?(conn, data) do
-    cond do
-      done(data) ->
-        <<_::size(32), data::binary>> = data
-        PackWrap.unpack(data)
-      true -> listen(conn, data)
-    end
-  end
-  def test do
-    port = 6664
-    start_link(port, &(&1))
-    IO.puts(inspect talk("localhost", port, ["spend"]))
-  end
+	def terminate(_reason, _req, _state) do
+		:ok
+	end
 end

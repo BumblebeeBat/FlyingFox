@@ -65,6 +65,7 @@ defmodule PackWrap do
   def unpack(x) do
 		case MessagePack.unpack(x) do
 			{:ok, y} -> y |> rekey |> remap
+			{:error, :incomplete} -> 1=3
 			{a, b}  ->
 				IO.puts(" Failed to unpack. #{inspect x}")
 				IO.puts("#{inspect a} #{inspect b}")

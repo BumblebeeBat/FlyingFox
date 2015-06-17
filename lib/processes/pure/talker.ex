@@ -59,7 +59,7 @@ defmodule Talker do
     status = Cli.status(p)
 		#IO.puts("status #{inspect status}")
     cond do
-			not is_list(status) -> IO.puts "peer crashed"
+			not is_list(status) -> status #IO.puts "peer crashed #{inspect status}"
       :error in Dict.keys(status) ->
 				false
       status[:height] > 0 and is_number(status[:height]) ->
