@@ -2,17 +2,19 @@ defmodule Cli do
   defp lh do "localhost" end
   defp lp do Port.external end
 	defp me do %Peer{port: lp, ip: lh} end
-	defp talk(msg, peer) do #port, ip) do
-		port = peer.port
-		ip = peer.ip
-    case Tcp.talk(ip, port, msg) do
-      {:ok, x} -> x
-      {:error, x} -> [error: x, port: port, ip: ip]
-    end
-  end
-	defp sudo_talk(msg, peer) do
-		talk(msg, %{peer | port: Port.internal})
-	end
+	def talk(msg, peer) do NewTcp.get("localhost", 8000, msg) end
+	#defp talk(msg, peer) do #port, ip) do
+	#	port = peer.port
+	#	ip = peer.ip
+  #  case Tcp.talk(ip, port, msg) do
+  #    {:ok, x} -> x
+  #    {:error, x} -> [error: x, port: port, ip: ip]
+  #  end
+  #end
+	def sudo_talk(msg, peer) do NewTcp.get_local("localhost", 8001, msg) end
+	#defp sudo_talk(msg, peer) do
+	#	talk(msg, %{peer | port: Port.internal})
+	#end
   def add_block(block, peer \\ me) do
 		talk([:add_block, block], peer) end
   def txs(peer \\ me) do
@@ -65,7 +67,10 @@ defmodule Cli do
 		spawn(fn -> buy_blocks_helper(n, peer) end)
 	end
   def spend(amount, to, peer \\ me) do
-		sudo_talk([:spend, String.to_integer(amount), to], peer) end
+		if is_binary(amount) do
+			amount = String.to_integer(amount)
+		end
+		sudo_talk([:spend, amount, to], peer) end
   def stop(peer \\ me) do
   talk([:stop], peer) end
 end

@@ -29,7 +29,7 @@ defmodule PackWrap do
 			true -> o
 		end
 	end
-	def remap(o) do #chances all the tuple list representations in the datastructure back into maps.
+	def remap(o) do #changes all the tuple list representations in the datastructure back into maps.
 		cond do
 			is_tuple(o) -> List.to_tuple(Enum.map(Tuple.to_list(o), &(remap(&1))))
 			is_list(o) and length(o) > 0 and is_tuple(hd(o)) and :__struct__ in Dict.keys(o) ->
@@ -59,10 +59,21 @@ defmodule PackWrap do
       true -> Enum.map(json, &(rekey(&1)))
     end
   end
+	#def pack(x) do x |> demap |> MessagePack.pack! |> Base.encode64 end
+  #def unpack(x) do x |> Base.decode64 |> MessagePack.unpack! |> rekey |> remap	end
 	def pack(x) do x |> demap |> MessagePack.pack! end
-  def unpack(x) do x |> MessagePack.unpack! |> rekey |> remap	end
-
-
+  def unpack(x) do
+		case MessagePack.unpack(x) do
+			{:ok, y} -> y |> rekey |> remap
+			{a, b}  ->
+				IO.puts(" Failed to unpack. #{inspect x}")
+				IO.puts("#{inspect a} #{inspect b}")
+		end
+	end
+	#def pack(x) do x |> demap |> :jiffy.encode end
+  #def unpack(x) do
+	#	:jiffy.decode(x) |> rekey |> remap 
+	#end
 	def test do
     x = unpack(pack(%Block{}))
     IO.puts inspect x

@@ -16,8 +16,10 @@ defmodule Main do
                 worker(Peers, []),
                 worker(Listener, []),
                 worker(InternalListener, []),
-                supervisor(Tcp, [{p, :tcp1}, &(Listener.export(&1))], id: :tcp1),
-                supervisor(Tcp, [{b, :tcp2}, &(InternalListener.export(&1))], id: :tcp2),
+                #supervisor(Tcp, [:external, &(Listener.export(&1))], id: :external),
+                #supervisor(Tcp, [:internal, &(InternalListener.export(&1))], id: :internal),
+                supervisor(NewTcp, [:tcp, &(Listener.export(&1)), &(InternalListener.export(&1))]),
+                #supervisor(NewTcp, [:new_internal, &(InternalListener.export(&1)), {122,0,0,1}], id: :n_internal),
                 worker(Talker, []),
                ]
     supervise(children, strategy: :rest_for_one)

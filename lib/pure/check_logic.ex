@@ -8,7 +8,7 @@ defmodule CheckLogic do
       fee < Constants.min_tx_fee ->
         IO.puts("fee too low")
         false
-      amount+fee > Constants.max_bond_block ->
+      amount+fee > Constants.max_bond ->
         IO.puts("too much money at once")
         false
       true -> true
@@ -92,9 +92,9 @@ defmodule CheckLogic do
     #the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
 	end
 	def to_channel(tx, txs) do
-    channel = KV.get(tx.channel)
+    channel = KV.get(tx.data.pub<>tx.data.pub2)
     cond do
-      not tx.data.tx in [:pub, :pub2] -> false
+      not tx.data.to in [:pub, :pub2] -> false
       (channel == nil) and (tx.data.new != true) -> false
       (channel != nil) and (tx.data.new == true) -> false
       true -> true

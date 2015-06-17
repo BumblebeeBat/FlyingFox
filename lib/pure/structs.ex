@@ -21,7 +21,7 @@ defmodule RevealTx do
 end
 
 defmodule SpendTx do
-  defstruct nonce: 0, to: "", amount: 0, fee: 10000
+  defstruct nonce: 0, to: "", amount: 0, fee: 10000, create: false
 end
 
 defmodule SignTx do
@@ -44,8 +44,8 @@ defmodule SlasherTx do
   defstruct nonce: 0, tx1: nil, tx2: nil, signed_on: 0
 end
 
-defmodule ToChannelTx do
-  defstruct nonce: 0, to: :pub, channel: nil
+defmodule ToChannelTx do#max 1 channel per pair of pubkeys.
+  defstruct nonce: 0, to: :pub, amount: 0, new: false, pub: "", pub2: "", delay: 100, fee: 10000
 end
 
 defmodule ChannelBlockTx do
