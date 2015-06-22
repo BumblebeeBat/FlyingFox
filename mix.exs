@@ -23,7 +23,7 @@ defmodule Flyingfox.Mixfile do
   #
   # Type `mix help compile.app` for more information
   def application do
-    [applications: [:crypto],
+    [applications: [:logger, :crypto, :cowboy],
      mod: {FlyingFox, []},
      registered: [:flyingfox]]
   end
@@ -51,6 +51,10 @@ defmodule Flyingfox.Mixfile do
   #
   # Type `mix help deps` for more examples and options
   defp deps do
-    [{:message_pack, "~> 0.1.4"}]
+    [
+				{:message_pack, "~> 0.1.4"},
+				{:cowboy, "~> 1.0.0"},
+				{:jiffy, github: "davisp/jiffy"},
+		]
   end
 end

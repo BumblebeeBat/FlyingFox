@@ -5,13 +5,18 @@ defmodule TxCreator do
     |> length
     a+KV.get(pub).nonce
   end
+	def broadcast(tx) do tx |> Keys.sign |> Mempool.add_tx end
   def spend(amount, to) do
     pub = Keys.pubkey
     balance = KV.get(pub).amount
-    if balance<amount do IO.puts("warning, you cannot afford to spend this tx, so it wont be valid") end
-    %SpendTx{to: to, amount: amount, nonce: nonce(pub), fee: 10000} 
-    |> Keys.sign 
-    |> Mempool.add_tx
+		fee = 10000
+    if balance < (amount + fee) do
+			IO.puts("warning, you cannot afford to spend this tx, so it wont be valid")
+		end
+		to_now = KV.get(to)
+		create = (to_now == nil)
+    %SpendTx{to: to, amount: amount, nonce: nonce(pub), fee: fee, create: create} 
+    |> broadcast
   end
   def sign do
     pub = Keys.pubkey
@@ -32,8 +37,7 @@ defmodule TxCreator do
       secret = DetHash.doit(ran)
 			#IO.puts("created sign tx #{inspect %SignTx{prev_hash: prev_hash, winners: w, secret_hash: secret, nonce: nonce(pub), height: h-1}}")
       %SignTx{prev_hash: prev_hash, winners: w, secret_hash: secret, nonce: nonce(pub), height: h-1}
-      |> Keys.sign
-      |> Mempool.add_tx
+      |> broadcast
     end
   end
   def reveal do
@@ -59,19 +63,38 @@ defmodule TxCreator do
                 amount: length(w)*bond_size, 
                 secret: KV.get("secret #{inspect h}"), 
                 nonce: nonce(pub)}
-      |> Keys.sign
-      |> Mempool.add_tx
+      |> broadcast
     end
   end
   def slasher(tx1, tx2) do
   end
-  def to_channel do
-    %ToChannelTx{}
+  def to_channel(amount, other, delay \\ 10) do
+		#pub is :pub or :pub2
+		if KV.get(other) == nil do
+			IO.puts("your partner doesn't exist yet, so this probably wont work")
+		end
+		is_ch = KV.get(ToChannel.key(Keys.pubkey, other))
+		new = (is_ch == nil)
+		tx = %ToChannelTx{
+					amount: amount,
+					new: new}
+		if new do
+			tx2 = %{tx | pub: Keys.pubkey, pub2: other, delay: delay, nonce: nonce(Keys.pubkey)}
+		else
+			cond do
+				is_ch.pub == Keys.pub  -> tx2 = %{ tx | to: "pub"}
+				is_ch.pub2 == Keys.pub -> tx2 = %{ tx | to: "pub2"}
+				true -> IO.puts("that isn't your channel")
+			end
+		end
+		tx2 |> broadcast
   end
   def channel_block do
     %ChannelBlockTx{}
+		|> broadcast
   end
   def close_channel do
     %CloseChannelTx{}
+		|> broadcast
   end
 end

@@ -15,7 +15,7 @@ defmodule Listener do
       "txs" -> Mempool.txs
       "height" -> KV.get("height")
       "block" -> Blockchain.get_block(hd(args))
-      "blocks" -> blocks(hd(args), hd(tl(args)))
+      "blocks" -> blocks(String.to_integer(hd(args)), String.to_integer(hd(tl(args))))
       "add_peer" -> Peers.add_peer(hd(args))
       "all_peers" -> Peers.get_all
       "status" ->

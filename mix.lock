@@ -1,4 +1,8 @@
-%{"flying_fox_chat": {:git, "https://github.com/BumblebeeBat/flying_fox_chat.git", "de8ce95d31add2d00e31559436ca55fcf4ae8284", []},
+%{"cowboy": {:hex, :cowboy, "1.0.0"},
+  "cowlib": {:hex, :cowlib, "1.0.1"},
+  "flying_fox_chat": {:git, "https://github.com/BumblebeeBat/flying_fox_chat.git", "de8ce95d31add2d00e31559436ca55fcf4ae8284", []},
   "flying_fox_cli": {:git, "https://github.com/BumblebeeBat/flying_fox_cli.git", "d8d9a7458c457184661e34d3004bb206b3880bd6", []},
+  "jiffy": {:git, "git://github.com/davisp/jiffy.git", "446e284bd51013fe2899803b9dcbd162d8b8efb3", []},
   "message_pack": {:hex, :message_pack, "0.1.4"},
+  "ranch": {:hex, :ranch, "1.0.0"},
   "security": {:git, "https://github.com/zack-bitcoin/security.git", "e4f2fa87506e56a03f3b1d8a35c95fd331a82f7a", []}}

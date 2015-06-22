@@ -13,8 +13,8 @@ defmodule TxUpdate do
     KV.put(pub, Map.put(acc, key, word))
   end
   def sym_increment(pub, key, amount, d) do
-		acc = KV.get(pub)
-    acc = Map.put(acc, key, Map.get(acc, key)+(amount*d))
+		acc = KV.get(pub)#if it doesn't exist yet, we need to add it.
+    acc = Map.put(acc, key, Map.get(acc, key)+(amount*d))#amount is nil?
     KV.put(pub, acc)
   end
   def deep_get(dict, keys) do

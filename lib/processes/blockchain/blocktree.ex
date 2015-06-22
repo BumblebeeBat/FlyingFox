@@ -119,10 +119,7 @@ defmodule Blocktree do
       not Blockchain.enough_validated([head|tail], round(length(get_height(height))/3)) ->
         IO.puts("double-signing everywhere")
         false
-      KV.get(Blockchain.blockhash(head)) != nil ->
-        IO.puts("already have this block")#: #{inspect head}")
-        #IO.puts("already: #{inspect KV.get(Blockchain.blockhash(head))}")
-        add_blocks(tail)
+      KV.get(Blockchain.blockhash(head)) != nil -> add_blocks(tail)
       true ->
 				IO.puts("adding block #{inspect height}")
         block_hash = put_block(head)

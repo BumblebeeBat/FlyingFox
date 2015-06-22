@@ -8,7 +8,7 @@ defmodule Mempool do
   def dump do         GenServer.cast(@name, :dump) end
   def add_tx(tx) do GenServer.cast(@name, {:add_tx, tx}) end
   def txs do          GenServer.call(@name, :txs) end
-  def handle_cast(:dump, x) do       {:noreply, []} end
+  def handle_cast(:dump, _x) do       {:noreply, []} end
   def handle_call(:txs, _from, x) do {:reply, x, x} end
   def handle_cast({:add_tx, tx}, x) do
 		cond do
