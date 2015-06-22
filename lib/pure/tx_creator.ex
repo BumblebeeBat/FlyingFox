@@ -82,8 +82,8 @@ defmodule TxCreator do
 			tx2 = %{tx | pub: Keys.pubkey, pub2: other, delay: delay, nonce: nonce(Keys.pubkey)}
 		else
 			cond do
-				is_ch.pub == Keys.pub  -> tx2 = %{ tx | to: :pub}
-				is_ch.pub2 == Keys.pub -> tx2 = %{ tx | to: :pub2}
+				is_ch.pub == Keys.pub  -> tx2 = %{ tx | to: "pub"}
+				is_ch.pub2 == Keys.pub -> tx2 = %{ tx | to: "pub2"}
 				true -> IO.puts("that isn't your channel")
 			end
 		end
