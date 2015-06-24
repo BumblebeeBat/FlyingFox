@@ -1,5 +1,6 @@
 defmodule Reveal do
-  def sign_tx(block, pub) do block.data.txs |> Enum.filter(&(&1.pub == pub))  |> Enum.filter(&(&1.data.__struct__ == :Elixir.SignTx)) end
+  defstruct nonce: 0, signed_on: 0, winners: [], amount: 0, secret: nil, bond_size: 0
+  def sign_tx(block, pub) do block.data.txs |> Enum.filter(&(&1.pub == pub))  |> Enum.filter(&(&1.data.__struct__ == :Elixir.Sign)) end
 	def check(tx, txs) do
     old_block = Blockchain.get_block(tx.data.signed_on)
     revealed = txs

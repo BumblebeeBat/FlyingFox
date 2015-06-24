@@ -1,0 +1,1858 @@
+defmodule Keys do
+  use GenServer
+  def key do :address end
+  def start_link() do GenServer.start_link(__MODULE__, :ok, [name: key]) end
+  def init(:ok) do {:ok, {"", ""}} end
+  def handle_cast(:new, x) do {:noreply, CryptoSign.new_key} end
+  def handle_cast({:load, y, z}, x) do {:noreply, {y, z}} end
+  def handle_call({:sign, m}, _from, x) do
+    {pub, priv} = x
+    sig=CryptoSign.sign_tx(m, pub, priv)
+    {:reply, sig, x}
+  end
+  def handle_call(:pubkey, _from, x) do {:reply, elem(x, 0), x} end
+  def pubkey do GenServer.call(key, :pubkey) end
+  def sign(m) do GenServer.call(key, {:sign, m}) end
+  def new do GenServer.cast(key, :new) end
+  def load(pub, priv) do GenServer.cast(key, {:load, pub, priv}) end
+  def master do load("BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc=", "pRxnT/38wyd6lSbwfCEVvchAL7m7AMYuZeQKrJW/RO0=") end
+end
+defmodule Mempool do
+	#maybe this should be split into 2 threads. the lower one stores the mempool, and the upper one pre-checks txs to see if they are worth giving to the mempool.
+	#I am worried it is too easy for an attacker to empty the mempool by feeding in txs that make it crash.
+  use GenServer
+  @name __MODULE__
+  def init(:ok) do {:ok, []} end
+  def start_link() do GenServer.start_link(__MODULE__, :ok, [name: @name]) end
+  def dump do         GenServer.cast(@name, :dump) end
+  def add_tx(tx) do GenServer.cast(@name, {:add_tx, tx}) end
+  def txs do          GenServer.call(@name, :txs) end
+  def handle_cast(:dump, _x) do       {:noreply, []} end
+  def handle_call(:txs, _from, x) do {:reply, x, x} end
+  def handle_cast({:add_tx, tx}, x) do
+		cond do
+			is_map(tx) ->
+				h = KV.get("height")
+				if h < 1 do prev_hash = nil
+				else
+					prev_hash = Blockchain.blockhash(Blockchain.get_block(h))
+				end
+				if VerifyTx.check_tx(tx, x, prev_hash) do x=[tx|x] end
+			true -> :ok
+		end
+		{:noreply, x}
+  end
+end
+defmodule Peers do#this module is a database of who your peers are, and other data useful for networking that isn't under consensus.
+  use GenServer
+  @name __MODULE__
+  def init(args) do {:ok, args} end
+  def update(peer) do GenServer.cast(@name, {:update, %Peer{peer | time: timestamp}}) end
+  def get_all do      GenServer.call(@name, :get_all) end
+  def get(peer) do    GenServer.call(@name, {:get, peer}) end
+  def start_link() do GenServer.start_link(__MODULE__, [], name: @name) end
+  def handle_call(:get_all, _from, state) do {:reply, state, state} end
+  def handle_call({:get, peer}, _from, mem) do {:reply, Dict.get(mem, peer_key(peer)), mem} end
+  def handle_cast({:update, peer}, mem) do {:noreply, Dict.put(mem, peer_key(peer), peer)} end
+  def timestamp do 
+    {_, b, c} = :os.timestamp
+    b * 1000 + div(c, 1000)
+  end
+  def peer_key(peer) do String.to_atom(to_string(peer.port) <>"$"<> peer.ip) end#to atom is VERY DANGEROUS!!!
+  def new_peer(peer) do update(peer) end
+  def add_peer(peer) do 
+  cond do
+    is_binary(peer) -> false
+    is_integer(peer) -> false
+    true -> new_peer(peer)
+    end
+  end
+end
+defmodule Port do
+	use GenServer
+	@name __MODULE__
+	def init(x) do {:ok, x} end
+	def start_link(a) do GenServer.start_link(__MODULE__, a, [name: @name]) end
+	def port do GenServer.call(@name, :port) end
+	def handle_call(:port, _from, d) do
+		{:reply, d, d}
+	end
+	def round_robin do
+		:random.seed(:erlang.now)
+		trunc(Constants.max_nodes*:random.uniform)
+	end
+	def next(key) do GenServer.cast(@name, {:next, key}) end
+	def handle_cast({:next, key}, d) do {:noreply, round_robin+Constants.tcp_port} end	
+end
+defmodule Tcp do
+	use Supervisor
+	def atom_join(x, y) do
+		a=to_string(x) <> "." <> to_string(y)
+		String.to_atom(a)
+	end
+	def start_link(id, func1, func2) do
+		import Supervisor.Spec, warn: false
+		children = [
+			worker(__MODULE__, [func1, id, "/:something", {0,0,0,0}], function: :run),
+			worker(__MODULE__, [func2, :tcp_internal, "/priv/:something", {127,0,0,1}], function: :run, id: :tcp_internal), #cannot share a port!!
+		]
+		opts = [strategy: :one_for_one, name: Tcp.Supervisor]
+		Supervisor.start_link(children, opts)
+	end
+	def run(func, id, r, ip) do
+		routes = [ {r, Tcp.Handler, [func, ip]}	]
+		dispatch = :cowboy_router.compile([{:_, routes}])
+		p = Port.port
+		if id == :tcp_internal do p = p+1000 end
+		opts = [port: p, ip: ip]
+		env = [env: [dispatch: dispatch]]
+		{:ok, _pid} = :cowboy.start_http(atom_join(:http, id), 100, opts, env)
+	end
+	def list2bin(x, out \\ "") do
+		cond do
+			x == [] -> out
+			true -> list2bin(tl(x), out <> <<hd(x)>>)
+		end
+	end
+	def de_list(x) do
+		Enum.reduce(tl(x), hd(x), &(to_string(&2) <> "&" <> to_string(&1)))
+	end
+	def get_local(ip, port, x) do get(ip, port, x, '/priv/') end
+	def get(ip, port, a, y \\ '/') do
+		if is_list(a) do
+			a = de_list(a)
+		end
+		false = is_tuple(a)
+		url = 'http://' ++ to_char_list(ip) ++ ':' ++ to_char_list(to_string(port)) ++ y ++ to_char_list(Base.encode64(PackWrap.pack(a)))
+		x = :httpc.request(url)
+		case x do
+			{:ok, z} ->  b = z |> elem(2) |> list2bin |> PackWrap.unpack
+			{:error, :socket_closed_remotely} -> get(ip, port, a, y)
+			_ -> {:error, :no_response}
+		end
+		#:jiffy.decode(x)
+	end
+end
+defmodule Tcp.Handler do
+	def init({:tcp, :http}, req, opts) do
+		{:ok, req, opts}
+	end
+	def re_list(x, next \\ "", out \\ []) do
+		cond do
+			x == "" -> out ++ [next]
+			true ->
+				<< a::size(8), b::binary >> = x
+				case <<a>> do
+					"&" -> re_list(b, "", out ++ [next])
+					y -> re_list(b, next <> y, out)
+				end
+		end
+	end
+	def handle(req, opts) do
+		[func, ip] = opts
+		f = fn(x) -> tl(x) end
+		if ip == {127,0,0,1} do
+			f = fn(x) -> tl(tl(tl(tl(tl(tl(x)))))) end
+		end
+		headers = [{"content-type", "text/plain"}]
+		body = elem(req, 11) |> to_char_list |> f.() |> to_string |> Base.decode64!	|> PackWrap.unpack |> re_list |> func.() |> PackWrap.pack
+		#body = :jiffy.encode(x)
+		{:ok, resp} = :cowboy_req.reply(200, headers, body, req)
+		{:ok, resp, func}
+	end
+	def terminate(_reason, _req, _state) do
+		:ok
+	end
+end
+defmodule Blockchain do
+  #The part of the blocktree we care about is the blockchain.
+  #it ends in the most recent valid block.
+  #@signers_per_block Application.get_env :flying_fox, :signers_per_block
+  #@block_creation_fee Application.get_env :flying_fox, :block_creation_fee
+  def txs_filter(txs, type) do Enum.filter(txs, fn(t) -> t.data.__struct__ == type end) end
+  def being_spent(txs) do txs |> txs_filter(:Elixir.Spend) |> Enum.map(fn(t) -> t.data.amount end) |> Enum.reduce(0, &(&1+&2)) end
+  def prev_block(block) do
+		cond do
+			block == nil -> nil
+			true ->KV.get(block.data.hash)
+		end
+	end
+  def valid_block?(block, cost) do
+		#block creator needs to pay a fee. he needs to have signed so we can take his fee.
+		f = fn(x) ->
+			cond do
+				x == nil -> 0
+				x.data == nil -> 0
+				x.data.bond_size == nil -> 0
+				true ->	x.data.bond_size
+			end
+		end
+		prev = prev_block(block)
+    prev2 = prev_block(prev)
+    prev3 = prev_block(prev2)
+    min_bond = max(f.(prev), max(f.(prev2), f.(prev3)))
+    if min_bond == nil do min_bond = 100000 end
+    ngenesis = block.data.height != 1
+    cond do
+      not is_map(block) ->
+        IO.puts("block should be a map #{inspect block}")
+        false
+      min_bond*2/3>f.(block) ->
+        #if the amount of money bonded per block changes too quickly,
+        #then it makes it more likely for double-spends to happen.
+        IO.puts("not enough bonded")
+        false
+      ngenesis and prev == nil ->
+        IO.puts("blocks come from parents: #{inspect block}")
+        IO.puts(inspect block.data.height)
+        false
+      ngenesis and block.data.height - prev.data.height < 1 ->
+        IO.puts("cannot redo history")
+        false
+      not CryptoSign.verify_tx(block) ->
+        IO.puts("bad signature #{inspect block}")
+        false
+      true ->
+        valid_block_2?(block, cost, ngenesis)
+    end
+  end
+  def winners(block) do 
+    block.data.txs
+    |> txs_filter(:Elixir.Sign)
+    |> Enum.map(&(length(&1.data.winners)))
+    |> Enum.reduce(0, &(&1+&2))
+  end
+  def valid_block_2?(block, cost, ngenesis) do
+    wins = winners(block)
+    cond do
+      ngenesis and wins < Constants.signers_per_block*2/3 ->
+        IO.puts("not enough signers #{inspect wins}")
+        IO.puts("block: #{inspect block}")
+        false
+      not VerifyTx.check_txs(block, cost) ->
+        IO.puts("invalid tx")
+        false
+      true -> valid_block_3?(block, wins)
+    end
+  end
+  def valid_block_3?(block, ns) do
+    txs = block.data.txs
+    sign_txs = txs_filter(txs, :Elixir.Sign)
+    signers = Enum.map(sign_txs, fn(t) -> t.pub end)
+    accs = Enum.map(signers, fn(s) -> KV.get(s) end)
+    balances = Enum.map(accs, fn(s) -> s.bond end)
+    poorest_balance = Enum.reduce(balances, nil, &(min(&1, &2)))
+    spending = being_spent(txs)
+    bs = block.data.bond_size
+    cond do
+      poorest_balance < bs ->
+        IO.puts("poorest signer cant afford")
+        false
+      bs*ns<spending*3 ->
+        IO.puts("not enough bonds to spend that much")
+        false
+      true -> true
+    end
+  end
+  def get_helper(h) do KV.get(to_string(h)) end
+  def get_block(h) do
+		cond do
+			is_integer(h) -> get_block_2(KV.get(to_string(h)))
+			true -> get_block_3(h)#KV.get(h)
+		end
+	end
+	def get_block_2(a) do
+		cond do
+			is_list(a) -> get_block_3(hd(a))#I guess the list should be another struct, and I should check it's struct type instead.
+			true -> null_block
+		end
+	end
+	def get_block_3(h) do
+		h = KV.get(h)
+		cond do
+			h==nil -> null_block
+			true -> h
+		end
+	end
+	def null_block do %CryptoSign{data: %Block{}} end
+  def blockhash(block) do
+    case block do
+      %CryptoSign{} -> block = block.data
+      _ -> 1
+    end
+    %Block{} = block
+    DetHash.doit(block)
+  end
+	def quick_validation(block) do
+    ran = VerifyTx.rng(block.data.hash)
+    tot_bonds = KV.get("tot_bonds")
+    l = Blockchain.txs_filter(block.data.txs, :Elixir.Sign)
+    |> Enum.map(fn(sign) ->
+      %{bond: bond} = KV.get(sign.pub)
+      Enum.map(sign.data.winners, fn(x)-> 
+        VerifyTx.winner?(bond, tot_bonds, ran, sign.pub, x) 
+      end)
+    end) |> Enum.reduce([], &(&1++&2)) |> Enum.map(&(if(&1) do 1 else 0 end)) |> Enum.reduce(0, &(&1+&2))
+    cond do
+      Blockchain.winners(block) <= Constants.signers_per_block*2/3 -> 
+        IO.puts("not enough winners")
+        false
+      l <= Constants.signers_per_block*1/2 -> 
+        IO.puts("not enough")
+        false
+      true -> true
+    end
+  end
+  def enough_validated(blocks, n) do
+    cond do
+      n == 0 -> true
+      blocks == [] -> false
+      not quick_validation(hd(blocks)) ->
+        IO.puts("bad block")
+        false
+      true ->
+        enough_validated(tl(blocks), n-1)
+    end
+  end
+  def buy_block(n \\ 1) do
+		true = n > 0
+		height = KV.get("height")
+		prev_block = get_block(KV.get("height"))
+		txs = Mempool.txs#remove expensive txs until we can afford it. packing problem.
+		bh = nil
+		if prev_block != nil do
+			bh = blockhash(prev_block)
+		end
+		new = %Block{height: height+n, txs: txs, hash: bh, bond_size: 1_000_000_000}#instead of fixed bond size, we shoul look at how big of a bond the txs need.
+		|> Keys.sign
+		|> Map.put(:meta, [revealed: []])
+	end
+end
+defmodule CheckLogic do
+	def main(tx, txs, prevhash) do
+		k = tx.data.__struct__
+		f = case k do
+					:Elixir.Sign -> &(Sign.check(&1, &2, prevhash))
+					:Elixir.Spend -> &(Spend.check(&1, &2))
+					:Elixir.Spend2Wait -> &(Spend2Wait.check(&1, &2))
+					:Elixir.Wait2Bond -> &(Wait2Bond.check(&1, &2))
+					:Elixir.Bond2Spend -> &(Bond2Spend.check(&1, &2))
+					:Elixir.Slasher -> &(Spend.check(&1, &2))
+					:Elixir.Reveal -> &(Reveal.check(&1, &2))
+					:Elixir.ToChannel -> &(ToChannel.check(&1, &2))
+					:Elixir.ChannelBlock -> &(ChannelBlock.check(&1, &2))
+					:Elixir.CloseChannel -> &(CloseChannel.check(&1, &2))
+					:Elixir.Oracle -> &(Oracle.check(&1, &2))
+					:Elixir.Judgement -> &(Judgement.check(&1, &2))
+					:Elixir.Win -> &(Win.check(&1, &2))
+					_ ->
+						IO.puts("invalid tx type: #{inspect k}")
+					  fn(_, _) -> false end
+			end
+		cond do
+			not f.(tx, txs) ->
+				#IO.puts("bad tx")
+				false
+			not CryptoSign.verify_tx(tx) ->
+				IO.puts("bad signature")
+				false
+			true -> true
+		end
+	end
+end
+defmodule Cli do
+  defp lh do "localhost" end
+  defp lp do Port.port end
+	defp me do %Peer{port: lp, ip: lh} end
+	def talk(msg, peer) do Tcp.get(peer.ip, peer.port, msg) end
+	def local_talk(msg, peer) do Tcp.get_local(peer.ip, peer.port+1000, msg) end
+  def add_block(block, peer \\ me) do
+		talk([:add_block, block], peer) end
+  def txs(peer \\ me) do
+		talk([:txs], peer) end
+  def pushtx(tx, peer \\ me) do
+		talk([:pushtx, tx], peer) end
+	def flip(l, out \\ []) do
+		cond do
+			l == [] -> out
+			is_list(l) -> flip(tl(l), [hd(l)|out])
+			true -> IO.puts("error #{inspect l}")
+							[]
+		end
+	end
+  def blocks(start, finish, peer \\ me) do #might not grab all blocks in he range.
+		flip(talk([:blocks, start, finish], peer))
+	end
+	def download_blocks(n, i, peer \\ me, out \\ []) do#grabs all blocks in the range.
+    lo = length(out)
+    cond do
+      lo >= n -> out
+      true -> download_blocks(n - 1, i, peer, out ++ blocks(i+lo, i+n, peer))
+    end		
+	end
+  def add_peer(peer, pr \\ me) do talk([:add_peer, peer], pr) end
+  def all_peers(peer \\ me) do talk([:all_peers], peer) end
+  def status(peer \\ me) do talk([:status], peer) end
+  def buy_block(peer \\ me) do
+		out = local_talk([:buy_block], peer)
+		cleanup
+		out
+	end
+	def cleanup do
+		TxCreator.sign
+		TxCreator.reveal
+	end
+	def buy_blocks_helper(n, peer \\ me) do
+		1..n |> Enum.map(fn(_) ->
+			local_talk([:buy_block], peer)
+			cleanup
+			:timer.sleep(1000)
+		end)
+	end
+  def buy_blocks(n, peer \\ me) do
+		spawn(fn -> buy_blocks_helper(n, peer) end)
+	end
+  def spend(amount, to, peer \\ me) do
+		if is_binary(amount) do
+			amount = String.to_integer(amount)
+		end
+		local_talk([:spend, amount, to], peer) end
+  def stop(peer \\ me) do
+  talk([:stop], peer) end
+end
+defmodule Constants do
+  #we need this instead of a config file to support more types of testing.
+  def initial_coins do 2100_000_000_000_000 end
+  def min_bond do 2_000_000_000 end
+  def min_tx_fee do 5000 end
+  def block_creation_fee do 31_000_000 end
+  def max_bond do 1_000_000_000 end
+  def signers_per_block do 54 end
+  def epoch do 50 end
+  def chances_per_address do 200 end
+  def tcp_port do 6666 end
+	def port_d do 1111 end
+	def oracle_fee do 50_000_000 end
+	def message_size do 10000 end #in bytes
+	def max_nodes do 5 end
+end
+defmodule PackWrap do
+	def map2dict(m) do Map.to_list(m)	end
+	def dict2map(d) do
+		b = d[:__struct__]
+		d = Dict.delete(d, :__struct__)
+		case b do
+			"Elixir.Block" -> o = %Block{}
+			"Elixir.CryptoSign" -> o = %CryptoSign{}
+			"Elixir.Channel" -> o = %Channel{}
+			"Elixir.Reveal" -> o = %Reveal{}
+			"Elixir.Spend" -> o = %Spend{}
+			"Elixir.Sign" -> o = %Sign{}
+			"Elixir.Spend2Wait" -> o = %Spend2Wait{}
+			"Elixir.Wait2Bond" -> o = %Wait2Bond{}
+			"Elixir.Bond2Spend" -> o = %Bond2Spend{}
+			"Elixir.Slasher" -> o = %Slasher{}
+			"Elixir.ToChannel" -> o = %ToChannel{}
+			"Elixir.ChannelBlock" -> o = %ChannelBlock{}
+			"Elixir.CloseChannel" -> o = %CloseChannel{}
+			"Elixir.Peer" -> o = %Peer{}
+		end
+		Enum.reduce(Dict.keys(d), o, &(Map.put(&2, &1, d[&1])))
+	end
+	def demap(o) do #changes all maps in a datastructure into tuple lists representations.
+		cond do
+			is_list(o) -> Enum.map(o, &(demap(&1)))
+			is_tuple(o) -> List.to_tuple(Enum.map(Tuple.to_list(o), &(demap(&1))))
+			is_map(o) -> Enum.map(map2dict(o), &(demap(&1)))
+			true -> o
+		end
+	end
+	def remap(o) do #changes all the tuple list representations in the datastructure back into maps.
+		cond do
+			is_tuple(o) -> List.to_tuple(Enum.map(Tuple.to_list(o), &(remap(&1))))
+			is_list(o) and length(o) > 0 and is_tuple(hd(o)) and :__struct__ in Dict.keys(o) ->
+				o |> Enum.map(&(remap(&1))) |> dict2map
+			is_list(o) and length(o) > 0 -> o |> Enum.map(&(remap(&1)))
+			true -> o
+		end
+	end
+  def slow_get(json, key) do#16,000 times in first 2 blocks.
+    cond do
+      json == [] -> nil
+      true ->
+        [{a, b}|tail] = json
+        cond do
+          a == key -> b
+          true -> slow_get(tail, key)
+        end
+    end
+  end
+  def rekey(json) do
+    cond do
+      not is_list(json) or json == [] -> json
+      is_tuple(hd(json))->
+        Enum.map(Dict.keys(json), fn(k) ->
+          {String.to_atom(k), rekey(slow_get(json, k))}
+        end)
+      true -> Enum.map(json, &(rekey(&1)))
+    end
+  end
+	#def pack(x) do x |> demap |> MessagePack.pack! |> Base.encode64 end
+  #def unpack(x) do x |> Base.decode64 |> MessagePack.unpack! |> rekey |> remap	end
+	def pack(x) do x |> demap |> MessagePack.pack! end
+  def unpack(x) do
+		case MessagePack.unpack(x) do
+			{:ok, y} -> y |> rekey |> remap
+			{:error, :incomplete} -> 1=3
+			{a, b}  ->
+				IO.puts(" Failed to unpack. #{inspect x}")
+				IO.puts("#{inspect a} #{inspect b}")
+		end
+	end
+	#def pack(x) do x |> demap |> :jiffy.encode end
+  #def unpack(x) do
+	#	:jiffy.decode(x) |> rekey |> remap 
+	#end
+	def test do
+    x = unpack(pack(%Block{}))
+    IO.puts inspect x
+  end
+	def test2 do remap([[__struct__: "Elixir.CryptoSign", data: [__struct__: "Elixir.Sign", height: 1, nonce: 0, prev_hash: "Dh9J/r3hhi9ems8FAE6gK4uMgEsbMiiKF6CIwyOPe+w=", secret_hash: "Urq9fr3KVUhU3+tHbk0EnYOqlk3UgD/qEuRijHr/ckM=", winners: [2, 6, 12, 17, 19, 23, 24, 26, 36, 38, 39, 40, 41, 45, 48, 49, 57, 62, 66, 68, 69, 72, 76, 78, 79, 85, 87, 88, 91, 93, 95, 97, 100, 104, 118, 121, 130, 131, 149, 151, 152, 154, 157]], meta: [], pub: "BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc=", sig: "MEQCIFOdKYCUdbxFh9fq8jQoBi6DobWHakGbjSLC54tgXWtWAiBothy0S0UKaR9fBJJPZQ5Az3+IPemwEyfsAKtol0pK/g=="]]) end
+end
+
+OB
+defmodule Account do
+  #wait={amount, height}
+  defstruct amount: 0, bond: 0, wait: {0, 0}, nonce: 0
+end
+defmodule Signed do
+  defstruct sig: nil, pub: nil, data: nil, meta: nil
+end
+defmodule Block do
+  defstruct height: 0, txs: [], hash: "", bond_size: 1.0e10
+end
+defmodule Channel do
+  @epoch Application.get_env :flying_fox, :epoch  
+  defstruct pub: nil, pub2: nil, amount: 0, amount2: 0, time: 0, nonce: 0, delay: @epoch
+end
+defmodule Peer do
+  defstruct time: 0, height: 0, hash: nil, ip: nil, port: 0
+end
+defmodule TxCreator do
+  def nonce(pub) do
+    a=Mempool.txs
+    |> Enum.filter(fn(tx) -> tx.pub == pub end)
+    |> length
+    a+KV.get(pub).nonce
+  end
+	def broadcast(tx) do tx |> Keys.sign |> Mempool.add_tx end
+  def spend(amount, to) do
+    pub = Keys.pubkey
+    balance = KV.get(pub).amount
+		fee = 10000
+    if balance < (amount + fee) do
+			IO.puts("warning, you cannot afford to spend this tx, so it wont be valid")
+		end
+		to_now = KV.get(to)
+		create = (to_now == nil)
+    %Spend{to: to, amount: amount, nonce: nonce(pub), fee: fee, create: create} 
+    |> broadcast
+  end
+  def sign do
+    pub = Keys.pubkey
+    acc = KV.get(pub)
+    if acc.bond > Constants.min_bond do
+      h=KV.get("height")
+      if h<1 do prev_hash=nil else
+        prev_hash = Blockchain.blockhash(Blockchain.get_block(h))
+      end
+      tot_bonds = KV.get("tot_bonds")
+      w= Enum.filter(0..Constants.chances_per_address, fn(x) -> Sign.winner?(acc.bond, tot_bonds, Sign.rng(prev_hash), pub, x) end) 
+      h = KV.get("height") + 1
+      ran = KV.get("secret #{inspect h}")
+      if ran == nil do
+        ran = :crypto.rand_bytes(10)
+        KV.put("secret #{inspect h}", ran)
+      end
+      secret = DetHash.doit(ran)
+      %Sign{prev_hash: prev_hash, winners: w, secret_hash: secret, nonce: nonce(pub), height: h-1}
+      |> broadcast
+    end
+  end
+  def reveal do
+    h = KV.get("height") - Constants.epoch
+    cond do
+      h < 2 -> nil
+      true -> reveal_2(h)
+    end
+  end
+  def reveal_2(h) do
+    pub = Keys.pubkey
+    old_block=Blockchain.get_block(h)
+    old_tx = old_block.data.txs 
+      |> Enum.filter(&(&1.data.type == "sign")) 
+      |> Enum.filter(&(&1.pub == pub)) 
+      |> hd
+    w=old_tx.data.winners
+    bond_size=old_block.data.bond_size
+    secret = KV.get("secret #{inspect h}")
+    if secret != nil do
+      %Reveal{signed_on: h, 
+              winners: w, 
+              amount: length(w)*bond_size, 
+              secret: KV.get("secret #{inspect h}"), 
+              nonce: nonce(pub)}
+      |> broadcast
+    end
+  end
+  def slasher(tx1, tx2) do
+  end
+  def to_channel(other, amount, amount2 \\ 0, delay \\ 10) do
+		#pub is "pub" or "pub2"
+		if KV.get(other) == nil do
+			IO.puts("your partner doesn't exist yet, so this probably wont work")
+		end
+		is_ch = KV.get(ToChannel.key(Keys.pubkey, other))
+		new = (is_ch == nil)
+		tx = %ToChannel{
+					amount: amount,
+					amount: amount2,
+					new: new}
+		if new do
+			tx2 = %{tx | pub: Keys.pubkey, pub2: other, delay: delay, nonce: nonce(Keys.pubkey)}
+		else
+			cond do
+				is_ch.pub == Keys.pub  -> tx2 = %{ tx | to: "pub"}
+				is_ch.pub2 == Keys.pub -> tx2 = %{ tx | to: "pub2"}
+				true -> IO.puts("that isn't your channel")
+			end
+		end
+		tx2 |> broadcast
+  end
+  def channel_block(other, amount, amount2, bets \\ [], nonce \\ 1) do
+		c = ToChannel.key(Keys.pubkey, other)
+		if KV.get(c) == nil do
+			IO.puts("this channel doesn't exist yet, so you cannot close it.")
+		end
+		#make sure that amount+amont2+bets is less than or equal to the total money.
+		#example bets: ["hash1": amount1, "hash2": amount2]
+    %ChannelBlock{channel: c, amount: amount, amount2: amount2, bets: bets, nonce: nonce}
+		#|> broadcast
+  end
+  def close_channel do
+    %CloseChannel{}
+		|> broadcast
+  end
+end
+defmodule VerifyBalances do
+  def all_positive(a) do
+    cond do
+      a == [] -> true
+      true -> all_positive_1(a)
+    end
+  end
+  def all_positive_1(addresses) do
+    [{_, t}|tail] = addresses
+    cond do
+      t < 0 -> false
+      tail == [] -> true
+      true -> all_positive_1(tail)
+    end
+  end
+  def get([head|tail], key) do
+    {k, v} = head
+    cond do
+      k==key -> v
+      true -> get(tail, key)
+    end
+  end
+  def put(l, key, value) do
+    cond do
+      l==[] -> [{key, value}]
+      key == elem(hd(l), 0) -> [{key, value}|tl(l)]
+      true -> [hd(l)|put(tl(l), key, value)]
+    end
+  end
+  def modify_balance(addresses, pub, f, key) do
+    balance = get(addresses, pub)
+    balance = f.(balance)
+    [{key, balance}|addresses]
+    put(addresses, key, balance)
+  end
+  def lose_key(address, pub, amount, key) do
+    f = fn(balance) ->
+      Dict.put(balance, key, Dict.get(balance, key) - amount) 
+    end
+    modify_balance(address, pub, f, key)
+  end
+  def lose_cash(address, pub, amount) do
+    lose_key(address, pub, amount, :cash)
+  end
+  def lose_bond(address, pub, amount) do
+    lose_key(address, pub, amount, :bond)
+  end
+  def positive_balances(txs, bond_size, block_creator, cost) do
+		cond do
+			block_creator == nil -> acc = %Account{amount: Constants.initial_coins}
+			true -> acc = KV.get(block_creator)
+		end
+    balance = [cash: acc.amount, bond: acc.bond]
+    addresses = [{block_creator, balance}]
+    positive_balances_2(txs, bond_size, block_creator, cost, addresses)
+  end
+  def positive_balances_2(txs, bond_size, block_creator, cost, addresses) do
+    cond do
+      txs==[] -> if block_creator != nil do
+                   addresses = lose_cash(addresses, block_creator, cost) 
+                 end
+                 all_positive(addresses)
+      true -> positive_balances_1(txs, bond_size, block_creator, cost, addresses)
+    end
+  end
+  def positive_balances_1(txs, bond_size, block_creator, cost, addresses) do
+    [tx|txs] = txs
+    pub = tx.pub
+    da = tx.data
+    if not pub in Dict.keys(addresses) do
+      acc = KV.get(pub)
+      balance = [cash: acc.amount, bond: acc.bond]
+      addresses = [{pub, balance}|addresses]
+    end
+    case da.__struct__ do
+      :Elixir.Spend        -> addresses = lose_cash(addresses, pub, da.amount+da.fee)
+      :Elixir.Spend2Wait   -> addresses = lose_cash(addresses, pub, da.amount+da.fee)
+      :Elixir.Wait2Bond    -> addresses = lose_cash(addresses, pub, da.fee)
+      :Elixir.Bond2Spend   -> addresses = lose_bond(addresses, pub, da.amount) |> lose_cash(pub, da.fee)
+      :Elixir.Sign         -> addresses = lose_bond(addresses, pub, bond_size*length(da.winners))
+      :Elixir.Slasher      -> true
+      :Elixir.Reveal       -> true
+      :Elixir.ToChannel    -> addresses = lose_cash(addresses, pub, da.amount+da.fee)
+      :Elixir.ChannelBlock -> true
+      :Elixir.CloseChannel -> true
+      :Elixir.Oracle       -> addresses = lose_cash(addresses, pub, Constants.oracle_fee) #maybe it is easiest if one person pays for the oracle.
+      :Elixir.Judgement    -> true
+      x -> 
+        IO.puts("no function with that name #{inspect x}")
+        false
+    end
+    positive_balances_2(txs, bond_size, block_creator, cost, addresses)
+  end
+end
+defmodule VerifyTx do
+	def check_sig2(tx) do tx |> Dict.put(:sig, tx.sig2) |> Dict.put(:pub, tx.pub2) |> CryptoSign.verify_tx() end
+  def check_tx(tx, txs, prev_hash) do
+    cond do
+      not CheckLogic.main(tx, txs, prev_hash) -> false
+      not check_(%{pub: nil, data: %Block{txs: [tx|txs]}}, Constants.block_creation_fee) -> false
+      true -> true
+    end
+  end
+  def remove_repeats(l) do
+    cond do
+      l == [] -> l
+      hd(l) in tl(l) -> remove_repeats(tl(l))
+      true -> [hd(l)|remove_repeats(tl(l))]
+    end
+  end
+  def consecutive?(l) do
+    # l is a list of numbers
+    cond do
+      length(l) < 2 -> true
+      hd(l) + 1 == hd(tl(l)) -> consecutive?(tl(l))
+      true -> false
+    end
+  end
+  def check_nonces(txs) do
+    have_nonce = Enum.map(txs, fn(tx) -> tx.data.nonce != nil end)
+    all_have_nonce = Enum.reduce(have_nonce, true, &(&1 and &2))
+    pubs = txs
+    |> Enum.map(fn(tx) -> tx.pub end)
+    |> remove_repeats
+    sorted_txs = Enum.map(pubs, fn(pub) -> Enum.filter(txs,  &(&1.pub == pub)) end)
+    f = (fn(x) -> Enum.reduce(x, true, &(&1 and &2)) end)
+    just_nonces = Enum.map(sorted_txs, fn(ts) -> Enum.map(ts, &(&1.data.nonce)) 
+                                                 |> Enum.sort
+    end)
+    consecutive = just_nonces
+    |> Enum.map(&(consecutive?(&1))) 
+    |> f.()
+    current_nonce = Enum.map(pubs, fn(pub) -> KV.get(pub).nonce end)
+    starts_right = Enum.zip(current_nonce, just_nonces)
+    |> Enum.map(fn(x)-> elem(x, 0)==hd(elem(x, 1)) end) 
+    |> f.()
+    (starts_right and consecutive) and all_have_nonce
+   end
+   def check_(block, cost) do
+     txs = block.data.txs
+     spending = Blockchain.being_spent(txs)
+     winners = txs
+     |> Blockchain.txs_filter(:Elixir.Sign)
+     |> Enum.map(fn(t) -> t.data.winners end)
+     |> Enum.map(fn(w) -> length(w) end)
+     |> Enum.reduce(0, &(&1+&2))
+		 #IO.puts("check_ #{inspect block}")
+     cond do
+       not check_nonces(txs) -> false
+       not VerifyBalances.positive_balances(txs,spending*3/max(winners, Constants.signers_per_block*2/3), block.pub, cost)->
+         IO.puts("someone spent more money than how much they have")
+         false
+       true -> true
+     end
+  end
+  def check_txs(block, cost) do#accept block as input
+    da = block.data
+    txs = da.txs
+    prev_hash = da.hash
+    cond do
+      not check_logics(txs, prev_hash, []) ->
+        IO.puts("bad logic")
+        false
+      txs == [] ->
+        IO.puts("no empty blocks")
+        false
+      not check_(block, cost) -> false
+      true -> true
+    end
+  end
+  def check_logics(new, prev_hash, old \\ []) do
+    cond do
+      length(new) == 0 -> true
+      CheckLogic.main(hd(new), old, prev_hash) -> check_logics(tl(new), prev_hash, [hd(new)|old])
+      true ->
+				IO.puts("check_logics returns false #{inspect hd(new)}")
+				false
+    end
+  end
+end
+defmodule BlockAbsorber do
+  use GenServer
+  @name __MODULE__
+  def init(_args) do 
+    Blocktree.genesis_state
+    Keys.master  
+    {:ok, []} 
+  end
+  def start_link do     GenServer.start_link(__MODULE__, :ok, name: @name) end
+  def absorb(blocks) do GenServer.call(@name, {:blocks, blocks}) end
+  def buy_block do      GenServer.call(@name, {:blocks, [Blockchain.buy_block]}) end
+  def handle_call({:blocks, blocks}, _from, state) do 
+    Blocktree.add_blocks(blocks)
+    {:reply, :ok, state}
+  end
+  def buy_blocks(n) do 
+    Enum.map(1..n, fn(_) -> 
+        :timer.sleep(1000)
+        buy_block 
+        TxCreator.sign
+        TxCreator.reveal
+      end) 
+  end
+end
+defmodule Blocktree do
+  def genesis_block do
+    b = %Block{height: 1, txs: [], hash: "z5cVID5hEmZcWNVRmVPRUtSN7e2Z5nXecc+8KWbxk+4=", bond_size: 1_000_000}
+    genesis_block = %CryptoSign{meta: [revealed: []], pub: "BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc=", sig: "MEYCIQCu3JqIcIn3jqBhH0nqF8ZTJmdV9GzlJ6WpSq66PA20sAIhAINAuEyCyl2x/iK3BRJM0JGXcd8epnzv0kTX6iHOMAeW", data: b}
+    put_block(genesis_block)
+    KV.put("height", 1)
+    KV.put("1", [Blockchain.blockhash(b)])
+  end
+  def sign_reveal do
+    TxCreator.sign
+    TxCreator.reveal
+  end
+  def put_block(signed) do
+    block = signed.data
+    height = block.height
+    block_hash = Blockchain.blockhash(block)
+    block_hashes = height |> Blockchain.get_helper
+    if block_hashes == nil do block_hashes = [] end
+    if block_hash in block_hashes do false else
+      block_hashes = block_hashes++[block_hash]
+      KV.put(to_string(height), block_hashes)
+      KV.put(block_hash, %{signed | meta: [revealed: []]})
+      block_hash
+    end
+  end
+  def genesis_state do
+    genesis_block
+    ac = Constants.initial_coins
+    b = ac/21
+    a = %Account{amount: 20*b, bond: b}
+    Keys.master
+    creator_pub = Keys.pubkey
+    KV.put(creator_pub, a)
+    KV.put("tot_bonds", b)
+    sign_reveal
+  end
+	def num_signers(txs) do txs |> Enum.filter(&(&1.data.__struct__ == :Elixir.Sign)) |> length end
+	def back do
+    h = KV.get("height")
+    if h>0 do
+      block = Blockchain.get_block(h)
+      prev = Blockchain.get_block(block.data.hash)
+      txs = block.data.txs
+      n = num_signers(txs)
+      TxUpdate.txs_updates(txs, -1, round(block.data.bond_size/n))
+      TxUpdate.sym_increment(block.pub, :amount, -Constants.block_creation_fee, -1)
+      b = prev.data.height
+      if b == nil do b = 0 end
+      KV.put("height", b)
+      Mempool.dump
+      true
+    end
+  end
+  def forward(block) do#while walking forward this needs to reorder the hashes used for get_block so that the block we are using is on top.
+    #IO.puts("forward block #{inspect block}")
+    if not is_map(block) do block = KV.get(block) end
+    #IO.puts("forward block #{inspect block}")
+    gap = block.data.height-KV.get("height")
+    cost = Constants.block_creation_fee * round(:math.pow(2, gap))
+    cond do
+      not is_map(block) -> [error: "blocks should be maps"]
+      KV.get(Blockchain.blockhash(block)) == nil -> [error: "don't have this block"]
+      gap < 1 -> [error: "cannot redo history"]
+      not Blockchain.valid_block?(block, cost) ->
+        IO.puts("invalid block")
+        false
+      true ->
+        #block creator needs to pay a fee. he needs to have signed so we can take his fee.
+        TxUpdate.sym_increment(block.pub, :amount, -cost, 1)
+        txs = block.data.txs
+        n = num_signers(txs)
+        TxUpdate.txs_updates(txs, 1, round(block.data.bond_size/n))
+        KV.put("height", block.data.height)
+        Mempool.dump
+        hash = Blockchain.blockhash(block)
+        n = to_string(block.data.height)
+        bh = KV.get(n) |> Enum.filter(&(&1!=hash))
+        KV.put(n, [hash|bh])
+    end
+  end
+  def goto(hash) do
+    h = hash |> Blockchain.get_block
+    goto_helper([h])
+  end
+  def goto_helper(last_blocks) do
+    h = KV.get("height")
+    my_block = Blockchain.get_block(h).data
+    hash = Blockchain.blockhash(my_block)
+    add_block = hd(last_blocks).data
+    cond do
+      length(last_blocks)>60 ->
+        IO.puts("error!#! #{inspect last_blocks}")
+      hd(last_blocks) == nil ->
+        IO.puts("error 2 #{inspect last_blocks}")
+        Enum.map(tl(last_blocks), &(forward(&1)))
+      my_block.height == 1 or add_block.hash == hash ->
+        Enum.map(last_blocks, &(forward(&1)))
+      add_block.height > my_block.height ->
+        goto_helper([Blockchain.get_block(add_block.hash)|last_blocks])
+      true ->
+        IO.puts("back")
+        back
+        goto_helper(last_blocks)
+    end
+  end	
+	def get_height(h) do
+    a = KV.get(h)
+    if a == nil do a = [] end
+    a
+  end
+  def add_blocks([]) do [] end
+  def add_blocks([head|tail]) do
+    block = head.data
+    height = block.height
+    cond do
+			block.bond_size > Constants.max_bond ->
+				IO.puts("too much bond for one block")
+				false
+      not Blockchain.enough_validated([head|tail], round(length(get_height(height))/3)) ->
+        IO.puts("double-signing everywhere")
+        false
+      KV.get(Blockchain.blockhash(head)) != nil -> add_blocks(tail)
+      true ->
+				IO.puts("adding block #{inspect height}")
+        block_hash = put_block(head)
+        current_height = KV.get("height")
+        if height > current_height do goto(block_hash) end
+        add_blocks(tail)
+    end
+  end
+end
+defmodule KV do
+  use GenServer
+	@name __MODULE__
+  def init(:ok) do {:ok, HashDict.new} end
+  def start_link() do GenServer.start_link(__MODULE__, :ok, [name: @name]) end
+  def put(k, v) do    GenServer.cast(@name, {:put, k, v}) end
+  def get(k) do       GenServer.call(@name, {:get, k}) end
+  def keys do         GenServer.call(@name, :keys) end
+  def handle_call(:keys, _from, d) do     {:reply, Dict.keys(d), d} end
+  def handle_call({:get, v}, _from, d) do {:reply, d[v], d} end
+  def handle_cast({:put, k, v}, d) do     {:noreply, Dict.put(d, k, v)} end
+end
+defmodule TxUpdate do
+  def exchange_rate(n \\ 0) do
+    #how many bonds is a cash worth?
+    b = KV.get("height") - n
+    :math.pow(1.001, b)
+  end
+  def sym_replace(pub, key, old, new, d) do
+    acc = KV.get(pub)
+    cond do
+      d == 1 -> word = new
+      d == -1 -> word = old
+    end
+    KV.put(pub, Map.put(acc, key, word))
+  end
+  def sym_increment(pub, key, amount, d) do
+		acc = KV.get(pub)#if it doesn't exist yet, we need to add it.
+    acc = Map.put(acc, key, Map.get(acc, key)+(amount*d))#amount is nil?
+    KV.put(pub, acc)
+  end
+  def deep_get(dict, keys) do
+    cond do
+      keys == [] -> dict
+      true -> deep_get(Map.get(dict, hd(keys)), tl(keys))
+    end
+  end
+  def deep_put(dict, keys, val) do
+    cond do
+      keys == [] -> val
+      true -> Map.put(dict, hd(keys), deep_put(Map.get(dict, hd(keys)), tl(keys), val))
+    end
+  end
+  def sym_append(pub, keys, item, d) do
+    acc = KV.get(pub)
+    a = deep_get(acc, keys)
+    cond do
+      d ==  1 -> a = a ++ [item]
+      d == -1 -> a = a -- [item]
+    end
+    acc = deep_put(acc, keys, a)
+    KV.put(pub, acc)
+  end
+  def common(tx, d, old_block, signer) do
+    bond_size = old_block.data.bond_size
+    w = length(tx.data.winners)
+    delta = exchange_rate(old_block.data.height) * bond_size * w
+    reward = KV.get("tot_bonds") / :math.pow(1.001, Constants.epoch) * w / 1000 / Constants.signers_per_block
+    sym_append(hd(KV.get(to_string(tx.data.signed_on))), [:meta, :revealed], signer, d)
+    {reward, delta}
+  end
+  def tx_update(tx, d, bond_size) do
+    pub = tx.pub
+    acc = KV.get(pub)
+    acc = Map.put(acc, :nonce, acc.nonce + d)
+    KV.put(pub, acc)
+    case tx.data.__struct__ do
+      :Elixir.Sign ->                 Sign.update(tx, d, bond_size)
+      :Elixir.Spend ->               Spend.update(tx, d)
+      :Elixir.Spend2Wait ->     Spend2Wait.update(tx, d)
+      :Elixir.Wait2Bond ->       Wait2Bond.update(tx, d)
+      :Elixir.Bond2Spend ->     Bond2Spend.update(tx, d)
+      :Elixir.Slasher ->           Slasher.update(tx, d)
+      :Elixir.Reveal ->             Reveal.update(tx, d)
+      :Elixir.ToChannel ->       ToChannel.update(tx, d)
+      :Elixir.ChannelBlock->  ChannelBlock.update(tx, d)
+      :Elixir.CloseChannel->  CloseChannel.update(tx, d)
+			:Elixir.Oracle ->             Oracle.update(tx, d)
+			:Elixir.Judgement ->       Judgement.update(tx, d)
+			:Elixir.Win ->                   Win.update(tx, d)
+      _	-> false
+    end
+  end
+  def txs_updates(txs, d, bond_size) do
+    Enum.map(txs, &(tx_update(&1, d, bond_size)))
+  end
+end
+defmodule FlyingFox do
+  use Application
+  def start(:normal, l) do Main.start(Port.round_robin) end
+  def stop(_state) do :ok end
+end
+defmodule InternalListener do
+  use GenServer
+  @name __MODULE__
+  def init(args) do {:ok, args} end
+  def start_link() do GenServer.start_link(__MODULE__, :ok, [name: @name]) end
+  def export(l) do    GenServer.call(@name, {hd(l), tl(l)}) end
+  def handle_call({type, args}, _from, _) do 
+    spawn(fn() ->     GenServer.reply(_from, main(type, args)) end)
+    {:noreply, []}
+  end
+  def main(type, args) do
+    case type do
+      "buy_block" -> BlockAbsorber.buy_block
+      "spend" -> TxCreator.spend(hd(args), hd(tl(args)))
+      "stop" -> 
+        IO.puts("stopping args")
+				FlyingFox.stop([])
+      x ->
+        IO.puts("is not a command #{inspect x}")
+    end
+  end
+end
+defmodule Listener do
+  use GenServer
+	@name __MODULE__
+  def init(:ok) do {:ok, []} end
+  def start_link() do GenServer.start_link(__MODULE__, :ok, [name: @name]) end
+  def export(l) do    GenServer.call(@name, {hd(l), self(), tl(l)}) end
+  def handle_call({type, s, args}, _from, _) do
+    spawn(fn() ->     GenServer.reply(_from, main(type, args)) end)
+    {:noreply, []}
+  end
+  def main(type, args) do
+    case type do
+      "add_blocks" -> BlockAbsorber.absorb(hd(args))
+      "pushtx" -> fee_filter(hd(args))
+      "txs" -> Mempool.txs
+      "height" -> KV.get("height")
+      "block" -> Blockchain.get_block(hd(args))
+      "blocks" -> blocks(String.to_integer(hd(args)), String.to_integer(hd(tl(args))))
+      "add_peer" -> Peers.add_peer(hd(args))
+      "all_peers" -> Peers.get_all
+      "status" ->
+          h = KV.get("height")
+          block = Blockchain.get_block(h)
+          if block.data==nil do block = %{data: 1} end
+          [height: h, hash: DetHash.doit(block.data)]
+      x -> IO.puts("listener is not a command #{inspect x}")
+    end
+  end
+  def fee_filter(tx) do
+    cond do
+      tx.data.fee<10000 -> "low-fee tx are blocked on this node"
+      true -> Mempool.add_tx(tx)
+    end
+  end
+  def blocks(start, finish, out \\ []) do
+    finish |> min(KV.get("height")) |> blocks_helper(start, out)
+  end
+  def blocks_helper(finish, start, out) do
+    block = Blockchain.get_block(start)
+    cond do
+			byte_size(inspect out) > Constants.message_size/2 -> tl(out)
+      start < 0 -> blocks_helper(finish, 1, out)
+      start > finish -> out
+      block == nil -> blocks_helper(finish, start+1, out)
+      true -> blocks_helper(finish, start+1, [block|out])
+    end
+  end
+end
+defmodule Main do
+  use Supervisor
+	@name __MODULE__
+	def start(x \\ 0) do start_link(x) end
+  def start_link(arg) do
+		Supervisor.start_link(__MODULE__, arg, name: @name)
+  end
+  def init(arg) do
+    p=arg+Constants.tcp_port
+    children = [worker(Port, [p]),
+								worker(KV, []),
+                worker(Keys, []),
+                worker(Mempool, []), 
+                worker(BlockAbsorber, []),                 
+                worker(Peers, []),
+                worker(Listener, []),
+                worker(InternalListener, []),
+                supervisor(Tcp, [:tcp, &(Listener.export(&1)), &(InternalListener.export(&1))]),
+                worker(Talker, []),
+               ]
+    supervise(children, strategy: :rest_for_one)
+  end
+end
+defmodule Talker do
+  #this module creates and maintains connections with multiple peers. It downloads blocks from them.
+  #grabs the list of peers from peers thread.
+  #has ability to black-list peers who are bad?
+  #don't talke to same peers too frequently
+  #don't ignore any peer much longer than the others.
+  #download blocks and peers.
+  use GenServer
+  @name __MODULE__
+  def start_link() do
+    GenServer.start_link(__MODULE__, :ok, [name: @name])
+  end
+  def start do spawn_link(fn() -> timer end) end
+  def still_on(blocks) do
+    blocks == :ok or blocks == [] or (is_tuple(hd(blocks)) and :error in Dict.keys(blocks))
+  end
+  def add_peers(x) do
+    Enum.map(x, fn(x) -> Peers.add_peer(x) end)
+  end
+  def download_blocks(i, u, p) do
+		#IO.puts("in talker p is #{inspect p}")
+    blocks = Cli.download_blocks(min(50, u - i), i, p)
+    my_block = Cli.blocks(i, i)
+    cond do
+      my_block == [] ->
+        BlockAbsorber.absorb(blocks)
+        [status: :first_blocks]
+      still_on(my_block) -> IO.puts("thread died")
+      still_on(blocks) -> IO.puts("peer died 0")
+      hd(my_block).data.hash == hd(blocks).data.hash ->
+        BlockAbsorber.absorb(blocks)
+        [status: :ahead]
+      true ->
+        blocks = Cli.download_blocks(min(50, u), max(0, i-40), p)
+        BlockAbsorber.absorb(blocks)
+        [status: :fork, height: u, peer: p]
+    end
+  end
+  def trade_peers(p) do
+		keys = fn(z) -> Enum.map(z, fn({x, y}) -> x end) end
+		my_peers = Cli.all_peers
+    peers = Cli.all_peers(p)
+		my_keys = keys.(my_peers)
+		#IO.puts("my_keys #{inspect my_keys}")
+		peers_keys = keys.(peers)
+		#IO.puts("peers_keys #{inspect peers_keys}")
+    if my_peers == :ok or peers == :ok do
+      IO.puts("peer died 1")
+    else
+      not_yours = Enum.filter(my_peers, &(not elem(&1, 0) in peers_keys))
+      not_mine = Enum.filter(peers, &(not elem(&1, 0) in my_keys))
+			#IO.puts("not_mine #{inspect not_mine}")
+			#IO.puts("not_yours #{inspect not_yours}")
+      Enum.map(not_yours,&(Cli.add_peer(elem(&1, 1),p)))
+      Enum.map(not_mine, &(Peers.add_peer(elem(&1, 1))))
+    end
+  end
+  def check_peer(p) do #validating mode
+    status = Cli.status(p)
+		#IO.puts("status #{inspect status}")
+    cond do
+			not is_list(status) -> status #IO.puts "peer crashed #{inspect status}"
+      :error in Dict.keys(status) ->
+				false
+      status[:height] > 0 and is_number(status[:height]) ->
+        x = Peers.get(p)
+        |> Map.put(:height, status[:height])
+        |> Map.put(:hash, status[:hash])
+        #|> Peers.add_peer
+				#IO.puts("add peer x #{inspect x}}")
+				Peers.add_peer(x)
+        check_peer_2(p, status)
+			true -> IO.puts("nothing to do")
+    end
+  end
+  def check_peer_2(p, status) do
+		#IO.puts("check peer 2 #{inspect p}")
+    trade_peers(p)
+    txs = Cli.txs(p)
+    u = status[:height]
+    i = KV.get("height")
+    cond do
+      txs == :ok -> IO.puts("txs shouldn't be :ok")
+      (txs != []) and length(txs)>0 and is_tuple(hd(txs)) ->
+        IO.puts("tx error #{inspect txs}")
+      u > i -> download_blocks(i, u, p)
+      u == i -> Enum.map(txs, &(Mempool.add_tx(&1)))
+      true ->
+        IO.puts("im ahead")
+        true
+    end
+  end
+  def check_peers do
+    Peers.get_all
+    |> Enum.map(&(elem(&1,1)))
+    |> Enum.map(&(spawn_link(fn -> check_peer(&1) end)))
+   end
+  def init(_) do
+    start
+    Enum.map(0..Constants.max_nodes, &(%Peer{ip: "localhost", port: Constants.tcp_port+&1})) 
+    |> Enum.map(&(Peers.add_peer(&1)))
+    {:ok, []}
+  end
+  def doit do GenServer.cast(@name, :doit) end
+  def handle_cast(:doit, state) do
+    check_peers
+    {:noreply, state}
+  end
+  def timer do
+    :timer.sleep(3000)
+    doit
+    timer
+  end
+end
+defmodule DetHash do
+  def collect(l) do Enum.reduce(l, "", fn element, acc -> element<>acc end) end #list of strings -> string
+  def hash_list(l) do Enum.sort(l) |> Enum.map(&(det_string(&1))) |> collect |> det_string end
+  def map_hash(s) do
+    keys = Map.keys(s) |> Enum.sort()
+    values = Enum.map(keys, fn x -> Map.get(s, x) end)
+    hash_list(keys ++ values)
+  end
+  def det_string(a) do
+    cond do
+      is_list(a) -> hash_list(a)
+      is_tuple(a) -> hash_list(Tuple.to_list(a))
+      is_integer(a) -> inspect(a)
+      is_float(a) -> inspect(a)
+      is_binary(a) -> inspect(a)
+      is_map(a) -> map_hash(a)
+      is_atom(a) -> inspect(a)
+      true -> 
+        IO.puts("error unsuported type #{inspect a}")
+        1=2
+    end
+  end
+  def hash(s) do :crypto.hmac(:sha256, to_string(s), "") |> Base.encode64 end
+  def doit(a) do det_string(a) |> hash end
+  def test() do 
+    {p, q} = CryptoSign.new_key
+    s=CryptoSign.sign_tx([], p, q)
+    DetHash.doit(s)
+  end
+end
+
+defmodule Encryption do
+  def times(x, f, n) do
+    cond do
+      n<1 -> x
+      true -> times(f.(x), f, n-1)
+    end
+  end
+  def si(key) do
+    f = fn(x) -> :crypto.hmac(:sha256, "", x) end
+    key = key |> times(f, 2000000)
+    b = <<182, 19, 103, 154, 8, 20, 217, 236, 119, 47, 149, 215, 120, 195, 95, 197>> 
+    si = :crypto.stream_init(:aes_ctr, key, b)
+  end
+  def encrypt(x, password) do 
+    {_, x} = :crypto.stream_encrypt(si(password), x)
+    x |> Base.encode64 
+  end
+  def decrypt(x, password) do 
+    {:ok, b} = Base.decode64(x)
+    {_, out} = :crypto.stream_decrypt(si(password), b)
+    out
+  end
+	def normal(l) do Enum.reduce(tl(l), hd(l), &(&2 <> " " <> &1))end
+	def ss(args) do CryptoSign.shared_secret(hd(args), hd(tl(args))) end
+	def ss_encrypt(args) do
+		b = normal(tl(tl(args)))
+		c = [hd(args), hd(tl(args))]
+		Encryption.encrypt(b, ss(c))
+	end
+	def ss_decrypt(args) do
+		Encryption.decrypt(hd(tl(tl(args))), ss(args))
+	end
+end
+defmodule HashMath do
+  def abc do
+    ["0": 0,
+     "1": 1,
+     "2": 2,
+     "3": 3,
+     "4": 4,
+     "5": 5,
+     "6": 6,
+     "7": 7,
+     "8": 8,
+     "9": 9,
+     "A": 10,
+     "B": 11,
+     "C": 12,
+     "D": 13,
+     "E": 14,
+     "F": 15]
+  end
+  def helper(h, acc) do
+    #this runs over 1000000 times in first 2 blocks.
+    cond do
+      h=="" -> acc
+      true -> 
+        a = String.slice(h, 0..0)
+        b = String.slice(h, 1,10000)
+        helper(b, acc * 16 + abc[String.to_atom(a)])
+    end
+  end
+  def hex2int(h) do helper(h, 0) end
+  def hash2int(h) do
+    {:ok, h} = Base.decode64(h)
+    h = Base.encode16(h)
+    hex2int(h)
+  end
+  def size(i, j \\ 0, base \\ 16) do
+    cond do
+      :math.pow(base, j) > i -> j - 1
+      true -> size(i, j+1)
+    end
+  end
+  def pow(a, b) do
+    b = f2i(b)
+    cond do
+      b == 1 -> a
+      rem(b, 2) == 0 -> 
+        pow(a * a, f2i(b / 2))
+      true -> a * pow(a, b - 1)
+    end
+  end
+  def f2i(f) do 
+    {i, _} = :string.to_integer(to_char_list(to_string(f)))
+    f2i(f, 0, i)
+  end
+  def f2i(f, lower, upper) do
+    #IO.puts "upper lower f #{inspect upper}, #{inspect lower}, #{inspect f}"
+    mid = div((lower + upper), 2)
+    odd = rem((lower + upper), 2)
+    cond do
+      lower >= upper - 1 -> 
+        cond do
+          f > mid -> upper
+          true -> lower
+      end
+      f > mid -> f2i(f, mid + odd, upper)
+      f < mid -> f2i(f, lower, mid)
+    end
+  end
+  def to16(i, s) do
+    ten = ["10": "A", "11": "B", "12": "C", "13": "D", "14": "E", "15": "F"]
+    p = pow(16, s)
+    n = div(i, p)
+    r = rem(i, p)
+    rest = fn() -> to16(r, s - 1) end
+    f = fn(r) -> ten[String.to_atom(to_string(r))] end
+    g = fn(n) -> to_string(n) end
+    cond do
+      s == 1 -> 
+        cond do
+          n > 9 -> f.(r)
+          true -> g.(r)
+        end
+      n > 9 -> f.(n) <> rest.()
+      true -> g.(n) <> rest.()
+    end
+  end
+  def int2hash(i) do 
+    s = to16(i, size(i))  
+    {:ok, s} = Base.decode16(s)
+    Base.encode64(s)
+  end
+
+  def test do
+    IO.puts hex2int("100")
+    IO.puts hex2int("101")
+    IO.puts DetHash.doit(2)
+    IO.puts hash2int(DetHash.doit(2))
+    #IO.puts inspect f2i(100.0)
+    #IO.puts DetHash.doit(1)
+    #IO.puts int2hash(hash2int(DetHash.doit(1)))
+  end
+end
+defmodule CryptoSign do
+  defstruct sig: nil, pub: nil, data: nil, meta: []
+  def params do
+    :crypto.ec_curve(:secp256k1)
+  end
+	def shared_secret(pub, priv) do
+		:crypto.compute_key(:ecdh, elem(Base.decode64(pub), 1), elem(Base.decode64(priv), 1), params)
+	end
+  def new_key do
+    {pub, priv} = :crypto.generate_key(:ecdh, params)
+    pub = Base.encode64(pub)
+    priv = Base.encode64(priv)
+    {pub, priv}
+  end
+  def sign(s, priv) do
+    {:ok, priv} = Base.decode64(priv)
+    :crypto.sign(:ecdsa, :sha256, s, [priv, params]) 
+    |> Base.encode64
+  end
+  def verify(s, sig, pub) do
+    {:ok, sig} = Base.decode64(sig)
+    {:ok, pub} = Base.decode64(pub)
+    :crypto.verify(:ecdsa, :sha256, s, sig, [pub, params])
+  end
+  def sign_tx(tx, pub, priv) do
+    h = DetHash.doit(tx)
+    sig = sign(h, priv)
+    %CryptoSign{pub: pub, sig: sig, data: tx}
+  end
+  def verify_tx(signed_tx) do
+    %{sig: sig, pub: pub, data: data} = signed_tx
+    h = DetHash.doit(data)
+    verify(h, sig, pub)
+  end
+  def test do
+    {pub, priv} = new_key
+    tx = [a: "b", b: "c"]
+    tx = sign_tx(tx, pub, priv) 
+    true = verify_tx(tx)
+    s = "test string"
+    sig = sign(s, priv)
+    true = verify(s, sig, pub)
+    false = verify(s <> " ", sig, pub)
+    "success"
+  end
+end
+defmodule Bond2Spend do
+	defstruct nonce: 0
+	def check(_, _) do true end
+	def update(tx, d) do
+    a = tx.data.amount
+    b = KV.get("tot_bonds")
+    KV.put("tot_bonds", b - (a * d))
+    TxUpdate.sym_increment(tx.pub, :amount, a / TxUpdate.exchange_rate - tx.data.fee, d)
+    TxUpdate.sym_increment(tx.pub, :bond, -a, d)
+    #Users can take their money out of the bond at any time.
+	end
+end
+defmodule ChannelBlock do
+  defstruct nonce: 0, channel: nil, amount: 0, amount2: 0, pub: nil, pub2: nil, secret_hash: nil, bets: []
+  #maybe we should stop any channel tx of different types from coexisting in the same block.
+	#must specify which hashes are new, and which have existed before. <- NOT a part of the channel state.
+	#if one tx is creating a new decision, then don't let any other tx in that same block bet on the same decision.
+	def check(tx, txs) do
+    da = tx.data
+    channel = KV.get(da.channel)
+		b = da.bets |> Enum.map(fn(x) -> x.amount end)
+		c = b |> Enum.reduce(0, &(&1+&2))
+		bool = b |> Enum.map(fn(x) -> x >= 0 end) |> Enum.reduce(&(&1 and &2))
+    cond do
+			not bool ->
+				IO.puts("no negative money")
+				false
+      not VerifyTx.check_sig2(tx) -> false
+      da.amount + da.amount2 + c > channel[da.pub] + channel[da.pub2] ->
+				IO.puts("no counterfeiting")
+				false
+      da.secret_hash != nil and da.secret_hash != DetHash.doit(tx.meta.secret) ->
+				IO.puts("secret does not match")
+				false
+      true -> true
+    end
+		#must contain the entire current state of the channel.
+		#fee can be paid by either or both.
+
+	end
+	def update(tx, d) do
+    #need to make a timestamp now for possible refund tx. Also, we should record the nonce for this channel state, so we only update one way.
+    da = tx.data
+    TxUpdate.sym_replace(da.channel, :time, 0, KV.get("height"), d)
+    TxUpdate.sym_replace(da.channel, :nonce, 0, da.nonce, d)
+		TxUpdate.sym_replace(da.channel, :amount, KV.get(da.channel).amount, tx.amount, d)
+		TxUpdate.sym_replace(da.channel, :amount2, KV.get(da.channel).amount2, tx.amount, d)
+		#
+    #update state to stop production of to_channel tx. starts timer.
+	end
+end
+defmodule CloseChannel do
+  defstruct nonce: 0, channel: nil, channel_block: nil
+	def check(tx, txs) do
+    #only one per block per channel. be careful.
+    channel = KV.get(tx.data.channel)
+    case tx.data.type do
+      "fast"    -> if VerifyTx.check_sig2(tx) do ChannelBlock.check(tx, txs) end
+      "slash"   -> if channel.nonce < tx.data.nonce do ChannelBlock.check(tx, txs) end
+      "timeout" -> channel.time < KV.get("height") - channel.delay
+    end
+	end
+	def update(tx, d) do
+		da = tx.data
+    TxUpdate.sym_increment(da.pub, :amount, da.amount, d)
+    TxUpdate.sym_increment(da.pub2, :amount, da.amount2, d)
+		#needs to delete the channel
+	end
+end
+defmodule Judgement do
+	defstruct bet: "", result: "", sigs: []
+	def check(tx, txs) do
+		false
+	end
+	def update(tx, d) do
+	end
+end
+defmodule Oracle do
+	defstruct ins: [], sigs: [], oracle_id: ""
+	def check(tx, txs) do
+		#can the creator afford this?
+		#no Sztorc at first.
+		#what are the addresses?
+		#How many addresses are needed?
+		n = length(tx.data.participants)
+		cond do
+			n > tx.data.m -> false
+			tx.data.m < 1 -> false
+			true -> true
+		end
+
+	end
+	def update(tx, d) do
+	end
+end
+defmodule Reveal do
+  defstruct nonce: 0, signed_on: 0, winners: [], amount: 0, secret: nil, bond_size: 0
+  def sign_tx(block, pub) do block.data.txs |> Enum.filter(&(&1.pub == pub))  |> Enum.filter(&(&1.data.__struct__ == :Elixir.Sign)) end
+	def check(tx, txs) do
+    old_block = Blockchain.get_block(tx.data.signed_on)
+    revealed = txs
+    |> Enum.filter(&(&1.data.type == "reveal"))
+    |> Enum.filter(&(&1.pub == tx.pub))
+    signed = sign_tx(old_block, tx.pub)
+    bond_size = old_block.data.bond_size
+    blen = bond_size*length(tx.data.winners)
+    amount = tx.data.amount
+    cond do
+      length(revealed) > 0 -> false
+      length(signed) == 0 ->
+        IO.puts "0"
+        false
+      byte_size(tx.data.secret) != 10 ->
+        IO.puts "1"
+        false
+      DetHash.doit(tx.data.secret) != hd(signed).data.secret_hash ->
+        IO.puts "2"
+        false
+      tx.pub in old_block.meta.revealed ->
+        IO.puts "3"
+        false
+      amount != blen ->
+        IO.puts "4 slfjksd"
+        false
+      KV.get("height") - Constants.epoch > tx.data.signed_on ->
+        IO.puts "5"
+        false
+      true -> true
+    end
+    #After you sign, you wait a while, and eventually are able to make this tx. 
+    #This tx reveals the random entropy_bit and salt from the sign tx, and it reclaims 
+    #the safety deposit given in the sign tx. If your bit is in the minority, then your prize is bigger.
+	end
+	def update(tx, d) do
+    old_block = Blockchain.get_block(tx.data.signed_on)
+    {reward, delta} = TxUpdate.common(tx, d, old_block, tx.pub)
+    TxUpdate.sym_increment(tx.pub, :amount, tx.data.amount + reward + delta, d)#during waiting period you are holding cash not bonds.
+	end
+end
+defmodule Sign do
+  defstruct nonce: 0, height: 0, secret_hash: nil, winners: [], prev_hash: nil
+  def first_bits(b, s) do
+    << c :: size(s), _ :: bitstring >> = b
+    s = s + 8 - rem(s, 8) #so that we have an integer number of bytes.
+    << c :: size(s) >>
+  end
+  def ran_block(block) do
+    txs = block.data.txs
+    cond do
+      is_nil(txs) -> 0
+      true ->
+        txs |> Enum.filter(&(&1.data.__struct__=="reveal"))
+        |> Enum.map(&(first_bits(&1.data.secret, length(&1.data.winners))))
+        |> Enum.reduce("", &(&1 <> &2))
+    end
+  end
+  def rng(hash, counter \\ 26, entropy \\ "" ) do 
+    block = KV.get(hash)
+    cond do
+      block == nil -> DetHash.doit(entropy)
+      counter < 1 -> DetHash.doit(entropy)
+      true -> rng(block.data.hash, counter - 1, ran_block(block) <> entropy)
+    end
+  end
+	def winner?(balance, total, seed, pub, j) do#each address gets 200 chances.
+    max = HashMath.hex2int("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
+    b = max * Constants.signers_per_block * balance / (Constants.chances_per_address * total)
+    a = HashMath.hash2int(DetHash.doit({seed, pub, j}))
+    a < b and j >= 0 and j < Constants.chances_per_address and is_integer(j)
+  end
+	def check(tx, txs, prev_hash) do
+    acc = KV.get(tx.pub)
+    tot_bonds = KV.get("tot_bonds")
+    ran = rng(prev_hash)
+    prev_block = KV.get(prev_hash)
+    l = Enum.map(tx.data.winners, fn(x)->winner?(acc.bond, tot_bonds, ran, tx.pub, x) end)
+    l1 = l
+    l = Enum.reduce(l, true, fn(x, y) -> x and y end)
+    m = length(Enum.filter(txs, fn(t) -> t.pub == tx.pub and t.data.__struct__ == :Elixir.Sign end))
+    height = KV.get("height")
+    tx_prev = tx.data.prev_hash
+    cond do
+      acc.bond < Constants.min_bond ->
+        IO.puts("not enough bond-money to validate")
+        false
+      not is_binary(tx.data.secret_hash) ->
+        IO.put("should have been binary")
+        false
+      tx.data.height != prev_block.data.height->
+        IO.puts("bad height")
+        false
+      not l ->
+        IO.puts("not l")
+        false
+      length(tx.data.winners) < 1 ->
+				IO.puts("too short")
+				false
+      m != 0 ->
+				false
+      not(height == 0) and tx_prev != prev_hash ->
+        IO.puts("hash not match")
+        false
+      true -> true
+    end
+	end
+	def update(tx, d, bond_size) do#0.1% of total bonds is given out as rewards on every block, which changes the exchange rate.
+    w = length(tx.data.winners)
+    delta = -TxUpdate.exchange_rate * bond_size * w
+    b = KV.get("tot_bonds")
+    KV.put("tot_bonds", b + delta * d)
+    TxUpdate.sym_increment(tx.pub, :bond, delta, d)
+    #loses some :bond money. total_money
+    #The most they could have to pay is as much bond-money as the poorest of them has.		
+	end
+end
+defmodule Slasher do
+  defstruct nonce: 0, tx1: nil, tx2: nil, signed_on: 0
+	def check(tx, txs) do
+		old_block = Blockchain.get_block(tx.data.signed_on)
+    tx1 = tx.data.tx1
+    tx2 = tx.data.tx2
+		check_sig = fn(tx) -> CryptoSign.verify_tx(tx) end
+    cond do
+      tx.data.tx1.pub in old_block.meta.revealed ->
+        IO.puts "slasher reuse"
+        false
+      tx1.data.prev_hash == tx2.data.prev_hash ->
+        IO.puts("same tx_hash")
+        false
+      tx1.data.height != tx2.data.height ->
+        IO.puts("different height")
+        false
+      not check_sig.(tx1) ->
+        IO.puts("unsigned")
+        false
+      not check_sig.(tx2) ->
+        IO.puts("unsigned 2")
+        false
+    end
+    #If you can prove that the same address signed on 2 different blocks at the same height, then you can take 1/3rd of the deposit, and destroy the rest.
+	end
+	def update(tx, d) do
+    #If you can prove that the same address signed on 2 different blocks at the same height, then you can take 1/3rd of the deposit, and destroy the rest.
+    a=tx.data
+    old_block = Blockchain.get_block(a.tx1.data.height)
+    {reward, delta} = TxUpdate.common(tx, d, old_block, a.tx1.pub)
+    TxUpdate.sym_increment(tx.pub, :amount, tx[:data][:amount] + reward + delta / 3, d)
+	end
+end
+defmodule Spend do
+  defstruct nonce: 0, to: "", amount: 0, fee: 10000, create: false
+	def check(tx, txs) do
+    block = tx.data
+    fee = block.fee
+    amount = block.amount
+    cond do
+      fee < Constants.min_tx_fee ->
+        IO.puts("fee too low")
+        false
+      amount+fee > Constants.max_bond ->
+        IO.puts("too much money at once")
+        false
+      true -> true
+    end
+	end
+	def update(tx, d) do
+    da = tx.data
+		if da.create do
+			cond do
+				d == 1 -> KV.put(da.to, %Account{})
+				true -> KV.put(da.to, nil)
+			end
+		end
+    TxUpdate.sym_increment(tx.pub, :amount, -da.amount - da.fee, d)
+    TxUpdate.sym_increment(da.to, :amount, da.amount, d)		
+	end
+end
+defmodule Spend2Wait do
+  defstruct nonce: 0, amount: 0
+	def check(tx, txs) do
+    pub = tx.pub
+    acc = KV.get(pub)
+    cond do
+      {0,0} != acc.wait -> false
+      true -> true
+    end
+	end
+	def update(tx, d) do
+    #can only have 1 wait-money at a time.
+    h = KV.get("height")
+    da = tx.data
+    TxUpdate.sym_increment(tx.pub, :amount, -da.amount - da.fee, d)
+    TxUpdate.sym_replace(tx.pub, :wait, {0,0}, {da.amount, h}, d)
+	end
+end
+defmodule ToChannel do
+  defstruct nonce: 0, to: "pub", amount: 0, amount2: 0, new: false, pub: "", pub2: "", delay: 100, fee: 10000
+	def key(a, b) do
+		cond do
+			a > b -> a <> b
+			true -> b <> a
+		end
+	end
+	def check(tx, txs) do
+    channel = KV.get(key(tx.pub, tx.pub2))
+    #channel = KV.get(tx.channel)
+    cond do
+      not tx.data.tx in [:pub, :pub2] -> false
+			KV.get(tx.pub) == nil -> false
+			KV.get(tx.pub2) == nil -> false
+			(channel == nil) and (tx.data.new != true) -> false
+      (channel != nil) and (tx.data.new == true) -> false
+      true -> true
+    end
+		#dont allow this any more after a channel_block has been published, or if there is a channel_block tx in the mempool.
+	end
+	def update(tx, d) do
+    da = tx.data
+		IO.puts("da.pub #{inspect da.pub}")
+		IO.puts("KV get da.pub #{inspect KV.get(da.pub)}")
+    TxUpdate.sym_increment(da.pub, :amount, -da.amount - da.fee, d)
+		channel = key(da.pub, da.pub2)
+    cond do
+      da.new and d==1 -> KV.put(channel,
+																%Channel{pub: da.pub,
+                                         pub2: da.pub2,
+                                         amount: da.amount,
+                                         amount2: da.amount2,
+                                         delay: da.delay})
+      da.new ->
+				KV.put(channel, nil)#this should be in a different key value store. Storing different things in the same place is dumb.
+      true -> TxUpdate.sym_increment(da.channel, da.to, da.amount, d)
+    end		
+	end
+end
+defmodule Wait2Bond do
+  defstruct nonce: 0, wait_money: 0
+    #If a user wants to take part in the consensus process, they would use this transaction type to turn some of their wait-money into bond-money. The price for bond-money changes continuously over time, and more bond-money is printed and given to the people who participate. If you participate, then the value of your bond-money will slowly grow. If you dont participate, then the value will quickly shrink. 
+    #There is a moving exchange rate. Bond-coins are constantly losing value.
+	def check(tx, txs) do
+    acc = KV.get(tx.pub)
+    {a, h} = tx.data.wait_money
+    cond do
+      {a, h} != acc.wait -> false 
+      h > KV.get("height") + Constants.epoch -> false 
+      true -> true
+    end
+	end
+	def update(tx, d) do
+    da = tx.data
+    {a, h} = da.wait_money
+    b = KV.get("tot_bonds")
+    KV.put("tot_bonds", b + (a * TxUpdate.exchange_rate * d))
+    TxUpdate.sym_increment(tx.pub, :bond, a * TxUpdate.exchange_rate, d)
+    TxUpdate.sym_replace(tx.pub, :wait, {a, h}, {0, 0}, d)
+    #If a user wants to take part in the consensus process, they would use this transaction type to turn some of their wait-money into bond-money. The price for bond-money changes continuously over time, and more bond-money is printed and given to the people who participate. If you participate, then the value of your bond-money will slowly grow. If you dont participate, then the value will quickly shrink. 
+    #There is a minimum size for purchasing bond-money, priced in spend-money. 
+	end
+end
+defmodule Win do
+	def check(tx, txs) do
+		false
+	end
+	def update(tx, d) do
+	end
+end

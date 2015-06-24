@@ -4,7 +4,7 @@ defmodule Blockchain do
   #@signers_per_block Application.get_env :flying_fox, :signers_per_block
   #@block_creation_fee Application.get_env :flying_fox, :block_creation_fee
   def txs_filter(txs, type) do Enum.filter(txs, fn(t) -> t.data.__struct__ == type end) end
-  def being_spent(txs) do txs |> txs_filter(:Elixir.SpendTx) |> Enum.map(fn(t) -> t.data.amount end) |> Enum.reduce(0, &(&1+&2)) end
+  def being_spent(txs) do txs |> txs_filter(:Elixir.Spend) |> Enum.map(fn(t) -> t.data.amount end) |> Enum.reduce(0, &(&1+&2)) end
   def prev_block(block) do
 		cond do
 			block == nil -> nil
@@ -43,7 +43,7 @@ defmodule Blockchain do
       ngenesis and block.data.height - prev.data.height < 1 ->
         IO.puts("cannot redo history")
         false
-      not Sign.verify_tx(block) ->
+      not CryptoSign.verify_tx(block) ->
         IO.puts("bad signature #{inspect block}")
         false
       true ->
@@ -52,7 +52,7 @@ defmodule Blockchain do
   end
   def winners(block) do 
     block.data.txs
-    |> txs_filter(:Elixir.SignTx)
+    |> txs_filter(:Elixir.Sign)
     |> Enum.map(&(length(&1.data.winners)))
     |> Enum.reduce(0, &(&1+&2))
   end
@@ -71,7 +71,7 @@ defmodule Blockchain do
   end
   def valid_block_3?(block, ns) do
     txs = block.data.txs
-    sign_txs = txs_filter(txs, :Elixir.SignTx)
+    sign_txs = txs_filter(txs, :Elixir.Sign)
     signers = Enum.map(sign_txs, fn(t) -> t.pub end)
     accs = Enum.map(signers, fn(s) -> KV.get(s) end)
     balances = Enum.map(accs, fn(s) -> s.bond end)
@@ -108,10 +108,10 @@ defmodule Blockchain do
 			true -> h
 		end
 	end
-	def null_block do %Signed{data: %Block{}} end
+	def null_block do %CryptoSign{data: %Block{}} end
   def blockhash(block) do
     case block do
-      %Signed{} -> block = block.data
+      %CryptoSign{} -> block = block.data
       _ -> 1
     end
     %Block{} = block
@@ -120,7 +120,7 @@ defmodule Blockchain do
 	def quick_validation(block) do
     ran = VerifyTx.rng(block.data.hash)
     tot_bonds = KV.get("tot_bonds")
-    l = Blockchain.txs_filter(block.data.txs, :Elixir.SignTx)
+    l = Blockchain.txs_filter(block.data.txs, :Elixir.Sign)
     |> Enum.map(fn(sign) ->
       %{bond: bond} = KV.get(sign.pub)
       Enum.map(sign.data.winners, fn(x)-> 

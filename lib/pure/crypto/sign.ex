@@ -1,7 +1,5 @@
-defmodule Signed do
-  defstruct sig: nil, pub: nil, data: nil, meta: nil
-end
-defmodule Sign do
+defmodule CryptoSign do
+  defstruct sig: nil, pub: nil, data: nil, meta: []
   def params do
     :crypto.ec_curve(:secp256k1)
   end
@@ -27,7 +25,7 @@ defmodule Sign do
   def sign_tx(tx, pub, priv) do
     h = DetHash.doit(tx)
     sig = sign(h, priv)
-    %Signed{pub: pub, sig: sig, data: tx, meta: []}
+    %CryptoSign{pub: pub, sig: sig, data: tx}
   end
   def verify_tx(signed_tx) do
     %{sig: sig, pub: pub, data: data} = signed_tx

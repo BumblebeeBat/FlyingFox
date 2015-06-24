@@ -73,18 +73,18 @@ defmodule VerifyBalances do
       addresses = [{pub, balance}|addresses]
     end
     case da.__struct__ do
-      :Elixir.SpendTx        -> addresses = lose_cash(addresses, pub, da.amount+da.fee)
-      :Elixir.Spend2WaitTx   -> addresses = lose_cash(addresses, pub, da.amount+da.fee)
-      :Elixir.Wait2BondTx    -> addresses = lose_cash(addresses, pub, da.fee)
-      :Elixir.Bond2SpendTx   -> addresses = lose_bond(addresses, pub, da.amount) |> lose_cash(pub, da.fee)
-      :Elixir.SignTx         -> addresses = lose_bond(addresses, pub, bond_size*length(da.winners))
-      :Elixir.SlasherTx      -> true
-      :Elixir.RevealTx       -> true
-      :Elixir.ToChannelTx    -> addresses = lose_cash(addresses, pub, da.amount+da.fee)
-      :Elixir.ChannelBlockTx -> true
-      :Elixir.CloseChannelTx -> true
-      :Elixir.OracleTx       -> addresses = lose_cash(addresses, pub, Constants.oracle_fee) #maybe it is easiest if one person pays for the oracle.
-      :Elixir.JudgementTx    -> true
+      :Elixir.Spend        -> addresses = lose_cash(addresses, pub, da.amount+da.fee)
+      :Elixir.Spend2Wait   -> addresses = lose_cash(addresses, pub, da.amount+da.fee)
+      :Elixir.Wait2Bond    -> addresses = lose_cash(addresses, pub, da.fee)
+      :Elixir.Bond2Spend   -> addresses = lose_bond(addresses, pub, da.amount) |> lose_cash(pub, da.fee)
+      :Elixir.Sign         -> addresses = lose_bond(addresses, pub, bond_size*length(da.winners))
+      :Elixir.Slasher      -> true
+      :Elixir.Reveal       -> true
+      :Elixir.ToChannel    -> addresses = lose_cash(addresses, pub, da.amount+da.fee)
+      :Elixir.ChannelBlock -> true
+      :Elixir.CloseChannel -> true
+      :Elixir.Oracle       -> addresses = lose_cash(addresses, pub, Constants.oracle_fee) #maybe it is easiest if one person pays for the oracle.
+      :Elixir.Judgement    -> true
       x -> 
         IO.puts("no function with that name #{inspect x}")
         false

@@ -1,4 +1,5 @@
 defmodule Spend2Wait do
+  defstruct nonce: 0, amount: 0
 	def check(tx, txs) do
     pub = tx.pub
     acc = KV.get(pub)

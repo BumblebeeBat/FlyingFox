@@ -23,8 +23,8 @@ defmodule DetHash do
   def hash(s) do :crypto.hmac(:sha256, to_string(s), "") |> Base.encode64 end
   def doit(a) do det_string(a) |> hash end
   def test() do 
-    {p, q} = Sign.new_key
-    s=Sign.sign_tx([], p, q)
+    {p, q} = CryptoSign.new_key
+    s=CryptoSign.sign_tx([], p, q)
     DetHash.doit(s)
   end
 end

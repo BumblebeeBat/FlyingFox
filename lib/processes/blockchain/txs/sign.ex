@@ -1,4 +1,5 @@
-defmodule SignTransaction do
+defmodule Sign do
+  defstruct nonce: 0, height: 0, secret_hash: nil, winners: [], prev_hash: nil
   def first_bits(b, s) do
     << c :: size(s), _ :: bitstring >> = b
     s = s + 8 - rem(s, 8) #so that we have an integer number of bytes.
@@ -36,7 +37,7 @@ defmodule SignTransaction do
     l = Enum.map(tx.data.winners, fn(x)->winner?(acc.bond, tot_bonds, ran, tx.pub, x) end)
     l1 = l
     l = Enum.reduce(l, true, fn(x, y) -> x and y end)
-    m = length(Enum.filter(txs, fn(t) -> t.pub == tx.pub and t.data.__struct__ == :Elixir.SignTx end))
+    m = length(Enum.filter(txs, fn(t) -> t.pub == tx.pub and t.data.__struct__ == :Elixir.Sign end))
     height = KV.get("height")
     tx_prev = tx.data.prev_hash
     cond do

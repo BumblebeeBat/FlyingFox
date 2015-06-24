@@ -1,4 +1,5 @@
 defmodule ToChannel do
+  defstruct nonce: 0, to: "pub", amount: 0, amount2: 0, new: false, pub: "", pub2: "", delay: 100, fee: 10000
 	def key(a, b) do
 		cond do
 			a > b -> a <> b
@@ -29,8 +30,10 @@ defmodule ToChannel do
 																%Channel{pub: da.pub,
                                          pub2: da.pub2,
                                          amount: da.amount,
+                                         amount2: da.amount2,
                                          delay: da.delay})
-      da.new -> KV.put(channel, nil)#this should be in a different key value store. Storing different things in the same place is dumb.
+      da.new ->
+				KV.put(channel, nil)#this should be in a different key value store. Storing different things in the same place is dumb.
       true -> TxUpdate.sym_increment(da.channel, da.to, da.amount, d)
     end		
 	end

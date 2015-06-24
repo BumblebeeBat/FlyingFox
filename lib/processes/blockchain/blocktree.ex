@@ -1,7 +1,7 @@
 defmodule Blocktree do
   def genesis_block do
     b = %Block{height: 1, txs: [], hash: "z5cVID5hEmZcWNVRmVPRUtSN7e2Z5nXecc+8KWbxk+4=", bond_size: 1_000_000}
-    genesis_block = %Signed{meta: [revealed: []], pub: "BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc=", sig: "MEYCIQCu3JqIcIn3jqBhH0nqF8ZTJmdV9GzlJ6WpSq66PA20sAIhAINAuEyCyl2x/iK3BRJM0JGXcd8epnzv0kTX6iHOMAeW", data: b}
+    genesis_block = %CryptoSign{meta: [revealed: []], pub: "BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc=", sig: "MEYCIQCu3JqIcIn3jqBhH0nqF8ZTJmdV9GzlJ6WpSq66PA20sAIhAINAuEyCyl2x/iK3BRJM0JGXcd8epnzv0kTX6iHOMAeW", data: b}
     put_block(genesis_block)
     KV.put("height", 1)
     KV.put("1", [Blockchain.blockhash(b)])
@@ -34,7 +34,7 @@ defmodule Blocktree do
     KV.put("tot_bonds", b)
     sign_reveal
   end
-	def num_signers(txs) do txs |> Enum.filter(&(&1.data.__struct__ == :Elixir.SignTx)) |> length end
+	def num_signers(txs) do txs |> Enum.filter(&(&1.data.__struct__ == :Elixir.Sign)) |> length end
 	def back do
     h = KV.get("height")
     if h>0 do

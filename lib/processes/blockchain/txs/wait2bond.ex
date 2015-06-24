@@ -1,4 +1,5 @@
 defmodule Wait2Bond do
+  defstruct nonce: 0, wait_money: 0
     #If a user wants to take part in the consensus process, they would use this transaction type to turn some of their wait-money into bond-money. The price for bond-money changes continuously over time, and more bond-money is printed and given to the people who participate. If you participate, then the value of your bond-money will slowly grow. If you dont participate, then the value will quickly shrink. 
     #There is a moving exchange rate. Bond-coins are constantly losing value.
 	def check(tx, txs) do

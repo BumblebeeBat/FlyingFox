@@ -1,5 +1,5 @@
 defmodule VerifyTx do
-	def check_sig2(tx) do tx |> Dict.put(:sig, tx.sig2) |> Dict.put(:pub, tx.pub2) |> Sign.verify_tx() end
+	def check_sig2(tx) do tx |> Dict.put(:sig, tx.sig2) |> Dict.put(:pub, tx.pub2) |> CryptoSign.verify_tx() end
   def check_tx(tx, txs, prev_hash) do
     cond do
       not CheckLogic.main(tx, txs, prev_hash) -> false
@@ -46,15 +46,13 @@ defmodule VerifyTx do
      txs = block.data.txs
      spending = Blockchain.being_spent(txs)
      winners = txs
-     |> Blockchain.txs_filter(:Elixir.SignTx)
+     |> Blockchain.txs_filter(:Elixir.Sign)
      |> Enum.map(fn(t) -> t.data.winners end)
      |> Enum.map(fn(w) -> length(w) end)
      |> Enum.reduce(0, &(&1+&2))
 		 #IO.puts("check_ #{inspect block}")
      cond do
-       not check_nonces(txs) ->
-         IO.puts("bad nonce")
-         false
+       not check_nonces(txs) -> false
        not VerifyBalances.positive_balances(txs,spending*3/max(winners, Constants.signers_per_block*2/3), block.pub, cost)->
          IO.puts("someone spent more money than how much they have")
          false

@@ -5,18 +5,18 @@ defmodule PackWrap do
 		d = Dict.delete(d, :__struct__)
 		case b do
 			"Elixir.Block" -> o = %Block{}
-			"Elixir.Signed" -> o = %Signed{}
+			"Elixir.CryptoSign" -> o = %CryptoSign{}
 			"Elixir.Channel" -> o = %Channel{}
-			"Elixir.RevealTx" -> o = %RevealTx{}
-			"Elixir.SpendTx" -> o = %SpendTx{}
-			"Elixir.SignTx" -> o = %SignTx{}
-			"Elixir.Spend2WaitTx" -> o = %Spend2WaitTx{}
-			"Elixir.Wait2BondTx" -> o = %Wait2BondTx{}
-			"Elixir.Bond2SpendTx" -> o = %Bond2SpendTx{}
-			"Elixir.SlasherTx" -> o = %SlasherTx{}
-			"Elixir.ToChannelTx" -> o = %ToChannelTx{}
-			"Elixir.ChannelBlockTx" -> o = %ChannelBlockTx{}
-			"Elixir.CloseChannelTx" -> o = %CloseChannelTx{}
+			"Elixir.Reveal" -> o = %Reveal{}
+			"Elixir.Spend" -> o = %Spend{}
+			"Elixir.Sign" -> o = %Sign{}
+			"Elixir.Spend2Wait" -> o = %Spend2Wait{}
+			"Elixir.Wait2Bond" -> o = %Wait2Bond{}
+			"Elixir.Bond2Spend" -> o = %Bond2Spend{}
+			"Elixir.Slasher" -> o = %Slasher{}
+			"Elixir.ToChannel" -> o = %ToChannel{}
+			"Elixir.ChannelBlock" -> o = %ChannelBlock{}
+			"Elixir.CloseChannel" -> o = %CloseChannel{}
 			"Elixir.Peer" -> o = %Peer{}
 		end
 		Enum.reduce(Dict.keys(d), o, &(Map.put(&2, &1, d[&1])))
@@ -79,7 +79,7 @@ defmodule PackWrap do
     x = unpack(pack(%Block{}))
     IO.puts inspect x
   end
-	def test2 do remap([[__struct__: "Elixir.Signed", data: [__struct__: "Elixir.SignTx", height: 1, nonce: 0, prev_hash: "Dh9J/r3hhi9ems8FAE6gK4uMgEsbMiiKF6CIwyOPe+w=", secret_hash: "Urq9fr3KVUhU3+tHbk0EnYOqlk3UgD/qEuRijHr/ckM=", winners: [2, 6, 12, 17, 19, 23, 24, 26, 36, 38, 39, 40, 41, 45, 48, 49, 57, 62, 66, 68, 69, 72, 76, 78, 79, 85, 87, 88, 91, 93, 95, 97, 100, 104, 118, 121, 130, 131, 149, 151, 152, 154, 157]], meta: [], pub: "BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc=", sig: "MEQCIFOdKYCUdbxFh9fq8jQoBi6DobWHakGbjSLC54tgXWtWAiBothy0S0UKaR9fBJJPZQ5Az3+IPemwEyfsAKtol0pK/g=="]]) end
+	def test2 do remap([[__struct__: "Elixir.CryptoSign", data: [__struct__: "Elixir.Sign", height: 1, nonce: 0, prev_hash: "Dh9J/r3hhi9ems8FAE6gK4uMgEsbMiiKF6CIwyOPe+w=", secret_hash: "Urq9fr3KVUhU3+tHbk0EnYOqlk3UgD/qEuRijHr/ckM=", winners: [2, 6, 12, 17, 19, 23, 24, 26, 36, 38, 39, 40, 41, 45, 48, 49, 57, 62, 66, 68, 69, 72, 76, 78, 79, 85, 87, 88, 91, 93, 95, 97, 100, 104, 118, 121, 130, 131, 149, 151, 152, 154, 157]], meta: [], pub: "BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc=", sig: "MEQCIFOdKYCUdbxFh9fq8jQoBi6DobWHakGbjSLC54tgXWtWAiBothy0S0UKaR9fBJJPZQ5Az3+IPemwEyfsAKtol0pK/g=="]]) end
 end
 
 OB

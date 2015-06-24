@@ -1,4 +1,5 @@
 defmodule CloseChannel do
+  defstruct nonce: 0, channel: nil, channel_block: nil
 	def check(tx, txs) do
     #only one per block per channel. be careful.
     channel = KV.get(tx.data.channel)

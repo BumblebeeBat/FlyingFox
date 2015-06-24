@@ -21,7 +21,7 @@ defmodule Encryption do
     out
   end
 	def normal(l) do Enum.reduce(tl(l), hd(l), &(&2 <> " " <> &1))end
-	def ss(args) do Sign.shared_secret(hd(args), hd(tl(args))) end
+	def ss(args) do CryptoSign.shared_secret(hd(args), hd(tl(args))) end
 	def ss_encrypt(args) do
 		b = normal(tl(tl(args)))
 		c = [hd(args), hd(tl(args))]

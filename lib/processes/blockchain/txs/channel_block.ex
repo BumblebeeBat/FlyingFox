@@ -1,11 +1,12 @@
 defmodule ChannelBlock do
+  defstruct nonce: 0, channel: nil, amount: 0, amount2: 0, pub: nil, pub2: nil, secret_hash: nil, bets: []
   #maybe we should stop any channel tx of different types from coexisting in the same block.
 	#must specify which hashes are new, and which have existed before. <- NOT a part of the channel state.
 	#if one tx is creating a new decision, then don't let any other tx in that same block bet on the same decision.
 	def check(tx, txs) do
     da = tx.data
     channel = KV.get(da.channel)
-		b = tx.bets |> Enum.map(fn(x) -> x.amount end)
+		b = da.bets |> Enum.map(fn(x) -> x.amount end)
 		c = b |> Enum.reduce(0, &(&1+&2))
 		bool = b |> Enum.map(fn(x) -> x >= 0 end) |> Enum.reduce(&(&1 and &2))
     cond do
@@ -30,6 +31,8 @@ defmodule ChannelBlock do
     da = tx.data
     TxUpdate.sym_replace(da.channel, :time, 0, KV.get("height"), d)
     TxUpdate.sym_replace(da.channel, :nonce, 0, da.nonce, d)
+		TxUpdate.sym_replace(da.channel, :amount, KV.get(da.channel).amount, tx.amount, d)
+		TxUpdate.sym_replace(da.channel, :amount2, KV.get(da.channel).amount2, tx.amount, d)
 		#
     #update state to stop production of to_channel tx. starts timer.
 	end

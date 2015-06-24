@@ -15,7 +15,7 @@ defmodule TxCreator do
 		end
 		to_now = KV.get(to)
 		create = (to_now == nil)
-    %SpendTx{to: to, amount: amount, nonce: nonce(pub), fee: fee, create: create} 
+    %Spend{to: to, amount: amount, nonce: nonce(pub), fee: fee, create: create} 
     |> broadcast
   end
   def sign do
@@ -27,7 +27,7 @@ defmodule TxCreator do
         prev_hash = Blockchain.blockhash(Blockchain.get_block(h))
       end
       tot_bonds = KV.get("tot_bonds")
-      w= Enum.filter(0..Constants.chances_per_address, fn(x) -> SignTransaction.winner?(acc.bond, tot_bonds, SignTransaction.rng(prev_hash), pub, x) end) 
+      w= Enum.filter(0..Constants.chances_per_address, fn(x) -> Sign.winner?(acc.bond, tot_bonds, Sign.rng(prev_hash), pub, x) end) 
       h = KV.get("height") + 1
       ran = KV.get("secret #{inspect h}")
       if ran == nil do
@@ -35,8 +35,7 @@ defmodule TxCreator do
         KV.put("secret #{inspect h}", ran)
       end
       secret = DetHash.doit(ran)
-			#IO.puts("created sign tx #{inspect %SignTx{prev_hash: prev_hash, winners: w, secret_hash: secret, nonce: nonce(pub), height: h-1}}")
-      %SignTx{prev_hash: prev_hash, winners: w, secret_hash: secret, nonce: nonce(pub), height: h-1}
+      %Sign{prev_hash: prev_hash, winners: w, secret_hash: secret, nonce: nonce(pub), height: h-1}
       |> broadcast
     end
   end
@@ -58,25 +57,26 @@ defmodule TxCreator do
     bond_size=old_block.data.bond_size
     secret = KV.get("secret #{inspect h}")
     if secret != nil do
-      %RevealTx{signed_on: h, 
-                winners: w, 
-                amount: length(w)*bond_size, 
-                secret: KV.get("secret #{inspect h}"), 
-                nonce: nonce(pub)}
+      %Reveal{signed_on: h, 
+              winners: w, 
+              amount: length(w)*bond_size, 
+              secret: KV.get("secret #{inspect h}"), 
+              nonce: nonce(pub)}
       |> broadcast
     end
   end
   def slasher(tx1, tx2) do
   end
-  def to_channel(amount, other, delay \\ 10) do
-		#pub is :pub or :pub2
+  def to_channel(other, amount, amount2 \\ 0, delay \\ 10) do
+		#pub is "pub" or "pub2"
 		if KV.get(other) == nil do
 			IO.puts("your partner doesn't exist yet, so this probably wont work")
 		end
 		is_ch = KV.get(ToChannel.key(Keys.pubkey, other))
 		new = (is_ch == nil)
-		tx = %ToChannelTx{
+		tx = %ToChannel{
 					amount: amount,
+					amount: amount2,
 					new: new}
 		if new do
 			tx2 = %{tx | pub: Keys.pubkey, pub2: other, delay: delay, nonce: nonce(Keys.pubkey)}
@@ -89,12 +89,18 @@ defmodule TxCreator do
 		end
 		tx2 |> broadcast
   end
-  def channel_block do
-    %ChannelBlockTx{}
-		|> broadcast
+  def channel_block(other, amount, amount2, bets \\ [], nonce \\ 1) do
+		c = ToChannel.key(Keys.pubkey, other)
+		if KV.get(c) == nil do
+			IO.puts("this channel doesn't exist yet, so you cannot close it.")
+		end
+		#make sure that amount+amont2+bets is less than or equal to the total money.
+		#example bets: ["hash1": amount1, "hash2": amount2]
+    %ChannelBlock{channel: c, amount: amount, amount2: amount2, bets: bets, nonce: nonce}
+		#|> broadcast
   end
   def close_channel do
-    %CloseChannelTx{}
+    %CloseChannel{}
 		|> broadcast
   end
 end
