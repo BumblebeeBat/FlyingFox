@@ -48,7 +48,7 @@ defmodule TxUpdate do
     {reward, delta}
   end
   def tx_update(tx, d, bond_size) do
-    pub = tx.pub
+    pub = tx.data.pub
     acc = KV.get(pub)
     acc = Map.put(acc, :nonce, acc.nonce + d)
     KV.put(pub, acc)

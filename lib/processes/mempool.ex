@@ -18,7 +18,7 @@ defmodule Mempool do
 				else
 					prev_hash = Blockchain.blockhash(Blockchain.get_block(h))
 				end
-				if VerifyTx.check_tx(tx, x, prev_hash) do x=[tx|x] end
+				if	VerifyTx.check_tx(tx, x, prev_hash) do x=[tx|x]	end
 			true -> :ok
 		end
 		{:noreply, x}

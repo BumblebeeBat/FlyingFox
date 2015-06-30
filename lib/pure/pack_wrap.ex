@@ -6,7 +6,7 @@ defmodule PackWrap do
 		case b do
 			"Elixir.Block" -> o = %Block{}
 			"Elixir.CryptoSign" -> o = %CryptoSign{}
-			"Elixir.Channel" -> o = %Channel{}
+			#"Elixir.Channel" -> o = %Channel{}
 			"Elixir.Reveal" -> o = %Reveal{}
 			"Elixir.Spend" -> o = %Spend{}
 			"Elixir.Sign" -> o = %Sign{}
@@ -18,6 +18,8 @@ defmodule PackWrap do
 			"Elixir.ChannelBlock" -> o = %ChannelBlock{}
 			"Elixir.CloseChannel" -> o = %CloseChannel{}
 			"Elixir.Peer" -> o = %Peer{}
+			"Elixir.Meta" -> o = %Meta{}
+			x -> IO.puts("dict2map odd ball #{inspect x}")
 		end
 		Enum.reduce(Dict.keys(d), o, &(Map.put(&2, &1, d[&1])))
 	end

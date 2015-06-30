@@ -1,5 +1,9 @@
+defmodule Meta do
+	defstruct sig: nil, sig2: nil, revealed: []
+end
+
 defmodule CryptoSign do
-  defstruct sig: nil, pub: nil, data: nil, meta: []
+  defstruct data: nil, meta: %Meta{} #sig and sig2 go in meta
   def params do
     :crypto.ec_curve(:secp256k1)
   end
@@ -25,16 +29,29 @@ defmodule CryptoSign do
   def sign_tx(tx, pub, priv) do
     h = DetHash.doit(tx)
     sig = sign(h, priv)
-    %CryptoSign{pub: pub, sig: sig, data: tx}
+		m = %Meta{sig: sig}
+    %CryptoSign{meta: m, data: tx}
   end
-  def verify_tx(signed_tx) do
-    %{sig: sig, pub: pub, data: data} = signed_tx
-    h = DetHash.doit(data)
-    verify(h, sig, pub)
+  def sign_tx_2(tx, pub, priv) do
+		cb = tx.data
+		cond do
+			not (cb.pub2 == pub) -> IO.puts("not for me to sign")
+			true ->
+				h = DetHash.doit(tx.data)
+				sig = sign(h, priv)
+				m = %{tx.meta | sig2: sig}
+				%CryptoSign{meta: m, data: tx.data}
+		end
+  end
+  def verify_tx(tx) do
+    #%{meta: meta, data: data} = signed_tx
+    h = DetHash.doit(tx.data)
+		pub = tx.data.pub
+    verify(h, tx.meta.sig, pub)
   end
   def test do
     {pub, priv} = new_key
-    tx = [a: "b", b: "c"]
+    tx = %{pub: "BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc="}
     tx = sign_tx(tx, pub, priv) 
     true = verify_tx(tx)
     s = "test string"
@@ -43,4 +60,9 @@ defmodule CryptoSign do
     false = verify(s <> " ", sig, pub)
     "success"
   end
+	def check_sig2(tx) do
+		h = DetHash.doit(tx.data)
+		pub = tx.data.pub2
+		verify(h, tx.meta.sig2, pub)
+	end
 end

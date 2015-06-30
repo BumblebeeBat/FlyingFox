@@ -46,26 +46,37 @@ defmodule VerifyBalances do
     lose_key(address, pub, amount, :bond)
   end
   def positive_balances(txs, bond_size, block_creator, cost) do
+		f = fn(acc) -> positive_balances_1_5(txs, acc, block_creator, bond_size, cost) end
+		g = KV.get(block_creator)
 		cond do
-			block_creator == nil -> acc = %Account{amount: Constants.initial_coins}
-			true -> acc = KV.get(block_creator)
+			block_creator == ""  ->
+				#The point of this is to do calculations before we have decided who the block_creator will be.
+				f.(%Account{amount: Constants.initial_coins})
+			g == nil ->
+				IO.puts("non-existent account cannot make block #{inspect block_creator}")
+				false
+			true -> f.(g)
 		end
+	end
+	def positive_balances_1_5(txs, acc, block_creator, bond_size, cost) do
     balance = [cash: acc.amount, bond: acc.bond]
     addresses = [{block_creator, balance}]
     positive_balances_2(txs, bond_size, block_creator, cost, addresses)
   end
   def positive_balances_2(txs, bond_size, block_creator, cost, addresses) do
     cond do
-      txs==[] -> if block_creator != nil do
-                   addresses = lose_cash(addresses, block_creator, cost) 
-                 end
-                 all_positive(addresses)
+      txs==[] ->
+				if block_creator != nil do
+          addresses = lose_cash(addresses, block_creator, cost) 
+        end
+				#IO.puts("verify balances #{inspect addresses}")#verify balances [{"BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc=", [cash: 1999999689989990.0, bond: 99734203939204.69]}, {"BDju4ADMQhB0DtzrM8BeVHZlVD74QVKXCfhpcvH8yg5/7yaOK7/e6mig4RC8WVpaVowInI4lMMHlV/UJKbEtBck=", [cash: 10, bond: 0]}, {:bond, [bond: 99734203939204.69, cash: 1999999689989990.0]}, {:cash, [cash: -61999990, bond: 0]}]
+        all_positive(addresses)
       true -> positive_balances_1(txs, bond_size, block_creator, cost, addresses)
     end
   end
   def positive_balances_1(txs, bond_size, block_creator, cost, addresses) do
     [tx|txs] = txs
-    pub = tx.pub
+    pub = tx.data.pub
     da = tx.data
     if not pub in Dict.keys(addresses) do
       acc = KV.get(pub)

@@ -1,5 +1,5 @@
 defmodule Sign do
-  defstruct nonce: 0, height: 0, secret_hash: nil, winners: [], prev_hash: nil
+  defstruct nonce: 0, height: 0, secret_hash: nil, winners: [], prev_hash: nil, pub: ""
   def first_bits(b, s) do
     << c :: size(s), _ :: bitstring >> = b
     s = s + 8 - rem(s, 8) #so that we have an integer number of bytes.
@@ -30,14 +30,14 @@ defmodule Sign do
     a < b and j >= 0 and j < Constants.chances_per_address and is_integer(j)
   end
 	def check(tx, txs, prev_hash) do
-    acc = KV.get(tx.pub)
+    acc = KV.get(tx.data.pub)
     tot_bonds = KV.get("tot_bonds")
     ran = rng(prev_hash)
     prev_block = KV.get(prev_hash)
-    l = Enum.map(tx.data.winners, fn(x)->winner?(acc.bond, tot_bonds, ran, tx.pub, x) end)
+    l = Enum.map(tx.data.winners, fn(x)->winner?(acc.bond, tot_bonds, ran, tx.data.pub, x) end)
     l1 = l
     l = Enum.reduce(l, true, fn(x, y) -> x and y end)
-    m = length(Enum.filter(txs, fn(t) -> t.pub == tx.pub and t.data.__struct__ == :Elixir.Sign end))
+    m = length(Enum.filter(txs, fn(t) -> t.data.pub == tx.data.pub and t.data.__struct__ == :Elixir.Sign end))
     height = KV.get("height")
     tx_prev = tx.data.prev_hash
     cond do
@@ -69,7 +69,7 @@ defmodule Sign do
     delta = -TxUpdate.exchange_rate * bond_size * w
     b = KV.get("tot_bonds")
     KV.put("tot_bonds", b + delta * d)
-    TxUpdate.sym_increment(tx.pub, :bond, delta, d)
+    TxUpdate.sym_increment(tx.data.pub, :bond, delta, d)
     #loses some :bond money. total_money
     #The most they could have to pay is as much bond-money as the poorest of them has.		
 	end

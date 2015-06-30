@@ -41,35 +41,28 @@ defmodule Talker do
 		my_peers = Cli.all_peers
     peers = Cli.all_peers(p)
 		my_keys = keys.(my_peers)
-		#IO.puts("my_keys #{inspect my_keys}")
 		peers_keys = keys.(peers)
-		#IO.puts("peers_keys #{inspect peers_keys}")
     if my_peers == :ok or peers == :ok do
       IO.puts("peer died 1")
     else
       not_yours = Enum.filter(my_peers, &(not elem(&1, 0) in peers_keys))
       not_mine = Enum.filter(peers, &(not elem(&1, 0) in my_keys))
-			#IO.puts("not_mine #{inspect not_mine}")
-			#IO.puts("not_yours #{inspect not_yours}")
       Enum.map(not_yours,&(Cli.add_peer(elem(&1, 1),p)))
       Enum.map(not_mine, &(Peers.add_peer(elem(&1, 1))))
     end
   end
   def check_peer(p) do #validating mode
-    status = Cli.status(p)
-		#IO.puts("status #{inspect status}")
+    status = Cli.status(p)#broke here???
     cond do
-			not is_list(status) -> status #IO.puts "peer crashed #{inspect status}"
+			not is_list(status) -> status
       :error in Dict.keys(status) ->
 				false
       status[:height] > 0 and is_number(status[:height]) ->
         x = Peers.get(p)
         |> Map.put(:height, status[:height])
         |> Map.put(:hash, status[:hash])
-        #|> Peers.add_peer
-				#IO.puts("add peer x #{inspect x}}")
-				Peers.add_peer(x)
-        check_peer_2(p, status)
+				x |> Peers.add_peer
+        check_peer_2(x, status)
 			true -> IO.puts("nothing to do")
     end
   end

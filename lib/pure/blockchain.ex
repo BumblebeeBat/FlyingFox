@@ -72,7 +72,7 @@ defmodule Blockchain do
   def valid_block_3?(block, ns) do
     txs = block.data.txs
     sign_txs = txs_filter(txs, :Elixir.Sign)
-    signers = Enum.map(sign_txs, fn(t) -> t.pub end)
+    signers = Enum.map(sign_txs, fn(t) -> t.data.pub end)
     accs = Enum.map(signers, fn(s) -> KV.get(s) end)
     balances = Enum.map(accs, fn(s) -> s.bond end)
     poorest_balance = Enum.reduce(balances, nil, &(min(&1, &2)))
@@ -157,8 +157,7 @@ defmodule Blockchain do
 		if prev_block != nil do
 			bh = blockhash(prev_block)
 		end
-		new = %Block{height: height+n, txs: txs, hash: bh, bond_size: 1_000_000_000}#instead of fixed bond size, we shoul look at how big of a bond the txs need.
+		new = %Block{height: height+n, txs: txs, hash: bh, bond_size: 1_000_000_000, pub: Keys.pubkey}#instead of fixed bond size, we shoul look at how big of a bond the txs need.
 		|> Keys.sign
-		|> Map.put(:meta, [revealed: []])
 	end
 end

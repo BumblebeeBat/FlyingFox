@@ -1,5 +1,5 @@
 defmodule Slasher do
-  defstruct nonce: 0, tx1: nil, tx2: nil, signed_on: 0
+  defstruct nonce: 0, tx1: nil, tx2: nil, signed_on: 0, pub: ""
 	def check(tx, txs) do
 		old_block = Blockchain.get_block(tx.data.signed_on)
     tx1 = tx.data.tx1
@@ -29,6 +29,6 @@ defmodule Slasher do
     a=tx.data
     old_block = Blockchain.get_block(a.tx1.data.height)
     {reward, delta} = TxUpdate.common(tx, d, old_block, a.tx1.pub)
-    TxUpdate.sym_increment(tx.pub, :amount, tx[:data][:amount] + reward + delta / 3, d)
+    TxUpdate.sym_increment(tx.data.pub, :amount, tx[:data][:amount] + reward + delta / 3, d)
 	end
 end

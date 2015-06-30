@@ -1,7 +1,8 @@
 defmodule Blocktree do
   def genesis_block do
-    b = %Block{height: 1, txs: [], hash: "z5cVID5hEmZcWNVRmVPRUtSN7e2Z5nXecc+8KWbxk+4=", bond_size: 1_000_000}
-    genesis_block = %CryptoSign{meta: [revealed: []], pub: "BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc=", sig: "MEYCIQCu3JqIcIn3jqBhH0nqF8ZTJmdV9GzlJ6WpSq66PA20sAIhAINAuEyCyl2x/iK3BRJM0JGXcd8epnzv0kTX6iHOMAeW", data: b}
+    b = %Block{height: 1, txs: [], hash: "z5cVID5hEmZcWNVRmVPRUtSN7e2Z5nXecc+8KWbxk+4=", bond_size: 1_000_000, pub: "BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc="}
+		m = %Meta{revealed: [], sig: "MEYCIQCu3JqIcIn3jqBhH0nqF8ZTJmdV9GzlJ6WpSq66PA20sAIhAINAuEyCyl2x/iK3BRJM0JGXcd8epnzv0kTX6iHOMAeW"}
+		genesis_block = %CryptoSign{meta: m, data: b}
     put_block(genesis_block)
     KV.put("height", 1)
     KV.put("1", [Blockchain.blockhash(b)])
@@ -19,7 +20,8 @@ defmodule Blocktree do
     if block_hash in block_hashes do false else
       block_hashes = block_hashes++[block_hash]
       KV.put(to_string(height), block_hashes)
-      KV.put(block_hash, %{signed | meta: [revealed: []]})
+			signed = %{signed | meta: %{signed.meta | revealed: []}}
+      KV.put(block_hash, signed)
       block_hash
     end
   end
@@ -66,7 +68,7 @@ defmodule Blocktree do
         false
       true ->
         #block creator needs to pay a fee. he needs to have signed so we can take his fee.
-        TxUpdate.sym_increment(block.pub, :amount, -cost, 1)
+        TxUpdate.sym_increment(block.data.pub, :amount, -cost, 1)
         txs = block.data.txs
         n = num_signers(txs)
         TxUpdate.txs_updates(txs, 1, round(block.data.bond_size/n))
@@ -112,6 +114,8 @@ defmodule Blocktree do
   def add_blocks([head|tail]) do
     block = head.data
     height = block.height
+		acc = KV.get(block.pub)
+		
     cond do
 			block.bond_size > Constants.max_bond ->
 				IO.puts("too much bond for one block")

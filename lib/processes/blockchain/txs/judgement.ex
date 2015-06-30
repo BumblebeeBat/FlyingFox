@@ -1,5 +1,5 @@
 defmodule Judgement do
-	defstruct bet: "", result: "", sigs: []
+	defstruct bet: "", result: "", sigs: [], pub: ""
 	def check(tx, txs) do
 		false
 	end
