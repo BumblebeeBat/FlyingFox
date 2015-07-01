@@ -1,17 +1,10 @@
 defmodule CloseChannel do #maybe this should have a negative fee, since it frees up space on the blockchain.
-  defstruct nonce: 0, type: "fast", mount: 0, amount2: 0, pub2: nil, pub: "", secret_hash: nil, bets: [], time: 0, delay: 10
+  defstruct type: "timeout", amount: 0, amount2: 0, pub2: nil, pub: "", secret_hash: nil, bets: [], channel_block: %ChannelBlock{}, nonce: 0
 	def check(tx, txs) do
 		channel = KV.get(ToChannel.key(tx.data.pub, tx.data.pub2))
     case tx.data.type do
-      "fast" ->
-				if CryptoSign.check_sig2(tx) do
-					ChannelBlock.check(tx, txs, true)
-				else
-					IO.puts("bad signature close channel")
-					false
-				end
-      "slash" -> if channel.nonce < tx.data.nonce do ChannelBlock.check(tx, txs, true) else false end
-      "timeout" -> channel.time < KV.get("height") - channel.delay
+      "slasher" -> if channel.nonce < tx.data.channel_block.data.nonce do ChannelBlock.check(tx.data.channel_block, txs, false) else false end
+      "timeout" -> channel.nonce > 0 and channel.time < KV.get("height") - channel.delay
     end
 	end
 	def update(tx, d) do

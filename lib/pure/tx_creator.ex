@@ -78,51 +78,80 @@ defmodule TxCreator do
 			tx2 = %{tx | delay: delay, nonce: nonce(Keys.pubkey)}
 		else
 			cond do
-				is_ch.pub == Keys.pub  -> tx2 = %{ tx | to: "pub"} |> Keys.sign
-				is_ch.pub2 == Keys.pub -> tx2 = %{ tx | to: "pub2"} |> Keys.sign2
+				is_ch.pub == Keys.pubkey  -> tx2 = %{ tx | to: "pub"} |> Keys.sign
+				is_ch.pub2 == Keys.pubkey -> tx2 = %{ tx | to: "pub2"} |> Keys.sign2
 				true -> IO.puts("that isn't your channel")
 			end
 		end
 		tx2 |> broadcast
 		#the channel should be updated in the channel manager.
   end
-  def close_channel_fast(other, amount, amount2, bets \\ [], nonce \\ 1) do
+  def close_channel_fast(other, amount, amount2, bets \\ []) do
 		c = ToChannel.key(Keys.pubkey, other)
 		if KV.get(c) == nil do
 			IO.puts("this channel doesn't exist yet, so you cannot close it.")
 		end
 		cb = KV.get(c)
-		cb = %{cb | amount: amount, amount2: amount2}
-		if nonce != 1 do
-			cb = %{cb | nonce: nonce}
-		end
+		IO.puts("channel on blockchain #{inspect cb}")
+		cb = %ChannelBlock{amount: amount,
+											 amount2: amount2,
+											 pub: cb.pub,
+											 pub2: cb.pub2,
+											 fast: true,
+											 old_amount: cb.amount,
+											 old_amount2: cb.amount2}
 		if bets != [] do
 			cb = %{cb | bets: bets}
 		end
     cb |> Keys.sign
   end
-	def close_channel_timeout(other) do
+  def close_channel_timeout(other) do
 		c = ToChannel.key(Keys.pubkey, other)
-	end
-	def channel_spend(other, amount, nonce) do
+		if KV.get(c) == nil do
+			IO.puts("this channel doesn't exist yet, so you cannot close it.")
+		end
+		c = KV.get(c)
+		if not(c.nonce > 0 and c.time < (KV.get("height") - c.delay)) do
+			IO.puts("you need to wait longer. #{inspect c.time - (KV.get("height") - c.delay) + 1}")
+		end
+		IO.puts("channel on blockchain #{inspect c}")
+		cb = %CloseChannel{pub: c.pub, pub2: c.pub2, type: "timeout", nonce: nonce(Keys.pubkey)}
+    cb |> broadcast
+  end
+  def close_channel_slasher(tx) do
+		other = [tx.data.pub, tx.data.pub2] |> Enum.filter(&(&1 != Keys.pubkey)) |> hd
+		c = ToChannel.key(Keys.pubkey, other)
+		if KV.get(c) == nil do
+			IO.puts("this channel doesn't exist yet, so you cannot close it.")
+		end
+		c = KV.get(c)
+		IO.puts("channel on blockchain #{inspect c}")
+		cb = %CloseChannel{pub: c.pub, pub2: c.pub2, type: "slasher", channel_block: tx, nonce: nonce(Keys.pubkey)}
+    cb |> broadcast
+  end
+	def channel_spend(other, amount, nonce \\ 1) do
 		me = Keys.pubkey
 		c = KV.get(ToChannel.key(Keys.pubkey, other))
-		IO.puts("channel #{inspect c}")
 		if c == nil do
 			IO.puts("this channel doesn't exist yet, so you cannot close it.")
 		end
-		d = -1
+		d = 1
 		if me == c.pub do
-			d = 1
+			d = -1
 		end
 		channel = ChannelManager.get(other)
-		%{c | amount: c.amount - (d * amount),
-			amount2: c.amount2 + (d * amount),
-			nonce: nonce,#channel.nonce+1,
+		new = %{c | amount: channel.amount - (d * amount),
+			amount2: channel.amount2 + (d * amount),
+			nonce: channel.nonce+1,
 			old_amount: c.amount,
-			old_amount2: c.amount2}# nonce should actually set by the channel manager
-    #%ChannelBlock{channel: c, amount: c.amount - (d * amount), amount2: c.amount2, bets: [], nonce: 0}
-		|> Keys.sign
-		#we should update the channel manager.
+			old_amount2: c.amount2,
+			nonce: nonce}
+		if me == new.pub do
+			new = Keys.sign(new)
+		else
+			new = Keys.sign2(new)
+		end
+		ChannelManager.update(other, new)
+		new
 	end
 end

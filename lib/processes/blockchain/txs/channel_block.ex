@@ -1,9 +1,9 @@
 defmodule ChannelBlock do
-  defstruct nonce: 0, amount: 0, amount2: 0, pub: "", pub2: nil, secret_hash: nil, bets: [], time: 0, delay: 10, old_amount: 0, old_amount2: 0
+  defstruct nonce: 0, amount: 0, amount2: 0, pub: "", pub2: nil, secret_hash: nil, bets: [], time: 0, delay: 10, old_amount: 0, old_amount2: 0, fast: false
   #maybe we should stop any channel tx of different types from coexisting in the same block.
 	#must specify which hashes are new, and which have existed before. <- NOT a part of the channel state.
 	#if one tx is creating a new decision, then don't let any other tx in that same block bet on the same decision.
-	def check(tx, txs) do
+	def check(tx, txs, backcheck \\ true) do
     da = tx.data
     #channel = KV.get(da.channel)
 		channel = KV.get(ToChannel.key(da.pub, da.pub2))
@@ -16,7 +16,7 @@ defmodule ChannelBlock do
 		IO.puts("channelblock check")
 		repeats = txs |> Enum.filter(&(&1.data.__struct__ == tx.data.__struct__ and (&1.data.pub == tx.data.pub and &1.data.pub2 == tx.data.pub2)))
     cond do
-			channel.time != 0 ->
+			channel.nonce != 0 and backcheck ->
 				IO.puts("a channel block was already published for this channel. ")
 				false
 			repeats != [] ->
@@ -50,10 +50,16 @@ defmodule ChannelBlock do
     #need to make a timestamp now for possible refund tx. Also, we should record the nonce for this channel state, so we only update one way.
     da = tx.data
 		channel = ToChannel.key(da.pub, da.pub2)
-    TxUpdate.sym_replace(channel, :time, 0, KV.get("height"), d)
-    TxUpdate.sym_replace(channel, :nonce, 0, da.nonce, d)
-		TxUpdate.sym_replace(channel, :amount, da.old_amount, da.amount, d)
-		TxUpdate.sym_replace(channel, :amount2, da.old_amount2, da.amount2, d)
-    #update state to stop production of to_channel tx. starts timer.
+		if da.fast do
+			TxUpdate.sym_increment(da.pub, :amount, da.amount, d)
+			TxUpdate.sym_increment(da.pub2, :amount, da.amount2, d)
+			#should delete the state.
+		else
+			TxUpdate.sym_replace(channel, :time, 0, KV.get("height"), d)
+			TxUpdate.sym_replace(channel, :nonce, 0, da.nonce, d)
+			TxUpdate.sym_replace(channel, :amount, da.old_amount, da.amount, d)
+			TxUpdate.sym_replace(channel, :amount2, da.old_amount2, da.amount2, d)
+			#update state to stop production of to_channel tx. starts timer.
+		end
 	end
 end

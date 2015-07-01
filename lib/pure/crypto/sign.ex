@@ -33,15 +33,26 @@ defmodule CryptoSign do
     %CryptoSign{meta: m, data: tx}
   end
   def sign_tx_2(tx, pub, priv) do
-		cb = tx.data
-		cond do
-			not (cb.pub2 == pub) -> IO.puts("not for me to sign")
-			true ->
-				h = DetHash.doit(tx.data)
-				sig = sign(h, priv)
-				m = %{tx.meta | sig2: sig}
-				%CryptoSign{meta: m, data: tx.data}
+		IO.puts("sign2 #{inspect tx}")
+		if tx.__struct__ == :Elixir.CryptoSign do
+			cb = tx.data
+			m = tx.meta
+		else
+			cb = tx
+			m = %Meta{}
 		end
+		h = DetHash.doit(cb)
+		sig = sign(h, priv)
+		cond do
+			(cb.pub == pub) ->
+				m = %{m | sig: sig}
+			(cb.pub2 == pub) ->
+				m = %{m | sig2: sig}
+			true ->
+				IO.puts("not for me to sign")
+				1 = 2
+		end
+		%CryptoSign{meta: m, data: cb}
   end
   def verify_tx(tx) do
     #%{meta: meta, data: data} = signed_tx

@@ -15,7 +15,7 @@ defmodule ChannelManager do
 		end
 		{:reply, out, mem} end
   def handle_cast({:update, pub, channel},  mem) do
-		IO.puts("channel manager update #{inspect pub} #{inspect channel}")
-		{:noreply, HashDict.put(mem, pub, channel)}	end
+		{:noreply, HashDict.put(mem, pub, channel)}
+	end
 	def del(pub) do update(pub, nil) end	
 end

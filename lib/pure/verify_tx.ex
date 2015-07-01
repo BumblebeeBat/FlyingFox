@@ -23,8 +23,7 @@ defmodule VerifyTx do
   end
   def check_nonces(txs) do
 		#remove any channel blocks and close_channels with type fast.
-		txs = Enum.filter(txs, fn(tx) -> tx.data.__struct__ != :Elixir.ChannelBlock end)#channels use nonces differently
-		txs = Enum.filter(txs, fn(tx) -> tx.data.__struct__ != :Elixir.CloseChannel or tx.data.type != "fast" end)
+		txs = Enum.filter(txs, fn(tx) -> tx.data.__struct__ != :Elixir.ChannelBlock end)
     have_nonce = Enum.map(txs, fn(tx) -> tx.data.nonce != nil end)
     all_have_nonce = Enum.reduce(have_nonce, true, &(&1 and &2))
     pubs = txs

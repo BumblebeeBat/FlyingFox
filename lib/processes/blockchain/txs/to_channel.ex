@@ -32,8 +32,11 @@ defmodule ToChannel do
 		(channel == nil) and (tx.data.new != true) ->
 				IO.puts("channel doesn't exist yet")
 				false
-    (channel != nil) and (tx.data.new == true) ->
+		(channel != nil) and (tx.data.new == true) ->
 				IO.puts("channel already exists")
+				false
+		(channel != nil) and (channel.nonce != 0) ->
+				IO.puts("this channel is being closed.")
 				false
     true -> true
     end
