@@ -1,11 +1,15 @@
 defmodule Reveal do
   defstruct nonce: 0, signed_on: 0, winners: [], amount: 0, secret: nil, bond_size: 0, pub: ""
-  def sign_tx(block, pub) do block.data.txs |> Enum.filter(&(&1.pub == pub))  |> Enum.filter(&(&1.data.__struct__ == :Elixir.Sign)) end
+  def sign_tx(block, pub) do
+		block.data.txs
+		|> Enum.filter(&(&1.data.pub == pub))
+		|> Enum.filter(&(&1.data.__struct__ == :Elixir.Sign))
+	end
 	def check(tx, txs) do
     old_block = Blockchain.get_block(tx.data.signed_on)
     revealed = txs
-    |> Enum.filter(&(&1.data.type == "reveal"))
-    |> Enum.filter(&(&1.pub == tx.data.pub))
+    |> Enum.filter(&(&1.data.__struct__ == :Elixir.Reveal))
+    |> Enum.filter(&(&1.data.pub == tx.data.pub))
     signed = sign_tx(old_block, tx.data.pub)
     bond_size = old_block.data.bond_size
     blen = bond_size*length(tx.data.winners)

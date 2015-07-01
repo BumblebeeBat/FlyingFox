@@ -50,8 +50,8 @@ defmodule TxCreator do
     pub = Keys.pubkey
     old_block=Blockchain.get_block(h)
     old_tx = old_block.data.txs 
-      |> Enum.filter(&(&1.data.type == "sign")) 
-      |> Enum.filter(&(&1.pub == pub)) 
+      |> Enum.filter(&(&1.data.__struct__ == :Elixir.Sign)) 
+      |> Enum.filter(&(&1.data.pub == pub)) 
       |> hd
     w=old_tx.data.winners
     bond_size=old_block.data.bond_size
