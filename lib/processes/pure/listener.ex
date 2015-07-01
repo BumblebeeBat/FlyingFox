@@ -17,12 +17,12 @@ defmodule Listener do
       "block" -> Blockchain.get_block(hd(args))
       "blocks" -> blocks(String.to_integer(hd(args)), String.to_integer(hd(tl(args))))
       "add_peer" -> Peers.add_peer(hd(args))
-      "all_peers" -> Peers.get_all
+      "all_peers" -> Enum.map(Peers.get_all, fn({x, y}) -> y end)
       "status" ->
           h = KV.get("height")
           block = Blockchain.get_block(h)
           if block.data==nil do block = %{data: 1} end
-          [height: h, hash: DetHash.doit(block.data)]
+          %Status{height: h, hash: DetHash.doit(block.data)}
       x -> IO.puts("listener is not a command #{inspect x}")
     end
   end

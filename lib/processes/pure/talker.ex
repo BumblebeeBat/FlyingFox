@@ -37,7 +37,8 @@ defmodule Talker do
     end
   end
   def trade_peers(p) do
-		keys = fn(z) -> Enum.map(z, fn({x, y}) -> x end) end
+		#keys = fn(z) -> Enum.map(z, fn({x, y}) -> x end) end
+		keys = fn(z) -> Enum.map(z, fn(x) -> Peers.peer_key(x) end) end
 		my_peers = Cli.all_peers
     peers = Cli.all_peers(p)
 		my_keys = keys.(my_peers)
@@ -45,22 +46,22 @@ defmodule Talker do
     if my_peers == :ok or peers == :ok do
       IO.puts("peer died 1")
     else
-      not_yours = Enum.filter(my_peers, &(not elem(&1, 0) in peers_keys))
-      not_mine = Enum.filter(peers, &(not elem(&1, 0) in my_keys))
+      not_yours = Enum.filter(my_peers, &(not Peers.peer_key(&1) in peers_keys))
+      not_mine = Enum.filter(peers, &(not Peers.peer_key(&1) in my_keys))
       Enum.map(not_yours,&(Cli.add_peer(elem(&1, 1),p)))
       Enum.map(not_mine, &(Peers.add_peer(elem(&1, 1))))
     end
   end
-  def check_peer(p) do #validating mode
-    status = Cli.status(p)#broke here???
+  def check_peer(p) do
+		#IO.puts("check peer #{inspect p}")
+    status = Cli.status(p)
+		#IO.puts("status #{inspect status}")
     cond do
-			not is_list(status) -> status
-      :error in Dict.keys(status) ->
-				false
-      status[:height] > 0 and is_number(status[:height]) ->
+			not is_map(status) -> status
+      status.height > 0 and is_number(status.height) ->
         x = Peers.get(p)
-        |> Map.put(:height, status[:height])
-        |> Map.put(:hash, status[:hash])
+        |> Map.put(:height, status.height)
+        |> Map.put(:hash, status.hash)
 				x |> Peers.add_peer
         check_peer_2(x, status)
 			true -> IO.puts("nothing to do")
@@ -70,7 +71,7 @@ defmodule Talker do
 		#IO.puts("check peer 2 #{inspect p}")
     trade_peers(p)
     txs = Cli.txs(p)
-    u = status[:height]
+    u = status.height
     i = KV.get("height")
     cond do
       txs == :ok -> IO.puts("txs shouldn't be :ok")
@@ -84,8 +85,7 @@ defmodule Talker do
     end
   end
   def check_peers do
-    Peers.get_all
-    |> Enum.map(&(elem(&1,1)))
+    Cli.all_peers
     |> Enum.map(&(spawn_link(fn -> check_peer(&1) end)))
    end
   def init(_) do

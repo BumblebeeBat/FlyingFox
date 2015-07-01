@@ -6,7 +6,6 @@ defmodule PackWrap do
 		case b do
 			"Elixir.Block" -> o = %Block{}
 			"Elixir.CryptoSign" -> o = %CryptoSign{}
-			#"Elixir.Channel" -> o = %Channel{}
 			"Elixir.Reveal" -> o = %Reveal{}
 			"Elixir.Spend" -> o = %Spend{}
 			"Elixir.Sign" -> o = %Sign{}
@@ -19,6 +18,7 @@ defmodule PackWrap do
 			"Elixir.CloseChannel" -> o = %CloseChannel{}
 			"Elixir.Peer" -> o = %Peer{}
 			"Elixir.Meta" -> o = %Meta{}
+			"Elixir.Status" -> o = %Status{}
 			x -> IO.puts("dict2map odd ball #{inspect x}")
 		end
 		Enum.reduce(Dict.keys(d), o, &(Map.put(&2, &1, d[&1])))
@@ -32,11 +32,18 @@ defmodule PackWrap do
 		end
 	end
 	def remap(o) do #changes all the tuple list representations in the datastructure back into maps.
+		#IO.puts("o #{inspect o}")
 		cond do
+			is_tuple(o) and is_list(elem(o, 0)) -> remap(elem(o, 0))#test
 			is_tuple(o) -> List.to_tuple(Enum.map(Tuple.to_list(o), &(remap(&1))))
-			is_list(o) and length(o) > 0 and is_tuple(hd(o)) and :__struct__ in Dict.keys(o) ->
-				o |> Enum.map(&(remap(&1))) |> dict2map
+			is_list(o) and is_tuple(hd(o)) and is_list(elem(hd(o), 0)) ->
+			  Enum.map(o, &(remap(&1)))
+			is_list(o) and length(o) > 0 and is_tuple(hd(o)) and "__struct__" in Dict.keys(o) ->
+				o |> rekey |> remap
+			#is_list(o) and length(o) > 0 and is_tuple(hd(o)) and :__struct__ in Dict.keys(o) ->#old can be removed.
+			#o |> Enum.map(&(remap(&1))) |> dict2map#this was commented out...
 			is_list(o) and length(o) > 0 -> o |> Enum.map(&(remap(&1)))
+			o == "nil" -> nil
 			true -> o
 		end
 	end
@@ -53,35 +60,36 @@ defmodule PackWrap do
   end
   def rekey(json) do
     cond do
+			is_tuple(json) ->
+				rekey(elem(json, 0)) |> dict2map
+			json == "nil" -> nil
       not is_list(json) or json == [] -> json
-      is_tuple(hd(json))->
+      is_tuple(hd(json)) and is_list(elem(hd(json), 0)) ->
+				Enum.map(json, &(rekey(&1)))
+			is_tuple(hd(json)) ->
         Enum.map(Dict.keys(json), fn(k) ->
           {String.to_atom(k), rekey(slow_get(json, k))}
         end)
       true -> Enum.map(json, &(rekey(&1)))
     end
   end
-	#def pack(x) do x |> demap |> MessagePack.pack! |> Base.encode64 end
-  #def unpack(x) do x |> Base.decode64 |> MessagePack.unpack! |> rekey |> remap	end
-	def pack(x) do x |> demap |> MessagePack.pack! end
-  def unpack(x) do
-		case MessagePack.unpack(x) do
-			{:ok, y} -> y |> rekey |> remap
-			{:error, :incomplete} -> 1=3
-			{a, b}  ->
-				IO.puts(" Failed to unpack. #{inspect x}")
-				IO.puts("#{inspect a} #{inspect b}")
+	def pack(x) do x |> :jiffy.encode end
+  def unpack(x) do x = :jiffy.decode(x) |> rekey
+		cond do
+			is_list(x) and Dict.has_key?(x, :__struct__) -> dict2map(x)
+			true -> x
 		end
 	end
-	#def pack(x) do x |> demap |> :jiffy.encode end
-  #def unpack(x) do
-	#	:jiffy.decode(x) |> rekey |> remap 
-	#end
 	def test do
-    x = unpack(pack(%Block{}))
+		#t = %CloseChannel{}
+		#t = :status
+		#t = [1,2,3]
+		t = %HashDict{}
+		t = HashDict.put(t, "a", "b")
+    x = unpack(pack(t))
     IO.puts inspect x
   end
 	def test2 do remap([[__struct__: "Elixir.CryptoSign", data: [__struct__: "Elixir.Sign", height: 1, nonce: 0, prev_hash: "Dh9J/r3hhi9ems8FAE6gK4uMgEsbMiiKF6CIwyOPe+w=", secret_hash: "Urq9fr3KVUhU3+tHbk0EnYOqlk3UgD/qEuRijHr/ckM=", winners: [2, 6, 12, 17, 19, 23, 24, 26, 36, 38, 39, 40, 41, 45, 48, 49, 57, 62, 66, 68, 69, 72, 76, 78, 79, 85, 87, 88, 91, 93, 95, 97, 100, 104, 118, 121, 130, 131, 149, 151, 152, 154, 157]], meta: [], pub: "BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc=", sig: "MEQCIFOdKYCUdbxFh9fq8jQoBi6DobWHakGbjSLC54tgXWtWAiBothy0S0UKaR9fBJJPZQ5Az3+IPemwEyfsAKtol0pK/g=="]]) end
 end
 
-OB
+

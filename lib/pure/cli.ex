@@ -2,7 +2,15 @@ defmodule Cli do
   defp lh do "localhost" end
   defp lp do Port.port end
 	defp me do %Peer{port: lp, ip: lh} end
-	def talk(msg, peer) do Tcp.get(peer.ip, peer.port, msg) end
+	def talk(msg, peer) do
+		#IO.puts("cli #{inspect peer}")
+		cond do
+			is_list(peer) ->
+				Tcp.get(peer[:ip], peer[:port], msg)
+			true ->
+				Tcp.get(peer.ip, peer.port, msg)
+		end
+	end
 	def local_talk(msg, peer) do Tcp.get_local(peer.ip, peer.port+1000, msg) end
   def add_block(block, peer \\ me) do
 		talk([:add_block, block], peer) end
@@ -19,7 +27,7 @@ defmodule Cli do
 		end
 	end
   def blocks(start, finish, peer \\ me) do #might not grab all blocks in he range.
-		flip(talk([:blocks, start, finish], peer))
+		flip(talk(["blocks", start, finish], peer))
 	end
 	def download_blocks(n, i, peer \\ me, out \\ []) do#grabs all blocks in the range.
     lo = length(out)
@@ -28,9 +36,9 @@ defmodule Cli do
       true -> download_blocks(n - 1, i, peer, out ++ blocks(i+lo, i+n, peer))
     end		
 	end
-  def add_peer(peer, pr \\ me) do talk([:add_peer, peer], pr) end
-  def all_peers(peer \\ me) do talk([:all_peers], peer) end
-  def status(peer \\ me) do talk([:status], peer) end
+  def add_peer(peer, pr \\ me) do talk(["add_peer", peer], pr) end
+  def all_peers(peer \\ me) do talk(["all_peers"], peer) end
+  def status(peer \\ me) do talk(["status"], peer) end
   def buy_block(peer \\ me) do
 		out = local_talk([:buy_block], peer)
 		cleanup

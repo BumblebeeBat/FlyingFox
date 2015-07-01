@@ -1,3 +1,6 @@
+defmodule Status do
+  defstruct height: 0, hash: ""
+end
 defmodule Account do
   #wait={amount, height}
   defstruct amount: 0, bond: 0, wait: {0, 0}, nonce: 0
