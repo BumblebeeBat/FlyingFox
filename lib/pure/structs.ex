@@ -1,3 +1,12 @@
+def Message do
+	defstruct to: "", msg: "", payment: %ChannelBlock{}
+end
+defmodule DeleteMessage do
+	defstruct pub: "", index: 0
+end
+defmodule DeleteAccount do
+	defstruct pub: ""
+end
 defmodule Status do
   defstruct height: 0, hash: ""
 end

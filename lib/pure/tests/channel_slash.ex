@@ -13,12 +13,12 @@ defmodule CS do
 		TxCreator.channel_spend(key, 10, 1)
 	end
 	def func3(tx, key) do #tx was output of func2
-		Keys.sign2(tx) |> Mempool.add_tx
+		Keys.sign(tx) |> Mempool.add_tx
 		Cli.buy_block
 		TxCreator.channel_spend(key, 0, 2)
 	end
 	def func4(tx, key) do #tx was output of func3
 		Cli.buy_block
-		Keys.sign2(tx) |>	TxCreator.close_channel_slasher
+		Keys.sign(tx) |>	TxCreator.close_channel_slasher
 	end
 end

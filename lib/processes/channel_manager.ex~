@@ -1,9 +1,0 @@
-defmodule ChannelManager do
-  use GenServer
-  @name __MODULE__
-  def init(args) do {:ok, args} end
-  def start_link() do GenServer.start_link(__MODULE__, [], name: @name) end
-  def get_all do      GenServer.call(@name, :get_all) end
-  def get(peer) do    GenServer.call(@name, {:get, peer}) end
-	
-end

@@ -1,0 +1,2 @@
+defmodule CM do
+	def func1

@@ -3,6 +3,7 @@ defmodule Constants do
   def initial_coins do 2100_000_000_000_000 end
   def min_bond do 2_000_000_000 end
   def min_tx_fee do 5000 end
+  def min_tx_fee_this_node do 10000 end
   def block_creation_fee do 31_000_000 end
   def max_bond do 1_000_000_000 end
   def signers_per_block do 54 end
@@ -13,4 +14,6 @@ defmodule Constants do
 	def oracle_fee do 50_000_000 end
 	def message_size do 10000 end #in bytes
 	def max_nodes do 5 end
+	def registration_fee do 1000000 end
+	
 end

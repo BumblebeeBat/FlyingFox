@@ -19,8 +19,8 @@ defmodule Talker do
   end
   def download_blocks(i, u, p) do
 		#IO.puts("in talker p is #{inspect p}")
-    blocks = Cli.download_blocks(min(50, u - i), i, p)
-    my_block = Cli.blocks(i, i)
+    blocks = Cli.blocks(min(50, u - i), i, p)
+    my_block = Cli.fast_blocks(i, i)
     cond do
       my_block == [] ->
         BlockAbsorber.absorb(blocks)
@@ -31,7 +31,7 @@ defmodule Talker do
         BlockAbsorber.absorb(blocks)
         [status: :ahead]
       true ->
-        blocks = Cli.download_blocks(min(50, u), max(0, i-40), p)
+        blocks = Cli.blocks(min(50, u), max(0, i-40), p)
         BlockAbsorber.absorb(blocks)
         [status: :fork, height: u, peer: p]
     end

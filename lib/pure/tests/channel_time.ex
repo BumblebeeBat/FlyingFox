@@ -11,7 +11,7 @@ defmodule CT do
 		TxCreator.channel_spend(key, 1000)
 	end
 	def func3(tx, key) do #tx was output of func2
-		Keys.sign2(tx) |> Mempool.add_tx
+		Keys.sign(tx) |> Mempool.add_tx
 		Cli.buy_block
 	end
 	def func4(key) do

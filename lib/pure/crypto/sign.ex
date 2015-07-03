@@ -27,13 +27,6 @@ defmodule CryptoSign do
     :crypto.verify(:ecdsa, :sha256, s, sig, [pub, params])
   end
   def sign_tx(tx, pub, priv) do
-    h = DetHash.doit(tx)
-    sig = sign(h, priv)
-		m = %Meta{sig: sig}
-    %CryptoSign{meta: m, data: tx}
-  end
-  def sign_tx_2(tx, pub, priv) do
-		IO.puts("sign2 #{inspect tx}")
 		if tx.__struct__ == :Elixir.CryptoSign do
 			cb = tx.data
 			m = tx.meta

@@ -5,7 +5,7 @@ defmodule TxCreator do
     |> length
     a+KV.get(pub).nonce
   end
-	def broadcast(tx) do tx |> Keys.sign |> Mempool.add_tx end
+	def broadcast(tx) do tx |> Keys.sign2 |> Mempool.add_tx end
   def spend(to, amount) do
     pub = Keys.pubkey
     balance = KV.get(pub).amount
@@ -73,15 +73,14 @@ defmodule TxCreator do
 		end
 		is_ch = KV.get(ToChannel.key(Keys.pubkey, other))
 		new = (is_ch == nil)
-		tx = %ToChannel{amount: amount, amount2: amount2,	new: new,	pub: Keys.pubkey,	pub2: other}
+		tx = %ToChannel{amount: amount, new: new,	pub: Keys.pubkey,	pub2: other}
 		if new do
 			tx2 = %{tx | delay: delay, nonce: nonce(Keys.pubkey)}
-		else
-			cond do
-				is_ch.pub == Keys.pubkey  -> tx2 = %{ tx | to: "pub"} |> Keys.sign
-				is_ch.pub2 == Keys.pubkey -> tx2 = %{ tx | to: "pub2"} |> Keys.sign2
-				true -> IO.puts("that isn't your channel")
-			end
+		end
+		cond do
+			is_ch.pub == Keys.pubkey  -> tx2 = %{ tx | to: "pub"} |> Keys.sign
+			is_ch.pub2 == Keys.pubkey -> tx2 = %{ tx | to: "pub2"} |> Keys.sign2
+			true -> IO.puts("that isn't your channel")
 		end
 		tx2 |> broadcast
 		#the channel should be updated in the channel manager.
@@ -103,6 +102,7 @@ defmodule TxCreator do
 		if bets != [] do
 			cb = %{cb | bets: bets}
 		end
+		#once it is accepted into the bockchain, we should delete the channel from the channel manager
     cb |> Keys.sign
   end
   def close_channel_timeout(other) do
@@ -120,6 +120,7 @@ defmodule TxCreator do
   end
   def close_channel_slasher(tx) do
 		other = [tx.data.pub, tx.data.pub2] |> Enum.filter(&(&1 != Keys.pubkey)) |> hd
+		
 		c = ToChannel.key(Keys.pubkey, other)
 		if KV.get(c) == nil do
 			IO.puts("this channel doesn't exist yet, so you cannot close it.")
@@ -129,29 +130,4 @@ defmodule TxCreator do
 		cb = %CloseChannel{pub: c.pub, pub2: c.pub2, type: "slasher", channel_block: tx, nonce: nonce(Keys.pubkey)}
     cb |> broadcast
   end
-	def channel_spend(other, amount, nonce \\ 1) do
-		me = Keys.pubkey
-		c = KV.get(ToChannel.key(Keys.pubkey, other))
-		if c == nil do
-			IO.puts("this channel doesn't exist yet, so you cannot close it.")
-		end
-		d = 1
-		if me == c.pub do
-			d = -1
-		end
-		channel = ChannelManager.get(other)
-		new = %{c | amount: channel.amount - (d * amount),
-			amount2: channel.amount2 + (d * amount),
-			nonce: channel.nonce+1,
-			old_amount: c.amount,
-			old_amount2: c.amount2,
-			nonce: nonce}
-		if me == new.pub do
-			new = Keys.sign(new)
-		else
-			new = Keys.sign2(new)
-		end
-		ChannelManager.update(other, new)
-		new
-	end
 end

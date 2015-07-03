@@ -1,5 +1,5 @@
 defmodule ToChannel do
-  defstruct nonce: 0, to: "pub", amount: 0, amount2: 0, new: false, delay: 100, fee: 10000, pub: "", pub2: ""
+  defstruct nonce: 0, to: "pub", amount: 0, new: false, delay: 100, fee: 10000, pub: "", pub2: ""
 	def key(a, b) do
 		cond do
 			a > b -> a <> b
@@ -44,20 +44,14 @@ defmodule ToChannel do
 	end
 	def update(tx, d) do
     da = tx.data
-		IO.puts("da.pub #{inspect da.pub}")
-		IO.puts("KV get da.pub #{inspect KV.get(da.pub)}")
-    TxUpdate.sym_increment(da.pub, :amount, -da.amount - da.fee, d)
 		channel = key(da.pub, da.pub2)
+    TxUpdate.sym_increment(da.pub, :amount, -da.amount - da.fee, d)
 		cb = %ChannelBlock{pub: da.pub,
 											 pub2: da.pub2,
-											 amount: da.amount,
-											 amount2: da.amount2,
 											 delay: da.delay}
-    cond do
-      da.new and d==1 -> KV.put(channel, cb)
-      da.new -> KV.put(channel, nil)
-      true -> TxUpdate.sym_increment(da.channel, da.to, da.amount, d)
-    end
+		if da.new and d==1 do KV.put(channel, cb) end
+    TxUpdate.sym_increment(channel, String.to_atom(da.to), da.amount, d)
+		if da.new and d==-1 do KV.put(channel, nil)	end
 		f = false
 		if da.pub == Keys.pubkey do
 			other = da.pub2

@@ -12,7 +12,7 @@ defmodule CF do
 		TxCreator.close_channel_fast(key, 1000, 999)
 	end
 	def func3(tx, key) do #tx was output of func2
-		Keys.sign2(tx) |> Mempool.add_tx
+		Keys.sign(tx) |> Mempool.add_tx
 		Cli.buy_block
 	end
 end
