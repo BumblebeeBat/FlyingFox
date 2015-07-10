@@ -19,6 +19,7 @@ defmodule PackWrap do
 			"Elixir.Peer" -> o = %Peer{}
 			"Elixir.Meta" -> o = %Meta{}
 			"Elixir.Status" -> o = %Status{}
+			"Elixir.ChannelManager" -> o = %ChannelManager{}
 			x -> IO.puts("dict2map odd ball #{inspect x}")
 		end
 		Enum.reduce(Dict.keys(d), o, &(Map.put(&2, &1, d[&1])))

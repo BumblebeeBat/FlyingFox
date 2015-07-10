@@ -1,74 +1,94 @@
+#channel manager needs to keep track of the highest-nonced transaction from the peer, and it also needs to keep track of the highest-nonced transaction we sent to the peer.
+#eventually we need to store multiple hash_locked transactions from the peer.
 defmodule ChannelManager do
+	defstruct recieved: %CryptoSign{data: %ChannelBlock{}}, sent: %CryptoSign{data: %ChannelBlock{}}#, hash_locked: []
+	#both are ChannelBlock types
   use GenServer
   @name __MODULE__
   def init(args) do {:ok, args} end
   def start_link() do   GenServer.start_link(__MODULE__, %HashDict{}, name: @name) end
-	def update(pub, c) do GenServer.cast(@name, {:update, pub, c}) end
 	def get(pub) do       GenServer.call(@name, {:get, pub}) end
   def get_all do        GenServer.call(@name, :get_all) end
   def handle_call(:get_all, _from, mem) do {:reply, mem, mem} end
   def handle_call({:get, pub}, _from, mem) do
 		out = mem[pub]
 		if out == nil do
-			out = %CryptoSign{data: %ChannelBlock{}}
+			out = %ChannelManager{sent: %CryptoSign{data: %ChannelBlock{pub: Keys.pubkey, pub2: pub}}}
 		end
+		#%{sent: out} = %ChannelManager{sent: out.sent}
 		{:reply, out, mem} end
-  def handle_cast({:update, pub, channel},  mem) do
-		is_integer(accept(channel)) = true
-		pub in [channel.data.pub, channel.data.pub2] = true
-		pub != Keys.pubkey = true
-		{:noreply, HashDict.put(mem, pub, channel)}
+  def handle_cast({:send, pub, channel},  mem) do
+		out = mem[pub]
+		if out == nil do out = %ChannelManager{} end
+		out = %{out | sent: channel}
+		IO.puts("handle cast send #{inspect out}")
+		{:noreply, HashDict.put(mem, pub, out)}
 	end
-	def del(pub) do update(pub, nil) end	
-
-	def accept(tx, min_amount) do
-		other = [tx.data.pub, tx.data.pub2] |> Enum.filter(&(&1 != Keys.pubkey)) |> hd
-		channel = get(other)
+	def handle_cast({:recieve, pub, channel},  mem) do
+		out = mem[pub]
+		if out == nil do out = %ChannelManager{} end
+		IO.puts("out #{inspect out}")
+		IO.puts("channel #{inspect channel}")		
+		out = %{out | recieved: channel}
+		{:noreply, HashDict.put(mem, pub, out)}
+	end
+	#def del(pub) do update(pub, nil) end	
+	def other(tx) do [tx.data.pub, tx.data.pub2] |> Enum.filter(&(&1 != Keys.pubkey)) |> hd end
+	def accept(tx, min_amount, mem \\ []) do
+		if accept_check(tx, min_amount, mem) do
+			other = other(tx)
+			GenServer.cast(@name, {:recieve, other, tx})
+			d = 1
+			if tx.data.pub2 == Keys.pubkey do d = d * -1 end
+			tx.data.amount * d
+		else
+			IO.puts("bad channel #{inspect tx}")
+		end			
+	end
+	def accept_check(tx, min_amount \\ -Constants.initial_coins, mem \\ []) do
+		other = other(tx)
+		IO.puts("channel manager accept #{inspect tx}")
 		d = -1
 		if Keys.pubkey == tx.data.pub do d = d * -1 end
+		if mem != [] do x = mem[other] else x = get(other) end
+		x = x |> top_block
 		cond do
-			not tx.data.amount > min_amount -> false
-			not :Elixir.CryptoSign = tx.__struct__ -> false
-			not :Elixir.ChannelBlock = tx.data.__struct__ -> false
-			not ChannelBlock.check(tx) -> false
-			not CryptoSign.verify_tx(tx, []) -> false
-			not tx.data.nonce > mem[pub].data.nonce -> false#should keep the biggest spendable block, and all bigger ones.
-			true ->
-				update(other, tx)
-				(tx.data.amount - tx.data.amount) * d
+			#require that the tx is signed by the other party.
+			d == 1 and tx.meta.sig2 == nil -> false
+			d == -1 and tx.meta.sig == nil -> false
+			not (tx.data.amount > min_amount) -> false #instead of this check, we should look at how much amount has changed since the previous highest nonce.
+			not (:Elixir.CryptoSign == tx.__struct__) -> false
+			not (:Elixir.ChannelBlock == tx.data.__struct__) -> false
+			not ChannelBlock.check(Keys.sign(tx)) -> false
+			not (tx.data.nonce > x.data.nonce) -> false#eventually we should keep the biggest spendable block, and all bigger ones.
+			true -> true
 		end
+	end
+	def top_block(c) do
+		[c.sent, c.recieved]
+		|> Enum.sort(&(&1.data.nonce > &2.data.nonce))
+		|> hd
 	end
 	def spend(pub, amount, default \\ Constants.default_channel_balance) do
-		channel = mem[pub]
-		if channel == nil do
-			channel = KV.get(ToChannel.key(pub, Keys.pubkey))
+		IO.puts("get pub topblock #{inspect get(pub) |> top_block}")
+		cb = get(pub) |> top_block
+		cb = cb.data
+		if is_binary(amount) do amount = String.to_integer(amount) end
+		on_chain = KV.get(ToChannel.key(pub, Keys.pubkey))
+		l = [cb.pub, cb.pub2]
+		if ((not (Keys.pubkey in l)) or not (pub in l)) do cb = %{cb | pub: Keys.pubkey, pub2: pub} end
+		if not pub in [cb.pub, cb.pub2] do cb = %{cb | pub2: Keys.pubkey} end
+		if Keys.pubkey != cb.pub do amount = -amount end
+		cb = %{cb | amount: cb.amount + amount, nonce: cb.nonce + 1} |> Keys.sign
+		if on_chain.amount <= amount or on_chain.amount2 <= -amount do
+			IO.puts("not enough money in the channel to spend that much")
+			IO.puts("on chain #{inspect on_chain}")
+			IO.puts("amoutn #{inspect amount}")
+		else
+			IO.puts("channel manager spend #{inspect cb}")
+			GenServer.cast(@name, {:send, pub, cb})
 		end
-		if channel == nil do
-			TxCreator.to_channel(pub, amount+default)
-			IO.puts("wait till next block, and try again")
-		end
-		a = channel.amount
-		if Keys.pubkey == channel.pub do
-			a = channel.amount2
-		end
-		if a<amount do
-			up = amount - a + default
-			TxCreator.to_channel(pub, up)
-			IO.puts("wait till next block, and try again")
-		end
-		c = KV.get(ToChannel.key(Keys.pubkey, other))
-		if c == nil do
-			IO.puts("this channel doesn't exist yet, so you cannot close it.")
-		end
-		me = Keys.pubkey
-		d = 1
-		if me == c.pub do
-			d = -1
-		end
-		channel = get(other)
-		new = %{c | amount: d * amount, nonce: channel.nonce+1}
-		|> Keys.sign(new)
-		ChannelManager.update(other, new)
-		new
+		cb
 	end
 end
+

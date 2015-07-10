@@ -18,7 +18,6 @@ defmodule Talker do
     Enum.map(x, fn(x) -> Peers.add_peer(x) end)
   end
   def download_blocks(i, u, p) do
-		#IO.puts("in talker p is #{inspect p}")
     blocks = Cli.blocks(min(50, u - i), i, p)
     my_block = Cli.fast_blocks(i, i)
     cond do

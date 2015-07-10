@@ -17,12 +17,14 @@ defmodule Blocktree do
     block_hash = Blockchain.blockhash(block)
     block_hashes = height |> Blockchain.get_helper
     if block_hashes == nil do block_hashes = [] end
-    if block_hash in block_hashes do false else
+    if block_hash in block_hashes do
+			false
+		else
       block_hashes = block_hashes++[block_hash]
       KV.put(to_string(height), block_hashes)
 			signed = %{signed | meta: %{signed.meta | revealed: []}}
       KV.put(block_hash, signed)
-      block_hash
+			block_hash
     end
   end
   def genesis_state do
@@ -54,7 +56,6 @@ defmodule Blocktree do
     end
   end
   def forward(block) do#while walking forward this needs to reorder the hashes used for get_block so that the block we are using is on top.
-    #IO.puts("forward block #{inspect block}")
     if not is_map(block) do block = KV.get(block) end
     #IO.puts("forward block #{inspect block}")
     gap = block.data.height-KV.get("height")
@@ -62,9 +63,11 @@ defmodule Blocktree do
     cond do
       not is_map(block) -> [error: "blocks should be maps"]
       KV.get(Blockchain.blockhash(block)) == nil -> [error: "don't have this block"]
-      gap < 1 -> [error: "cannot redo history"]
+      #gap < 1 -> [error: "cannot redo history"]
+      gap != 1 ->
+				[error: "history moves one direction"]
       not Blockchain.valid_block?(block, cost) ->
-        IO.puts("invalid block")
+        IO.puts("invalid block #{inspect block}")
         false
       true ->
         #block creator needs to pay a fee. he needs to have signed so we can take his fee.
@@ -82,22 +85,27 @@ defmodule Blocktree do
   end
   def goto(hash) do
     h = hash |> Blockchain.get_block
-    goto_helper([h])
+		height = h.data.height
+		b = Blockchain.get_block(height+1)
+		if b.data.hash == Blockchain.blockhash(h) do
+			goto(b.data.height)
+		else
+			to = h.data.height
+			me = KV.get("height")
+			Enum.map(me..to, &(Blockchain.get_block(&1)))
+			|> goto_helper
+		end
   end
-  def goto_helper(last_blocks) do
+	def goto_helper(last_blocks) do
     h = KV.get("height")
     my_block = Blockchain.get_block(h).data
-    hash = Blockchain.blockhash(my_block)
-    add_block = hd(last_blocks).data
+		add_block = hd(last_blocks).data
+		hash = Blockchain.get_block(add_block.height).data.hash
     cond do
-      length(last_blocks)>60 ->
-        IO.puts("error!#! #{inspect last_blocks}")
-      hd(last_blocks) == nil ->
-        IO.puts("error 2 #{inspect last_blocks}")
-        Enum.map(tl(last_blocks), &(forward(&1)))
-      my_block.height == 1 or add_block.hash == hash ->
-        Enum.map(last_blocks, &(forward(&1)))
-      add_block.height > my_block.height ->
+			add_block.hash == hash ->
+				forward(hd(last_blocks))
+				if tl(last_blocks) != [] do	goto_helper(tl(last_blocks)) end
+      add_block.height > my_block.height+1 ->
         goto_helper([Blockchain.get_block(add_block.hash)|last_blocks])
       true ->
         IO.puts("back")
@@ -115,21 +123,20 @@ defmodule Blocktree do
     block = head.data
     height = block.height
 		acc = KV.get(block.pub)
-		
     cond do
 			block.bond_size > Constants.max_bond ->
-				IO.puts("too much bond for one block")
+				add_blocks(tail)
 				false
-      not Blockchain.enough_validated([head|tail], round(length(get_height(height))/3)) ->
+      not Blockchain.enough_validated([head], round(length(get_height(height))/3)) ->
         IO.puts("double-signing everywhere")
-        false
+				add_blocks(tail)
       KV.get(Blockchain.blockhash(head)) != nil -> add_blocks(tail)
       true ->
 				IO.puts("adding block #{inspect height}")
         block_hash = put_block(head)
         current_height = KV.get("height")
-        if height > current_height do goto(block_hash) end
         add_blocks(tail)
+        if height > current_height do goto(block_hash) end
     end
   end
 end

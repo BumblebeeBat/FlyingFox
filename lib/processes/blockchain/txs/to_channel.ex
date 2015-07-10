@@ -1,5 +1,5 @@
 defmodule ToChannel do
-  defstruct nonce: 0, to: "pub", amount: 0, new: false, delay: 100, fee: 10000, pub: "", pub2: ""
+  defstruct nonce: 0, to: "amount", amount: 0, new: false, delay: 100, fee: 10000, pub: "", pub2: ""
 	def key(a, b) do
 		cond do
 			a > b -> a <> b
@@ -8,8 +8,8 @@ defmodule ToChannel do
 	end
 	def check(tx, txs) do
     cond do
-      not tx.data.to in ["pub", "pub2"] ->
-				IO.puts("bad to")
+      not tx.data.to in ["amount", "amount2"] ->
+				IO.puts("bad to #{inspect tx}")
 				false
 			tx.data.pub == nil ->
 				IO.puts("nil pub #{inspect tx.data.pub}")
@@ -40,36 +40,18 @@ defmodule ToChannel do
 				false
     true -> true
     end
-		#dont allow this any more after a channel_block has been published, or if there is a channel_block tx in the mempool.
 	end
 	def update(tx, d) do
     da = tx.data
 		channel = key(da.pub, da.pub2)
     TxUpdate.sym_increment(da.pub, :amount, -da.amount - da.fee, d)
-		cb = %ChannelBlock{pub: da.pub,
-											 pub2: da.pub2,
-											 delay: da.delay}
-		if da.new and d==1 do KV.put(channel, cb) end
+		cb = %Channel{pub: da.pub,
+									pub2: da.pub2,
+									delay: da.delay}
+		if da.new and d==1 do
+			KV.put(channel, cb)
+		end
     TxUpdate.sym_increment(channel, String.to_atom(da.to), da.amount, d)
 		if da.new and d==-1 do KV.put(channel, nil)	end
-		f = false
-		if da.pub == Keys.pubkey do
-			other = da.pub2
-			f = true
 		end
-		if da.pub2 == Keys.pubkey do
-			other = da.pub
-			f = true
-		end
-		if f do
-			c = ChannelManager.get(other)
-			if c == nil do c = cb	end
-			if tx.data.to == da.pub do
-				c = %{c | amount: c.amount + (d * da.amount)}
-			else
-				c = %{c | amount2: c.amount2 + (d * da.amount)}
-			end
-			ChannelManager.update(other, c)
-		end
-	end
 end

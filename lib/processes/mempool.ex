@@ -15,6 +15,7 @@ defmodule Mempool do
 		prev_hash = nil
 		if h > 0 do prev_hash = Blockchain.blockhash(Blockchain.get_block(h)) end
 		cond do
+			not is_map(tx) -> "not map"
 			tx.data.__struct__ == :Elixir.Send and tx.data.fee < Constants.min_tx_fee_this_node -> "low-fee tx are blocked on this node"
 			not VerifyTx.check_tx(tx, x, prev_hash) -> "invalid tx"
 			true -> x = [tx|x]

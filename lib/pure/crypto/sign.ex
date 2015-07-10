@@ -22,9 +22,13 @@ defmodule CryptoSign do
     |> Base.encode64
   end
   def verify(s, sig, pub) do
-    {:ok, sig} = Base.decode64(sig)
-    {:ok, pub} = Base.decode64(pub)
-    :crypto.verify(:ecdsa, :sha256, s, sig, [pub, params])
+    {x, sig} = Base.decode64(sig)
+    {y, pub} = Base.decode64(pub)
+		cond do
+			x != :ok -> false
+			y != :ok -> false
+			true -> :crypto.verify(:ecdsa, :sha256, s, sig, [pub, params])
+		end
   end
   def sign_tx(tx, pub, priv) do
 		if tx.__struct__ == :Elixir.CryptoSign do

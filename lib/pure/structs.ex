@@ -1,4 +1,4 @@
-def Message do
+defmodule Message do
 	defstruct to: "", msg: "", payment: %ChannelBlock{}
 end
 defmodule DeleteMessage do
@@ -8,7 +8,7 @@ defmodule DeleteAccount do
 	defstruct pub: ""
 end
 defmodule Status do
-  defstruct height: 0, hash: ""
+  defstruct height: 0, hash: "", pubkey: ""
 end
 defmodule Account do
   #wait={amount, height}
@@ -17,10 +17,9 @@ end
 defmodule Block do
   defstruct height: 0, txs: [], hash: "", bond_size: 1.0e10, pub: ""
 end
-#defmodule Channel do
-#  @epoch Application.get_env :flying_fox, :epoch  
-#  defstruct pub: nil, pub2: nil, amount: 0, amount2: 0, time: 0, nonce: 0, delay: @epoch
-#end
+defmodule Channel do
+  defstruct pub: nil, pub2: nil, amount: 0, amount2: 0, time: 0, nonce: 0, delay: 10, bets: []
+end
 defmodule Peer do
   defstruct time: 0, height: 0, hash: nil, ip: nil, port: 0
 end

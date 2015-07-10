@@ -5,10 +5,15 @@ defmodule TxCreator do
     |> length
     a+KV.get(pub).nonce
   end
-	def broadcast(tx) do tx |> Keys.sign2 |> Mempool.add_tx end
+	def broadcast(tx) do
+		tx
+		|> Keys.sign
+		|> Mempool.add_tx
+	end
   def spend(to, amount) do
     pub = Keys.pubkey
     balance = KV.get(pub).amount
+		if is_binary(amount) do amount = String.to_integer(amount) end
 		fee = 10000
     if balance < (amount + fee) do
 			IO.puts("warning, you cannot afford to spend this tx, so it wont be valid")
@@ -67,43 +72,40 @@ defmodule TxCreator do
   end
   def slasher(tx1, tx2) do
   end
-  def to_channel(other, amount, amount2 \\ 0, delay \\ 10) do
+  def to_channel(other, amount, delay \\ 10) do
+		IO.puts("to channel")
 		if KV.get(other) == nil do
 			IO.puts("your partner doesn't exist yet, so this probably wont work")
 		end
+		if is_binary(amount) do amount = String.to_integer(amount) end
 		is_ch = KV.get(ToChannel.key(Keys.pubkey, other))
 		new = (is_ch == nil)
-		tx = %ToChannel{amount: amount, new: new,	pub: Keys.pubkey,	pub2: other}
+		tx = %ToChannel{amount: amount, new: new,	to: "amount"}
 		if new do
-			tx2 = %{tx | delay: delay, nonce: nonce(Keys.pubkey)}
+			tx2 = %{tx | delay: delay, nonce: nonce(Keys.pubkey), pub: Keys.pubkey, pub2: other}
+		else
+			tx2 = %{tx | pub: is_ch.pub, pub2: is_ch.pub2}
+			if is_ch.pub2 == Keys.pubkey do tx2 = %{tx2 | to: "amount2"} end
 		end
-		cond do
-			is_ch.pub == Keys.pubkey  -> tx2 = %{ tx | to: "pub"} |> Keys.sign
-			is_ch.pub2 == Keys.pubkey -> tx2 = %{ tx | to: "pub2"} |> Keys.sign2
-			true -> IO.puts("that isn't your channel")
-		end
+		IO.puts("is_ch #{inspect is_ch}")
 		tx2 |> broadcast
 		#the channel should be updated in the channel manager.
   end
-  def close_channel_fast(other, amount, amount2, bets \\ []) do
+  def close_channel_fast(other) do
+		#needs  channel manager top block
+		IO.puts("close channel fast #{inspect other}")
 		c = ToChannel.key(Keys.pubkey, other)
 		if KV.get(c) == nil do
 			IO.puts("this channel doesn't exist yet, so you cannot close it.")
 		end
-		cb = KV.get(c)
-		IO.puts("channel on blockchain #{inspect cb}")
-		cb = %ChannelBlock{amount: amount,
-											 amount2: amount2,
-											 pub: cb.pub,
-											 pub2: cb.pub2,
-											 fast: true,
-											 old_amount: cb.amount,
-											 old_amount2: cb.amount2}
-		if bets != [] do
-			cb = %{cb | bets: bets}
-		end
+		IO.puts("2")
+		cb = ChannelManager.get(other)
+		IO.puts("channel #{inspect cb}")
+		cb = cb |> ChannelManager.top_block
+		IO.puts("channel #{inspect cb}")
+		%{cb.data | fast: true}
 		#once it is accepted into the bockchain, we should delete the channel from the channel manager
-    cb |> Keys.sign
+    |> Keys.sign
   end
   def close_channel_timeout(other) do
 		c = ToChannel.key(Keys.pubkey, other)

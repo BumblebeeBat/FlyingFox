@@ -50,14 +50,14 @@ defmodule MailBox do
 	def size(pub) do GenServer.call(@name, {:size, pub}) end
 	def status do GenServer.call(@name, :status) end
 	def test do
-		MailBox.start_link
-		MailBox.new("a")
-		IO.puts(inspect MailBox.size("a"))
-		MailBox.send("a", "hello", 0)
-		IO.puts(inspect MailBox.size("a"))
-		IO.puts(inspect MailBox.read("a", 0))
-		MailBox.del("a", 0)		
-		IO.puts(inspect MailBox.size("a"))
+		start_link
+		new("a")
+		IO.puts(inspect size("a"))
+		send("a", "hello", 0)
+		IO.puts(inspect size("a"))
+		IO.puts(inspect read("a", 0))
+		del("a", 0)		
+		IO.puts(inspect size("a"))
 	end
 
 	#these higher-level functions watch the channel manager to manage payments and permissions. 

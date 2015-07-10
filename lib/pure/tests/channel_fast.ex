@@ -1,18 +1,21 @@
 defmodule CF do
 	#odd numbers are one node, even numbers are the other.
 	def func1 do
-		Keys.new
-		Keys.pubkey
+		Cli.new_key
+		Cli.status.pubkey
 	end
 	def func2(key) do#key was the output of fun1
-		TxCreator.spend(key, 500000000)
+		Cli.spend(key, 500000000)
 		Cli.buy_block
-		TxCreator.to_channel(key, 2000)
+		Cli.to_channel(key, 5000)
 		Cli.buy_block
-		TxCreator.close_channel_fast(key, 1000, 999)
+		Cli.channel_spend(key, 200)
+		Cli.close_channel_fast(key)
 	end
 	def func3(tx, key) do #tx was output of func2
-		Keys.sign(tx) |> Mempool.add_tx
+		tx
+		|> Cli.sign
+		|> Cli.pushtx
 		Cli.buy_block
 	end
 end

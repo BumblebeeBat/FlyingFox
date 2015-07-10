@@ -11,7 +11,12 @@ defmodule Listener do
   def main(type, args) do
     case type do
       "add_blocks" -> BlockAbsorber.absorb(hd(args))
-      "pushtx" -> Mempool.add_tx(hd(args))
+      "pushtx" ->
+				args
+				|> hd
+				|> PackWrap.unpack
+				|> Mempool.add_tx
+				|> PackWrap.pack
       "txs" -> Mempool.txs
       "height" -> KV.get("height")
       "block" -> Blockchain.get_block(hd(args))
@@ -22,13 +27,13 @@ defmodule Listener do
           h = KV.get("height")
           block = Blockchain.get_block(h)
           if block.data==nil do block = %{data: 1} end
-          %Status{height: h, hash: DetHash.doit(block.data)}
+          %Status{height: h, hash: DetHash.doit(block.data), pubkey: Keys.pubkey}
 			"register" -> MailBox.register(hd(args))
-			"delete_account" -> if CryptoSign.verify_tx(tx) do MailBox.delete_account(hd(args)) else "bad sig" end
+			"delete_account" -> if CryptoSign.verify_tx(hd(args)) do MailBox.delete_account(hd(args)) else "bad sig" end
 
 			"send_message" -> MailBox.send(hd(args))
 			"cost" -> MailBox.cost
-			"delete" -> if CryptoSign.verify_tx(tx) do MailBox.delete(hd(args)) else "bad sig" end
+			"delete" -> if CryptoSign.verify_tx(hd(args)) do MailBox.delete(hd(args)) else "bad sig" end
 			"read_message" ->
 				tx = hd(args)
 				if CryptoSign.verify_tx(tx) do MailBox.read(tx.data.pub, tx.data.index) else "bad sig" end
@@ -39,14 +44,6 @@ defmodule Listener do
       x -> IO.puts("listener is not a command #{inspect x}")
     end
   end
-	def flip(l, out \\ []) do
-		cond do
-			l == [] -> out
-			is_list(l) -> flip(tl(l), [hd(l)|out])
-			true -> IO.puts("error #{inspect l}")
-							[]
-		end
-	end
   def blocks(start, finish, out \\ []) do
     finish |> min(KV.get("height")) |> blocks_helper(start, out)
   end
@@ -55,7 +52,7 @@ defmodule Listener do
     cond do
 			byte_size(inspect out) > Constants.message_size/2 -> tl(out)
       start < 0 -> blocks_helper(finish, 1, out)
-      start > finish -> flip(out)
+      start > finish -> out
       block == nil -> blocks_helper(finish, start+1, out)
       true -> blocks_helper(finish, start+1, [block|out])
     end
