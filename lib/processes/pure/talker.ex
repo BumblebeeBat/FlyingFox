@@ -11,32 +11,13 @@ defmodule Talker do
     GenServer.start_link(__MODULE__, :ok, [name: @name])
   end
   def start do spawn_link(fn() -> timer end) end
-  def still_on(blocks) do
-    blocks == :ok or blocks == [] or (is_tuple(hd(blocks)) and :error in Dict.keys(blocks))
-  end
-  def add_peers(x) do
-    Enum.map(x, fn(x) -> Peers.add_peer(x) end)
-  end
+  def still_on(blocks) do blocks == :ok or blocks == [] or (is_tuple(hd(blocks)) and :error in Dict.keys(blocks)) end
+  def add_peers(x) do Enum.map(x, fn(x) -> Peers.add_peer(x) end) end
   def download_blocks(i, u, p) do
     blocks = Cli.blocks(min(50, u - i), i, p)
-    my_block = Cli.fast_blocks(i, i)
-    cond do
-      my_block == [] ->
-        BlockAbsorber.absorb(blocks)
-        [status: :first_blocks]
-      still_on(my_block) -> IO.puts("thread died")
-      still_on(blocks) -> IO.puts("peer died 0")
-      hd(my_block).data.hash == hd(blocks).data.hash ->
-        BlockAbsorber.absorb(blocks)
-        [status: :ahead]
-      true ->
-        blocks = Cli.blocks(min(50, u), max(0, i-40), p)
-        BlockAbsorber.absorb(blocks)
-        [status: :fork, height: u, peer: p]
-    end
+    BlockAbsorber.absorb(blocks)
   end
   def trade_peers(p) do
-		#keys = fn(z) -> Enum.map(z, fn({x, y}) -> x end) end
 		keys = fn(z) -> Enum.map(z, fn(x) -> Peers.peer_key(x) end) end
 		my_peers = Cli.all_peers
     peers = Cli.all_peers(p)

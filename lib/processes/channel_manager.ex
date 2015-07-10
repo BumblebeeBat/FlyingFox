@@ -2,7 +2,6 @@
 #eventually we need to store multiple hash_locked transactions from the peer.
 defmodule ChannelManager do
 	defstruct recieved: %CryptoSign{data: %ChannelBlock{}}, sent: %CryptoSign{data: %ChannelBlock{}}#, hash_locked: []
-	#both are ChannelBlock types
   use GenServer
   @name __MODULE__
   def init(args) do {:ok, args} end
@@ -15,24 +14,19 @@ defmodule ChannelManager do
 		if out == nil do
 			out = %ChannelManager{sent: %CryptoSign{data: %ChannelBlock{pub: Keys.pubkey, pub2: pub}}}
 		end
-		#%{sent: out} = %ChannelManager{sent: out.sent}
 		{:reply, out, mem} end
   def handle_cast({:send, pub, channel},  mem) do
 		out = mem[pub]
 		if out == nil do out = %ChannelManager{} end
 		out = %{out | sent: channel}
-		IO.puts("handle cast send #{inspect out}")
 		{:noreply, HashDict.put(mem, pub, out)}
 	end
 	def handle_cast({:recieve, pub, channel},  mem) do
 		out = mem[pub]
 		if out == nil do out = %ChannelManager{} end
-		IO.puts("out #{inspect out}")
-		IO.puts("channel #{inspect channel}")		
 		out = %{out | recieved: channel}
 		{:noreply, HashDict.put(mem, pub, out)}
 	end
-	#def del(pub) do update(pub, nil) end	
 	def other(tx) do [tx.data.pub, tx.data.pub2] |> Enum.filter(&(&1 != Keys.pubkey)) |> hd end
 	def accept(tx, min_amount, mem \\ []) do
 		if accept_check(tx, min_amount, mem) do
@@ -47,16 +41,14 @@ defmodule ChannelManager do
 	end
 	def accept_check(tx, min_amount \\ -Constants.initial_coins, mem \\ []) do
 		other = other(tx)
-		IO.puts("channel manager accept #{inspect tx}")
 		d = -1
 		if Keys.pubkey == tx.data.pub do d = d * -1 end
 		if mem != [] do x = mem[other] else x = get(other) end
 		x = x |> top_block
 		cond do
-			#require that the tx is signed by the other party.
 			d == 1 and tx.meta.sig2 == nil -> false
 			d == -1 and tx.meta.sig == nil -> false
-			not (tx.data.amount > min_amount) -> false #instead of this check, we should look at how much amount has changed since the previous highest nonce.
+			not (tx.data.amount - x.data.amount > min_amount) -> false
 			not (:Elixir.CryptoSign == tx.__struct__) -> false
 			not (:Elixir.ChannelBlock == tx.data.__struct__) -> false
 			not ChannelBlock.check(Keys.sign(tx)) -> false
@@ -70,7 +62,6 @@ defmodule ChannelManager do
 		|> hd
 	end
 	def spend(pub, amount, default \\ Constants.default_channel_balance) do
-		IO.puts("get pub topblock #{inspect get(pub) |> top_block}")
 		cb = get(pub) |> top_block
 		cb = cb.data
 		if is_binary(amount) do amount = String.to_integer(amount) end
@@ -83,7 +74,7 @@ defmodule ChannelManager do
 		if on_chain.amount <= amount or on_chain.amount2 <= -amount do
 			IO.puts("not enough money in the channel to spend that much")
 			IO.puts("on chain #{inspect on_chain}")
-			IO.puts("amoutn #{inspect amount}")
+			IO.puts("amount #{inspect amount}")
 		else
 			IO.puts("channel manager spend #{inspect cb}")
 			GenServer.cast(@name, {:send, pub, cb})

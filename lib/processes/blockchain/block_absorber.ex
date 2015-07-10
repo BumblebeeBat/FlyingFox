@@ -9,7 +9,7 @@ defmodule BlockAbsorber do
   def start_link do     GenServer.start_link(__MODULE__, :ok, name: @name) end
   def absorb(blocks) do GenServer.call(@name, {:blocks, blocks}) end
   def buy_block do      GenServer.call(@name, {:blocks, [Blockchain.buy_block]}) end
-  def handle_call({:blocks, blocks}, _from, []) do 
+  def handle_call({:blocks, blocks}, _from, []) do
 		Blocktree.add_blocks(blocks)
 		{:reply, :ok, []}
   end
