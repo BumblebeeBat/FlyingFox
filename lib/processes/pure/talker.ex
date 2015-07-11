@@ -59,6 +59,9 @@ defmodule Talker do
       u > i -> download_blocks(i, u, p)
       u == i -> Enum.map(txs, &(Mempool.add_tx(&1)))
       true ->
+				#should push blocks!
+				Enum.map((u+1)..min((u+4), i), &(Blockchain.get_block(&1)))
+				|> Cli.add_blocks(p)
         IO.puts("im ahead")
         true
     end

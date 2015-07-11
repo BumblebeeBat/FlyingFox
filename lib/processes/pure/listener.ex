@@ -14,7 +14,7 @@ defmodule Listener do
     case type do
       "add_blocks" ->
 				IO.puts("add_blocks #{inspect args}")
-				BlockAbsorber.absorb(hd(args))
+				args |> hd |> packer(&(BlockAbsorber.absorb(&1)))
       "pushtx" -> args |> hd |> packer(&(Mempool.add_tx(&1)))
       "txs" -> Mempool.txs
       "height" -> KV.get("height")
