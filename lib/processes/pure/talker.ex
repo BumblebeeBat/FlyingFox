@@ -28,17 +28,13 @@ defmodule Talker do
     else
       not_yours = Enum.filter(my_peers, &(not Peers.peer_key(&1) in peers_keys))
       not_mine = Enum.filter(peers, &(not Peers.peer_key(&1) in my_keys))
-			IO.puts("not yours #{inspect not_yours}")
       Enum.map(not_yours,&(Cli.add_peer(&1,p)))
-			IO.puts("not mine #{inspect not_mine}")
       Enum.map(not_mine, &(Peers.add_peer(&1)))
-			IO.puts("finish trade peers")
     end
   end
   def check_peer(p) do
 		#IO.puts("check peer #{inspect p}")
     status = Cli.status(p)
-		IO.puts("status #{inspect status}")
     cond do
 			not is_map(status) -> status
       status.height > 0 and is_number(status.height) ->
@@ -75,7 +71,9 @@ defmodule Talker do
     start
     Enum.map(0..Constants.max_nodes, &(%Peer{ip: "localhost", port: Constants.tcp_port+&1})) 
     |> Enum.map(&(Peers.add_peer(&1)))
-		Peers.add_peer(%Peer{ip: "192.241.212.114", port: 6670})
+    Enum.map(0..Constants.max_nodes, &(%Peer{ip: "192.241.212.114", port: Constants.tcp_port+&1})) 
+    |> Enum.map(&(Peers.add_peer(&1)))
+		#Peers.add_peer(%Peer{ip: "192.241.212.114", port: 6669})
     {:ok, []}
   end
   def doit do GenServer.cast(@name, :doit) end

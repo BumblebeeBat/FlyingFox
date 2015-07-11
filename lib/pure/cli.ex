@@ -3,7 +3,6 @@ defmodule Cli do
   defp lp do Port.port end
 	defp me do %Peer{port: lp, ip: lh} end
 	def talk(msg, peer) do
-		IO.puts("cli talk #{inspect peer}")
 		cond do
 			is_list(peer) ->
 				Tcp.get(peer[:ip], peer[:port], msg)
@@ -12,16 +11,10 @@ defmodule Cli do
 		end
 	end
 	def local_talk(msg) do Tcp.get_local(me.ip, me.port+1000, msg) end
-	def packer(o, f) do
-		IO.puts("packer #{inspect o}")
-		IO.puts("packer #{inspect o |> PackWrap.pack}")
-		IO.puts("packer #{inspect o |> PackWrap.pack |> f.()}")
-		IO.puts("packer #{inspect o |> PackWrap.pack |> f.() |> PackWrap.unpack}")
-		o |> PackWrap.pack |> f.() |> PackWrap.unpack end
+	def packer(o, f) do o |> PackWrap.pack |> f.() |> PackWrap.unpack end
   def add_block(block, peer \\ me) do block |> packer(&(talk([:add_block, &1], peer))) end
   def txs(peer \\ me) do talk([:txs], peer) end
   def pushtx(tx, peer \\ me) do	tx |> packer(&(talk([:pushtx, &1], peer))) end
-  #def pushtx(tx, peer \\ me) do	talk([:pushtx, tx], peer) end
   def fast_blocks(start, finish, peer \\ me) do
 		#only use 1 network message. might not grab all blocks
 		talk(["blocks", start, finish], peer)
@@ -36,12 +29,7 @@ defmodule Cli do
       true -> blocks(n - 1, i, peer, out ++ fast_blocks(i+lo, i+n, peer))
     end		
 	end
-  def add_peer(peer, pr \\ me) do
-		IO.puts("add peer #{inspect peer}")
-		IO.puts("add pr #{inspect pr}")
-		peer |> packer(&(talk(["add_peer", &1], pr)))
-		IO.puts("add peer done")
-	end
+  def add_peer(peer, pr \\ me) do peer |> packer(&(talk(["add_peer", &1], pr)))	end
   def all_peers(peer \\ me) do
 		talk(["all_peers"], peer) end
   def status(peer \\ me) do
