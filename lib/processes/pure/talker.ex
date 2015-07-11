@@ -57,7 +57,9 @@ defmodule Talker do
       (txs != []) and length(txs)>0 and is_tuple(hd(txs)) ->
         IO.puts("tx error #{inspect txs}")
       u > i -> download_blocks(i, u, p)
-      u == i -> Enum.map(txs, &(Mempool.add_tx(&1)))
+      u == i ->
+				Enum.map(txs, &(Mempool.add_tx(&1)))
+				Cli.txs |> Enum.filter(&(not &1 in txs)) |> Enum.map(&(Cli.pushtx(&1, p)))
       true ->
 				#should push blocks!
 				Enum.map((u+1)..min((u+4), i), &(Blockchain.get_block(&1)))

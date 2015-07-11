@@ -73,9 +73,8 @@ defmodule Cli do
 	def register(peer \\ me) do
 		#we may need to do a to_channel first?
 		IO.puts("cli register")
-		pub = Cli.status(peer)
+		pub = Cli.status(peer).pubkey
 		IO.puts("pub #{inspect pub}")
-		pub = pub.pubkey
 		tx = ChannelManager.spend(pub, Constants.registration)
 		IO.puts("cli register tx #{inspect tx}")
 		%{payment: tx, pub: Keys.pubkey}

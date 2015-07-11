@@ -82,10 +82,14 @@ defmodule ChannelManager do
 		|> hd
 	end
 	def spend(pub, amount, default \\ Constants.default_channel_balance) do
+		IO.puts("pub #{inspect pub}")
 		cb = get(pub) |> top_block
+		IO.puts("cb #{inspect cb}")
 		cb = cb.data
+		IO.puts("cb #{inspect cb}")
 		if is_binary(amount) do amount = String.to_integer(amount) end
 		on_chain = KV.get(ToChannel.key(pub, Keys.pubkey))
+		IO.puts("on_chain #{inspect on_chain}")
 		l = [cb.pub, cb.pub2]
 		if ((not (Keys.pubkey in l)) or not (pub in l)) do cb = %{cb | pub: Keys.pubkey, pub2: pub} end
 		if not pub in [cb.pub, cb.pub2] do cb = %{cb | pub2: Keys.pubkey} end
