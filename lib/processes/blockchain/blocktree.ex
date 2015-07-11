@@ -88,7 +88,8 @@ defmodule Blocktree do
 		height = h.data.height
 		b = Blockchain.get_block(height+1)
 		if b.data.hash == Blockchain.blockhash(h) do
-			goto(b.data.height)
+			goto(Blockchain.blockhash(b))
+			#goto(b.data.height)
 		else
 			to = h.data.height
 			me = KV.get("height")
