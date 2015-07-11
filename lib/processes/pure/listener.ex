@@ -3,43 +3,35 @@ defmodule Listener do
 	@name __MODULE__
   def init(:ok) do {:ok, []} end
   def start_link() do GenServer.start_link(__MODULE__, :ok, [name: @name]) end
-  def export(l) do    GenServer.call(@name, {hd(l), self(), tl(l)}) end
+  def export(l) do GenServer.call(@name, {hd(l), self(), tl(l)}) end
   def handle_call({type, s, args}, _from, _) do
-    spawn(fn() ->     GenServer.reply(_from, main(type, args)) end)
+    spawn(fn() -> GenServer.reply(_from, main(type, args)) end)
     {:noreply, []}
   end
-  def main(type, args) do
+	def packer(o, f) do o |> PackWrap.unpack |> f.() |> PackWrap.pack end
+	def sig(o, f) do o |> hd |> packer(&(if CryptoSign.verify_tx(o) do f.(&1.data) else	"bad sig"	end)) end
+	def main(type, args) do
     case type do
       "add_blocks" -> BlockAbsorber.absorb(hd(args))
-      "pushtx" ->
-				args
-				|> hd
-				|> PackWrap.unpack
-				|> Mempool.add_tx
-				|> PackWrap.pack
+      "pushtx" -> args |> hd |> packer(&(Mempool.add_tx(&1)))
       "txs" -> Mempool.txs
       "height" -> KV.get("height")
       "block" -> Blockchain.get_block(hd(args))
       "blocks" -> blocks(String.to_integer(hd(args)), String.to_integer(hd(tl(args))))
-      "add_peer" -> Peers.add_peer(hd(args))
+      "add_peer" -> args |> hd |> packer(&(Peers.add_peer(&1)))
       "all_peers" -> Enum.map(Peers.get_all, fn({x, y}) -> y end)
       "status" ->
           h = KV.get("height")
           block = Blockchain.get_block(h)
           if block.data==nil do block = %{data: 1} end
           %Status{height: h, hash: DetHash.doit(block.data), pubkey: Keys.pubkey}
-			"register" -> MailBox.register(hd(args))
-			"delete_account" -> if CryptoSign.verify_tx(hd(args)) do MailBox.delete_account(hd(args)) else "bad sig" end
-
-			"send_message" -> MailBox.send(hd(args))
 			"cost" -> MailBox.cost
-			"delete" -> if CryptoSign.verify_tx(hd(args)) do MailBox.delete(hd(args)) else "bad sig" end
-			"read_message" ->
-				tx = hd(args)
-				if CryptoSign.verify_tx(tx) do MailBox.read(tx.data.pub, tx.data.index) else "bad sig" end
-			"inbox_size" ->
-				tx = hd(args)
-				if CryptoSign.verify_tx(tx) do MailBox.size(tx.data.pub) else "bad sig"	end
+			"register" -> args |> packer(&(MailBox.register(&1.payment, &1.pub)))
+			"delete_account" -> args |> sig(&(MailBox.delete_account(&1.pub)))
+			"send_message" ->   args |> sig(&(MailBox.send(&1.payment, &1.to, &1.msg, &1.pub)))
+			"delete" ->         args |> sig(&(MailBox.delete(&1.pub, &1.index)))
+			"read_message" ->   args |> sig(&(MailBox.read(&1.pub, &1.index)))
+			"inbox_size" ->     args |> sig(&(MailBox.size(&1.pub)))
 			"accept" -> ChannelManager.accept(hd(args), 1000)
       x -> IO.puts("listener is not a command #{inspect x}")
     end

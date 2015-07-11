@@ -29,16 +29,26 @@ defmodule Tcp do
 		end
 	end
 	def de_list(x) do
-		Enum.reduce(tl(x), hd(x), &(to_string(&2) <> "&" <> to_string(&1)))
+		cond do
+			x == [] -> ""
+			length(x) == 1 ->
+				IO.puts("de list 1 #{inspect x}")
+				to_string(hd(x))
+			true ->	Enum.reduce(tl(x), hd(x), &(to_string(&2) <> "&" <> to_string(&1)))
+		end
 	end
 	def get_local(ip, port, x) do get(ip, port, x, '/priv/') end
 	def get(ip, port, a, y \\ '/') do
+		IO.puts("is list #{inspect a}")
 		if is_list(a) do
 			a = de_list(a)
 		end
+		IO.puts("tcp get #{inspect a}")
 		false = is_tuple(a)
 		url = 'http://' ++ to_char_list(ip) ++ ':' ++ to_char_list(to_string(port)) ++ y ++ to_char_list(Base.encode64(PackWrap.pack(a)))
+		IO.puts("tcp get 2")
 		x = :httpc.request(url)
+		IO.puts("tcp get")
 		case x do
 			{:ok, z} ->  b = z |> elem(2) |> list2bin |> PackWrap.unpack
 			{:error, :socket_closed_remotely} -> get(ip, port, a, y)

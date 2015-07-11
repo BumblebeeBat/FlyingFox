@@ -10,6 +10,8 @@ This is a proof of stake blockchain written in elixir. The goal of this project 
 
 you need to install elixir to run this code http://elixir-lang.org/install.html
 
+for ubuntu you may need the line: "apt-get install erlang-dev"
+
 to run:
 
    ulimit -m 99999

@@ -27,7 +27,13 @@ defmodule ChannelManager do
 		out = %{out | recieved: channel}
 		{:noreply, HashDict.put(mem, pub, out)}
 	end
-	def other(tx) do [tx.data.pub, tx.data.pub2] |> Enum.filter(&(&1 != Keys.pubkey)) |> hd end
+	def other(tx) do
+		tx = [tx.data.pub, tx.data.pub2] |> Enum.filter(&(&1 != Keys.pubkey))
+		cond do
+			tx = [] -> Keys.pubkey
+			true -> hd(tx)
+		end
+	end
 	def accept(tx, min_amount, mem \\ []) do
 		if accept_check(tx, min_amount, mem) do
 			other = other(tx)
@@ -46,13 +52,27 @@ defmodule ChannelManager do
 		if mem != [] do x = mem[other] else x = get(other) end
 		x = x |> top_block
 		cond do
-			d == 1 and tx.meta.sig2 == nil -> false
-			d == -1 and tx.meta.sig == nil -> false
-			not (tx.data.amount - x.data.amount > min_amount) -> false
-			not (:Elixir.CryptoSign == tx.__struct__) -> false
-			not (:Elixir.ChannelBlock == tx.data.__struct__) -> false
-			not ChannelBlock.check(Keys.sign(tx)) -> false
-			not (tx.data.nonce > x.data.nonce) -> false#eventually we should keep the biggest spendable block, and all bigger ones.
+			d == 1 and tx.meta.sig2 == nil ->
+				IO.puts("2 should be signed by partner")
+				false
+			d == -1 and tx.meta.sig == nil ->
+				IO.puts("should be signed by partner")
+				false
+			not (tx.data.amount - x.data.amount > min_amount) ->
+				IO.puts("didn't spend enough")
+				false
+			not (:Elixir.CryptoSign == tx.__struct__) ->
+				IO.puts("unsigned")
+				false
+			not (:Elixir.ChannelBlock == tx.data.__struct__) ->
+				IO.puts("isn't a channel block")
+				false
+			not ChannelBlock.check(Keys.sign(tx)) ->
+				IO.puts("isn't a valid channel block")
+				false
+			not (tx.data.nonce > x.data.nonce) ->
+				IO.puts("nonce is too low")
+				false#eventually we should keep the biggest spendable block, and all bigger ones.
 			true -> true
 		end
 	end

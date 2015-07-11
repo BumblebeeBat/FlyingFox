@@ -1,5 +1,5 @@
 defmodule Msg do
-	defstruct time: 0, msg: "", size: 0, price: 0
+	defstruct time: 0, msg: "", size: 0, price: 0, from: ""
 end
 
 defmodule MailBox do
@@ -21,9 +21,9 @@ defmodule MailBox do
 			{:noreply, {HashDict.del(db, pub), mailboxes - 1, messages - length(db[pub])}}
 		end
 	end
-	def handle_cast({:send, pub, message, price}, {db, m, messages}) do
-		msg = %Msg{msg: message, time: :os.timestamp, size: byte_size(message), price: price}
-		dd = HashDict.put(db, pub, [msg|db[pub]])
+	def handle_cast({:send, to, message, from}, {db, m, messages}) do
+		msg = %Msg{msg: message, time: :os.timestamp, size: byte_size(message), price: messages*1000000, from: from}
+		dd = HashDict.put(db, to, [msg|db[to]])
 		{:noreply, {dd, m, messages+1}}
 	end
 	def handle_cast({:del, pub, index}, {db, m, messages}) do
@@ -39,58 +39,35 @@ defmodule MailBox do
 		end
 		{:reply, out, {db, b, c}}
 	end
-	def handle_call(:status, _from, {db, m, n}) do {:reply, {m, n}, {db, m, n}} end
-
-	#these are low level functions for interactin with mailbox and ignoring channel manager
-	def new(pub) do GenServer.cast(@name, {:new, pub}) end
-	def del_acc(pub) do GenServer.cast(@name, {:del_acc, pub}) end
-	def send(pub, message, price) do GenServer.cast(@name, {:send, pub, message, price}) end
-	def del(pub, index) do GenServer.cast(@name, {:del, pub, index}) end
+	def handle_call(:status, _from, {db, m, n}) do {:reply, %{mailboxes: m, messages: n}, {db, m, n}} end
 	def read(pub, index) do GenServer.call(@name, {:read, pub, index}) end
 	def size(pub) do GenServer.call(@name, {:size, pub}) end
 	def status do GenServer.call(@name, :status) end
-	def test do
-		start_link
-		new("a")
-		IO.puts(inspect size("a"))
-		send("a", "hello", 0)
-		IO.puts(inspect size("a"))
-		IO.puts(inspect read("a", 0))
-		del("a", 0)		
-		IO.puts(inspect size("a"))
-	end
-
-	#these higher-level functions watch the channel manager to manage payments and permissions. 
-	def register(tx) do if ChannelManager.accept(tx, Constants.registration_fee) do new(tx.data.pub) else "bad payment"	end end
-	def delete_account(tx) do
-		:Elixir.DeleteAccount = tx.data.__struct__
-		foo = size(tx.data.pub)
-		del_acc(tx.data.pub)
-		bar = size(tx.data.pub)
+	def cost do cost(status) end
+	def cost(s) do s.messages*1000000	end
+	def accept(payment, cost, f) do if ChannelManager.accept(payment, cost) do f.() else "bad payment" end	end
+	def register(payment, pub) do accept(payment, Constants.registration,  fn() -> GenServer.cast(@name, {:new, pub}) end) end
+	def send(payment, to, msg, from) do accept(payment, cost, fn() -> GenServer.cast(@name, {:send, to, msg, from}) end) end
+	def delete_account(pub) do
+		foo = size(pub)
+		GenServer.cast(@name, {:del_acc, pub})
+		bar = size(pub)
 		if foo != bar do
-			ChannelManager.send(tx.data.pub, Constants.registration_fee * 9 / 10)
+			ChannelManager.send(pub, Constants.registration_fee * 9 / 10)
 			#we should send a message to out peer about his new money.
 		end
 	end
-	def cost do
-		{_, messages} = status
-		1000000*messages
-	end
-	def send(tx) do
-		%Message{} = tx
-		if ChannelManager.accept(tx.data.payment, cost) do send(tx.data.to, tx.data.msg, cost) else "bad payment"	end	end #what type is tx? channel_block?
-	def delete(tx) do
-		:Elixir.DeleteMessage = tx.data.__struct__
-		msg = read(tx.data.pub, tx.data.index)
+	def delete(pub, index) do
+		msg = read(pub, index)
 		time = :timer.now_diff(:os.timestamp, msg.time)
 		two_days = 24*60*60*1000000
-		del(tx.data.pub, tx.data.index) 
-		after_msg = read(tx.data.pub, tx.data.index)
+		GenServer.cast(@name, {:del, pub, index})
+		after_msg = read(pub, index)
 		cond do
 			msg == after_msg -> "nothing to delete"
 			true ->
 				cost = msg.cost * ((two_days - time) / two_days)
-				ChannelManager.send(tx.data.pub, cost)
+				ChannelManager.send(pub, cost)
 				#we should send a message to out peer about his new money.
 		end
 	end

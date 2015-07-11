@@ -3,7 +3,7 @@ defmodule Cli do
   defp lp do Port.port end
 	defp me do %Peer{port: lp, ip: lh} end
 	def talk(msg, peer) do
-		#IO.puts("cli #{inspect peer}")
+		IO.puts("cli talk #{inspect peer}")
 		cond do
 			is_list(peer) ->
 				Tcp.get(peer[:ip], peer[:port], msg)
@@ -12,7 +12,12 @@ defmodule Cli do
 		end
 	end
 	def local_talk(msg) do Tcp.get_local(me.ip, me.port+1000, msg) end
-	def packer(o, f) do PackWrap.unpack(f.(PackWrap.pack(o))) end
+	def packer(o, f) do
+		IO.puts("packer #{inspect o}")
+		IO.puts("packer #{inspect o |> PackWrap.pack}")
+		IO.puts("packer #{inspect o |> PackWrap.pack |> f.()}")
+		IO.puts("packer #{inspect o |> PackWrap.pack |> f.() |> PackWrap.unpack}")
+		o |> PackWrap.pack |> f.() |> PackWrap.unpack end
   def add_block(block, peer \\ me) do block |> packer(&(talk([:add_block, &1], peer))) end
   def txs(peer \\ me) do talk([:txs], peer) end
   def pushtx(tx, peer \\ me) do	tx |> packer(&(talk([:pushtx, &1], peer))) end
@@ -32,7 +37,11 @@ defmodule Cli do
     end		
 	end
   def add_peer(peer, pr \\ me) do
-		talk(["add_peer", peer], pr) end
+		IO.puts("add peer #{inspect peer}")
+		IO.puts("add pr #{inspect pr}")
+		peer |> packer(&(talk(["add_peer", &1], pr)))
+		IO.puts("add peer done")
+	end
   def all_peers(peer \\ me) do
 		talk(["all_peers"], peer) end
   def status(peer \\ me) do
@@ -74,26 +83,40 @@ defmodule Cli do
 	def load_key(pub, priv) do local_talk([:loadkey, pub, priv]) end
 	def sign(o) do o |> packer(&(local_talk([:sign, &1]))) end
 	def register(peer \\ me) do
-		tx = ChannelManager.send(peer, cost(peer)*1.05)
-		talk(["register", tx], peer)
+		#we may need to do a to_channel first?
+		IO.puts("cli register")
+		pub = Cli.status(peer).pubkey
+		tx = ChannelManager.spend(pub, Constants.registration)
+		IO.puts("cli register tx #{inspect tx}")
+		%{payment: tx, pub: Keys.pubkey}
+		|> packer(&(talk(["register", &1], peer)))
 	end
 	def delete_account(peer \\ me) do
-		%DeleteAccount{}
-		talk([], peer)
+		%{pub: Keys.pubkey}
+		|> Keys.sign
+		|> packer(&(talk(["delete_account", &1], peer)))
 	end
-	def send_message(peer \\ me) do
-		%Message{}
-		talk([], peer)
+	def send_message(pub, msg, peer \\ me) do
+		tx = ChannelManager.send(peer, cost(peer)*1.05)
+		%{payment: tx, to: pub, msg: msg, pub: Keys.pubkey}
+		|> Keys.sign
+		|> packer(&(talk(["send_message", &1], peer)))
 	end
 	def cost(peer \\ me) do talk(["cost"], peer) end
-	def delete(peer \\ me) do
-		%DeleteMessage{index: 0, pub: ""}
-		talk([], peer)
+	def delete(index, peer \\ me) do
+		%{pub: Keys.pubkey, index: index}
+		|> Keys.sign
+		|> packer(&(talk(["delete", &1], peer)))
+		#%DeleteMessage{index: 0, pub: ""}
 	end
-	def read_message(peer \\ me) do#something with a pub and an index...
-		talk([], peer)
+	def read_message(index, peer \\ me) do#something with a pub and an index...
+		%{pub: Keys.pubkey, index: index}
+		|> Keys.sign
+		|> packer(&(talk(["read_message", &1], peer)))
 	end
 	def inbox_size(peer \\ me) do
-		talk([], peer)
+		%{pub: Keys.pubkey}
+		|> Keys.sign
+		|> packer(&(talk(["inbox_size", &1], peer)))
 	end
 end

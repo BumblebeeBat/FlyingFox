@@ -40,15 +40,16 @@ defmodule CryptoSign do
 		end
 		h = DetHash.doit(cb)
 		sig = sign(h, priv)
-		cond do
-			(cb.pub == pub) ->
+		a = true
+		if cb.pub == pub do
 				m = %{m | sig: sig}
-			(cb.pub2 == pub) ->
-				m = %{m | sig2: sig}
-			true ->
-				IO.puts("not for me to sign")
-				1 = 2
+				a = false
 		end
+		if :pub2 in Map.keys(cb) and (cb.pub2 == pub) do
+				m = %{m | sig2: sig}
+				a = false
+		end
+		if a do IO.puts("not for me to sign") end
 		%CryptoSign{meta: m, data: cb}
   end
   def verify_tx(tx) do
