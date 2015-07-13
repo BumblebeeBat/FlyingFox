@@ -24,7 +24,7 @@ defmodule Listener do
           h = KV.get("height")
           block = Blockchain.get_block(h)
           if block.data==nil do block = %{data: 1} end
-          %Status{height: h, hash: DetHash.doit(block.data), pubkey: Keys.pubkey}
+          %Status{height: h, hash: Blockchain.blockhash(block), pubkey: Keys.pubkey}
 			"cost" -> MailBox.cost
 			"register" -> args |> packer(&(MailBox.register(&1.payment, &1.pub)))
 			"delete_account" -> args |> sig(&(MailBox.delete_account(&1.pub)))
