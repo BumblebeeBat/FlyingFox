@@ -13,9 +13,17 @@ defmodule Talker do
   def start do spawn_link(fn() -> timer end) end
   def still_on(blocks) do blocks == :ok or blocks == [] or (is_tuple(hd(blocks)) and :error in Dict.keys(blocks)) end
   def add_peers(x) do Enum.map(x, fn(x) -> Peers.add_peer(x) end) end
+	def flip(x) do flip(x, []) end
+	def flip([], x) do x end
+	def flip([head|tail], out \\ []) do flip(tail, [head|out]) end
   def download_blocks(i, u, p) do
-    blocks = Cli.blocks(min(50, u - i), i, p)
-    BlockAbsorber.absorb(blocks)
+    blocks = Cli.blocks(min(50, u - i), i, p) |> flip
+		if blocks != [] do
+			parent = hd(blocks).data.hash |> KV.get
+			#1 block at a time is pretty conservative, we could probably do this faster.
+			if parent == nil do download_blocks(i-5, i, p) end 
+			BlockAbsorber.absorb(blocks)
+		end
   end
   def trade_peers(p) do
 		keys = fn(z) -> Enum.map(z, fn(x) -> Peers.peer_key(x) end) end
