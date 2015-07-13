@@ -12,7 +12,9 @@ defmodule Listener do
 	def sig(o, f) do o |> hd |> packer(&(if CryptoSign.verify_tx(o) do f.(&1.data) else	"bad sig"	end)) end
 	def main(type, args) do
     case type do
-      "add_blocks" -> args |> hd |> packer(&(BlockAbsorber.absorb(&1)))
+      "add_blocks" ->
+				IO.puts("recieve blocks")
+				args |> hd |> packer(&(BlockAbsorber.absorb(&1)))
       "pushtx" -> args |> hd |> packer(&(Mempool.add_tx(&1)))
       "txs" -> Mempool.txs
       "height" -> KV.get("height")
