@@ -12,7 +12,9 @@ defmodule Cli do
 	end
 	def local_talk(msg) do Tcp.get_local(me.ip, me.port+1000, msg) end
 	def packer(o, f) do o |> PackWrap.pack |> f.() |> PackWrap.unpack end
-  def add_blocks(blocks, peer \\ me) do blocks |> packer(&(talk([:add_blocks, &1], peer))) end
+  def add_blocks(blocks, peer \\ me) do
+		IO.puts("add blocks #{inspect blocks}")
+		blocks |> packer(&(talk([:add_blocks, &1], peer))) end
   def txs(peer \\ me) do talk([:txs], peer) end
   def pushtx(tx, peer \\ me) do	tx |> packer(&(talk([:pushtx, &1], peer))) end
   def fast_blocks(start, finish, peer \\ me) do

@@ -60,6 +60,7 @@ defmodule Talker do
     txs = Cli.txs(p)
     u = status.height
     i = KV.get("height")
+		hash = Blockchain.blockhash(Blockchain.get_block(u))
     cond do
       txs == :ok -> IO.puts("txs shouldn't be :ok")
       (txs != []) and length(txs)>0 and is_tuple(hd(txs)) ->
@@ -68,9 +69,13 @@ defmodule Talker do
       u == i ->
 				Enum.map(txs, &(Mempool.add_tx(&1)))
 				Cli.txs |> Enum.filter(&(not &1 in txs)) |> Enum.map(&(Cli.pushtx(&1, p)))
+			status.hash == hash ->
+				Enum.map((u+1)..min((u+4), i), &(Blockchain.get_block(&1)))
+				|> Cli.add_blocks(p)
+        IO.puts("im ahead")
       true ->
 				#should push blocks!
-				Enum.map((u+1)..min((u+4), i), &(Blockchain.get_block(&1)))
+				Enum.map((u-3)..min((u+1), i), &(Blockchain.get_block(&1)))
 				|> Cli.add_blocks(p)
         IO.puts("im ahead")
         true

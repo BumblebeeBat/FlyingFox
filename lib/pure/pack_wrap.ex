@@ -1,29 +1,33 @@
 defmodule PackWrap do
 	def map2dict(m) do Map.to_list(m)	end
 	def dict2map(d) do
-		b = d[:__struct__]
-		d = Dict.delete(d, :__struct__)
-		case b do
-			"Elixir.Block" -> o = %Block{}
-			"Elixir.CryptoSign" -> o = %CryptoSign{}
-			"Elixir.Reveal" -> o = %Reveal{}
-			"Elixir.Spend" -> o = %Spend{}
-			"Elixir.Sign" -> o = %Sign{}
-			"Elixir.Spend2Wait" -> o = %Spend2Wait{}
-			"Elixir.Wait2Bond" -> o = %Wait2Bond{}
-			"Elixir.Bond2Spend" -> o = %Bond2Spend{}
-			"Elixir.Slasher" -> o = %Slasher{}
-			"Elixir.ToChannel" -> o = %ToChannel{}
-			"Elixir.ChannelBlock" -> o = %ChannelBlock{}
-			"Elixir.CloseChannel" -> o = %CloseChannel{}
-			"Elixir.Peer" -> o = %Peer{}
-			"Elixir.Meta" -> o = %Meta{}
-			"Elixir.Status" -> o = %Status{}
-			"Elixir.ChannelManager" -> o = %ChannelManager{}
-			nil -> o = %{}
-			x -> IO.puts("dict2map odd ball #{inspect x}")
+		if not (is_list(d) and Dict.has_key?(d, :__struct__)) do
+			d
+		else
+			b = d[:__struct__]
+			d = Dict.delete(d, :__struct__)
+			case b do
+				"Elixir.Block" -> o = %Block{}
+				"Elixir.CryptoSign" -> o = %CryptoSign{}
+				"Elixir.Reveal" -> o = %Reveal{}
+				"Elixir.Spend" -> o = %Spend{}
+				"Elixir.Sign" -> o = %Sign{}
+				"Elixir.Spend2Wait" -> o = %Spend2Wait{}
+				"Elixir.Wait2Bond" -> o = %Wait2Bond{}
+				"Elixir.Bond2Spend" -> o = %Bond2Spend{}
+				"Elixir.Slasher" -> o = %Slasher{}
+				"Elixir.ToChannel" -> o = %ToChannel{}
+				"Elixir.ChannelBlock" -> o = %ChannelBlock{}
+				"Elixir.CloseChannel" -> o = %CloseChannel{}
+				"Elixir.Peer" -> o = %Peer{}
+				"Elixir.Meta" -> o = %Meta{}
+				"Elixir.Status" -> o = %Status{}
+				"Elixir.ChannelManager" -> o = %ChannelManager{}
+				nil -> o = %{}
+				x -> IO.puts("dict2map odd ball #{inspect x}")
+			end
+			Enum.reduce(Dict.keys(d), o, &(Map.put(&2, &1, d[&1])))
 		end
-		Enum.reduce(Dict.keys(d), o, &(Map.put(&2, &1, d[&1])))
 	end
 	def demap(o) do #changes all maps in a datastructure into tuple lists representations.
 		cond do
@@ -76,11 +80,8 @@ defmodule PackWrap do
     end
   end
 	def pack(x) do x |> :jiffy.encode end
-  def unpack(x) do x = :jiffy.decode(x) |> rekey
-		cond do
-			is_list(x) and Dict.has_key?(x, :__struct__) -> dict2map(x)
-			true -> x
-		end
+  def unpack(x) do
+		if x == "" do "" else	:jiffy.decode(x) |> rekey |> dict2map	end
 	end
 	def test do
 		#t = %CloseChannel{}
