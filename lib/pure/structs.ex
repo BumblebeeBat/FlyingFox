@@ -1,12 +1,20 @@
-defmodule Message do
-	defstruct to: "", msg: "", payment: %ChannelBlock{}
+defmodule DeleteAccount do
+	defstruct pub: ""
+end
+defmodule SendMessage do
+	defstruct pub: "", to: "", msg: "", payment: %ChannelBlock{}
 end
 defmodule DeleteMessage do
 	defstruct pub: "", index: 0
 end
-defmodule DeleteAccount do
+defmodule ReadMessage do
+	defstruct pub: "", index: 0
+end
+defmodule InboxSize do
 	defstruct pub: ""
 end
+
+
 defmodule Status do
   defstruct height: 0, hash: "", pubkey: ""
 end

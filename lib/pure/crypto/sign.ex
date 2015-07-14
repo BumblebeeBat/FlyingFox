@@ -31,7 +31,7 @@ defmodule CryptoSign do
 		end
   end
   def sign_tx(tx, pub, priv) do
-		if tx.__struct__ == :Elixir.CryptoSign do
+		if :__struct__ in Map.keys(tx) and tx.__struct__ == :Elixir.CryptoSign do
 			cb = tx.data
 			m = tx.meta
 		else
@@ -53,7 +53,6 @@ defmodule CryptoSign do
 		%CryptoSign{meta: m, data: cb}
   end
   def verify_tx(tx) do
-    #%{meta: meta, data: data} = signed_tx
     h = DetHash.doit(tx.data)
 		pub = tx.data.pub
     verify(h, tx.meta.sig, pub)

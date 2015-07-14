@@ -51,6 +51,7 @@ defmodule ChannelManager do
 		if Keys.pubkey == tx.data.pub do d = d * -1 end
 		if mem != [] do x = mem[other] else x = get(other) end
 		x = x |> top_block
+		if is_binary(min_amount) do min_amount = String.to_integer(min_amount) end
 		cond do
 			d == 1 and tx.meta.sig2 == nil ->
 				IO.puts("2 should be signed by partner")
@@ -58,8 +59,9 @@ defmodule ChannelManager do
 			d == -1 and tx.meta.sig == nil ->
 				IO.puts("should be signed by partner")
 				false
-			not (tx.data.amount - x.data.amount > min_amount) ->
-				IO.puts("didn't spend enough")
+			not (tx.data.amount - x.data.amount >= min_amount) ->
+				IO.puts("didn't spend enough #{inspect tx.data.amount - x.data.amount}")
+				IO.puts("min amount #{inspect min_amount}")
 				false
 			not (:Elixir.CryptoSign == tx.__struct__) ->
 				IO.puts("unsigned")
@@ -84,12 +86,10 @@ defmodule ChannelManager do
 	def spend(pub, amount, default \\ Constants.default_channel_balance) do
 		IO.puts("pub #{inspect pub}")
 		cb = get(pub) |> top_block
-		IO.puts("cb #{inspect cb}")
 		cb = cb.data
-		IO.puts("cb #{inspect cb}")
+		#IO.puts("cb #{inspect cb}")
 		if is_binary(amount) do amount = String.to_integer(amount) end
 		on_chain = KV.get(ToChannel.key(pub, Keys.pubkey))
-		IO.puts("on_chain #{inspect on_chain}")
 		l = [cb.pub, cb.pub2]
 		if ((not (Keys.pubkey in l)) or not (pub in l)) do cb = %{cb | pub: Keys.pubkey, pub2: pub} end
 		if not pub in [cb.pub, cb.pub2] do cb = %{cb | pub2: Keys.pubkey} end

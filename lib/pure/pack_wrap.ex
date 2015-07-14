@@ -23,6 +23,12 @@ defmodule PackWrap do
 				"Elixir.Meta" -> o = %Meta{}
 				"Elixir.Status" -> o = %Status{}
 				"Elixir.ChannelManager" -> o = %ChannelManager{}
+				"Elixir.DeleteAccount" -> o = %DeleteAccount{}
+				"Elixir.SendMessage" -> o = %SendMessage{}
+				"Elixir.DeleteMessage" -> o = %DeleteMessage{}
+				"Elixir.ReadMessage" -> o = %ReadMessage{}
+				"Elixir.InboxSize" -> o = %InboxSize{}
+				"Elixir.Msg" -> o = %Msg{}
 				nil -> o = %{}
 				x -> IO.puts("dict2map odd ball #{inspect x}")
 			end

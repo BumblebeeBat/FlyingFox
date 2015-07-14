@@ -9,12 +9,12 @@ defmodule Listener do
     {:noreply, []}
   end
 	def packer(o, f) do o |> PackWrap.unpack |> f.() |> PackWrap.pack end
-	def sig(o, f) do o |> hd |> packer(&(if CryptoSign.verify_tx(o) do f.(&1.data) else	"bad sig"	end)) end
+	def sig(o, f) do
+		IO.puts("sig #{inspect packer(hd(o), &(&1.data))}")
+		o |> hd |> packer(&(if CryptoSign.verify_tx(&1) do f.(&1.data) else	"bad sig"	end)) end
 	def main(type, args) do
     case type do
-      "add_blocks" ->
-				IO.puts("recieve blocks")
-				args |> hd |> packer(&(BlockAbsorber.absorb(&1)))
+      "add_blocks" -> args |> hd |> packer(&(BlockAbsorber.absorb(&1)))
       "pushtx" -> args |> hd |> packer(&(Mempool.add_tx(&1)))
       "txs" -> Mempool.txs
       "height" -> KV.get("height")
@@ -28,13 +28,25 @@ defmodule Listener do
           if block.data==nil do block = %{data: 1} end
           %Status{height: h, hash: Blockchain.blockhash(block), pubkey: Keys.pubkey}
 			"cost" -> MailBox.cost
-			"register" -> args |> packer(&(MailBox.register(&1.payment, &1.pub)))
-			"delete_account" -> args |> sig(&(MailBox.delete_account(&1.pub)))
+			"register" ->
+				#IO.puts("listener register #{inspect args}")
+				args |> hd |> packer(fn(x) ->
+				#IO.puts("unpacked register #{inspect x}")
+				MailBox.register(x[:payment], x[:pub])
+			end)
+			"delete_account" -> args |> sig(fn(x) ->
+					IO.puts("delete account #{inspect args}")
+					MailBox.delete_account(x.pub)
+				end)
+													#&(MailBox.delete_account(&1.pub)))
 			"send_message" ->   args |> sig(&(MailBox.send(&1.payment, &1.to, &1.msg, &1.pub)))
 			"delete" ->         args |> sig(&(MailBox.delete(&1.pub, &1.index)))
-			"read_message" ->   args |> sig(&(MailBox.read(&1.pub, &1.index)))
+			"read_message" ->
+				IO.puts("listener read #{inspect hd(args)}")
+				IO.puts("listener read #{inspect PackWrap.unpack(hd(args))}")
+				args |> sig(&(MailBox.read(&1.pub, &1.index)))
 			"inbox_size" ->     args |> sig(&(MailBox.size(&1.pub)))
-			"accept" -> ChannelManager.accept(hd(args), 1000)
+			"accept" -> args |> hd |> packer(&(ChannelManager.accept(&1, max(1000, hd(tl(args))))))
       x -> IO.puts("listener is not a command #{inspect x}")
     end
   end

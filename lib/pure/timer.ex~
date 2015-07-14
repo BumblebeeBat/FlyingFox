@@ -1,0 +1,11 @@
+defmodule Timer do
+	def stamp do
+	end
+	def now_diff(x) do
+		x = etoi(x)
+		x
+		|> etoi
+		|> &(:timer.now_diff(:os.timestamp, &1).()
+		|> itoe
+	end
+end
