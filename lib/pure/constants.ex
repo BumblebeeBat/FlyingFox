@@ -13,8 +13,9 @@ defmodule Constants do
 	def message_size do 10000 end #in bytes
 	# constants below here can be edited.
   def min_tx_fee_this_node do 10000 end
-  def tcp_port do 6666 end
+  def tcp_port do 7666 end
 	def max_nodes do 5 end
 	def registration do 1000000 end
 	def default_channel_balance do 500_000_000 end
+	def min_channel_spend do 10000 end
 end

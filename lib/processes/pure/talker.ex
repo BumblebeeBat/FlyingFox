@@ -10,19 +10,18 @@ defmodule Talker do
   def start_link() do
     GenServer.start_link(__MODULE__, :ok, [name: @name])
   end
-  def start do spawn_link(fn() -> timer end) end
   def still_on(blocks) do blocks == :ok or blocks == [] or (is_tuple(hd(blocks)) and :error in Dict.keys(blocks)) end
   def add_peers(x) do Enum.map(x, fn(x) -> Peers.add_peer(x) end) end
 	def flip(x) do flip(x, []) end
 	def flip([], x) do x end
 	def flip([head|tail], out \\ []) do flip(tail, [head|out]) end
   def download_blocks(i, u, p) do
-    blocks = Cli.blocks(min(50, u - i), i, p) |> flip
+		blocks = Cli.blocks(i, min(i+50, u), p) |> flip
+    #blocks = Cli.blocks(min(50, u - i), i, p) |> flip
 		if blocks != [] do
 			parent = hd(blocks).data.hash |> KV.get
-			#1 block at a time is pretty conservative, we could probably do this faster.
+			Task.start(fn() -> BlockAbsorber.absorb(blocks) end)
 			if parent == nil do download_blocks(i-5, i, p) end 
-			BlockAbsorber.absorb(blocks)
 		end
   end
   def trade_peers(p) do
@@ -72,21 +71,18 @@ defmodule Talker do
 			status.hash == hash ->
 				Enum.map((u+1)..min((u+4), i), &(Blockchain.get_block(&1)))
 				|> Cli.add_blocks(p)
-        IO.puts("im ahead")
       true ->
-				#should push blocks!
 				Enum.map((u-3)..min((u+1), i), &(Blockchain.get_block(&1)))
 				|> Cli.add_blocks(p)
-        IO.puts("im ahead")
         true
     end
   end
   def check_peers do
     Cli.all_peers
-    |> Enum.map(&(spawn_link(fn -> check_peer(&1) end)))
+    |> Enum.map(&(Task.start_link(fn -> check_peer(&1) end)))
    end
   def init(_) do
-    start
+		Task.start_link(fn() -> timer end)
     Enum.map(0..Constants.max_nodes, &(%Peer{ip: "localhost", port: Constants.tcp_port+&1})) 
     |> Enum.map(&(Peers.add_peer(&1)))
     Enum.map(0..Constants.max_nodes, &(%Peer{ip: "192.241.212.114", port: Constants.tcp_port+&1})) 

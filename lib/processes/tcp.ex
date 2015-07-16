@@ -43,6 +43,7 @@ defmodule Tcp do
 		end
 		false = is_tuple(a)
 		url = 'http://' ++ to_char_list(ip) ++ ':' ++ to_char_list(to_string(port)) ++ y ++ to_char_list(Base.encode64(PackWrap.pack(a)))
+		#IO.puts("url #{inspect url}")
 		x = :httpc.request(url)
 		case x do
 			{:ok, z} ->  b = z |> elem(2) |> list2bin |> PackWrap.unpack

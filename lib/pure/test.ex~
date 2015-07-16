@@ -70,22 +70,22 @@ defmodule Test do
 	def sm do
 		p = peer
 		rg
-		Cli.send_message(Keys.pubkey, "example message", p)
-		Cli.inbox_size(p)
+		Cli.send_message(Cli.status(p).pubkey, "example message", p)
+		#Cli.inbox_size(p)
 	end
 	def dm do
+		sm
 		p = peer
-		rg
-		Cli.send_message(Keys.pubkey, "test test", p)
-		Cli.inbox_size(p) |> inspect |> IO.puts
-		Cli.delete(0, p)
-		Cli.inbox_size(p) |> inspect |> IO.puts
+		a = Cli.inbox_size(p)
+		IO.puts("dm size #{inspect a}")
+		Cli.delete_message(0, p)
+		a = Cli.inbox_size(p)
+		IO.puts("dm size #{inspect a}")
 	end
-	def rm do
-		rg
-		Cli.send_message(Keys.pubkey, "test message", peer)
-		Cli.read_message(0, peer)
-	end
+	#def rm do
+	#	sm
+	#	Cli.read_message(0, peer)
+	#end
 	def is do
 		rg
 		Cli.inbox_size(peer)

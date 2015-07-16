@@ -25,10 +25,10 @@ defmodule PackWrap do
 				"Elixir.ChannelManager" -> o = %ChannelManager{}
 				"Elixir.DeleteAccount" -> o = %DeleteAccount{}
 				"Elixir.SendMessage" -> o = %SendMessage{}
-				"Elixir.DeleteMessage" -> o = %DeleteMessage{}
-				"Elixir.ReadMessage" -> o = %ReadMessage{}
+				"Elixir.PopMessage" -> o = %PopMessage{}
 				"Elixir.InboxSize" -> o = %InboxSize{}
 				"Elixir.Msg" -> o = %Msg{}
+				"Elixir.Account" -> o = %Account{}
 				nil -> o = %{}
 				x -> IO.puts("dict2map odd ball #{inspect x}")
 			end

@@ -30,20 +30,21 @@ defmodule ChannelManager do
 	def other(tx) do
 		tx = [tx.data.pub, tx.data.pub2] |> Enum.filter(&(&1 != Keys.pubkey))
 		cond do
-			tx = [] -> Keys.pubkey
+			tx == [] -> Keys.pubkey
 			true -> hd(tx)
 		end
 	end
 	def accept(tx, min_amount, mem \\ []) do
-		if accept_check(tx, min_amount, mem) do
-			other = other(tx)
-			GenServer.cast(@name, {:recieve, other, tx})
-			d = 1
-			if tx.data.pub2 == Keys.pubkey do d = d * -1 end
-			tx.data.amount * d
-		else
-			IO.puts("bad channel #{inspect tx}")
-		end			
+		cond do
+			tx == nil -> "no channel"
+			accept_check(tx, min_amount, mem) ->
+				other = other(tx)
+				GenServer.cast(@name, {:recieve, other, tx})
+				d = 1
+				if tx.data.pub2 == Keys.pubkey do d = d * -1 end
+				tx.data.amount * d
+			true -> IO.puts("bad channel #{inspect tx}")
+		end
 	end
 	def accept_check(tx, min_amount \\ -Constants.initial_coins, mem \\ []) do
 		other = other(tx)
@@ -59,8 +60,10 @@ defmodule ChannelManager do
 			d == -1 and tx.meta.sig == nil ->
 				IO.puts("should be signed by partner")
 				false
-			not (tx.data.amount - x.data.amount >= min_amount) ->
-				IO.puts("didn't spend enough #{inspect tx.data.amount - x.data.amount}")
+			not ( (d * (x.data.amount - tx.data.amount)) >= min_amount) ->
+				IO.puts("x #{inspect x}")
+				IO.puts("tx #{inspect tx}")
+				IO.puts("didn't spend enough #{inspect d * (x.data.amount - tx.data.amount)}")
 				IO.puts("min amount #{inspect min_amount}")
 				false
 			not (:Elixir.CryptoSign == tx.__struct__) ->
@@ -84,23 +87,27 @@ defmodule ChannelManager do
 		|> hd
 	end
 	def spend(pub, amount, default \\ Constants.default_channel_balance) do
-		IO.puts("pub #{inspect pub}")
+		if amount > Constants.min_channel_spend do
+			spend_helper(pub, amount, default)
+		end
+	end
+	def spend_helper(pub, amount, default) do
 		cb = get(pub) |> top_block
 		cb = cb.data
-		#IO.puts("cb #{inspect cb}")
+		IO.puts("channel manager spend #{inspect cb}")
+		pub1 = cb.pub
 		if is_binary(amount) do amount = String.to_integer(amount) end
 		on_chain = KV.get(ToChannel.key(pub, Keys.pubkey))
-		l = [cb.pub, cb.pub2]
-		if ((not (Keys.pubkey in l)) or not (pub in l)) do cb = %{cb | pub: Keys.pubkey, pub2: pub} end
-		if not pub in [cb.pub, cb.pub2] do cb = %{cb | pub2: Keys.pubkey} end
+		cb = %{cb | pub: Keys.pubkey, pub2: pub}
+		d = 1
+		if pub1 != cb.pub do d = -1 end
 		if Keys.pubkey != cb.pub do amount = -amount end
-		cb = %{cb | amount: cb.amount + amount, nonce: cb.nonce + 1} |> Keys.sign
+		cb = %{cb | amount: (d * cb.amount) + amount, nonce: cb.nonce + 1} |> Keys.sign
 		if on_chain.amount <= amount or on_chain.amount2 <= -amount do
 			IO.puts("not enough money in the channel to spend that much")
 			IO.puts("on chain #{inspect on_chain}")
 			IO.puts("amount #{inspect amount}")
 		else
-			IO.puts("channel manager spend #{inspect cb}")
 			GenServer.cast(@name, {:send, pub, cb})
 		end
 		cb

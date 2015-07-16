@@ -46,8 +46,8 @@ defmodule ChannelBlock do
 		else
 			TxUpdate.sym_replace(channel, :time, 0, KV.get("height"), d)
 			TxUpdate.sym_replace(channel, :nonce, 0, da.nonce, d)
-			TxUpdate.sym_increment(channel, :amount, -da.amount, d)
-			TxUpdate.sym_increment(channel, :amount2, da.amount, d)
+			TxUpdate.sym_increment(channel, :amount, da.amount, d)
+			TxUpdate.sym_increment(channel, :amount2, -da.amount, d)
 		end
 	end
 end

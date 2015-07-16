@@ -1,5 +1,5 @@
 defmodule Msg do
-	defstruct time: 0, msg: "", size: 0, price: 0, from: ""
+	defstruct time: 0, msg: "", size: 0, price: 0, from: "", to: ""
 end
 #there should be a KV thread that this thread uses to store stuff. That way when this thread dies, the mailbox doesn't get dumped.
 defmodule MailBox do
@@ -22,25 +22,20 @@ defmodule MailBox do
 		end
 	end
 	def handle_cast({:send, to, message, from}, {db, m, messages}) do
-		msg = %Msg{msg: message, time: Timer.stamp, size: byte_size(message), price: messages*1000000, from: from}
+		msg = %Msg{msg: message, time: Timer.stamp, size: byte_size(message), price: messages*1000000, from: from, to: to}
 		a = db[to]
 		if a == nil do a = [] end
-		dd = HashDict.put(db, to, [msg|a])
+		dd = HashDict.put(db, to, a ++ [msg])
 		{:noreply, {dd, m, messages+1}}
 	end
-	def handle_cast({:del, pub, index}, {db, m, messages}) do
-		dd = HashDict.put(db, pub, List.delete_at(db[pub], index))
-		{:noreply, {dd, m, messages - 1}}
-	end
-	def nth(index, l) do
-		cond do
-			l == nil -> nil
-			l == [] -> nil
-			index == 0 -> hd(l)
-			true -> nth(index - 1, tl(l))
+	def handle_call({:pop, pub}, _from, {db, b, messages}) do
+		if is_list(db[pub]) and length(db[pub]) > 0 do
+			out = hd(db[pub])
+			db = HashDict.put(db, pub, tl(db[pub]))#List.delete_at(db[pub], index))
+		else
+			out = nil
 		end
-	end
-	def handle_call({:read, pub, index}, _from, {db, b, c}) do {:reply, nth(index, db[pub]), {db, b, c}}	end
+		{:reply, out, {db, b, messages - 1}}	end
 	def handle_call({:size, pub}, _from, {db, b, c}) do
 		cond do
 			db[pub] == nil -> out = 0
@@ -49,14 +44,29 @@ defmodule MailBox do
 		{:reply, out, {db, b, c}}
 	end
 	def handle_call(:status, _from, {db, m, n}) do {:reply, %{mailboxes: m, messages: n}, {db, m, n}} end
-	def read(pub, index) do GenServer.call(@name, {:read, pub, index}) end
+	def pop(pub) do
+		msg = GenServer.call(@name, {:pop, pub})
+		time = Timer.now_diff(msg.time) + 10000000 #10 second fee automatically
+		two_days = 24*60*60*1000000
+		cond do
+			msg == nil -> nil
+			pub == Keys.pubkey -> nil
+			true ->
+				refund = round(msg.price *  max(0, ((two_days - time) / two_days)))
+				tx = ChannelManager.spend(pub, refund)
+				%SendMessage{msg: msg, payment: tx, to: pub, pub: Keys.pubkey}
+		end
+	end
 	def size(pub) do GenServer.call(@name, {:size, pub}) end
 	def status do GenServer.call(@name, :status) end
 	def cost do cost(status) end
 	def cost(s) do s.messages*1000000	end
 	def accept(payment, cost, f) do if ChannelManager.accept(payment, cost) do f.() else "bad payment" end	end
 	def register(payment, pub) do
-		accept(payment, Constants.registration,  fn() -> GenServer.cast(@name, {:new, pub}) end) end
+		accept(payment, Constants.registration,  fn() ->
+			GenServer.cast(@name, {:new, pub})
+		end)
+	end
 	def send(payment, to, msg, from) do accept(payment, cost, fn() -> GenServer.cast(@name, {:send, to, msg, from}) end) end
 	def delete_account(pub) do
 		foo = size(pub)
@@ -65,23 +75,6 @@ defmodule MailBox do
 		if foo != bar do
 			ChannelManager.send(pub, Constants.registration_fee * 9 / 10)
 			#we should send a message to out peer about his new money.
-		end
-	end
-	def delete(pub, index) do
-		msg = read(pub, index)
-		time = Timer.now_diff(msg.time)
-		two_days = 24*60*60*1000000
-		GenServer.cast(@name, {:del, pub, index})
-		after_msg = read(pub, index)
-		cond do
-			msg == after_msg -> "nothing to delete"
-			true ->
-				cost = msg.price * ((two_days - time) / two_days)
-				tx = nil
-				if pub != Keys.pubkey do 
-				  tx = ChannelManager.spend(pub, cost)
-				end
-				tx
 		end
 	end
 end

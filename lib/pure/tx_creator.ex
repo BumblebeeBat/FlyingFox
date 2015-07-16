@@ -73,36 +73,29 @@ defmodule TxCreator do
   def slasher(tx1, tx2) do
   end
   def to_channel(other, amount, delay \\ 10) do
-		IO.puts("to channel")
 		if KV.get(other) == nil do
-			IO.puts("your partner doesn't exist yet, so this probably wont work")
+			IO.puts("your partner doesn't exist yet, so this to_channel tx probably wont work")
 		end
 		if is_binary(amount) do amount = String.to_integer(amount) end
 		is_ch = KV.get(ToChannel.key(Keys.pubkey, other))
 		new = (is_ch == nil)
-		tx = %ToChannel{amount: amount, new: new,	to: "amount"}
+		tx = %ToChannel{amount: amount, new: new,	to: "amount", pub: Keys.pubkey, pub2: other}
 		if new do
-			tx2 = %{tx | delay: delay, nonce: nonce(Keys.pubkey), pub: Keys.pubkey, pub2: other}
+			tx = %{tx | delay: delay, nonce: nonce(Keys.pubkey)}
 		else
-			tx2 = %{tx | pub: is_ch.pub, pub2: is_ch.pub2}
-			if is_ch.pub2 == Keys.pubkey do tx2 = %{tx2 | to: "amount2"} end
+			if is_ch.pub2 == Keys.pubkey do tx = %{tx | to: "amount2"} end
 		end
-		IO.puts("is_ch #{inspect is_ch}")
-		tx2 |> broadcast
+		tx |> broadcast
 		#the channel should be updated in the channel manager.
   end
   def close_channel_fast(other) do
 		#needs  channel manager top block
-		IO.puts("close channel fast #{inspect other}")
 		c = ToChannel.key(Keys.pubkey, other)
 		if KV.get(c) == nil do
 			IO.puts("this channel doesn't exist yet, so you cannot close it.")
 		end
-		IO.puts("2")
 		cb = ChannelManager.get(other)
-		IO.puts("channel #{inspect cb}")
-		cb = cb |> ChannelManager.top_block
-		IO.puts("channel #{inspect cb}")
+		|> ChannelManager.top_block
 		%{cb.data | fast: true}
 		#once it is accepted into the bockchain, we should delete the channel from the channel manager
     |> Keys.sign

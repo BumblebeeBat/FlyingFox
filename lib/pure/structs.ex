@@ -4,11 +4,8 @@ end
 defmodule SendMessage do
 	defstruct pub: "", to: "", msg: "", payment: %ChannelBlock{}
 end
-defmodule DeleteMessage do
-	defstruct pub: "", index: 0
-end
-defmodule ReadMessage do
-	defstruct pub: "", index: 0
+defmodule PopMessage do
+	defstruct pub: ""
 end
 defmodule InboxSize do
 	defstruct pub: ""
@@ -20,7 +17,8 @@ defmodule Status do
 end
 defmodule Account do
   #wait={amount, height}
-  defstruct amount: 0, bond: 0, wait: {0, 0}, nonce: 0
+  #defstruct amount: 0, bond: 0, wait: {0, 0}, nonce: 0
+  defstruct amount: 0, bond: 0, nonce: 0, wait_amount: 0, wait_height: 0
 end
 defmodule Block do
   defstruct height: 0, txs: [], hash: "", bond_size: 1.0e10, pub: ""

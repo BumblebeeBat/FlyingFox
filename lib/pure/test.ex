@@ -1,13 +1,14 @@
 defmodule Test do
 	#each of the 2-letter functions is a test for the system. To run tests, start 2 flying fox nodes on the same computer. Then run any of these 2-letter functions from either computer.
 	# warning, if you run tests on the main-chain, you will spend money.
-	def peer do
+	def peer_helper do
 		Cli.all_peers
 		|> Enum.filter(&(&1.port != Port.port))
 		|> Enum.filter(&(&1.ip == "localhost"))
 		|> Enum.sort(&(&1.height > &2.height))
-		|> hd
-	end
+	end		
+	def peer do peer_helper |> hd	end
+	def peer2 do peer_helper |> tl |> hd end
 	def channel_common do
 		p = peer
 		Cli.new_key(p)
@@ -18,6 +19,7 @@ defmodule Test do
 		Cli.buy_block
 		{p, key}
 	end
+	#These tests need 2 nodes
 	def cf do
 		{p, key}  = channel_common
 		Cli.channel_spend(key, 2000)
@@ -51,30 +53,49 @@ defmodule Test do
 		|> Keys.sign
 		|> Cli.close_channel_slasher
 	end
-	def rg do
-		p = peer
-		Cli.new_key(p)
-		key = Cli.status(p).pubkey
-		Cli.spend(key, 1000000)
+	#these tests need 3 nodes
+	def ms do
+		delay = 5000
+		p1 = peer #central node
+		p2 = peer2
+		Cli.new_key(p1)
+		Cli.new_key(p2)
+		key1 = Cli.status(p1).pubkey
+		key2 = Cli.status(p2).pubkey
+		Cli.spend(key1, 10000000)
+		Cli.spend(key2, 10000000)
 		Cli.cleanup
+		:timer.sleep(delay)
 		Cli.buy_block
-		Cli.to_channel(key, 2000000)
+		:timer.sleep(delay)
+		Cli.to_channel(key1, 8000000, p2)
+		Cli.to_channel(key1, 12000000)
+		:timer.sleep(delay)
 		Cli.buy_block
-		:timer.sleep(5000)
-		Cli.register(p)
-	end
+		:timer.sleep(delay)
+		Cli.to_channel(Keys.pubkey, 1500000, p1)
+		Cli.to_channel(key2, 1500000, p1)
+		:timer.sleep(delay)
+		Cli.buy_block
+		:timer.sleep(delay)
+		Cli.register(p1)
+		Cli.register(p1, p2)
+		Cli.send_message(key2, "test1234", p1)
+		#:timer.sleep(1000)
+		Cli.send_message(key2, "test1235", p1)
+		#:timer.sleep(1000)
+		Cli.send_message(key2, "test1236", p1)
+		:timer.sleep(delay)
+		Cli.read_message(0, Keys.pubkey, p2) |> inspect |> IO.puts
+		Cli.read_message(1, Keys.pubkey, p2) |> inspect |> IO.puts
+		Cli.read_message(2, Keys.pubkey, p2) |> inspect |> IO.puts
+		end
 	def da do
-		rg
+		#rg
 		Cli.delete_account(peer)
 	end
-	def sm do
-		p = peer
-		rg
-		Cli.send_message(Cli.status(p).pubkey, "example message", p)
-		#Cli.inbox_size(p)
-	end
 	def dm do
-		sm
+		#sm
 		p = peer
 		a = Cli.inbox_size(p)
 		IO.puts("dm size #{inspect a}")
@@ -82,12 +103,8 @@ defmodule Test do
 		a = Cli.inbox_size(p)
 		IO.puts("dm size #{inspect a}")
 	end
-	#def rm do
-	#	sm
-	#	Cli.read_message(0, peer)
-	#end
 	def is do
-		rg
+		#rg
 		Cli.inbox_size(peer)
 	end
 end

@@ -18,7 +18,10 @@ defmodule Main do
                 worker(InternalListener, []),
                 supervisor(Tcp, [:tcp, &(Listener.export(&1)), &(InternalListener.export(&1))]),
                 worker(Talker, []),
-								worker(MailBox, [])
+								worker(MailBox, []),
+								worker(MailNodes, []),
+								worker(Inbox, []),
+								worker(CheckMail, []),
                ]
     supervise(children, strategy: :one_for_one)
   end

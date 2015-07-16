@@ -5,7 +5,7 @@ defmodule InternalListener do
   def start_link() do GenServer.start_link(__MODULE__, :ok, [name: @name]) end
   def export(l) do GenServer.call(@name, {hd(l), tl(l)}) end
   def handle_call({type, args}, _from, _) do 
-    spawn(fn() -> GenServer.reply(_from, main(type, args)) end)
+    Task.start(fn() -> GenServer.reply(_from, main(type, args)) end)
     {:noreply, []}
   end
 	def pack(o, f) do
@@ -33,8 +33,40 @@ defmodule InternalListener do
 				TxCreator.reveal
 			"newkey" -> Keys.new
 			"loadkey" -> Keys.load(hd(args), hd(tl(args)))
-      x ->
-        IO.puts("is not a command #{inspect x}")
+			"register" ->
+				#maybe MailNodes.register shoule contain all this logic
+				peer = args |> hd |> PackWrap.unpack
+				pub = Cli.status(peer).pubkey
+				%{payment: MailNodes.register(peer, pub), pub: Keys.pubkey}
+				|> Cli.packer(&(Cli.talk(["register", &1], peer)))
+			"delete_account" ->
+				#maybe MailNodes.delete_account shoule contain all this logic
+				peer = hd(args)
+				MailNodes.delete_account(peer)
+				%DeleteAccount{pub: Keys.pubkey}
+				|> Keys.sign
+				|> Cli.packer(&(Cli.talk(["delete_account", &1], peer)))
+				|> ChannelManager.accept(0)
+			"send_message" ->
+				#maybe a function in inbox shoule contain all this logic
+				node = hd(args) |> PackWrap.unpack
+				pub = hd(tl(args))
+				msg = hd(tl(tl(args))) |> PackWrap.unpack
+				node_pub = Cli.status(node).pubkey
+				tx = ChannelManager.spend(node_pub, max(round(Cli.cost(node)*1.01), Constants.min_channel_spend))
+				Inbox.record_message(%Msg{msg: msg, to: pub, from: Keys.pubkey})
+				%SendMessage{payment: tx, to: pub, msg: msg, pub: Keys.pubkey}
+				|> Keys.sign
+				|> Cli.packer(&(Cli.talk(["send_message", &1], node)))
+			"read_message" ->
+				index = hd(args)
+				if is_binary(index) do index = String.to_integer(index) end
+				pub = hd(tl(args))
+				Inbox.read_message(pub, index)
+			"inbox_size" -> Inbox.size(hd(args))
+			"delete_message" -> Inbox.delete_message(hd(args), hd(tl(args)))
+			"inbox_peers" -> Inbox.peers
+      x -> IO.puts("is not a command #{inspect x}")
     end
   end
 end

@@ -1,4 +1,5 @@
 defmodule ToChannel do
+	#pub is always the person who is spending money into the channel.
   defstruct nonce: 0, to: "amount", amount: 0, new: false, delay: 100, fee: 10000, pub: "", pub2: ""
 	def key(a, b) do
 		cond do
@@ -7,7 +8,13 @@ defmodule ToChannel do
 		end
 	end
 	def check(tx, txs) do
+		news = txs |> Enum.filter(&(&1.data.__struct__ == tx.data.__struct__))
+		|> Enum.filter(&(key(&1.data.pub, &1.data.pub2) == key(tx.data.pub, tx.data.pub2)))
+		|> Enum.filter(&(&1.data.new == true))
     cond do
+			tx.data.new and news != [] ->
+				IO.puts("no repeated news")
+				false
       not tx.data.to in ["amount", "amount2"] ->
 				IO.puts("bad to #{inspect tx}")
 				false
@@ -33,7 +40,7 @@ defmodule ToChannel do
 				IO.puts("channel doesn't exist yet")
 				false
 		(channel != nil) and (tx.data.new == true) ->
-				IO.puts("channel already exists")
+				#IO.puts("channel already exists")
 				false
 		(channel != nil) and (channel.nonce != 0) ->
 				IO.puts("this channel is being closed.")
@@ -42,6 +49,7 @@ defmodule ToChannel do
     end
 	end
 	def update(tx, d) do
+		IO.puts("to_channel update #{inspect tx}")
     da = tx.data
 		channel = key(da.pub, da.pub2)
     TxUpdate.sym_increment(da.pub, :amount, -da.amount - da.fee, d)

@@ -1,0 +1,87 @@
+    <html>
+    <p id="pub"></p>
+    <p id="bal"></p>
+    <p id="bal"></p>
+    <textarea id="msg" rows="6" cols="80"></textarea>
+    <button type="button" id="send_button">Send Message</button>
+    <ul id="messages" style="list-style: none; padding: 0; margin: 0;"></ul>
+    <head>
+    </head>
+    <script>
+
+var send_button = document.getElementById("send_button");
+send_button.onclick=function() {
+    var b = document.getElementById("msg");
+    console.log("message: ".concat(b.value));
+};
+
+function url(port) {
+    return "http://localhost:".concat(port.toString().concat("/"));
+}
+
+function get(s) {
+    s = JSON.stringify(s);
+    u = url(7666);
+    u = u.concat(btoa(s));
+    xmlhttp=new XMLHttpRequest();
+    xmlhttp.open("GET",u,false);
+    xmlhttp.send();
+    out = xmlhttp.responseText;
+    return out;
+}
+function local_get(s) {
+    s = JSON.stringify(s);
+    // u = url(8669);
+    u = url(8666).concat("priv/");
+    u = u.concat(btoa(s));
+    xmlhttp=new XMLHttpRequest();
+    xmlhttp.open("GET",u,false);
+    xmlhttp.send();
+    out = xmlhttp.responseText;
+    return out;
+}
+function add_message(message) {
+    var ul = document.getElementById("messages");
+    var li = document.createElement("li");
+    li.innerHTML = '<font color="#000000">'.concat(message).concat('</font>');
+    ul.appendChild(li);
+}
+function recieve_message(message) {
+    var ul = document.getElementById("messages");
+    var li = document.createElement("li");
+    li.innerHTML = '<font color="#FF0000">____'.concat(message).concat('</font>');
+    ul.appendChild(li);
+}
+function empty_messages() {
+    var ul = document.getElementById("messages");
+    ul.innerHTML = '';
+}
+function peers() { return JSON.parse(local_get("inbox_peers")); } 
+function message(index, pub) {return JSON.parse(local_get("read_message&".concat(index).concat("&").concat(pub))); }
+function refresh_messages() {
+    empty_messages();
+    pub = peers()[0];
+    console.log(pub.concat(" our peer"));
+    size = local_get("inbox_size&".concat(pub));
+    console.log("size ".concat(size));
+    for (i = 0; i < size; i++) {
+	msg = message(i, pub);
+	if (msg.to == pub) {
+	    add_message(msg.msg);
+	} else {
+	    recieve_message(msg.msg);
+	}
+    }
+}
+
+status = get("status");
+pub = JSON.parse(status).pubkey;
+document.getElementById("pub").innerHTML = "pubkey: ".concat(pub);
+acc = get("kv&".concat(pub));
+amount = JSON.parse(acc).amount;
+document.getElementById("bal").innerHTML = "balance: ".concat(amount);
+add_message("abcd");
+recieve_message("abcff");
+refresh_messages();
+</script>
+    </html>

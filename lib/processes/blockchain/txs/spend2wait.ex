@@ -4,7 +4,8 @@ defmodule Spend2Wait do
     pub = tx.data.pub
     acc = KV.get(pub)
     cond do
-      {0,0} != acc.wait -> false
+			acc.wait_amount != 0 -> false
+			acc.wait_height != 0 -> false
       true -> true
     end
 	end
@@ -13,6 +14,8 @@ defmodule Spend2Wait do
     h = KV.get("height")
     da = tx.data
     TxUpdate.sym_increment(tx.data.pub, :amount, -da.amount - da.fee, d)
-    TxUpdate.sym_replace(tx.data.pub, :wait, {0,0}, {da.amount, h}, d)
+    TxUpdate.sym_replace(tx.data.pub, :wait_amount, 0, da.amount, d)
+    TxUpdate.sym_replace(tx.data.pub, :wait_height, 0, h, d)
+    #TxUpdate.sym_replace(tx.data.pub, :wait, {0,0}, {da.amount, h}, d)
 	end
 end
