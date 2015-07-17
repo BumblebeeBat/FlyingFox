@@ -73,8 +73,9 @@ defmodule Test do
 		:timer.sleep(delay)
 		Cli.buy_block
 		:timer.sleep(delay)
-		Cli.to_channel(Keys.pubkey, 1500000, p1)
-		Cli.to_channel(key2, 1500000, p1)
+		Cli.to_channel(Keys.pubkey, 3000000, p1)
+		:timer.sleep(delay)
+		Cli.to_channel(key2, 3000000, p1)
 		:timer.sleep(delay)
 		Cli.buy_block
 		:timer.sleep(delay)

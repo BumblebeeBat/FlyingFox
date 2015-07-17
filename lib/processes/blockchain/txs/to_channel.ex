@@ -40,7 +40,7 @@ defmodule ToChannel do
 				IO.puts("channel doesn't exist yet")
 				false
 		(channel != nil) and (tx.data.new == true) ->
-				#IO.puts("channel already exists")
+				IO.puts("channel already exists")
 				false
 		(channel != nil) and (channel.nonce != 0) ->
 				IO.puts("this channel is being closed.")
@@ -49,7 +49,6 @@ defmodule ToChannel do
     end
 	end
 	def update(tx, d) do
-		IO.puts("to_channel update #{inspect tx}")
     da = tx.data
 		channel = key(da.pub, da.pub2)
     TxUpdate.sym_increment(da.pub, :amount, -da.amount - da.fee, d)

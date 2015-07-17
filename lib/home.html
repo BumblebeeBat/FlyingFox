@@ -9,19 +9,15 @@
     </head>
     <script>
 
-var send_button = document.getElementById("send_button");
-send_button.onclick=function() {
-    var b = document.getElementById("msg");
-    console.log("message: ".concat(b.value));
-};
-
 function url(port) {
     return "http://localhost:".concat(port.toString().concat("/"));
 }
+PORT = 7669;
+me = 7670;
 
 function get(s) {
     s = JSON.stringify(s);
-    u = url(7666);
+    u = url(me);
     u = u.concat(btoa(s));
     xmlhttp=new XMLHttpRequest();
     xmlhttp.open("GET",u,false);
@@ -30,9 +26,9 @@ function get(s) {
     return out;
 }
 function local_get(s) {
+    u = url(me + 1000);
+    u = u.concat("priv/");
     s = JSON.stringify(s);
-    // u = url(8669);
-    u = url(8666).concat("priv/");
     u = u.concat(btoa(s));
     xmlhttp=new XMLHttpRequest();
     xmlhttp.open("GET",u,false);
@@ -57,11 +53,12 @@ function empty_messages() {
     ul.innerHTML = '';
 }
 function peers() { return JSON.parse(local_get("inbox_peers")); } 
+function network_peers() { return JSON.parse(get("all_peers")); } 
 function message(index, pub) {return JSON.parse(local_get("read_message&".concat(index).concat("&").concat(pub))); }
 function refresh_messages() {
     empty_messages();
     pub = peers()[0];
-    console.log(pub.concat(" our peer"));
+    // console.log(pub.concat(" our peer"));
     size = local_get("inbox_size&".concat(pub));
     console.log("size ".concat(size));
     for (i = 0; i < size; i++) {
@@ -73,13 +70,37 @@ function refresh_messages() {
 	}
     }
 }
+var send_button = document.getElementById("send_button");
+send_button.onclick=function() {
+    var msg = document.getElementById("msg").value;
+    var peer = network_peers()[0];
+    console.log("peer ".concat(peer));
+    peer.ip = "localhost"; // this isn't supposed to be my port, it is the server's port.
+    peer.port = PORT; // this isn't supposed to be my port, it is the server's port.
+    // maybe use the hd of the list, but change the port to be correct?
+    URL = "send_message&".concat(JSON.stringify(peer)).concat("&").concat(pub).concat("&").concat(JSON.stringify(msg));
+    console.log("url ".concat(URL));
+    // b = get("".concat(JSON.stringify(peer)).concat("&").concat(pub).concat("&").concat(JSON.stringify(msg)));
+    b = local_get(URL);
+    refresh_messages();
+    // console.log("message: ".concat(b.value));
+};
+
 
 status = get("status");
 pub = JSON.parse(status).pubkey;
 document.getElementById("pub").innerHTML = "pubkey: ".concat(pub);
 acc = get("kv&".concat(pub));
+cpeers = JSON.parse(local_get("channel_peers"));
+console.log(cpeers[0]);
+
+bal2 = local_get("channel_balance&".concat(cpeers[0]));
+console.log("channel balance: ".concat(bal2));
+
+
 amount = JSON.parse(acc).amount;
-document.getElementById("bal").innerHTML = "balance: ".concat(amount);
+// document.getElementById("bal").innerHTML = "balance: ".concat(amount);
+document.getElementById("bal").innerHTML = "balance: ".concat(bal2);
 add_message("abcd");
 recieve_message("abcff");
 refresh_messages();

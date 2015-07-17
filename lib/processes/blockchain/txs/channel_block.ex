@@ -9,6 +9,8 @@ defmodule ChannelBlock do
     da = tx.data
 		channel = KV.get(ToChannel.key(da.pub, da.pub2))
 		repeats = txs |> Enum.filter(&(&1.data.__struct__ == tx.data.__struct__ and (&1.data.pub == tx.data.pub and &1.data.pub2 == tx.data.pub2)))
+		d = 1
+		if channel.pub != da.pub do d = -1 end
     cond do
 			da.bets != [] ->
 				IO.puts("bets not yet programmed")
@@ -22,11 +24,11 @@ defmodule ChannelBlock do
       not CryptoSign.check_sig2(tx) ->
 				IO.puts("bad sig2")
 				false
-			channel.amount - da.amount < 0 ->
-				IO.puts("no counterfeiting #{inspect da.amount} #{inspect channel}")
+			channel.amount - (da.amount * d) < 0 ->
+				IO.puts("no counterfeiting: need #{inspect d * da.amount} have #{inspect channel.amount}")
 				false
-			channel.amount2 + da.amount < 0 ->
-				IO.puts("conservation of money #{inspect da.amount} #{inspect channel}")
+			channel.amount2 + (da.amount * d) < 0 ->
+				IO.puts("conservation of money: need #{inspect da.amount * d} have #{inspect channel.amount2}")
 				false
       da.secret_hash != nil and da.secret_hash != DetHash.doit(tx.meta.secret) ->
 				IO.puts("secret does not match")
@@ -46,8 +48,8 @@ defmodule ChannelBlock do
 		else
 			TxUpdate.sym_replace(channel, :time, 0, KV.get("height"), d)
 			TxUpdate.sym_replace(channel, :nonce, 0, da.nonce, d)
-			TxUpdate.sym_increment(channel, :amount, -da.amount, d)
-			TxUpdate.sym_increment(channel, :amount2, da.amount, d)
+			TxUpdate.sym_increment(channel, :amount, da.amount, d)
+			TxUpdate.sym_increment(channel, :amount2, -da.amount, d)
 		end
 	end
 end

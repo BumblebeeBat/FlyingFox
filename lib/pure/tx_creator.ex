@@ -79,9 +79,9 @@ defmodule TxCreator do
 		if is_binary(amount) do amount = String.to_integer(amount) end
 		is_ch = KV.get(ToChannel.key(Keys.pubkey, other))
 		new = (is_ch == nil)
-		tx = %ToChannel{amount: amount, new: new,	to: "amount", pub: Keys.pubkey, pub2: other}
+		tx = %ToChannel{amount: amount, new: new,	to: "amount", pub: Keys.pubkey, pub2: other, nonce: nonce(Keys.pubkey)}
 		if new do
-			tx = %{tx | delay: delay, nonce: nonce(Keys.pubkey)}
+			tx = %{tx | delay: delay}
 		else
 			if is_ch.pub2 == Keys.pubkey do tx = %{tx | to: "amount2"} end
 		end

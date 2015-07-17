@@ -66,6 +66,22 @@ defmodule InternalListener do
 			"inbox_size" -> Inbox.size(hd(args))
 			"delete_message" -> Inbox.delete_message(hd(args), hd(tl(args)))
 			"inbox_peers" -> Inbox.peers
+			"channel_peers" -> HashDict.keys(ChannelManager.get_all)
+			"channel_balance" ->
+				pub = hd(args)
+				on_blockchain = KV.get(ToChannel.key(Keys.pubkey, hd(args)))
+				on_channel_manager = ChannelManager.get(pub) |> ChannelManager.top_block
+				if on_blockchain.pub == Keys.pubkey do
+					amount = on_blockchain.amount
+				else
+					amount = on_blockchain.amount2
+				end
+				if on_channel_manager.data.pub == Keys.pubkey do
+					amount = amount + on_channel_manager.data.amount
+				else
+					amount = amount - on_channel_manager.data.amount
+				end
+				amount
       x -> IO.puts("is not a command #{inspect x}")
     end
   end

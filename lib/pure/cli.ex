@@ -22,8 +22,10 @@ defmodule Cli do
 	end
 	def blocks(start, finish, peer \\ me, out \\ []) do
 		lo = length(out)
+		more = fast_blocks(start+lo, finish, peer)
 		cond do
-			lo >= finish - start -> out
+			more == [] -> out
+			#lo >= finish - start -> out
 			true ->
 				more = fast_blocks(start+lo, finish, peer)
 				blocks(start, finish, peer, more ++ out)
@@ -73,4 +75,6 @@ defmodule Cli do
 	def inbox_size(pub, p \\ me) do local_talk([:inbox_size, pub], p) end
 	def delete_message(index, peer, p \\ me) do peer |> packer(&(local_talk([:delete_message, index, &1], p))) end
 	def inbox_peers(p \\ me) do local_talk([:inbox_peers], p) end
+	def channel_balance(pub, p \\ me) do local_talk([:channel_balance, pub], p) end
+	def channel_peers(p \\ me) do local_talk([:channel_peers], p) end
 end
