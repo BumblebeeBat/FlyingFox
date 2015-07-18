@@ -56,10 +56,10 @@ defmodule ChannelManager do
 		if Keys.pubkey == x.data.pub do d2 = d2 * -1 end
 		if is_binary(min_amount) do min_amount = String.to_integer(min_amount) end
 		cond do
-			d == 1 and tx.meta.sig2 == nil ->
+			d == -1 and tx.meta.sig2 == nil ->#here
 				IO.puts("2 should be signed by partner")
 				false
-			d == -1 and tx.meta.sig == nil ->
+			d == 1 and tx.meta.sig == nil ->
 				IO.puts("should be signed by partner")
 				false
 			not ( ((d2 * x.data.amount) - (d * tx.data.amount)) >= min_amount) ->

@@ -17,5 +17,5 @@ defmodule Constants do
 	def max_nodes do 5 end
 	def registration do 1000000 end
 	def default_channel_balance do 500_000_000 end
-	def min_channel_spend do 10000 end
+	def min_channel_spend do 1000 end
 end

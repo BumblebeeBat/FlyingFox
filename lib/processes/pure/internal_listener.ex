@@ -71,17 +71,21 @@ defmodule InternalListener do
 				pub = hd(args)
 				on_blockchain = KV.get(ToChannel.key(Keys.pubkey, hd(args)))
 				on_channel_manager = ChannelManager.get(pub) |> ChannelManager.top_block
-				if on_blockchain.pub == Keys.pubkey do
-					amount = on_blockchain.amount
-				else
-					amount = on_blockchain.amount2
+				cond do
+					on_blockchain == nil -> 0
+					true ->
+						if on_blockchain.pub == Keys.pubkey do
+							amount = on_blockchain.amount
+						else
+							amount = on_blockchain.amount2
+						end
+						if on_channel_manager.data.pub == Keys.pubkey do
+							amount = amount + on_channel_manager.data.amount
+						else
+							amount = amount - on_channel_manager.data.amount
+						end
+						amount
 				end
-				if on_channel_manager.data.pub == Keys.pubkey do
-					amount = amount + on_channel_manager.data.amount
-				else
-					amount = amount - on_channel_manager.data.amount
-				end
-				amount
       x -> IO.puts("is not a command #{inspect x}")
     end
   end
