@@ -1,19 +1,3 @@
-defmodule MailNodes do
-	#need to keep track of a list of nodes where we are registered.
-  @name __MODULE__
-  def start_link() do GenServer.start_link(__MODULE__, :ok, [name: @name]) end
-  def init(_) do {:ok, []} end
-	def handle_cast({:reg, peer}, db) do {:noreply, [peer|db]} end
-	def handle_cast({:del, peer}, db) do {:noreply, db |> Enum.filter(&(&1.port != peer.port or &1.ip != peer.ip))}	end
-	def handle_call(:all, _from, db) do {:reply, db, db} end
-	def register(peer, pub) do
-		GenServer.cast(@name, {:reg, peer})
-		ChannelManager.spend(pub, Constants.registration)
-	end
-	def delete_account(peer) do GenServer.cast(@name, {:del, peer}) end
-	def all do GenServer.call(@name, :all) end
-end
-
 defmodule Inbox do 
 	#Record all the sent messages.
 	#Keep a hashdict sorted by partner's pubkey. Tag each message so we know if it was sent or recieved. Order messages by timestamp.
@@ -53,43 +37,3 @@ defmodule Inbox do
 	def delete_message(pub, index) do GenServer.cast(@name, {:del, pub, index}) end
 end
 
-#This thread is like talker in that it is active.
-#Watch the mailbox module on several nodes
-#delete any messages to me on those nodes, and put the message into the inbox
-defmodule CheckMail do
-  @name __MODULE__
-  def start_link() do
-    GenServer.start_link(__MODULE__, :ok, [name: @name])
-  end
-  def init(_) do
-		Task.start_link(fn() -> timer end)
-    {:ok, []}
-  end
-	def doit3(times, p) do
-		cond do
-			times <= 0 -> []
-			true ->
-				x = %PopMessage{pub: Keys.pubkey}
-				|> Keys.sign
-				|> Cli.packer(&(Cli.talk([:pop, &1], p)))
-			Task.start(fn() -> doit3(times - 1, p) end)
-			x.msg |> Inbox.record_message
-			x.payment |> ChannelManager.accept(0)
-		end
-	end
-	def doit2(peer) do
-		fn() ->
-			s = %InboxSize{pub: Keys.pubkey}
-			|> Keys.sign
-			|> Cli.packer(fn(x) -> Cli.talk([:inbox_size, x], peer) end)
-			|> doit3(peer)
-		end
-	end
-	def doit do MailNodes.all |> Enum.map(&(Task.start(doit2(&1)))) end
-
-  def timer do
-    :timer.sleep(3000)
-    doit
-    timer
-  end
-end

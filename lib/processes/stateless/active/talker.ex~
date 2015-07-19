@@ -1,3 +1,5 @@
+#maybe this should be split into more smaller threads. One can focus on finding out peer's heights, one can download blocks, etc.
+
 defmodule Talker do
   #this module creates and maintains connections with multiple peers. It downloads blocks from them.
   #grabs the list of peers from peers thread.
