@@ -56,13 +56,17 @@ defmodule ChannelManager do
 		if Keys.pubkey == x.data.pub do d2 = d2 * -1 end
 		if is_binary(min_amount) do min_amount = String.to_integer(min_amount) end
 		cond do
-			d == -1 and tx.meta.sig2 == nil ->#here
+			#checking if nil is a joke. you need to see if it is a valid signature or not.
+			not Keys.pubkey in [tx.data.pub, tx.data.pub2] ->
+				IO.puts("channel isn't for me")
+				false
+			tx.data.pub == Keys.pubkey and not (CryptoSign.check_sig2(tx)) ->
 				IO.puts("2 should be signed by partner")
 				false
-			d == 1 and tx.meta.sig == nil ->
-				IO.puts("should be signed by partner")
+			tx.data.pub2 == Keys.pubkey and not (CryptoSign.verify_tx(tx))->
+				IO.puts("1 should be signed by partner")
 				false
-			not ( ((d2 * x.data.amount) - (d * tx.data.amount)) >= min_amount) ->
+			not (((d2 * x.data.amount) - (d * tx.data.amount)) >= min_amount) ->
 				IO.puts("x #{inspect x}")
 				IO.puts("tx #{inspect tx}")
 				IO.puts("didn't spend enough #{inspect (d2 * x.data.amount) - (d * tx.data.amount)}")

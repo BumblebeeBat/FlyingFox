@@ -78,4 +78,5 @@ defmodule Cli do
 	def channel_balance(pub, p \\ me) do local_talk([:channel_balance, pub], p) end
 	def channel_peers(p \\ me) do local_talk([:channel_peers], p) end
 	def channel_get(pub, p \\ me) do talk([:channel_get, pub], p) |> PackWrap.unpack end
+	def mail_nodes(p \\ me) do talk([:mail_nodes], p) |> PackWrap.unpack end
 end

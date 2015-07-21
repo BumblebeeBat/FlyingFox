@@ -35,6 +35,7 @@ defmodule InternalListener do
 			"loadkey" -> Keys.load(hd(args), hd(tl(args)))
 			"register" ->
 				#maybe MailNodes.register shoule contain all this logic
+				IO.puts("internal register #{inspect args}")
 				peer = args |> hd |> PackWrap.unpack
 				pub = Cli.status(peer).pubkey
 				%{payment: MailNodes.register(peer, pub), pub: Keys.pubkey}
@@ -55,8 +56,7 @@ defmodule InternalListener do
 				node_pub = Cli.status(node).pubkey
 				tx = ChannelManager.spend(node_pub, max(round(Cli.cost(node)*1.01), Constants.min_channel_spend))
 				Inbox.record_message(%Msg{msg: msg, to: pub, from: Keys.pubkey})
-				%SendMessage{payment: tx, to: pub, msg: msg, pub: Keys.pubkey}
-				|> Keys.sign
+				%SendMessage{payment: tx, to: pub, msg: Encryption.send_msg(msg, pub)}
 				|> Cli.packer(&(Cli.talk(["send_message", &1], node)))
 			"read_message" ->
 				index = hd(args)

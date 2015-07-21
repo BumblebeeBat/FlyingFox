@@ -18,7 +18,7 @@ defmodule CheckMail do
 				|> Keys.sign
 				|> Cli.packer(&(Cli.talk([:pop, &1], p)))
 			Task.start(fn() -> doit3(times - 1, p) end)
-			x.msg |> Inbox.record_message
+			x.msg |> Encryption.recieve_msg |> Inbox.record_message
 			x.payment |> ChannelManager.accept(0)
 		end
 	end

@@ -13,7 +13,7 @@ function url(port, ip) { return "http://".concat(ip).concat(":").concat(port.toS
 PORT = 46666;
 
 // my_port = 7668;
-my_port = 7780;
+my_port = 7782;
 function getter(u){
     xmlhttp=new XMLHttpRequest();
     xmlhttp.open("GET",u,false);
@@ -24,7 +24,7 @@ function getter(u){
 function get(s) {
     u = url(my_port, "localhost");
     s = JSON.stringify(s);
-    console.log("get ".concat(s));
+    // console.log("get ".concat(s));
     u = u.concat(btoa(s));
     return getter(u);
 }
@@ -33,7 +33,7 @@ function server_get(t) {
     u = url(s.port, s.ip);
     t = JSON.stringify(t);
     u = u.concat(btoa(t));
-    console.log("server_get ".concat(u));
+    // console.log("server_get ".concat(u));
     return getter(u);
 }
 function local_get(s) {
@@ -41,7 +41,7 @@ function local_get(s) {
     u = u.concat("priv/");
     s = JSON.stringify(s);
     u = u.concat(btoa(s));
-    console.log("local get ".concat(u));
+    // console.log("local get ".concat(u));
     return getter(u);
 }
 function add_message(message) {
@@ -132,10 +132,10 @@ function register_1() {
     my_pub = s.pubkey;
     console.log("pub ".concat(pub))
     channel = JSON.parse(JSON.parse(get("channel_get&".concat(pub))));
-    console.log("channel ".concat(channel));
+    console.log("channel ".concat(JSON.stringify(channel)));
     // console.log("channel ".concat(JSON.parse(channel)));
     if (channel == "nil") {
-	balance = JSON.parse(get("kv&".concat(pub))).amount;
+	balance = JSON.parse(get("kv&".concat(my_pub))).amount;
 	console.log("balance: ".concat(balance));
 	amount = Math.min(3000000, parseInt(balance));
 	console.log("amount: ".concat(amount));
@@ -155,18 +155,35 @@ function register_1() {
 	console.log("txs ".concat([].length));
 	if (txs.length == 0) { // tx isn't in txs
 	    console.log("create channel");
+	    console.log("amount #{inspect amount}")
 	    local_get("to_channel&".concat(pub).concat("&").concat(amount));
 	}
     }
-    document.getElementById("reg").innerHTML = "wait for next block"
-    return register_2();
+    document.getElementById("reg").innerHTML = "wait for next block";
+    return register_2(pub);
 }
 
-function register_2() {
+function register_2(pub) {
     // is the channel ready to use yet? if not, wait a while, then recurse.
     // did we register the mailnode yet? if not, do it, and update registration status and exit.
-    get("register&".concat(node));
-    
+    channel = JSON.parse(JSON.parse(get("channel_get&".concat(pub))));
+    mail_nodes = JSON.parse(JSON.parse(get("mail_nodes")));
+    m = mail_nodes.length == 0;
+    console.log("mail_nodes ".concat(JSON.stringify(mail_nodes.length)));
+    console.log("m ".concat(m));
+    console.log("[] ".concat(JSON.stringify([].length)));
+    if (channel == "nil") {
+	console.log("no channel");
+	setTimeout(function() {register_2(pub);}, 3000);
+    } else if (m) {
+	console.log("mail node needs to be registered");
+	s = server();
+	local_get("register&".concat(JSON.stringify(s)));
+	document.getElementById("reg").innerHTML = "registered";
+    } else {
+	console.log("mail node works");
+	document.getElementById("reg").innerHTML = "registered";
+    }
 }
 
 s = get("status");

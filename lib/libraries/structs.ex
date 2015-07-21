@@ -4,6 +4,9 @@ end
 defmodule SendMessage do
 	defstruct pub: "", to: "", msg: "", payment: %ChannelBlock{}
 end
+defmodule MsgPop do
+	defstruct msg: "", payment: %ChannelBlock{}
+end
 defmodule PopMessage do
 	defstruct pub: ""
 end

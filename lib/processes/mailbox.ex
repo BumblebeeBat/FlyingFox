@@ -3,6 +3,7 @@ defmodule Msg do
 end
 #there should be a KV thread that this thread uses to store stuff. That way when this thread dies, the mailbox doesn't get dumped.
 defmodule MailBox do
+	#if you are running a node with external IP, then this thread could be generating profit for you.
   use GenServer
   @name __MODULE__
   def start_link() do GenServer.start_link(__MODULE__, :ok, [name: @name]) end
@@ -21,8 +22,8 @@ defmodule MailBox do
 			{:noreply, {HashDict.delete(db, pub), mailboxes - 1, messages - length(db[pub])}}
 		end
 	end
-	def handle_cast({:send, to, message, from}, {db, m, messages}) do
-		msg = %Msg{msg: message, time: Timer.stamp, size: byte_size(message), price: messages*1000000, from: from, to: to}
+	def handle_cast({:send, to, message}, {db, m, messages}) do
+		msg = %Msg{msg: message, time: Timer.stamp, size: byte_size(message), price: messages*1000000, to: to}
 		a = db[to]
 		if a == nil do a = [] end
 		dd = HashDict.put(db, to, a ++ [msg])
@@ -54,7 +55,7 @@ defmodule MailBox do
 			true ->
 				refund = round(msg.price *  max(0, ((two_days - time) / two_days)))
 				tx = ChannelManager.spend(pub, refund)
-				%SendMessage{msg: msg, payment: tx, to: pub, pub: Keys.pubkey}
+				%MsgPop{msg: msg, payment: tx}
 		end
 	end
 	def size(pub) do GenServer.call(@name, {:size, pub}) end
@@ -67,7 +68,7 @@ defmodule MailBox do
 			GenServer.cast(@name, {:new, pub})
 		end)
 	end
-	def send(payment, to, msg, from) do accept(payment, cost, fn() -> GenServer.cast(@name, {:send, to, msg, from}) end) end
+	def send(payment, to, msg) do accept(payment, cost, fn() -> GenServer.cast(@name, {:send, to, msg}) end) end
 	def delete_account(pub) do
 		foo = size(pub)
 		GenServer.cast(@name, {:del_acc, pub})

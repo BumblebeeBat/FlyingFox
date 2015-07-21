@@ -1,3 +1,4 @@
+#since I can't put [a: :b] type objects into the wrapper, then I shouldn't be able to take the out either. They need to all be in this format: %{a: :b}
 defmodule PackWrap do
 	def map2dict(m) do Map.to_list(m)	end
 	def dict2map(d) do

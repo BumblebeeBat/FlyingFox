@@ -29,13 +29,14 @@ defmodule Listener do
 			"cost" -> MailBox.cost
 			"register" -> args |> hd |> packer(fn(x) ->	MailBox.register(x[:payment], x[:pub]) end)
 			"delete_account" -> args |> sig(fn(x) -> MailBox.delete_account(x.pub) end)
-			"send_message" ->   args |> sig(&(MailBox.send(&1.payment, &1.to, &1.msg, &1.pub)))
+			"send_message" ->   args |> packer(&(MailBox.send(&1.payment, &1.to, &1.msg, &1.pub)))
 			#"delete" ->         args |> sig(&(MailBox.delete(&1.pub, &1.index)))
 			#"read_message" ->   args |> sig(&(MailBox.read(&1.pub, &1.index)))
 			"pop" -> args |> sig(&(MailBox.pop(&1.pub)))
 			"inbox_size" ->     args |> sig(&(MailBox.size(&1.pub)))
 			"accept" -> args |> hd |> packer(&(ChannelManager.accept(&1, max(Constants.min_channel_spend, hd(tl(args))))))
 			"channel_get" -> args |> hd |> ToChannel.key(Keys.pubkey) |> KV.get |> PackWrap.pack
+			"mail_nodes" -> MailNodes.all |> PackWrap.pack
       x -> IO.puts("listener is not a command #{inspect x}")
     end
   end

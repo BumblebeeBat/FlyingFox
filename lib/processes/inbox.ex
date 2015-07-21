@@ -19,6 +19,11 @@ defmodule Inbox do
 		{:reply, out, db} end
 	def handle_call({:read, pub, index}, _from, db) do {:reply, nth(index, db[pub]), db} end
 	def handle_cast({:rec, msg}, db) do
+		#msg = Encryption.recieve_msg(msg)
+		#other = msg.from
+		#a = db[other]
+		#if a == nil do a = [] end
+		#{:noreply, HashDict.put(db, other, a ++ [msg])}
 		other = [msg.from, msg.to] |> Enum.filter(&(&1 != Keys.pubkey)) |> hd
 		if other == [] do
 			IO.puts("can't send a message to yourself")

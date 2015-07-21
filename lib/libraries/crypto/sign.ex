@@ -54,8 +54,7 @@ defmodule CryptoSign do
   end
   def verify_tx(tx) do
     h = DetHash.doit(tx.data)
-		pub = tx.data.pub
-    verify(h, tx.meta.sig, pub)
+    verify(h, tx.meta.sig, tx.data.pub)
   end
   def test do
     {pub, priv} = new_key
@@ -70,7 +69,6 @@ defmodule CryptoSign do
   end
 	def check_sig2(tx) do
 		h = DetHash.doit(tx.data)
-		pub = tx.data.pub2
-		verify(h, tx.meta.sig2, pub)
+		verify(h, tx.meta.sig2, tx.data.pub2)
 	end
 end
