@@ -13,8 +13,8 @@ defmodule Constants do
 	def message_size do 10000 end #in bytes
 	# constants below here can be edited.
   def min_tx_fee_this_node do 10000 end
-  def tcp_port do 37778 end
-	def server do %Peer{ip: "45.55.5.85", port: Constants.tcp_port} end
+  def tcp_port do 7778 end
+	def server do %Peer{ip: "45.55.5.85", port: 46666, height: 1} end
 	def max_nodes do 5 end
 	def registration do 1000000 end
 	def default_channel_balance do 500_000_000 end

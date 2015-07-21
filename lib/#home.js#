@@ -158,16 +158,24 @@ function register_1() {
 	    local_get("to_channel&".concat(pub).concat("&").concat(amount));
 	}
     }
-    document.getElementById("reg").innerHTML = "wait for next block"
-    return register_2();
+    document.getElementById("reg").innerHTML = "wait for next block";
+    return register_2(pub);
 }
 
-function register_2() {
+function register_2(pub) {
     // is the channel ready to use yet? if not, wait a while, then recurse.
     // did we register the mailnode yet? if not, do it, and update registration status and exit.
-    get("register&".concat(node));
+    channel = JSON.parse(JSON.parse(get("channel_get&".concat(pub))));
+    if (channel == "nil") {
+	setTimeout(function() {register_2(pub);}, 3000);
+    } elif (false) {// grab the mail_nodes list, and see if pub is already in it.
+
+    } else {
+	document.getElementById("reg").innerHTML = "registered";
+	local_get("register&".concat(server()));
+    }
     
-}
+} // m
 
 s = get("status");
 console.log("local status ".concat(s));

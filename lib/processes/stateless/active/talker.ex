@@ -42,8 +42,18 @@ defmodule Talker do
     end
   end
   def check_peer(p) do
+		#first we should check if the peer has been connected to before. If we never connected before, then only connect to them with probability 10%.
 		#IO.puts("check peer #{inspect p}")
+		:random.seed(:erlang.now)
+		r = trunc(10*:random.uniform)
+		cond do
+			p.height == 0 and r > 0 -> nil
+			true -> check_peer_1(p)
+		end
+	end
+	def check_peer_1(p) do
     status = Cli.status(p)
+		#IO.puts("status #{inspect status}")
     cond do
 			not is_map(status) -> status
       status.height > 0 and is_number(status.height) ->

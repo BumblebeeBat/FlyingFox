@@ -8,7 +8,7 @@ defmodule Tcp do
 		import Supervisor.Spec, warn: false
 		children = [
 			worker(__MODULE__, [func1, id, "/:something", {0,0,0,0}], function: :run),
-			worker(__MODULE__, [func2, :tcp_internal, "/priv/:something", {127,0,0,1}], function: :run, id: :tcp_internal), #cannot share a port!!
+			worker(__MODULE__, [func2, :tcp_internal, "/priv/:something", {127,0,0,1}], function: :run, id: :tcp_internal), 
 		]
 		opts = [strategy: :one_for_one, name: Tcp.Supervisor]
 		Supervisor.start_link(children, opts)
@@ -48,7 +48,8 @@ defmodule Tcp do
 		case x do
 			{:ok, z} ->  b = z |> elem(2) |> list2bin |> PackWrap.unpack
 			{:error, :socket_closed_remotely} -> get(ip, port, a, y)
-			_ -> {:error, :no_response}
+			x -> x
+			#_ -> {:error, :no_response}
 		end
 		#:jiffy.decode(x)
 	end
