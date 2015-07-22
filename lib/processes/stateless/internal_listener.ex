@@ -37,6 +37,7 @@ defmodule InternalListener do
 				#maybe MailNodes.register shoule contain all this logic
 				IO.puts("internal register #{inspect args}")
 				peer = args |> hd |> PackWrap.unpack
+				IO.puts("peer #{inspect peer}")
 				pub = Cli.status(peer).pubkey
 				%{payment: MailNodes.register(peer, pub), pub: Keys.pubkey}
 				|> Cli.packer(&(Cli.talk(["register", &1], peer)))
@@ -70,6 +71,7 @@ defmodule InternalListener do
 			"inbox_size" -> Inbox.size(hd(args))
 			"delete_message" -> Inbox.delete_message(hd(args), hd(tl(args)))
 			"inbox_peers" -> Inbox.peers |> PackWrap.pack
+			"channel_get" -> args |> hd |> ToChannel.key(Keys.pubkey) |> KV.get |> PackWrap.pack
 			"channel_peers" -> HashDict.keys(ChannelManager.get_all)
 			"channel_balance" ->
 				pub = hd(args)

@@ -24,8 +24,9 @@ defmodule CheckMail do
 						end)
 			Task.start(fn() -> doit3(times - 1, p) end)
 			IO.puts("check mail #{inspect x}")
-			x[:msg] |> Encryption.recieve_msg |> Inbox.record_message
-			x[:payment] |> ChannelManager.accept(0)
+			%{msg: x.msg.msg[:msg], key: x.msg.msg[:key]}
+			|> Encryption.recieve_msg |> Inbox.record_message
+			x.payment |> ChannelManager.accept(0)
 		end
 	end
 	def doit2(peer) do

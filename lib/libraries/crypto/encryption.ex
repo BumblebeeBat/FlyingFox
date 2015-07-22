@@ -25,5 +25,5 @@ defmodule Encryption do
 			%{msg: sig[:msg], from: sig[:from], to: Keys.pubkey}
 		else false end
 	end
-	def test do send_msg(%{test: :b, c: ["1234"], d: %Block{}}, Keys.pubkey) |> recieve_msg end
+	def test do send_msg(%{test: %{a: :b, c: ["1234"], d: %Block{}}}, Keys.pubkey) |> recieve_msg end
 end
