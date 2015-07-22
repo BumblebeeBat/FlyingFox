@@ -33,7 +33,7 @@ defmodule Listener do
 					IO.puts("listener send message #{inspect x}")
 					out = MailBox.send(x.payment, x.to, x.msg)
 					IO.puts("listener send message out #{inspect out}")
-					out)
+					out end)
 			"pop" -> args |> sig(&(MailBox.pop(&1.pub)))
 			"inbox_size" ->     args |> sig(&(MailBox.size(&1.pub)))
 			"accept" -> args |> hd |> packer(&(ChannelManager.accept(&1, max(Constants.min_channel_spend, hd(tl(args))))))
