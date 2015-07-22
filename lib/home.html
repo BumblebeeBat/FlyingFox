@@ -16,7 +16,7 @@ function url(port, ip) { return "http://".concat(ip).concat(":").concat(port.toS
 PORT = 46666;
 
 // my_port = 7668;
-my_port = 7780;
+my_port = 7778;
 function getter(u){
     xmlhttp=new XMLHttpRequest();
     xmlhttp.open("GET",u,false);

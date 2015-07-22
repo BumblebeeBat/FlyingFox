@@ -31,7 +31,8 @@ defmodule Listener do
 			"delete_account" -> args |> sig(fn(x) -> MailBox.delete_account(x.pub) end)
 			"send_message" ->   args |> packer(fn(x) ->
 					IO.puts("listener send message #{inspect x}")
-					out = MailBox.send(x.payment, x.to, x.msg)
+					m = %{msg: x.msg[:msg], key: x.msg[:key]}
+					out = MailBox.send(x.payment, x.to, m)
 					IO.puts("listener send message out #{inspect out}")
 					out end)
 			"pop" -> args |> sig(&(MailBox.pop(&1.pub)))
