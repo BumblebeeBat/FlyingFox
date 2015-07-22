@@ -4,7 +4,14 @@ defmodule Spend do
     block = tx.data
     fee = block.fee
     amount = block.amount
+		acc = KV.get(tx.data.to)
     cond do
+			acc == nil and not tx.data.create ->
+				IO.puts("this account doesn't exist yes")
+				false
+			acc != nil and tx.data.create ->
+				IO.puts("this account already exists")
+				false
       fee < Constants.min_tx_fee ->
         IO.puts("fee too low")
         false

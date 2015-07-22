@@ -1,6 +1,6 @@
 defmodule ToChannel do
 	#pub is always the person who is spending money into the channel.
-  defstruct nonce: 0, to: "amount", amount: 0, new: false, delay: 100, fee: 10000, pub: "", pub2: ""
+  defstruct nonce: 0, to: "amount", amount: 0, new: false, delay: 100, fee: 10000, pub: "", pub2: "", create: false
 	def key(a, b) do
 		cond do
 			a > b -> a <> b
@@ -11,7 +11,17 @@ defmodule ToChannel do
 		news = txs |> Enum.filter(&(&1.data.__struct__ == tx.data.__struct__))
 		|> Enum.filter(&(key(&1.data.pub, &1.data.pub2) == key(tx.data.pub, tx.data.pub2)))
 		|> Enum.filter(&(&1.data.new == true))
+		acc = KV.get(tx.data.pub2)
     cond do
+			KV.get(tx.data.pub) == nil ->
+				IO.puts("account hasn't been registered #{inspect tx.data.pub}")
+				false
+			acc == nil and not tx.data.create ->
+				IO.puts("this account doesn't exist yes")
+				false
+			acc != nil and tx.data.create ->
+				IO.puts("this account already exists")
+				false
 			tx.data.new and news != [] ->
 				IO.puts("no repeated news")
 				false
@@ -24,12 +34,6 @@ defmodule ToChannel do
 			tx.data.pub2 == nil ->
 				IO.puts("nil pub 2 #{inspect tx.data.pub2}")
 				IO.puts("tx #{inspect tx}")
-				false
-			KV.get(tx.data.pub) == nil ->
-				IO.puts("account hasn't been registered #{inspect tx.data.pub}")
-				false
-			KV.get(tx.data.pub2) == nil ->
-				IO.puts("account hasn't been registered #{inspect tx.data.pub2}")
 				false
 			true -> check_2(tx, KV.get(key(tx.data.pub, tx.data.pub2)), txs)
 		end
@@ -55,6 +59,12 @@ defmodule ToChannel do
 		cb = %Channel{pub: da.pub,
 									pub2: da.pub2,
 									delay: da.delay}
+		if da.create do
+			cond do
+				d == 1 -> KV.put(da.to, %Account{})
+				true -> KV.put(da.to, nil)
+			end
+		end
 		if da.new and d==1 do
 			KV.put(channel, cb)
 		end
