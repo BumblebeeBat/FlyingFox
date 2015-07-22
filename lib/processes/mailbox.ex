@@ -23,7 +23,7 @@ defmodule MailBox do
 		end
 	end
 	def handle_cast({:send, to, message}, {db, m, messages}) do
-		msg = %Msg{msg: message, time: Timer.stamp, size: byte_size(message.msg) + byte_size(message.key), price: messages*1000000, to: to}
+		msg = %Msg{msg: message, time: Timer.stamp, size: byte_size(message[:msg]) + byte_size(message[:key]), price: messages*1000000, to: to}
 		a = db[to]
 		if a == nil do a = [] end
 		dd = HashDict.put(db, to, a ++ [msg])
