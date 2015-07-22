@@ -29,9 +29,11 @@ defmodule Listener do
 			"cost" -> MailBox.cost
 			"register" -> args |> hd |> packer(fn(x) ->	MailBox.register(x[:payment], x[:pub]) end)
 			"delete_account" -> args |> sig(fn(x) -> MailBox.delete_account(x.pub) end)
-			"send_message" ->   args |> packer(&(MailBox.send(&1.payment, &1.to, &1.msg)))
-			#"delete" ->         args |> sig(&(MailBox.delete(&1.pub, &1.index)))
-			#"read_message" ->   args |> sig(&(MailBox.read(&1.pub, &1.index)))
+			"send_message" ->   args |> packer(fn(x) ->
+					IO.puts("listener send message #{inspect x}")
+					out = MailBox.send(x.payment, x.to, x.msg)
+					IO.puts("listener send message out #{inspect out}")
+					out)
 			"pop" -> args |> sig(&(MailBox.pop(&1.pub)))
 			"inbox_size" ->     args |> sig(&(MailBox.size(&1.pub)))
 			"accept" -> args |> hd |> packer(&(ChannelManager.accept(&1, max(Constants.min_channel_spend, hd(tl(args))))))

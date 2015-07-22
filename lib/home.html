@@ -16,7 +16,7 @@ function url(port, ip) { return "http://".concat(ip).concat(":").concat(port.toS
 PORT = 46666;
 
 // my_port = 7668;
-my_port = 7778;
+my_port = 7780;
 function getter(u){
     xmlhttp=new XMLHttpRequest();
     xmlhttp.open("GET",u,false);
@@ -164,7 +164,7 @@ function register_1() {
 	console.log("txs ".concat([].length));
 	if (txs.length == 0) { // tx isn't in txs
 	    console.log("create channel");
-	    console.log("amount #{inspect amount}")
+	    console.log("amount ".concat(amount))
 	    local_get("to_channel&".concat(pub).concat("&").concat(amount));
 	}
     }
