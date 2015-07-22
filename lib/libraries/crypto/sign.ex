@@ -8,6 +8,8 @@ defmodule CryptoSign do
     :crypto.ec_curve(:secp256k1)
   end
 	def shared_secret(pub, priv) do
+		IO.puts("shared secret pub #{inspect pub}")
+		IO.puts("shared secret priv #{inspect priv}")
 		:crypto.compute_key(:ecdh, elem(Base.decode64(pub), 1), elem(Base.decode64(priv), 1), params)
 	end
   def new_key do

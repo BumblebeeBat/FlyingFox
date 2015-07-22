@@ -29,7 +29,7 @@ defmodule Listener do
 			"cost" -> MailBox.cost
 			"register" -> args |> hd |> packer(fn(x) ->	MailBox.register(x[:payment], x[:pub]) end)
 			"delete_account" -> args |> sig(fn(x) -> MailBox.delete_account(x.pub) end)
-			"send_message" ->   args |> packer(&(MailBox.send(&1.payment, &1.to, &1.msg, &1.pub)))
+			"send_message" ->   args |> packer(&(MailBox.send(&1.payment, &1.to, &1.msg)))
 			#"delete" ->         args |> sig(&(MailBox.delete(&1.pub, &1.index)))
 			#"read_message" ->   args |> sig(&(MailBox.read(&1.pub, &1.index)))
 			"pop" -> args |> sig(&(MailBox.pop(&1.pub)))

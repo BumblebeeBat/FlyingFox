@@ -73,9 +73,6 @@ defmodule TxCreator do
   def slasher(tx1, tx2) do
   end
   def to_channel(other, amount, delay \\ 10) do
-		if KV.get(other) == nil do
-			IO.puts("your partner doesn't exist yet, so this to_channel tx probably wont work")
-		end
 		if is_binary(amount) do amount = String.to_integer(amount) end
 		is_ch = KV.get(ToChannel.key(Keys.pubkey, other))
 		new = (is_ch == nil)

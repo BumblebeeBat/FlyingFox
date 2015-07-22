@@ -51,7 +51,10 @@ defmodule InternalListener do
 			"send_message" ->
 				#maybe a function in inbox shoule contain all this logic
 				node = hd(args) |> PackWrap.unpack
+				IO.puts("send message node #{inspect node}")
 				pub = hd(tl(args))
+				IO.puts("send message pub #{inspect pub}")
+				IO.puts("args #{inspect args}")
 				msg = hd(tl(tl(args))) |> PackWrap.unpack
 				node_pub = Cli.status(node).pubkey
 				tx = ChannelManager.spend(node_pub, max(round(Cli.cost(node)*1.01), Constants.min_channel_spend))
@@ -63,9 +66,10 @@ defmodule InternalListener do
 				if is_binary(index) do index = String.to_integer(index) end
 				pub = hd(tl(args))
 				Inbox.read_message(pub, index)
+				|> PackWrap.pack
 			"inbox_size" -> Inbox.size(hd(args))
 			"delete_message" -> Inbox.delete_message(hd(args), hd(tl(args)))
-			"inbox_peers" -> Inbox.peers
+			"inbox_peers" -> Inbox.peers |> PackWrap.pack
 			"channel_peers" -> HashDict.keys(ChannelManager.get_all)
 			"channel_balance" ->
 				pub = hd(args)

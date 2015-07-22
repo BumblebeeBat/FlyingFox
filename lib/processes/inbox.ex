@@ -24,7 +24,8 @@ defmodule Inbox do
 		#a = db[other]
 		#if a == nil do a = [] end
 		#{:noreply, HashDict.put(db, other, a ++ [msg])}
-		other = [msg.from, msg.to] |> Enum.filter(&(&1 != Keys.pubkey)) |> hd
+		other = [msg.from, msg.to] |> Enum.filter(&(&1 != Keys.pubkey))
+		if other == [] do other = Keys.pubkey else other = hd(other) end
 		if other == [] do
 			IO.puts("can't send a message to yourself")
 			{:noreply, db}

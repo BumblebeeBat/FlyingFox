@@ -74,7 +74,7 @@ defmodule Cli do
 	def read_message(index, pub, p \\ me) do local_talk([:read_message, index, pub], p) end
 	def inbox_size(pub, p \\ me) do local_talk([:inbox_size, pub], p) end
 	def delete_message(index, peer, p \\ me) do peer |> packer(&(local_talk([:delete_message, index, &1], p))) end
-	def inbox_peers(p \\ me) do local_talk([:inbox_peers], p) end
+	def inbox_peers(p \\ me) do local_talk([:inbox_peers], p) |> PackWrap.unpack end
 	def channel_balance(pub, p \\ me) do local_talk([:channel_balance, pub], p) end
 	def channel_peers(p \\ me) do local_talk([:channel_peers], p) end
 	def channel_get(pub, p \\ me) do talk([:channel_get, pub], p) |> PackWrap.unpack end
