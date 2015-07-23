@@ -14,7 +14,7 @@
 
 function url(port, ip) { return "http://".concat(ip).concat(":").concat(port.toString().concat("/")); }
 PORT = 46666;
-my_port = 7781;
+my_port = 7779;
 function getter(t, u, callback){
     t = JSON.stringify(t);
     u = u.concat(btoa(t));
@@ -122,14 +122,13 @@ function refresh_my_balance() {
     var x = get("kv&".concat(my_status.pubkey));
     refresh_helper(x, function(){ my_balance = JSON.parse(xml_out(x)).amount;});
 };
-setTimeout(refresh_my_balance, 2000);
+setTimeout(refresh_my_balance, 2000);//after a short delay, that way we are sure my_status is ready
 window.setInterval(refresh_my_balance, 5000);
 
 channel = "nil";
 function refresh_channel() {
     var x = local_get("channel_get&".concat(server_status.pubkey));
     refresh_helper(x, function(){ channel = JSON.parse(JSON.parse(xml_out(x)));});
-    console.log("channel ".concat(JSON.stringify(channel)));
 };
 setTimeout(refresh_channel, 3000);//after a short delay, that way we are sure server_status is ready
 window.setInterval(refresh_channel, 5000);

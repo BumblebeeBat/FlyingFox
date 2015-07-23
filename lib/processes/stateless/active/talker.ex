@@ -53,7 +53,6 @@ defmodule Talker do
 	end
 	def check_peer_1(p) do
     status = Cli.status(p)
-		#IO.puts("status #{inspect status}")
     cond do
 			not is_map(status) -> status
       status.height > 0 and is_number(status.height) ->
