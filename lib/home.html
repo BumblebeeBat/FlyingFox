@@ -14,7 +14,7 @@
 
 function url(port, ip) { return "http://".concat(ip).concat(":").concat(port.toString().concat("/")); }
 PORT = 46666;
-my_port = 7780;
+my_port = 7779;
 function getter(t, u, callback){
     t = JSON.stringify(t);
     u = u.concat(btoa(t));
@@ -155,6 +155,9 @@ function message(index, pub) {
     refresh_helper(x, function(){ return "success"; });
 };
 function refresh_messages() {
+    // this could be so much more efficient.
+    // we don't need to refresh the whole page every time, we can just append the new message.
+    // if "other" changes then we should refresh the page.
     pub = document.getElementById("other").value;
     temp = [];
     for (i = 0; i < inbox_size; i++) { messages.push(message(i, pub)); };
@@ -165,7 +168,7 @@ function refresh_messages() {
 	else                  { recieve_message(msg.msg); }
     });
 };
-window.setInterval(refresh_messages, 10000);
+window.setInterval(refresh_messages, 5000);
 
 function to_channel(pub, amount) {
     x = local_get("to_channel&".concat(pub).concat("&").concat(amount));

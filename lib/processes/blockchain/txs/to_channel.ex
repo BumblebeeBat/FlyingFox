@@ -13,6 +13,9 @@ defmodule ToChannel do
 		|> Enum.filter(&(&1.data.new == true))
 		acc = KV.get(tx.data.pub2)
     cond do
+			tx.data.amount <= 0 ->
+				IO.puts("cant send negative amounts")
+				false
 			KV.get(tx.data.pub) == nil ->
 				IO.puts("account hasn't been registered #{inspect tx.data.pub}")
 				false

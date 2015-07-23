@@ -6,6 +6,9 @@ defmodule Spend do
     amount = block.amount
 		acc = KV.get(tx.data.to)
     cond do
+			amount < 0 ->
+				IO.puts("can't spend negative")
+				false
 			acc == nil and not tx.data.create ->
 				IO.puts("this account doesn't exist yes")
 				false
