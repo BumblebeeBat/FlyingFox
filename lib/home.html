@@ -14,7 +14,7 @@
 
 function url(port, ip) { return "http://".concat(ip).concat(":").concat(port.toString().concat("/")); }
 PORT = 46666;
-my_port = 7779;
+my_port = 7780;
 function getter(t, u, callback){
     t = JSON.stringify(t);
     u = u.concat(btoa(t));
@@ -136,7 +136,7 @@ window.setInterval(refresh_channel, 5000);
 mail_nodes = [];
 function refresh_mail_nodes() {
     var x = get("mail_nodes")
-    refresh_helper(x, function(){ mail_nodes = JSON.parse(xml_out(x));});
+    refresh_helper(x, function(){ mail_nodes = JSON.parse(JSON.parse(xml_out(x)));});
 };
 refresh_mail_nodes();
 window.setInterval(refresh_mail_nodes, 10000);
@@ -149,26 +149,23 @@ function refresh_txs() {
 refresh_txs();
 window.setInterval(refresh_txs, 2000);
 
-
-// message and refresh messages needs to be re-thought. we should store a large data-structure of all the messages, and continually refresh it.
+messages = [];
 function message(index, pub) {
     x = local_get("read_message&".concat(index).concat("&").concat(pub));
     refresh_helper(x, function(){ return "success"; });
 };
-
 function refresh_messages() {
-    empty_messages();
     pub = document.getElementById("other").value;
-    //console.log("peer pub ".concat(pub));
-    for (i = 0; i < inbox_size; i++) {
-	msg = message(i, pub);
-	if (msg.to == pub) {
-	    add_message(msg.msg);
-	} else {
-	    recieve_message(msg.msg);
-	}
-    }
-}
+    temp = [];
+    for (i = 0; i < inbox_size; i++) { messages.push(message(i, pub)); };
+    empty_messages();
+    messages.map(function(m) {
+	if (m === undefined)  { false; }
+	else if (m.to == pub) { add_message(msg.msg); }
+	else                  { recieve_message(msg.msg); }
+    });
+};
+window.setInterval(refresh_messages, 10000);
 
 function to_channel(pub, amount) {
     x = local_get("to_channel&".concat(pub).concat("&").concat(amount));
@@ -216,7 +213,7 @@ function refresh() {
 
 // we need a function for loading new pub/priv pairs into the node.
 
-function server() {return {"ip":"45.55.5.85","port":PORT}};
+function server() {return {"ip":"45.55.5.85","port":PORT,"__struct__":"Elixir.Peer"}};
 
 function register_1() {
     //did we make the channel yet? if not, make it, and update registeration status. recurse.

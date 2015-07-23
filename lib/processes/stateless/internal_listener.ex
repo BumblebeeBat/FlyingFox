@@ -51,6 +51,7 @@ defmodule InternalListener do
 				|> ChannelManager.accept(0)
 			"send_message" ->
 				#maybe a function in inbox shoule contain all this logic
+				IO.puts("send message node #{inspect args}")
 				node = hd(args) |> PackWrap.unpack
 				IO.puts("send message node #{inspect node}")
 				pub = hd(tl(args))
