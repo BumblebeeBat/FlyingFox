@@ -31,6 +31,7 @@ defmodule PackWrap do
 				"Elixir.Msg" -> o = %Msg{}
 				"Elixir.Account" -> o = %Account{}
 				"Elixir.MsgPop" -> o = %MsgPop{}
+				"Elixir.Channel" -> o = %Channel{}
 				nil -> o = %{}
 				x -> IO.puts("dict2map odd ball #{inspect x}")
 			end

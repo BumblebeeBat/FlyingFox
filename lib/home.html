@@ -14,7 +14,7 @@
 
 function url(port, ip) { return "http://".concat(ip).concat(":").concat(port.toString().concat("/")); }
 PORT = 46666;
-my_port = 7780;
+my_port = 7781;
 function getter(t, u, callback){
     t = JSON.stringify(t);
     u = u.concat(btoa(t));
@@ -112,6 +112,7 @@ channel_balance = -1;
 function refresh_channel_balance() {
     var x = local_get("channel_balance&".concat(server_status.pubkey));
     refresh_helper(x, function(){ channel_balance = xml_out(x);});
+    
 };
 refresh_channel_balance();
 window.setInterval(refresh_channel_balance, 5000);
@@ -121,15 +122,16 @@ function refresh_my_balance() {
     var x = get("kv&".concat(my_status.pubkey));
     refresh_helper(x, function(){ my_balance = JSON.parse(xml_out(x)).amount;});
 };
-refresh_my_balance();
-window.setInterval(refresh_my_balance, 10000);
+setTimeout(refresh_my_balance, 2000);
+window.setInterval(refresh_my_balance, 5000);
 
-channel = {};
+channel = "nil";
 function refresh_channel() {
     var x = local_get("channel_get&".concat(server_status.pubkey));
-    refresh_helper(x, function(){ channel = xml_out(x);});
+    refresh_helper(x, function(){ channel = JSON.parse(JSON.parse(xml_out(x)));});
+    console.log("channel ".concat(JSON.stringify(channel)));
 };
-refresh_channel();
+setTimeout(refresh_channel, 3000);//after a short delay, that way we are sure server_status is ready
 window.setInterval(refresh_channel, 5000);
 
 mail_nodes = [];
@@ -158,7 +160,7 @@ function message(index, pub) {
 function refresh_messages() {
     empty_messages();
     pub = document.getElementById("other").value;
-    console.log("peer pub ".concat(pub));
+    //console.log("peer pub ".concat(pub));
     for (i = 0; i < inbox_size; i++) {
 	msg = message(i, pub);
 	if (msg.to == pub) {
@@ -182,7 +184,7 @@ document.getElementById("send_button").onclick=function() {
     node = server();
     pub = document.getElementById("other").value;
     URL = "send_message&".concat(JSON.stringify(node)).concat("&").concat(pub).concat("&").concat(JSON.stringify(msg));
-    console.log("url ".concat(URL));
+    //console.log("url ".concat(URL));
     local_get(URL);
     refresh();
 };
@@ -190,7 +192,7 @@ peer_id = 0;
 document.getElementById("switch_partner").onclick=function() {
     //ps = JSON.parse(JSON.parse(local_get("inbox_peers")));
     ps = JSON.parse(inbox_peers);
-    console.log("switch partner ps ".concat(ps));
+    //console.log("switch partner ps ".concat(ps));
     peer_id = peer_id + 1;
     if (ps.length > 0) {
 	document.getElementById("other").value = ps[peer_id % peers.length];
@@ -201,14 +203,14 @@ function refresh_balance() {
     pub = my_status.pubkey;
     document.getElementById("pub").innerHTML = "pubkey: ".concat(pub);
     bal2 = channel_balance;
-    console.log("channel balance: ".concat(bal2));
+    //console.log("channel balance: ".concat(bal2));
     amount = my_balance;
     // document.getElementById("bal").innerHTML = "balance: ".concat(amount);
     document.getElementById("bal").innerHTML = "balance: ".concat(bal2);
 }
 function refresh() {
     v = document.getElementById("other").value;
-    console.log("partner ".concat(v));
+    //console.log("partner ".concat(v));
     refresh_balance();
     refresh_messages();
 }
@@ -224,12 +226,14 @@ function register_1() {
     s = my_status;
     my_pub = s.pubkey;
     if (channel == "nil") {
+	console.log("my balance ".concat(my_balance));
 	amount = Math.min(3000000, parseInt(my_balance));
 	console.log("amount: ".concat(amount));
-	txss = txss.filter(function (tx) {
-	    return tx.data.__struct__ == ":Elixir.ToChannel";
-	})
 	txss = txs.filter(function (tx) {
+	    return tx.data.__struct__ == ":Elixir.ToChannel";
+	});
+	txss = txss.filter(function (tx) {
+	    console.log("error error");
 	    return tx.data.pub == my_pub;;
 	});
 	console.log("txs ".concat(JSON.stringify(txss.length)));
@@ -249,9 +253,9 @@ function register_2(pub) {
     // is the channel ready to use yet? if not, wait a while, then recurse.
     // did we register the mailnode yet? if not, do it, and update registration status and exit.
     m = mail_nodes.length == 0;
-    console.log("mail_nodes ".concat(JSON.stringify(mail_nodes.length)));
-    console.log("m ".concat(m));
-    console.log("[] ".concat(JSON.stringify([].length)));
+    //console.log("mail_nodes ".concat(JSON.stringify(mail_nodes.length)));
+    //console.log("m ".concat(m));
+    //console.log("[] ".concat(JSON.stringify([].length)));
     if (channel == "nil") {
 	console.log("no channel");
 	setTimeout(function() {register_2(pub);}, 3000);
@@ -265,7 +269,7 @@ function register_2(pub) {
     }
 }
 
-setTimeout(register_1, 5000);
+setTimeout(register_1, 4000);
 window.setInterval(refresh, 5000);
 </script>
     </html>
