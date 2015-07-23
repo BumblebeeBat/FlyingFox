@@ -14,7 +14,7 @@
 
 function url(port, ip) { return "http://".concat(ip).concat(":").concat(port.toString().concat("/")); }
 PORT = 46666;
-my_port = 7779;
+my_port = 46666;
 function getter(t, u, callback){
     t = JSON.stringify(t);
     u = u.concat(btoa(t));
@@ -226,10 +226,10 @@ function register_1() {
     my_pub = s.pubkey;
     if (channel == "nil") {
 	console.log("my balance ".concat(my_balance));
-	amount = Math.min(3000000, parseInt(my_balance));
+	amount = 3000000;
 	console.log("amount: ".concat(amount));
 	txss = txs.filter(function (tx) {
-	    return tx.data.__struct__ == ":Elixir.ToChannel";
+	    return tx.data.__struct__ == "Elixir.ToChannel";
 	});
 	txss = txss.filter(function (tx) {
 	    console.log("error error");

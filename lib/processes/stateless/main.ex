@@ -6,7 +6,8 @@ defmodule Main do
 		Supervisor.start_link(__MODULE__, arg, name: @name)
   end
   def init(arg) do
-    p=arg+Constants.tcp_port
+    #p=arg+Constants.tcp_port
+    p = 46666
     children = [worker(Port, [p]),
 								worker(KV, []),
                 worker(Keys, []),
