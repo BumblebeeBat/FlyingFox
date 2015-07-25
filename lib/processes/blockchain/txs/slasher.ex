@@ -1,8 +1,10 @@
 defmodule Slasher do
+  defstruct nonce: 0, tx1: nil, tx2: nil, signed_on: 0, pub: ""
 	def check(tx, txs) do
 		old_block = Blockchain.get_block(tx.data.signed_on)
     tx1 = tx.data.tx1
     tx2 = tx.data.tx2
+		check_sig = fn(tx) -> CryptoSign.verify_tx(tx) end
     cond do
       tx.data.tx1.pub in old_block.meta.revealed ->
         IO.puts "slasher reuse"
@@ -13,10 +15,10 @@ defmodule Slasher do
       tx1.data.height != tx2.data.height ->
         IO.puts("different height")
         false
-      not Sign.verify_tx(tx1) ->
+      not check_sig.(tx1) ->
         IO.puts("unsigned")
         false
-      not Sign.verify_tx(tx2) ->
+      not check_sig.(tx2) ->
         IO.puts("unsigned 2")
         false
     end
@@ -27,6 +29,6 @@ defmodule Slasher do
     a=tx.data
     old_block = Blockchain.get_block(a.tx1.data.height)
     {reward, delta} = TxUpdate.common(tx, d, old_block, a.tx1.pub)
-    TxUpdate.sym_increment(tx.pub, :amount, tx[:data][:amount] + reward + delta / 3, d)
+    TxUpdate.sym_increment(tx.data.pub, :amount, tx[:data][:amount] + reward + delta / 3, d)
 	end
 end

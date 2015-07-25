@@ -1,4 +1,5 @@
 defmodule Win do
+	defstruct pub: ""
 	def check(tx, txs) do
 		false
 	end

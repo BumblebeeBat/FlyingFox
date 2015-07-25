@@ -1,11 +1,16 @@
 defmodule Reveal do
-  def sign_tx(block, pub) do block.data.txs |> Enum.filter(&(&1.pub == pub))  |> Enum.filter(&(&1.data.__struct__ == :Elixir.SignTx)) end
+  defstruct nonce: 0, signed_on: 0, winners: [], amount: 0, secret: nil, bond_size: 0, pub: ""
+  def sign_tx(block, pub) do
+		block.data.txs
+		|> Enum.filter(&(&1.data.pub == pub))
+		|> Enum.filter(&(&1.data.__struct__ == :Elixir.Sign))
+	end
 	def check(tx, txs) do
     old_block = Blockchain.get_block(tx.data.signed_on)
     revealed = txs
-    |> Enum.filter(&(&1.data.type == "reveal"))
-    |> Enum.filter(&(&1.pub == tx.pub))
-    signed = sign_tx(old_block, tx.pub)
+    |> Enum.filter(&(&1.data.__struct__ == :Elixir.Reveal))
+    |> Enum.filter(&(&1.data.pub == tx.data.pub))
+    signed = sign_tx(old_block, tx.data.pub)
     bond_size = old_block.data.bond_size
     blen = bond_size*length(tx.data.winners)
     amount = tx.data.amount
@@ -20,7 +25,7 @@ defmodule Reveal do
       DetHash.doit(tx.data.secret) != hd(signed).data.secret_hash ->
         IO.puts "2"
         false
-      tx.pub in old_block.meta.revealed ->
+      tx.data.pub in old_block.meta.revealed ->
         IO.puts "3"
         false
       amount != blen ->
@@ -37,7 +42,7 @@ defmodule Reveal do
 	end
 	def update(tx, d) do
     old_block = Blockchain.get_block(tx.data.signed_on)
-    {reward, delta} = TxUpdate.common(tx, d, old_block, tx.pub)
-    TxUpdate.sym_increment(tx.pub, :amount, tx.data.amount + reward + delta, d)#during waiting period you are holding cash not bonds.
+    {reward, delta} = TxUpdate.common(tx, d, old_block, tx.data.pub)
+    TxUpdate.sym_increment(tx.data.pub, :amount, tx.data.amount + reward + delta, d)#during waiting period you are holding cash not bonds.
 	end
 end

@@ -1,0 +1,2 @@
+defmodule CheckLogic do
+end

@@ -11,15 +11,14 @@ defmodule Mempool do
   def handle_cast(:dump, _x) do       {:noreply, []} end
   def handle_call(:txs, _from, x) do {:reply, x, x} end
   def handle_cast({:add_tx, tx}, x) do
+		h = KV.get("height")
+		prev_hash = nil
+		if h > 0 do prev_hash = Blockchain.blockhash(Blockchain.get_block(h)) end
 		cond do
-			is_map(tx) ->
-				h = KV.get("height")
-				if h < 1 do prev_hash = nil
-				else
-					prev_hash = Blockchain.blockhash(Blockchain.get_block(h))
-				end
-				if VerifyTx.check_tx(tx, x, prev_hash) do x=[tx|x] end
-			true -> :ok
+			not is_map(tx) -> "not map"
+			tx.data.__struct__ == :Elixir.Send and tx.data.fee < Constants.min_tx_fee_this_node -> "low-fee tx are blocked on this node"
+			not VerifyTx.check_tx(tx, x, prev_hash) -> "invalid tx"
+			true -> x = [tx|x]
 		end
 		{:noreply, x}
   end

@@ -48,24 +48,24 @@ defmodule TxUpdate do
     {reward, delta}
   end
   def tx_update(tx, d, bond_size) do
-    pub = tx.pub
+    pub = tx.data.pub
     acc = KV.get(pub)
     acc = Map.put(acc, :nonce, acc.nonce + d)
     KV.put(pub, acc)
     case tx.data.__struct__ do
-      :Elixir.SignTx -> SignTransaction.update(tx, d, bond_size)
-      :Elixir.SpendTx ->               Spend.update(tx, d)
-      :Elixir.Spend2WaitTx ->     Spend2Wait.update(tx, d)
-      :Elixir.Wait2BondTx ->       Wait2Bond.update(tx, d)
-      :Elixir.Bond2SpendTx ->     Bond2Spend.update(tx, d)
-      :Elixir.SlasherTx ->           Slasher.update(tx, d)
-      :Elixir.RevealTx ->             Reveal.update(tx, d)
-      :Elixir.ToChannelTx ->       ToChannel.update(tx, d)
-      :Elixir.ChannelBlockTx->  ChannelBlock.update(tx, d)
-      :Elixir.CloseChannelTx->  CloseChannel.update(tx, d)
-			:Elixir.OracleTx ->             Oracle.update(tx, d)
-			:Elixir.JudgementTx ->       Judgement.update(tx, d)
-			:Elixir.WinTx ->                   Win.update(tx, d)
+      :Elixir.Sign ->                 Sign.update(tx, d, bond_size)
+      :Elixir.Spend ->               Spend.update(tx, d)
+      :Elixir.Spend2Wait ->     Spend2Wait.update(tx, d)
+      :Elixir.Wait2Bond ->       Wait2Bond.update(tx, d)
+      :Elixir.Bond2Spend ->     Bond2Spend.update(tx, d)
+      :Elixir.Slasher ->           Slasher.update(tx, d)
+      :Elixir.Reveal ->             Reveal.update(tx, d)
+      :Elixir.ToChannel ->       ToChannel.update(tx, d)
+      :Elixir.ChannelBlock->  ChannelBlock.update(tx, d)
+      :Elixir.CloseChannel->  CloseChannel.update(tx, d)
+			:Elixir.Oracle ->             Oracle.update(tx, d)
+			:Elixir.Judgement ->       Judgement.update(tx, d)
+			:Elixir.Win ->                   Win.update(tx, d)
       _	-> false
     end
   end

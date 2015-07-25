@@ -1,17 +1,16 @@
-defmodule CloseChannel do
+defmodule CloseChannel do #maybe this should have a negative fee, since it frees up space on the blockchain.
+  defstruct type: "timeout", amount: 0, amount2: 0, pub2: nil, pub: "", secret_hash: nil, bets: [], channel_block: %ChannelBlock{}, nonce: 0
 	def check(tx, txs) do
-    #only one per block per channel. be careful.
-    channel = KV.get(tx.data.channel)
+		channel = KV.get(ToChannel.key(tx.data.pub, tx.data.pub2))
     case tx.data.type do
-      "fast"    -> if VerifyTx.check_sig2(tx) do ChannelBlock.check(tx, txs) end
-      "slash"   -> if channel.nonce < tx.data.nonce do ChannelBlock.check(tx, txs) end
-      "timeout" -> channel.time < KV.get("height") - channel.delay
+      "slasher" -> if channel.nonce < tx.data.channel_block.data.nonce do ChannelBlock.check(tx.data.channel_block, txs, false) else false end
+      "timeout" -> channel.nonce > 0 and channel.time < KV.get("height") - channel.delay
     end
 	end
 	def update(tx, d) do
-		da = tx.data
-    TxUpdate.sym_increment(da.pub, :amount, da.amount, d)
-    TxUpdate.sym_increment(da.pub2, :amount, da.amount2, d)
+		x = tx.data
+    TxUpdate.sym_increment(x.pub, :amount, x.amount, d)
+    TxUpdate.sym_increment(x.pub2, :amount, x.amount2, d)
 		#needs to delete the channel
 	end
 end

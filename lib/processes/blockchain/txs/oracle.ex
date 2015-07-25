@@ -1,4 +1,5 @@
 defmodule Oracle do
+	defstruct ins: [], sigs: [], oracle_id: "", pub: ""
 	def check(tx, txs) do
 		#can the creator afford this?
 		#no Sztorc at first.
