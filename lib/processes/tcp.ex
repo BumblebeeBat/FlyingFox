@@ -75,8 +75,8 @@ defmodule Tcp.Handler do
 		if ip == {127,0,0,1} do
 			f = fn(x) -> tl(tl(tl(tl(tl(tl(x)))))) end
 		end
-		headers = [{"content-type", "text/plain"}]#,
-		#{"access-control-allow-origin", "*"}]
+		headers = [{"content-type", "text/plain"},
+		{"access-control-allow-origin", "*"}]
 		body = elem(req, 11) |> to_char_list |> f.() |> to_string |> Base.decode64!	|> PackWrap.unpack |> re_list |> func.() |> PackWrap.pack
 		#body = :jiffy.encode(x)
 		{:ok, resp} = :cowboy_req.reply(200, headers, body, req)
