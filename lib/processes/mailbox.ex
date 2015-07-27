@@ -47,12 +47,12 @@ defmodule MailBox do
 	def handle_call(:status, _from, {db, m, n}) do {:reply, %{mailboxes: m, messages: n}, {db, m, n}} end
 	def pop(pub) do
 		msg = GenServer.call(@name, {:pop, pub})
-		time = Timer.now_diff(msg.time) + 10000000 #10 second fee automatically
-		two_days = 24*60*60*1000000
 		cond do
 			msg == nil -> nil
 			pub == Keys.pubkey -> nil
 			true ->
+				time = Timer.now_diff(msg.time) + 10000000 #10 second fee automatically
+				two_days = 24*60*60*1000000
 				refund = round(msg.price *  max(0, ((two_days - time) / two_days)))
 				tx = ChannelManager.spend(pub, refund)
 				%MsgPop{msg: msg, payment: tx}

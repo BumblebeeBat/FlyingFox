@@ -149,20 +149,22 @@ function refresh_txs() {
 refresh_txs();
 window.setInterval(refresh_txs, 2000);
 
-messages = [];
-function message(index, pub) {
-    x = local_get("read_message&".concat(index).concat("&").concat(pub));
-    refresh_helper(x, function(){ return "success"; });
-};
+function message(index, pub) { local_get("read_message&".concat(index).concat("&").concat(pub)); };
 function refresh_messages() {
+    // no messages are getting displayed at this time.
+
     // this could be so much more efficient.
     // we don't need to refresh the whole page every time, we can just append the new message.
     // if "other" changes then we should refresh the page.
     pub = document.getElementById("other").value;
     temp = [];
+    messages = [];
+    console.log("empty messages ".concat(messages));
     for (i = 0; i < inbox_size; i++) { messages.push(message(i, pub)); };
+    console.log("full messages ".concat(messages));
     empty_messages();
     messages.map(function(m) {
+	console.log("inside map ".concat(JSON.stringify(m)));
 	if (m === undefined)  { false; }
 	else if (m.to == pub) { add_message(msg.msg); }
 	else                  { recieve_message(msg.msg); }
