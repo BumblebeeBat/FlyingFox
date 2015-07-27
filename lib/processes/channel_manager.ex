@@ -36,14 +36,18 @@ defmodule ChannelManager do
 	end
 	def accept(tx, min_amount, mem \\ []) do
 		cond do
-			tx == nil -> "no channel"
+			tx == nil ->
+				IO.puts("no payment")
+				false
 			accept_check(tx, min_amount, mem) ->
 				other = other(tx)
 				GenServer.cast(@name, {:recieve, other, tx})
 				d = 1
 				if tx.data.pub2 == Keys.pubkey do d = d * -1 end
 				tx.data.amount * d
-			true -> IO.puts("bad channel #{inspect tx}")
+			true ->
+				IO.puts("bad payment #{inspect tx}")
+				false
 		end
 	end
 	def accept_check(tx, min_amount \\ -Constants.initial_coins, mem \\ []) do

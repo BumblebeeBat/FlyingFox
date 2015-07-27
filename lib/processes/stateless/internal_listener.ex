@@ -59,7 +59,7 @@ defmodule InternalListener do
 				IO.puts("args #{inspect args}")
 				msg = hd(tl(tl(args))) |> PackWrap.unpack
 				node_pub = Cli.status(node).pubkey
-				tx = ChannelManager.spend(node_pub, max(round(Cli.cost(node)*1.01), Constants.min_channel_spend))
+				tx = ChannelManager.spend(node_pub, max(round(Cli.cost(node)*1.01), Constants.min_channel_spend)) #this isn't creating a tx. something is wrong.
 				Inbox.record_message(%Msg{msg: msg, to: pub, from: Keys.pubkey})
 				%SendMessage{payment: tx, to: pub, msg: Encryption.send_msg(msg, pub)}
 				|> Cli.packer(&(Cli.talk(["send_message", &1], node)))

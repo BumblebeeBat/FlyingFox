@@ -61,7 +61,7 @@ defmodule MailBox do
 	def size(pub) do GenServer.call(@name, {:size, pub}) end
 	def status do GenServer.call(@name, :status) end
 	def cost do cost(status) end
-	def cost(s) do s.messages*1000000	end
+	def cost(s) do (1+s.messages)*1000000	end
 	def accept(payment, cost, f) do if ChannelManager.accept(payment, cost) do f.() else "bad payment" end	end
 	def register(payment, pub) do
 		accept(payment, Constants.registration,  fn() ->

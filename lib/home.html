@@ -2,7 +2,7 @@
     <font id="pub"></font> <br>
     <font id="bal"></font> <br>
     <font>registration status: </font><font id="reg">"not registered"</font> <br>
-    <font>partner pubkey: </font><textarea id="other" rows="1" cols="80">a</textarea>
+    <font>partner pubkey: </font><textarea id="other" rows="1" cols="80">BPy3XN8D14C6/sZ0VhubSrTAU2jpf9kguEDqibfQPobyFlFMhkykvZNv02AyDACFi8HjX3UNCjlGuKs5DezzH3k=</textarea>
     <button type="button" id="switch_partner">Switch Partner</button> <br>
     <textarea id="msg" rows="6" cols="80"></textarea>
     <button type="button" id="send_button">Send Message</button>
@@ -96,6 +96,7 @@ function refresh_inbox_size() {
     pub = document.getElementById("other").value;
     var x = local_get("inbox_size&".concat(pub));
     refresh_helper(x, function(){ inbox_size = xml_out(x);});
+    // console.log("inbox size ".concat(inbox_size));
 };
 refresh_inbox_size();
 window.setInterval(refresh_inbox_size, 2000);
@@ -149,28 +150,59 @@ function refresh_txs() {
 refresh_txs();
 window.setInterval(refresh_txs, 2000);
 
-function message(index, pub) { local_get("read_message&".concat(index).concat("&").concat(pub)); };
+//function message(index, pub, callback) {
+//    var x = local_get("read_message&".concat(index).concat("&").concat(pub));
+//    refresh_helper(x, function(){ callback(); });
+//};
+messages = [];
 function refresh_messages() {
+    for (i = 0; i < inbox_size; i++) {
+	var j = i;
+	refresh_messages_2(j);
+    };
+};
+function refresh_messages_2(i) {
+    pub = document.getElementById("other").value;
+    var x = local_get("read_message&".concat(i).concat("&").concat(pub));
+    refresh_helper(x, function(){
+	msg = JSON.parse(JSON.parse(xml_out(x)));
+	messages[i] = msg;
+    });
+};
+function refresh_messages_3() {
+    pub = document.getElementById("other").value;
+    empty_messages();
+    messages.map(function(m) {
+	console.log("inside map ".concat(JSON.stringify(m)));
+	if (m === undefined)  { false; }
+	else if (m.to == pub) { add_message(m.msg); }
+	else                  { recieve_message(m.msg); }
+    });
+};
+
+
+//function refresh_messages_old() {
     // no messages are getting displayed at this time.
 
     // this could be so much more efficient.
     // we don't need to refresh the whole page every time, we can just append the new message.
     // if "other" changes then we should refresh the page.
-    pub = document.getElementById("other").value;
-    temp = [];
-    messages = [];
-    console.log("empty messages ".concat(messages));
-    for (i = 0; i < inbox_size; i++) { messages.push(message(i, pub)); };
-    console.log("full messages ".concat(messages));
-    empty_messages();
-    messages.map(function(m) {
-	console.log("inside map ".concat(JSON.stringify(m)));
-	if (m === undefined)  { false; }
-	else if (m.to == pub) { add_message(msg.msg); }
-	else                  { recieve_message(msg.msg); }
-    });
-};
+//    pub = document.getElementById("other").value;
+//    temp = [];
+//    messages = [];
+//    console.log("empty messages ".concat(JSON.stringify(messages)));
+//    for (var i = 0; i < inbox_size; i++) { messages.push(message(i, pub)); };
+//    console.log("full messages ".concat(JSON.stringify(messages)));
+//    empty_messages();
+//    messages.map(function(m) {
+//	console.log("inside map ".concat(JSON.stringify(m)));
+//	if (m === undefined)  { false; }
+//	else if (m.to == pub) { add_message(msg.msg); }
+//	else                  { recieve_message(msg.msg); }
+//    });
+//};
 window.setInterval(refresh_messages, 5000);
+window.setInterval(refresh_messages_3, 3000);
 
 function to_channel(pub, amount) {
     x = local_get("to_channel&".concat(pub).concat("&").concat(amount));
@@ -213,7 +245,7 @@ function refresh() {
     v = document.getElementById("other").value;
     //console.log("partner ".concat(v));
     refresh_balance();
-    refresh_messages();
+    //refresh_messages();
 }
 
 // we need a function for loading new pub/priv pairs into the node.

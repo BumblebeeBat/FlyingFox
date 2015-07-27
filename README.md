@@ -6,7 +6,7 @@ FlyingFox
 
 Donations: 1GbpRPE83Vjg73KFvTVZ4EnS2qNkiLY5TT
 
-This is a proof of stake blockchain written in elixir. The goal of this project is a simple smart-contracting blockchain. FlyingFox lets you write your contract in any language, including  codius, EVM, and English
+This is a proof of stake blockchain written in elixir. The goal of this project is a simple smart-contracting blockchain in the truthcoin style http://www.truthcoin.info . FlyingFox lets you write your contract in any language, including  EVM, Spanish, Python, C, Chinese, and English
 
 you need to install elixir to run this code http://elixir-lang.org/install.html
 
@@ -14,12 +14,8 @@ for ubuntu you may need the line: "apt-get install erlang-dev"
 
 to run:
 
-   ulimit -m 99999
-
    iex -S mix
 
-
-to talk to FlyingFox, use this: https://github.com/BumblebeeBat/flying_fox_cli
 
 Code of conduct, development guidelines:
 Submit pull request. If I like, I will accept.
