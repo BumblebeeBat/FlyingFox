@@ -23,7 +23,7 @@ defmodule MailBox do
 		end
 	end
 	def handle_cast({:send, to, message}, {db, m, messages}) do
-		msg = %Msg{msg: message, time: Timer.stamp, size: byte_size(message[:msg]) + byte_size(message[:key]), price: messages*1000000, to: to}
+		msg = %Msg{msg: message, time: Timer.stamp, size: byte_size(message[:msg]) + byte_size(message[:key]), price: pure_cost(messages), to: to}
 		a = db[to]
 		if a == nil do a = [] end
 		dd = HashDict.put(db, to, a ++ [msg])
@@ -60,8 +60,9 @@ defmodule MailBox do
 	end
 	def size(pub) do GenServer.call(@name, {:size, pub}) end
 	def status do GenServer.call(@name, :status) end
+	def pure_cost(m) do (1 + m) * 1000000 end
+	def cost(s) do pure_cost(s.messages) end
 	def cost do cost(status) end
-	def cost(s) do (1+s.messages)*1000000	end
 	def accept(payment, cost, f) do if ChannelManager.accept(payment, cost) do f.() else "bad payment" end	end
 	def register(payment, pub) do
 		accept(payment, Constants.registration,  fn() ->
