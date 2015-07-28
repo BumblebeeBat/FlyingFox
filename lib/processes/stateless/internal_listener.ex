@@ -87,9 +87,9 @@ defmodule InternalListener do
 							amount = on_blockchain.amount2
 						end
 						if on_channel_manager.data.pub == Keys.pubkey do
-							amount = amount + on_channel_manager.data.amount
-						else
 							amount = amount - on_channel_manager.data.amount
+						else
+							amount = amount + on_channel_manager.data.amount
 						end
 						amount
 				end
