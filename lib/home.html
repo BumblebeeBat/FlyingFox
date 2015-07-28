@@ -206,10 +206,14 @@ peer_id = 0;
 document.getElementById("switch_partner").onclick=function() {
     //ps = JSON.parse(JSON.parse(local_get("inbox_peers")));
     ps = JSON.parse(inbox_peers);
-    //console.log("switch partner ps ".concat(ps));
+    console.log("switch partner ps ".concat(JSON.stringify(ps)));
     peer_id = peer_id + 1;
+    console.log("peer_id ".concat(peer_id));
     if (ps.length > 0) {
-	document.getElementById("other").value = ps[peer_id % inbox_peers.length];
+	console.log("ps long enough");
+	console.log("modded ".concat(peer_id % ps.length));
+	console.log("value ".concat(ps[peer_id % ps.length]));
+	document.getElementById("other").value = ps[peer_id % ps.length];
     };
 };
 
