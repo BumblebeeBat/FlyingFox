@@ -13,7 +13,7 @@ defmodule ToChannel do
 		|> Enum.filter(&(&1.data.new == true))
 		acc = KV.get(tx.data.pub2)
     cond do
-			tx.data.pub == tx.data.pub1 ->
+			tx.data.pub == tx.data.pub2 ->
 				IO.puts("no channel with yourself")
 				false
 			tx.data.amount <= 0 ->
