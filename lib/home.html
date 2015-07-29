@@ -1,4 +1,7 @@
     <html>
+    <head>
+    </head>
+    <body>
     <font id="pub"></font> <br>
     <font id="bal"></font> <br>
     <font id="cbal"></font> <br>
@@ -8,16 +11,23 @@
     <textarea id="msg" rows="6" cols="80"></textarea>
     <button type="button" id="send_button">Send Message</button>
     <ul id="messages" style="list-style: none; padding: 0; margin: 0;"></ul>
-    <head>
-    </head>
+    <button type="button" id="delete">Delete Messages</button>
+    </body>
     <script>
+
+document.getElementById("delete").onclick=function() {
+    pub = document.getElementById("other").value;
+    URL = "delete_all_messages&".concat(pub);
+    local_get(URL);
+    refresh_messages();
+};
 
 document.getElementById("send_button").onclick=function() {
     var msg = document.getElementById("msg").value;
     pub = document.getElementById("other").value;
-    var a = JSON.stringify(server());
-    var b = JSON.stringify(msg);
-    URL = "send_message&".concat(a).concat("&").concat(pub).concat("&").concat(b);
+    var node = JSON.stringify(server());
+    msg = JSON.stringify(msg);
+    URL = "send_message&".concat(node).concat("&").concat(pub).concat("&").concat(msg);
     //console.log("url ".concat(URL));
     local_get(URL);
     document.getElementById("msg").value = "";
@@ -163,6 +173,7 @@ window.setInterval(refresh_txs, 2000);
 
 messages = [];
 function refresh_messages() {
+    messages = [];
     console.log("refresh messages");
     for (i = 0; i < inbox_size; i++) {
 	refresh_messages_2(i);

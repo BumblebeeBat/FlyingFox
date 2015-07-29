@@ -71,6 +71,7 @@ defmodule InternalListener do
 				|> PackWrap.pack
 			"inbox_size" -> Inbox.size(hd(args))
 			"delete_message" -> Inbox.delete_message(hd(args), hd(tl(args)))
+			"delete_all_messages" -> Inbox.delete_all(hd(args))
 			"inbox_peers" -> Inbox.peers |> PackWrap.pack
 			"channel_get" -> args |> hd |> ToChannel.key(Keys.pubkey) |> KV.get |> PackWrap.pack
 			"channel_peers" -> HashDict.keys(ChannelManager.get_all)

@@ -36,10 +36,12 @@ defmodule Inbox do
 		end
 	end
 	def handle_cast({:del, pub, index}, db) do {:noreply, HashDict.put(db, pub, List.delete_at(db[pub], index))} end
+	def handle_cast({:del_all, pub}, db) do {:noreply, HashDict.put(db, pub, [])} end
 	def peers do GenServer.call(@name, {:peers}) end
 	def size(pub) do GenServer.call(@name, {:size, pub}) end
 	def read_message(pub, index) do GenServer.call(@name, {:read, pub, index}) end
 	def record_message(msg) do GenServer.cast(@name, {:rec, msg}) end
 	def delete_message(pub, index) do GenServer.cast(@name, {:del, pub, index}) end
+	def delete_all(pub) do GenServer.cast(@name, {:del_all, pub}) end
 end
 

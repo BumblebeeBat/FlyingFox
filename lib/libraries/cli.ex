@@ -73,7 +73,8 @@ defmodule Cli do
 	def send_message(pub, msg, node, p \\ me) do local_talk([:send_message, PackWrap.pack(node), pub, PackWrap.pack(msg)], p) end
 	def read_message(index, pub, p \\ me) do local_talk([:read_message, index, pub], p) end
 	def inbox_size(pub, p \\ me) do local_talk([:inbox_size, pub], p) end
-	def delete_message(index, peer, p \\ me) do peer |> packer(&(local_talk([:delete_message, index, &1], p))) end
+	def delete_message(index, peer, p \\ me) do peer |> packer(&(local_talk([:delete_message, index, &1], p))) end #I don't think this needs packer(_). it should be pub not peer.
+	def delete_all_messages(peer, p \\ me) do peer |> packer(&(local_talk([:delete_all_messages, &1], p))) end
 	def inbox_peers(p \\ me) do local_talk([:inbox_peers], p) |> PackWrap.unpack end
 	def channel_balance(pub, p \\ me) do local_talk([:channel_balance, pub], p) end
 	def channel_peers(p \\ me) do local_talk([:channel_peers], p) end

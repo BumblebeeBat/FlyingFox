@@ -28,15 +28,11 @@ defmodule Flyingfox.Mixfile do
      registered: [:flyingfox]]
   end
 
-  #defp escript_config do
-  #  [ main_module: FlyingFox ]
-  #end
-  
   defp package do
     [files: ~W(lib mix.exs README.md test),
     author: "Zack Hess",
     contributors: ["Ricardo Lanziano"],
-    licenses: ["Something"],
+    licenses: ["Unlicence"],
     links: %{"GitHub" => @repo,
     	     "GitHub issues" => @issues}]
   end    
@@ -50,10 +46,14 @@ defmodule Flyingfox.Mixfile do
   #   {:mydep, git: "https://github.com/elixir-lang/mydep.git", tag: "0.1.0"}
   #
   # Type `mix help deps` for more examples and options
-  defp deps do
+
+	defp deps do
+		#we need to add the sha256 hash of the push, that way we wont get tricked into downloading bad code. 
     [
 				{:cowboy, "~> 1.0.0"},
 				{:jiffy, github: "davisp/jiffy"},
+				{:exleveldb, "~> 0.5"},
+				{:eleveldb, github: "basho/eleveldb", tag: "2.1.0"}
 		]
   end
 end

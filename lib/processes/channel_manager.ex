@@ -4,8 +4,29 @@ defmodule ChannelManager do
 	defstruct recieved: %CryptoSign{data: %ChannelBlock{}}, sent: %CryptoSign{data: %ChannelBlock{}}#, hash_locked: []
   use GenServer
   @name __MODULE__
-  def init(args) do {:ok, args} end
-  def start_link() do   GenServer.start_link(__MODULE__, %HashDict{}, name: @name) end
+	def db_lock(f) do
+		{status, db} = Exleveldb.open(System.cwd <> "/channeldb")#different in windows?
+		case status do
+			:ok ->
+				#we have a lock on the db, so no one else can use it till we are done.
+				out = f.(db)
+				Exleveldb.close(db)#unlock
+				out
+			:db_open ->#someone else has a lock on the db.
+				:timer.sleep(50)
+				db_lock(f)
+			true -> IO.puts("db broke")
+		end
+	end
+	def put(key, val) do Task.start_link(fn() -> db_lock(fn(db) -> Exleveldb.put(db, key, PackWrap.pack(val), []) end) end) end
+  def init(_) do
+		{:ok, db_lock(fn(db) ->
+					Exleveldb.fold(
+						db,
+						fn({key, value}, acc) -> HashDict.put(acc, key, PackWrap.unpack(value)) end,
+						%HashDict{}) end)}
+	end
+  def start_link() do   GenServer.start_link(__MODULE__, 0, name: @name) end
 	def get(pub) do       GenServer.call(@name, {:get, pub}) end
   def get_all do        GenServer.call(@name, :get_all) end
   def handle_call(:get_all, _from, mem) do {:reply, mem, mem} end
@@ -19,12 +40,14 @@ defmodule ChannelManager do
 		out = mem[pub]
 		if out == nil do out = %ChannelManager{} end
 		out = %{out | sent: channel}
+		put(pub, out)
 		{:noreply, HashDict.put(mem, pub, out)}
 	end
 	def handle_cast({:recieve, pub, channel},  mem) do
 		out = mem[pub]
 		if out == nil do out = %ChannelManager{} end
 		out = %{out | recieved: channel}
+		put(pub, out)
 		{:noreply, HashDict.put(mem, pub, out)}
 	end
 	def other(tx) do
@@ -34,7 +57,7 @@ defmodule ChannelManager do
 			true -> hd(tx)
 		end
 	end
-	def accept(tx, min_amount, mem \\ []) do
+	def accept(tx, min_amount \\ -Constants.initial_coins, mem \\ []) do
 		cond do
 			tx == nil ->
 				IO.puts("no payment")
