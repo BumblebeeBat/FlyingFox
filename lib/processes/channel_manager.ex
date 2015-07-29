@@ -5,7 +5,9 @@ defmodule ChannelManager do
   use GenServer
   @name __MODULE__
 	def db_lock(f) do
-		{status, db} = Exleveldb.open(System.cwd <> "/channeldb")#different in windows?
+		path = System.cwd <> "/dbs"
+		File.mkdir(path)
+		{status, db} = Exleveldb.open(path <> "/channeldb")#different in windows?
 		case status do
 			:ok ->
 				#we have a lock on the db, so no one else can use it till we are done.

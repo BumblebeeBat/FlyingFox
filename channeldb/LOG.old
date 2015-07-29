@@ -1,32 +1,32 @@
-2015/07/29-09:25:41.088855 b160e000             Options.comparator: leveldb.InternalKeyComparator
-2015/07/29-09:25:41.088913 b160e000      Options.create_if_missing: 1
-2015/07/29-09:25:41.088922 b160e000        Options.error_if_exists: 0
-2015/07/29-09:25:41.088930 b160e000        Options.paranoid_checks: 0
-2015/07/29-09:25:41.088938 b160e000     Options.verify_compactions: 1
-2015/07/29-09:25:41.088945 b160e000                    Options.env: 0x7f857241e8f0
-2015/07/29-09:25:41.088953 b160e000               Options.info_log: 0x7f8572501e00
-2015/07/29-09:25:41.088963 b160e000      Options.write_buffer_size: 20971520
-2015/07/29-09:25:41.088971 b160e000         Options.max_open_files: 1000
-2015/07/29-09:25:41.088979 b160e000            Options.block_cache: 0x7f8573008e00
-2015/07/29-09:25:41.088987 b160e000             Options.block_size: 4096
-2015/07/29-09:25:41.088994 b160e000       Options.block_size_steps: 16
-2015/07/29-09:25:41.089002 b160e000 Options.block_restart_interval: 16
-2015/07/29-09:25:41.089010 b160e000            Options.compression: 1
-2015/07/29-09:25:41.089017 b160e000          Options.filter_policy: NULL
-2015/07/29-09:25:41.089025 b160e000              Options.is_repair: false
-2015/07/29-09:25:41.089033 b160e000         Options.is_internal_db: false
-2015/07/29-09:25:41.089041 b160e000      Options.total_leveldb_mem: 0
-2015/07/29-09:25:41.089049 b160e000  Options.block_cache_threshold: 33554432
-2015/07/29-09:25:41.089056 b160e000  Options.limited_developer_mem: false
-2015/07/29-09:25:41.089064 b160e000              Options.mmap_size: 0
-2015/07/29-09:25:41.089072 b160e000       Options.delete_threshold: 1000
-2015/07/29-09:25:41.089079 b160e000       Options.fadvise_willneed: false
-2015/07/29-09:25:41.089087 b160e000      Options.tiered_slow_level: 0
-2015/07/29-09:25:41.089095 b160e000     Options.tiered_fast_prefix: /Users/zack/Hacking/FlyingFox/channeldb
-2015/07/29-09:25:41.089103 b160e000     Options.tiered_slow_prefix: /Users/zack/Hacking/FlyingFox/channeldb
-2015/07/29-09:25:41.089110 b160e000                         crc32c: software
-2015/07/29-09:25:41.089118 b160e000                File cache size: 186642432
-2015/07/29-09:25:41.089126 b160e000               Block cache size: 188739584
-2015/07/29-09:25:41.089410 b160e000 Recovering log #28
-2015/07/29-09:25:41.091943 b160e000 Delete type=0 #28
-2015/07/29-09:25:41.092022 b160e000 Delete type=3 #27
+2015/07/29-09:29:06.108731 b160e000             Options.comparator: leveldb.InternalKeyComparator
+2015/07/29-09:29:06.108793 b160e000      Options.create_if_missing: 1
+2015/07/29-09:29:06.108803 b160e000        Options.error_if_exists: 0
+2015/07/29-09:29:06.108811 b160e000        Options.paranoid_checks: 0
+2015/07/29-09:29:06.108819 b160e000     Options.verify_compactions: 1
+2015/07/29-09:29:06.108826 b160e000                    Options.env: 0x7ff3e95031b0
+2015/07/29-09:29:06.108834 b160e000               Options.info_log: 0x7ff3e95046a0
+2015/07/29-09:29:06.108842 b160e000      Options.write_buffer_size: 20971520
+2015/07/29-09:29:06.108850 b160e000         Options.max_open_files: 1000
+2015/07/29-09:29:06.108857 b160e000            Options.block_cache: 0x7ff3ea033200
+2015/07/29-09:29:06.108865 b160e000             Options.block_size: 4096
+2015/07/29-09:29:06.108874 b160e000       Options.block_size_steps: 16
+2015/07/29-09:29:06.108882 b160e000 Options.block_restart_interval: 16
+2015/07/29-09:29:06.108889 b160e000            Options.compression: 1
+2015/07/29-09:29:06.108897 b160e000          Options.filter_policy: NULL
+2015/07/29-09:29:06.108904 b160e000              Options.is_repair: false
+2015/07/29-09:29:06.108912 b160e000         Options.is_internal_db: false
+2015/07/29-09:29:06.108920 b160e000      Options.total_leveldb_mem: 0
+2015/07/29-09:29:06.108928 b160e000  Options.block_cache_threshold: 33554432
+2015/07/29-09:29:06.108935 b160e000  Options.limited_developer_mem: false
+2015/07/29-09:29:06.108943 b160e000              Options.mmap_size: 0
+2015/07/29-09:29:06.108950 b160e000       Options.delete_threshold: 1000
+2015/07/29-09:29:06.108958 b160e000       Options.fadvise_willneed: false
+2015/07/29-09:29:06.108965 b160e000      Options.tiered_slow_level: 0
+2015/07/29-09:29:06.108973 b160e000     Options.tiered_fast_prefix: /Users/zack/Hacking/FlyingFox/channeldb
+2015/07/29-09:29:06.108980 b160e000     Options.tiered_slow_prefix: /Users/zack/Hacking/FlyingFox/channeldb
+2015/07/29-09:29:06.108988 b160e000                         crc32c: software
+2015/07/29-09:29:06.108996 b160e000                File cache size: 186642432
+2015/07/29-09:29:06.109004 b160e000               Block cache size: 188739584
+2015/07/29-09:29:06.109307 b160e000 Recovering log #30
+2015/07/29-09:29:06.111445 b160e000 Delete type=0 #30
+2015/07/29-09:29:06.111528 b160e000 Delete type=3 #29

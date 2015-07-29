@@ -52,5 +52,7 @@ docs/_build/
 
 # PyBuilder
 target/
+
 /erl_crash.dump
 /deps/
+/dbs/
