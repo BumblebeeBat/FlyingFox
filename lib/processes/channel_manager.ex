@@ -4,26 +4,10 @@ defmodule ChannelManager do
 	defstruct recieved: %CryptoSign{data: %ChannelBlock{}}, sent: %CryptoSign{data: %ChannelBlock{}}#, hash_locked: []
   use GenServer
   @name __MODULE__
-	def db_lock(f) do
-		path = System.cwd <> "/dbs"
-		File.mkdir(path)
-		{status, db} = Exleveldb.open(path <> "/channeldb")#different in windows?
-		case status do
-			:ok ->
-				#we have a lock on the db, so no one else can use it till we are done.
-				out = f.(db)
-				Exleveldb.close(db)#unlock
-				out
-			:db_open ->#someone else has a lock on the db.
-				:timer.sleep(50)
-				db_lock(f)
-			true -> IO.puts("db broke")
-		end
-	end
-	def put(key, val) do Task.start_link(fn() -> db_lock(fn(db) -> Exleveldb.put(db, key, PackWrap.pack(val), []) end) end) end
+	def db_location do "/channeldb" end
   def init(_) do
-		{:ok, db_lock(fn(db) ->
-					Exleveldb.fold(
+		{:ok, Leveldb.db_lock(db_location, fn(db) ->
+					Exleveldb.fold(#fold is also called "reduce".
 						db,
 						fn({key, value}, acc) -> HashDict.put(acc, key, PackWrap.unpack(value)) end,
 						%HashDict{}) end)}
@@ -42,14 +26,14 @@ defmodule ChannelManager do
 		out = mem[pub]
 		if out == nil do out = %ChannelManager{} end
 		out = %{out | sent: channel}
-		put(pub, out)
+		Leveldb.put(pub, out, db_location)
 		{:noreply, HashDict.put(mem, pub, out)}
 	end
 	def handle_cast({:recieve, pub, channel},  mem) do
 		out = mem[pub]
 		if out == nil do out = %ChannelManager{} end
 		out = %{out | recieved: channel}
-		put(pub, out)
+		Leveldb.put(pub, out, db_location)
 		{:noreply, HashDict.put(mem, pub, out)}
 	end
 	def other(tx) do

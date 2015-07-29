@@ -64,8 +64,11 @@ defmodule Cli do
 	def channel_spend(key, amount, peer \\ me) do local_talk([:channel_spend, key, amount], peer) end
 	def channel_accept(tx, amount, peer \\ me) do tx |> packer(&(talk([:accept, &1, amount],peer))) end
 	def channel_state(key) do local_talk([:channel_state, key]) end
-	def new_key(p \\ me) do local_talk([:newkey], p) end
-	def load_key(pub, priv) do local_talk([:loadkey, pub, priv]) end
+	def new_key(brainwallet, p \\ me) do local_talk([:newkey, brainwallet], p) end
+	def load_key(pub, priv, brainwallet) do local_talk([:loadkey, pub, priv, brainwallet]) end
+	def unlock_key(brainwallet) do local_talk([:unlock, brainwallet]) end
+	def lock_key do local_talk([:lock]) end
+	def key_status do local_talk([:key_status]) end
 	def sign(o, p \\ me) do o |> packer(&(local_talk([:sign, &1], p))) end
 	def cost(peer \\ me) do talk(["cost"], peer) end
 	def register(node, p \\ me) do local_talk([:register, PackWrap.pack(node)], p) end

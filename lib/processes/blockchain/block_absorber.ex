@@ -3,7 +3,7 @@ defmodule BlockAbsorber do
   @name __MODULE__
   def init(_args) do 
     Blocktree.genesis_state
-    Keys.master  
+    #Keys.master  
     {:ok, []} 
   end
   def start_link do     GenServer.start_link(__MODULE__, :ok, name: @name) end

@@ -31,8 +31,11 @@ defmodule InternalListener do
 			"cleanup" ->
 				TxCreator.sign
 				TxCreator.reveal
-			"newkey" -> Keys.new
-			"loadkey" -> Keys.load(hd(args), hd(tl(args)))
+			"newkey" -> Keys.new(hd(args))
+			"loadkey" -> Keys.load(hd(args), hd(tl(args)), hd(tl(tl(args))))
+			"unlock" -> Keys.unlock(hd(args))
+			"lock" -> Keys.lock
+			"key_status" -> Keys.status
 			"register" ->
 				#maybe MailNodes.register shoule contain all this logic
 				IO.puts("internal register #{inspect args}")
