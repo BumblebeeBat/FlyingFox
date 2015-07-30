@@ -14,14 +14,11 @@ defmodule Mempool do
 		h = KV.get("height")
 		prev_hash = nil
 		if h > 0 do prev_hash = Blockchain.blockhash(Blockchain.get_block(h)) end
-		IO.puts("possibly adding tx #{inspect tx}")
 		cond do
 			not is_map(tx) -> "not map"
 			tx.data.__struct__ == :Elixir.Send and tx.data.fee < Constants.min_tx_fee_this_node -> "low-fee tx are blocked on this node"
 			not VerifyTx.check_tx(tx, x, prev_hash) -> "invalid tx"
-			true ->
-				IO.puts("adding tx #{inspect tx}")
-				x = [tx|x]
+			true -> x = [tx|x]
 		end
 		{:noreply, x}
   end

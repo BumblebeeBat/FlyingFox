@@ -47,7 +47,7 @@ defmodule Blocktree do
       txs = block.data.txs
       n = num_signers(txs)
       TxUpdate.txs_updates(txs, -1, round(block.data.bond_size/n))
-      TxUpdate.sym_increment(block.pub, :amount, -Constants.block_creation_fee, -1)
+      TxUpdate.sym_increment(block.data.pub, :amount, -Constants.block_creation_fee, -1)
       b = prev.data.height
       if b == nil do b = 0 end
       KV.put("height", b)
@@ -94,7 +94,6 @@ defmodule Blocktree do
 	end
 	def goto_helper(last_blocks) do
 		#this should back up until we are on the same fork, then walk forward through last_blocks till the end.
-		IO.puts("goto helper #{inspect last_blocks}")
     h = KV.get("height")
     my_block = Blockchain.get_block(h).data
 		add_block = hd(last_blocks).data
@@ -133,8 +132,8 @@ defmodule Blocktree do
 				IO.puts("adding block #{inspect height}")
         block_hash = put_block(head)
         current_height = KV.get("height")
-        add_blocks(tail)
         if height > current_height do goto(block_hash) end
+        add_blocks(tail)
     end
   end
 end

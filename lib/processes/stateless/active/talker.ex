@@ -53,6 +53,7 @@ defmodule Talker do
 	end
 	def check_peer_1(p) do
     status = Cli.status(p)
+		IO.puts("check peer #{inspect status}")
     cond do
 			not is_map(status) -> status
       status.height > 0 and is_number(status.height) ->
@@ -75,14 +76,22 @@ defmodule Talker do
       txs == :ok -> IO.puts("txs shouldn't be :ok")
       (txs != []) and length(txs)>0 and is_tuple(hd(txs)) ->
         IO.puts("tx error #{inspect txs}")
-      u > i -> download_blocks(i, u, p)
+      u > i ->
+				IO.puts("download blocks")
+				download_blocks(i, u, p)
       u == i ->
+				IO.puts("share txs")
 				Enum.map(txs, &(Mempool.add_tx(&1)))
 				Cli.txs |> Enum.filter(&(not &1 in txs)) |> Enum.map(&(Cli.pushtx(&1, p)))
 			status.hash == hash ->
+				IO.puts("hash match")
+				blocks = Enum.map((u+1)..min((u+4), i), &(Blockchain.get_block(&1)))
+				IO.puts("send blocks #{inspect blocks}")
 				Enum.map((u+1)..min((u+4), i), &(Blockchain.get_block(&1)))
 				|> Cli.add_blocks(p)
       true ->
+				blocks = Enum.map((u-3)..min((u+1), i), &(Blockchain.get_block(&1)))
+				IO.puts("send block #{inspect blocks}")
 				Enum.map((u-3)..min((u+1), i), &(Blockchain.get_block(&1)))
 				|> Cli.add_blocks(p)
         true
