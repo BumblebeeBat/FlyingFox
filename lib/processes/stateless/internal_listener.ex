@@ -36,6 +36,7 @@ defmodule InternalListener do
 			"unlock" -> Keys.unlock(hd(args))
 			"lock" -> Keys.lock
 			"key_status" -> Keys.status
+			"change_password_key" -> Keys.change_password(hd(args), hd(tl(args)))
 			"register" ->
 				#maybe MailNodes.register shoule contain all this logic
 				IO.puts("internal register #{inspect args}")

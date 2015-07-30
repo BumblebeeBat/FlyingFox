@@ -67,6 +67,7 @@ defmodule Cli do
 	def new_key(brainwallet, p \\ me) do local_talk([:newkey, brainwallet], p) end
 	def load_key(pub, priv, brainwallet) do local_talk([:loadkey, pub, priv, brainwallet]) end
 	def unlock_key(brainwallet) do local_talk([:unlock, brainwallet]) end
+	def change_password_key(current, new) do local_talk([:change_password_key, current, new]) end
 	def lock_key do local_talk([:lock]) end
 	def key_status do local_talk([:key_status]) end
 	def sign(o, p \\ me) do o |> packer(&(local_talk([:sign, &1], p))) end

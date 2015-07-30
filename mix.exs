@@ -52,8 +52,6 @@ defmodule Flyingfox.Mixfile do
     [
 				{:cowboy, "~> 1.0.0"},
 				{:jiffy, github: "davisp/jiffy"},
-				{:exleveldb, "~> 0.5"},
-				{:eleveldb, github: "basho/eleveldb", tag: "2.1.0"}
 		]
   end
 end

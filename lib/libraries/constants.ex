@@ -19,5 +19,5 @@ defmodule Constants do
 	def registration do 1000000 end
 	def default_channel_balance do 500_000_000 end
 	def min_channel_spend do 1000 end
-	def creator_pub do "BCaA1Vyj47plI1qp2B01BsWFGdbba44P9xXkselSyHQ4S34ouLhL1NkEmFuAFgREJJUsBuDfl/iHKPlS+9qeivA=" end
+	def creator_pub do "BMYocgxkguE9/5JJcV8enkZNTLNT6NTiDztK60n/hth9YhztV9nENKjr9NSrotm+V0nXMhf6/gyRShAupstxiHo=" end
 end

@@ -6,11 +6,9 @@ defmodule ChannelManager do
   @name __MODULE__
 	def db_location do "/channeldb" end
   def init(_) do
-		{:ok, Leveldb.db_lock(db_location, fn(db) ->
-					Exleveldb.fold(#fold is also called "reduce".
-						db,
-						fn({key, value}, acc) -> HashDict.put(acc, key, PackWrap.unpack(value)) end,
-						%HashDict{}) end)}
+		x = DB.get_raw(db_location)
+		if x == "" do x = %HashDict{} end
+		{:ok, x}
 	end
   def start_link() do   GenServer.start_link(__MODULE__, 0, name: @name) end
 	def get(pub) do       GenServer.call(@name, {:get, pub}) end
@@ -26,15 +24,17 @@ defmodule ChannelManager do
 		out = mem[pub]
 		if out == nil do out = %ChannelManager{} end
 		out = %{out | sent: channel}
-		Leveldb.put(pub, out, db_location)
-		{:noreply, HashDict.put(mem, pub, out)}
+		mem = HashDict.put(mem, pub, out)
+		DB.put_function(db_location, fn() -> mem end)
+		{:noreply, mem}
 	end
 	def handle_cast({:recieve, pub, channel},  mem) do
 		out = mem[pub]
 		if out == nil do out = %ChannelManager{} end
 		out = %{out | recieved: channel}
-		Leveldb.put(pub, out, db_location)
-		{:noreply, HashDict.put(mem, pub, out)}
+		mem = HashDict.put(mem, pub, out)
+		DB.put_function(db_location, fn() -> mem end)
+		{:noreply, mem}
 	end
 	def other(tx) do
 		tx = [tx.data.pub, tx.data.pub2] |> Enum.filter(&(&1 != Keys.pubkey))

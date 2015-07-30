@@ -1,7 +1,47 @@
 #since I can't put [a: :b] type objects into the wrapper, then I shouldn't be able to take the out either. They need to all be in this format: %{a: :b}
 defmodule PackWrap do
 	def map2dict(m) do Map.to_list(m)	end
+	def structer(d) do
+		case d[:__struct__] do
+			"Elixir.ChannelManager" -> %ChannelManager{}
+			"Elixir.DeleteAccount" -> %DeleteAccount{}
+			"Elixir.ChannelBlock" -> %ChannelBlock{}
+			"Elixir.CloseChannel" -> %CloseChannel{}
+			"Elixir.SendMessage" -> %SendMessage{}
+			"Elixir.CryptoSign" -> %CryptoSign{}
+			"Elixir.Spend2Wait" -> %Spend2Wait{}
+			"Elixir.PopMessage" -> %PopMessage{}
+			"Elixir.Bond2Spend" -> %Bond2Spend{}
+			"Elixir.Wait2Bond" -> %Wait2Bond{}
+			"Elixir.ToChannel" -> %ToChannel{}
+			"Elixir.InboxSize" -> %InboxSize{}
+			"Elixir.Slasher" -> %Slasher{}
+			"Elixir.Account" -> %Account{}
+			"Elixir.Channel" -> %Channel{}
+			"Elixir.MsgPop" -> %MsgPop{}
+			"Elixir.Status" -> %Status{}
+			"Elixir.Reveal" -> %Reveal{}
+			"Elixir.Spend" -> %Spend{}
+			"Elixir.Block" -> %Block{}
+			"Elixir.Peer" -> %Peer{}
+			"Elixir.Meta" -> %Meta{}
+			"Elixir.Sign" -> %Sign{}
+			"Elixir.Msg" -> %Msg{}
+			x -> IO.puts("dict2map odd ball #{inspect x}")
+		end
+	end
 	def dict2map(d) do
+		if is_list(d) and length(d)>0 and is_tuple(hd(d)) and tuple_size(hd(d)) == 2 do
+			o = %{}
+			if :__struct__ in Dict.keys(d) do
+				o = structer(d)
+				d = Dict.delete(d, :__struct__)
+			end
+			d = Enum.reduce(Dict.keys(d), o, &(Map.put(&2, &1, d[&1])))
+		end
+		d
+	end
+	def dict2map_backup(d) do
 		if not (is_list(d) and Dict.has_key?(d, :__struct__)) do
 			d
 		else

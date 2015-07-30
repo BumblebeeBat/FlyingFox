@@ -36,7 +36,7 @@ defmodule Blocktree do
     creator_pub = Constants.creator_pub
     KV.put(creator_pub, a)
     KV.put("tot_bonds", b)
-    sign_reveal
+    #sign_reveal
   end
 	def num_signers(txs) do txs |> Enum.filter(&(&1.data.__struct__ == :Elixir.Sign)) |> length end
 	def back do
@@ -87,13 +87,14 @@ defmodule Blocktree do
 		goal_chain_block = hash |> Blockchain.get_block
 		my_chain_block = goal_chain_block.data.height |> Blockchain.get_block
 		if my_chain_block == goal_chain_block do
-			goto_helper(acc)
+			goto_helper([goal_chain_block|acc])
 		else
 			goto(goal_chain_block.data.hash, [goal_chain_block|acc])
 		end
 	end
 	def goto_helper(last_blocks) do
 		#this should back up until we are on the same fork, then walk forward through last_blocks till the end.
+		IO.puts("goto helper #{inspect last_blocks}")
     h = KV.get("height")
     my_block = Blockchain.get_block(h).data
 		add_block = hd(last_blocks).data
