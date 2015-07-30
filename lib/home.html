@@ -17,6 +17,20 @@ function unlocked() {
     var div = document.getElementById("main");
     div.innerHTML = "";
     
+    refresh_server_status();
+    window.setInterval(refresh_server_status, 10000);
+    refresh_inbox_peers();
+    window.setInterval(refresh_inbox_peers, 20000);
+    refresh_channel_peers();
+    window.setInterval(refresh_channel_peers, 5000);
+    setTimeout(refresh_channel, 3000);//after a short delay, that way we are sure server_status is ready
+    window.setInterval(refresh_channel, 5000);
+    refresh_mail_nodes();
+    window.setInterval(refresh_mail_nodes, 10000);
+    refresh_txs();
+    window.setInterval(refresh_txs, 2000);
+    
+
     var x = document.createElement("font");
     x.id = "pub";
     div.appendChild(x);
@@ -129,6 +143,8 @@ function unlocked() {
     div.appendChild(x);
     x.onclick=function() {
 	local_get("lock");
+	// locked();
+	refresh_page();
     };
 };
 //setTimeout(unlocked, 1000);
@@ -156,6 +172,7 @@ function locked() {
     x.onclick=function() {
 	passphrase = document.getElementById("passphrase").value;
 	local_get("unlock&".concat(passphrase));
+	refresh_page();
     };
 
     var x = document.createElement("button");
@@ -222,6 +239,16 @@ function change_password() {
 	if (new_pass === confirm_pass) {
 	    local_get("change_password_key&".concat(old).concat("&").concat(new_pass));
 	};
+    };
+    div.appendChild(x);
+
+    var x = document.createElement("button");
+    x.type = "button";
+    var t = document.createTextNode("cancel");
+    x.appendChild(t);
+    x.onclick=function() {
+	locked();
+	//refresh_page();
     };
     div.appendChild(x);
 };
@@ -320,16 +347,12 @@ function refresh_server_status() {
     var x = server_get("status");
     refresh_helper(x, function(){ server_status = JSON.parse(xml_out(x));});
 };
-refresh_server_status();
-window.setInterval(refresh_server_status, 10000);
 
 inbox_peers = [];
 function refresh_inbox_peers() {
     var x = local_get("inbox_peers");
     refresh_helper(x, function(){ inbox_peers = JSON.parse(JSON.parse(xml_out(x)));});
 };
-refresh_inbox_peers();
-window.setInterval(refresh_inbox_peers, 20000);
 
 network_peers = [];
 function refresh_network_peers() { //unused at this time.
@@ -353,8 +376,6 @@ function refresh_channel_peers() {
     var x = local_get("channel_peers");
     refresh_helper(x, function(){ channel_peers = JSON.parse(xml_out(x));});
 };
-refresh_channel_peers();
-window.setInterval(refresh_channel_peers, 5000);
 
 channel_balance = -1;
 function refresh_channel_balance() {
@@ -375,32 +396,24 @@ function refresh_channel() {
     var x = local_get("channel_get&".concat(server_status.pubkey));
     refresh_helper(x, function(){ channel = JSON.parse(JSON.parse(xml_out(x)));});
 };
-setTimeout(refresh_channel, 3000);//after a short delay, that way we are sure server_status is ready
-window.setInterval(refresh_channel, 5000);
 
 mail_nodes = [];
 function refresh_mail_nodes() {
     var x = get("mail_nodes")
     refresh_helper(x, function(){ mail_nodes = JSON.parse(JSON.parse(xml_out(x)));});
 };
-refresh_mail_nodes();
-window.setInterval(refresh_mail_nodes, 10000);
 
 txs = [];
 function refresh_txs() {
     var x = get("txs");
     refresh_helper(x, function(){ txs = JSON.parse(xml_out(x)); });
 };
-refresh_txs();
-window.setInterval(refresh_txs, 2000);
 
 lock_status = "";
 function refresh_lock_status() {
     var x = local_get("key_status");
     refresh_helper(x, function(){ lock_status = JSON.parse(xml_out(x)); });
 };
-refresh_lock_status();
-window.setInterval(refresh_lock_status, 2000);
 
 function refresh_page_status_helper() {
     page_status = lock_status;
@@ -414,15 +427,19 @@ function refresh_page_status() {
 	refresh_page_status_helper();
     };
 };
-function lockwait(){
-    if (lock_status == "") {
-	window.setTimeout(lockwait, 20);
-    } else{
-	refresh_page_status_helper();
-	window.setInterval(refresh_page_status, 1000);
+function lockwait(x, maxtimes){
+    console.log("lockwait");
+    if (maxtimes < 1) {
+	false
+    } else if (lock_status == x) {
+	refresh_lock_status();
+	window.setTimeout(function(){lockwait(x, maxtimes - 1);}, 100);
+    } else {
+	refresh_page_status_helper(); //maybe we should do this repeatedly??
     };
 };
-lockwait();
+function refresh_page() { lockwait(lock_status, 50); };
+refresh_page();
 
 
 
@@ -485,7 +502,6 @@ function register_1() {
 	    return tx.data.__struct__ == "Elixir.ToChannel";
 	});
 	txss = txss.filter(function (tx) {
-	    console.log("error error");
 	    return tx.data.pub == my_pub;
 	});
 	if (txss.length == 0) { // tx isn't in txs
@@ -500,11 +516,9 @@ function register_1() {
 function register_2(pub) {
     // is the channel ready to use yet? if not, wait a while, then recurse.
     // did we register the mailnode yet? if not, do it, and update registration status and exit.
-    m = mail_nodes.length == 0;
     if (channel == "nil") {
-	console.log("no channel");
 	setTimeout(function() {register_2(pub);}, 3000);
-    } else if (m) {
+    } else if (mail_nodes.length == 0) {
 	console.log("mail node needs to be registered");
 	register();
 	document.getElementById("reg").innerHTML = "registartion status: registered".concat("<br>");
