@@ -19,6 +19,9 @@ defmodule Talker do
 	def flip([head|tail], out \\ []) do flip(tail, [head|out]) end
   def download_blocks(i, u, p) do
 		blocks = Cli.blocks(i, min(i+50, u), p) |> flip
+		IO.puts("got blocks #{inspect blocks}")
+		IO.puts("got blocks  u #{inspect u}")
+		IO.puts("got blocks p #{inspect p}")
 		if blocks != [] do
 			parent = hd(blocks).data.hash |> KV.get
 			Task.start(fn() -> BlockAbsorber.absorb(blocks) end)

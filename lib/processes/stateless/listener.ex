@@ -55,7 +55,7 @@ defmodule Listener do
   def blocks_helper(finish, start, out) do
     block = Blockchain.get_block(start)
     cond do
-			byte_size(inspect out) > Constants.message_size/2 -> tl(out)
+			byte_size(PackWrap.pack(out)) > Constants.message_size -> tl(out)
       start < 0 -> blocks_helper(finish, 1, out)
       start > finish -> out
       block == nil -> blocks_helper(finish, start+1, out)

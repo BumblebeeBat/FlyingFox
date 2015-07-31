@@ -7,7 +7,7 @@ defmodule ChannelManager do
 	def db_location do "/channeldb" end
   def init(_) do
 		x = DB.get_raw(db_location)
-		if x == "" do x = %HashDict{} end
+		if x == "" do x = %{} end
 		{:ok, x}
 	end
   def start_link() do   GenServer.start_link(__MODULE__, 0, name: @name) end
@@ -24,15 +24,16 @@ defmodule ChannelManager do
 		out = mem[pub]
 		if out == nil do out = %ChannelManager{} end
 		out = %{out | sent: channel}
-		mem = HashDict.put(mem, pub, out)
-		DB.put_function(db_location, fn() -> mem end)
+		mem = Dict.put(mem, pub, out)
+		IO.puts("channel manager spend #{inspect mem}")
+		DB.put_function(db_location, fn() -> mem end)#crashes here I think.
 		{:noreply, mem}
 	end
 	def handle_cast({:recieve, pub, channel},  mem) do
 		out = mem[pub]
 		if out == nil do out = %ChannelManager{} end
 		out = %{out | recieved: channel}
-		mem = HashDict.put(mem, pub, out)
+		mem = Dict.put(mem, pub, out)
 		DB.put_function(db_location, fn() -> mem end)
 		{:noreply, mem}
 	end

@@ -73,7 +73,9 @@ defmodule TxCreator do
   def slasher(tx1, tx2) do
   end
   def to_channel(other, amount, delay \\ 10) do
+		IO.puts("to channel #{inspect amount}")
 		if is_binary(amount) do amount = String.to_integer(amount) end
+		IO.puts("to channel #{inspect amount}")
 		is_ch = KV.get(ToChannel.key(Keys.pubkey, other))
 		new = (is_ch == nil)
 		pub2_now = KV.get(other)
