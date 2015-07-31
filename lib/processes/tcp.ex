@@ -50,6 +50,7 @@ defmodule Tcp.Handler do
 		end
 		headers = [{"content-type", "text/plain"},
 							 {"access-control-allow-origin", "*"}]
+		IO.puts("tcp rec #{inspect req}")
 		body = req |> elem(21) |> PackWrap.unpack |> func.() |> PackWrap.pack
 		{:ok, resp} = :cowboy_req.reply(200, headers, body, req)
 		{:ok, resp, func}#why is func there???

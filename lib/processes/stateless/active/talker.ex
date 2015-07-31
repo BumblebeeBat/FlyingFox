@@ -19,8 +19,6 @@ defmodule Talker do
 	def flip([head|tail], out \\ []) do flip(tail, [head|out]) end
   def download_blocks(i, u, p) do
 		blocks = Cli.blocks(i, min(i+50, u), p) |> flip
-		IO.puts("blocks #{inspect blocks}")
-    #blocks = Cli.blocks(min(50, u - i), i, p) |> flip
 		if blocks != [] do
 			parent = hd(blocks).data.hash |> KV.get
 			Task.start(fn() -> BlockAbsorber.absorb(blocks) end)
@@ -87,7 +85,6 @@ defmodule Talker do
 				blocks = Enum.map((u+1)..min((u+10), i), &(Blockchain.get_block(&1)))
 				IO.puts("message size #{inspect byte_size(PackWrap.pack(blocks))}")
 				#blocks = [(Blockchain.get_block(u+1)]
-				IO.puts("send blocks #{inspect blocks}")#if I try to send too much at once, it fails catastrophically.
 				blocks
 				|> Cli.add_blocks(p)
       true ->
