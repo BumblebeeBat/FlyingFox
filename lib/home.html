@@ -376,6 +376,7 @@ channel_peers = [];
 function refresh_channel_peers() {
     var x = local_get(["channel_peers"]);
     refresh_helper(x, function(){ channel_peers = JSON.parse(xml_out(x));});
+    //console.log("channel peers ".concat(channel_peers));
 };
 
 channel_balance = -1;
@@ -414,6 +415,7 @@ lock_status = "";
 function refresh_lock_status() {
     var x = local_get(["key_status"]);
     refresh_helper(x, function(){ lock_status = JSON.parse(xml_out(x)); });
+    console.log("lock status ".concat(lock_status));
 };
 
 function refresh_page_status_helper() {
