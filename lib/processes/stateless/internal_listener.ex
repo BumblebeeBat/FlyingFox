@@ -3,7 +3,9 @@ defmodule InternalListener do
   @name __MODULE__
   def init(args) do {:ok, args} end
   def start_link() do GenServer.start_link(__MODULE__, :ok, [name: @name]) end
-  def export(l) do GenServer.call(@name, {hd(l), tl(l)}) end
+  def export(l) do
+		IO.puts("internal listenre export #{inspect l}")
+		GenServer.call(@name, {hd(l), tl(l)}) end
   def handle_call({type, args}, _from, _) do 
     Task.start(fn() -> GenServer.reply(_from, main(type, args)) end)
     {:noreply, []}
