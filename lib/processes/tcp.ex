@@ -34,7 +34,10 @@ defmodule Tcp do
 				b = z |> elem(2)
 				if b == [] do [] else PackWrap.unpack(b) end
 			{:error, :socket_closed_remotely} -> get(ip, port, a, y)
-			x -> x
+			{:error, {:failed_connect, _}} -> nil
+			x ->
+				IO.puts("TCP WEIRD #{inspect x}")
+				x
 		end
 	end
 end
@@ -50,7 +53,7 @@ defmodule Tcp.Handler do
 		end
 		headers = [{"content-type", "text/plain"},
 							 {"access-control-allow-origin", "*"}]
-		IO.puts("tcp rec #{inspect req}")
+		#IO.puts("tcp rec #{inspect req}")
 		body = req |> elem(21) |> PackWrap.unpack |> func.() |> PackWrap.pack
 		{:ok, resp} = :cowboy_req.reply(200, headers, body, req)
 		{:ok, resp, func}#why is func there???

@@ -89,7 +89,7 @@ defmodule Talker do
 				|> Cli.add_blocks(p)
       true ->
 				blocks = Enum.map((u-3)..min((u+1), i), &(Blockchain.get_block(&1)))
-				IO.puts("send block #{inspect blocks}")
+				#IO.puts("send block #{inspect blocks}")
 				Enum.map((u-3)..min((u+1), i), &(Blockchain.get_block(&1)))
 				|> Cli.add_blocks(p)
         true
@@ -101,8 +101,8 @@ defmodule Talker do
    end
   def init(_) do
 		Task.start_link(fn() -> timer end)
-    Enum.map(0..Constants.max_nodes, &(%Peer{ip: "localhost", port: Constants.tcp_port+&1})) 
-    |> Enum.map(&(Peers.add_peer(&1)))
+    #Enum.map(0..Constants.max_nodes, &(%Peer{ip: "localhost", port: Constants.tcp_port+&1})) 
+    #|> Enum.map(&(Peers.add_peer(&1)))
 		Constants.server |> Peers.add_peer
 		#%Peer{ip: "45.55.5.85", port: Constants.tcp_port} |> Enum.map(&(Peers.add_peer(&1)))
 		#Peers.add_peer(%Peer{ip: "192.241.212.114", port: 6669})
