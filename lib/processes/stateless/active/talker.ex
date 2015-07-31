@@ -81,7 +81,7 @@ defmodule Talker do
 				Enum.map(txs, &(Mempool.add_tx(&1)))
 				Cli.txs |> Enum.filter(&(not &1 in txs)) |> Enum.map(&(Cli.pushtx(&1, p)))
 			status.hash == hash ->
-				Enum.map((u+1)..min((u+10), i), &(Blockchain.get_block(&1)))
+				Enum.map((u+1)..min((u+100), i), &(Blockchain.get_block(&1)))
 				|> Cli.add_blocks(p)
       true ->
 				#blocks = Enum.map((u-10)..min((u+2), i), &(Blockchain.get_block(&1)))
@@ -97,11 +97,7 @@ defmodule Talker do
    end
   def init(_) do
 		Task.start_link(fn() -> timer end)
-    #Enum.map(0..Constants.max_nodes, &(%Peer{ip: "localhost", port: Constants.tcp_port+&1})) 
-    #|> Enum.map(&(Peers.add_peer(&1)))
 		Constants.server |> Peers.add_peer
-		#%Peer{ip: "45.55.5.85", port: Constants.tcp_port} |> Enum.map(&(Peers.add_peer(&1)))
-		#Peers.add_peer(%Peer{ip: "192.241.212.114", port: 6669})
     {:ok, []}
   end
   def doit do GenServer.cast(@name, :doit) end
