@@ -70,13 +70,16 @@ defmodule Tcp.Handler do
 		end
 		headers = [{"content-type", "application/octet-stream"},
 							 {"access-control-allow-origin", "*"}]
-		IO.puts("tcp rec #{inspect req}")
-		length = req |> elem(16) |> tl |> hd |> elem(1) |> String.to_integer
-		IO.puts("length #{inspect length}")
-		body_length = req |> elem(21) |> byte_size
-		IO.puts("body length #{inspect body_length}")
+		#IO.puts("tcp rec #{inspect req}")
+		#length = req |> elem(16) |> tl |> hd |> elem(1) |> String.to_integer
+		#IO.puts("length #{inspect length}")
+		#body_length = req |> elem(21) |> byte_size
+		#IO.puts("body length #{inspect body_length}")
 		#if body_length < length do
-		b = body(req, opts) |> PackWrap.unpack |> func.() |> PackWrap.pack
+		b = body(req, opts) |> PackWrap.unpack
+		IO.puts("before func #{inspect b}")
+		b = b |> func.() |> PackWrap.pack
+		IO.puts("response #{inspect b}")
 		{:ok, resp} = :cowboy_req.reply(200, headers, b, req)
 			
 			#handle(req, opts)
