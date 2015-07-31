@@ -65,6 +65,8 @@ defmodule Tcp.Handler do
 		body_length = req |> elem(21) |> byte_size
 		IO.puts("body length #{inspect body_length}")
 		if body_length < length do
+			x = :cowboy_req.body(req, opts)
+			IO.puts("body #{inspect x}")
 			#handle(req, opts)
 			#IO.puts("broke")
 			#io:format("Received file ~p of content-type ~p as follow:~n~p~n~n",
