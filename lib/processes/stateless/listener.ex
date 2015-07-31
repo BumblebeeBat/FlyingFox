@@ -13,8 +13,7 @@ defmodule Listener do
 	def main(type, args) do
     case type do
 			"kv" -> args |> hd |> KV.get
-      "add_blocks" -> IO.puts("recieve blocks #{inspect args}")
-				args |> hd |> packer(&(BlockAbsorber.absorb(&1)))
+      "add_blocks" -> args |> hd |> packer(&(BlockAbsorber.absorb(&1)))
       "pushtx" -> args |> hd |> packer(&(Mempool.add_tx(&1)))
       "txs" -> Mempool.txs
       "height" -> KV.get("height")

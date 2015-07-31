@@ -79,7 +79,6 @@ defmodule Talker do
 				IO.puts("download blocks")
 				download_blocks(i, u, p)
       u == i ->
-				IO.puts("share txs")
 				Enum.map(txs, &(Mempool.add_tx(&1)))
 				Cli.txs |> Enum.filter(&(not &1 in txs)) |> Enum.map(&(Cli.pushtx(&1, p)))
 			status.hash == hash ->
