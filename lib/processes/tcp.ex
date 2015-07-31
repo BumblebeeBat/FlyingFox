@@ -43,18 +43,11 @@ defmodule Tcp do
 end
 defmodule Tcp.Handler do
 	def init({:tcp, :http}, req, opts) do
-		#x = :cowboy_req.part(req)
-		#IO.puts("cowboy req #{inspect x}")
-		#{:ok, headers, req2} = :cowboy_req.part(req)
-		#{:ok, data, req3} = :cowboy_req.part_body(req2)
-		#{:file, "inputfile", filename, contentType, _} = :cow_multipart.form_data(headers)
-		#{:ok, req3, opts}
 		{:ok, req, opts}
 	end
 	def body(req, opts) do
 		[func, ip] = opts
 		{status, data, req2} = :cowboy_req.body(req, opts)
-		IO.puts("body #{inspect data}")
 		cond do
 			status == :ok -> data
 			true ->
@@ -70,30 +63,9 @@ defmodule Tcp.Handler do
 		end
 		headers = [{"content-type", "application/octet-stream"},
 							 {"access-control-allow-origin", "*"}]
-		#IO.puts("tcp rec #{inspect req}")
-		#length = req |> elem(16) |> tl |> hd |> elem(1) |> String.to_integer
-		#IO.puts("length #{inspect length}")
-		#body_length = req |> elem(21) |> byte_size
-		#IO.puts("body length #{inspect body_length}")
-		#if body_length < length do
-		b = body(req, opts) |> PackWrap.unpack
-		IO.puts("before func #{inspect b}")
-		b = b |> func.() |> PackWrap.pack
-		IO.puts("response #{inspect b}")
+		b = body(req, opts) |> PackWrap.unpack |> func.() |> PackWrap.pack
 		{:ok, resp} = :cowboy_req.reply(200, headers, b, req)
-			
-			#handle(req, opts)
-			#IO.puts("broke")
-			#io:format("Received file ~p of content-type ~p as follow:~n~p~n~n",
-			#					[Filename, ContentType, Data]),
-			#{:ok, req3, opts}
-			#{:ok, req, opts}#why is func there???
 		{:ok, resp, opts}
-	#else
-	#		body = req |> elem(21) |> PackWrap.unpack |> func.() |> PackWrap.pack
-	#		{:ok, resp} = :cowboy_req.reply(200, headers, body, req)
-	#		{:ok, resp, opts}#why is func there???
-	#	end
 	end
 	def terminate(_reason, _req, _state) do
 		:ok

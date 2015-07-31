@@ -81,16 +81,12 @@ defmodule Talker do
 				Enum.map(txs, &(Mempool.add_tx(&1)))
 				Cli.txs |> Enum.filter(&(not &1 in txs)) |> Enum.map(&(Cli.pushtx(&1, p)))
 			status.hash == hash ->
-				IO.puts("hash match")
-				blocks = Enum.map((u+1)..min((u+10), i), &(Blockchain.get_block(&1)))
-				IO.puts("message size #{inspect byte_size(PackWrap.pack(blocks))}")
-				#blocks = [(Blockchain.get_block(u+1)]
-				blocks
+				Enum.map((u+1)..min((u+10), i), &(Blockchain.get_block(&1)))
 				|> Cli.add_blocks(p)
       true ->
-				blocks = Enum.map((u-3)..min((u+1), i), &(Blockchain.get_block(&1)))
+				#blocks = Enum.map((u-10)..min((u+2), i), &(Blockchain.get_block(&1)))
 				#IO.puts("send block #{inspect blocks}")
-				Enum.map((u-3)..min((u+1), i), &(Blockchain.get_block(&1)))
+				Enum.map((u-10)..min((u+2), i), &(Blockchain.get_block(&1)))
 				|> Cli.add_blocks(p)
         true
     end
