@@ -51,6 +51,17 @@ defmodule Tcp.Handler do
 		#{:ok, req3, opts}
 		{:ok, req, opts}
 	end
+	def body(req, opts) do
+		[func, ip] = opts
+		{status, data, req2} = :cowboy_req.body(req, opts)
+		IO.puts("body #{inspect data}")
+		cond do
+			status == :ok -> data
+			true ->
+				:timer.sleep(50)
+				body(req, opts)
+		end
+	end
 	def handle(req, opts) do
 		[func, ip] = opts
 		f = fn(x) -> tl(x) end
@@ -64,21 +75,22 @@ defmodule Tcp.Handler do
 		IO.puts("length #{inspect length}")
 		body_length = req |> elem(21) |> byte_size
 		IO.puts("body length #{inspect body_length}")
-		if body_length < length do
-			x = :cowboy_req.body(req, opts)
-			IO.puts("body #{inspect x}")
+		#if body_length < length do
+		b = body(req, opts) |> PackWrap.unpack |> func.() |> PackWrap.pack
+		{:ok, resp} = :cowboy_req.reply(200, headers, b, req)
+			
 			#handle(req, opts)
 			#IO.puts("broke")
 			#io:format("Received file ~p of content-type ~p as follow:~n~p~n~n",
 			#					[Filename, ContentType, Data]),
 			#{:ok, req3, opts}
 			#{:ok, req, opts}#why is func there???
-			{:ok, req, opts}
-		else
-			body = req |> elem(21) |> PackWrap.unpack |> func.() |> PackWrap.pack
-			{:ok, resp} = :cowboy_req.reply(200, headers, body, req)
-			{:ok, resp, opts}#why is func there???
-		end
+		{:ok, resp, opts}
+	#else
+	#		body = req |> elem(21) |> PackWrap.unpack |> func.() |> PackWrap.pack
+	#		{:ok, resp} = :cowboy_req.reply(200, headers, body, req)
+	#		{:ok, resp, opts}#why is func there???
+	#	end
 	end
 	def terminate(_reason, _req, _state) do
 		:ok
