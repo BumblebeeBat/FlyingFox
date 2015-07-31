@@ -65,12 +65,13 @@ defmodule Tcp.Handler do
 		body_length = req |> elem(21) |> byte_size
 		IO.puts("body length #{inspect body_length}")
 		if body_length < length do
-			handle(req, opts)
+			#handle(req, opts)
 			#IO.puts("broke")
 			#io:format("Received file ~p of content-type ~p as follow:~n~p~n~n",
 			#					[Filename, ContentType, Data]),
 			#{:ok, req3, opts}
 			#{:ok, req, opts}#why is func there???
+			{:ok, req, opts}
 		else
 			body = req |> elem(21) |> PackWrap.unpack |> func.() |> PackWrap.pack
 			{:ok, resp} = :cowboy_req.reply(200, headers, body, req)
