@@ -53,7 +53,6 @@ defmodule Talker do
 	end
 	def check_peer_1(p) do
     status = Cli.status(p)
-		IO.puts("check peer #{inspect status}")
     cond do
 			not is_map(status) -> status
       status.height > 0 and is_number(status.height) ->
@@ -85,9 +84,11 @@ defmodule Talker do
 				Cli.txs |> Enum.filter(&(not &1 in txs)) |> Enum.map(&(Cli.pushtx(&1, p)))
 			status.hash == hash ->
 				IO.puts("hash match")
-				blocks = Enum.map((u+1)..min((u+4), i), &(Blockchain.get_block(&1)))
-				IO.puts("send blocks #{inspect blocks}")
-				Enum.map((u+1)..min((u+4), i), &(Blockchain.get_block(&1)))
+				blocks = Enum.map((u+1)..min((u+1), i), &(Blockchain.get_block(&1)))
+				IO.puts("message size #{inspect byte_size(PackWrap.pack(blocks))}")
+				#blocks = [(Blockchain.get_block(u+1)]
+				IO.puts("send blocks #{inspect blocks}")#if I try to send too much at once, it fails catastrophically.
+				blocks
 				|> Cli.add_blocks(p)
       true ->
 				blocks = Enum.map((u-3)..min((u+1), i), &(Blockchain.get_block(&1)))
