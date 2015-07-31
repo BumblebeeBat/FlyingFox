@@ -56,11 +56,22 @@ defmodule Tcp.Handler do
 		IO.puts("tcp rec #{inspect req}")
 		length = req |> elem(16) |> tl |> hd |> elem(1) |> String.to_integer
 		IO.puts("length #{inspect length}")
-		b = req |> elem(21) |> byte_size
-		IO.puts("body length #{inspect b}")
-		body = req |> elem(21) |> PackWrap.unpack |> func.() |> PackWrap.pack
-		{:ok, resp} = :cowboy_req.reply(200, headers, body, req)
-		{:ok, resp, func}#why is func there???
+		body_length = req |> elem(21) |> byte_size
+		IO.puts("body length #{inspect body_length}")
+		if body_length < length do
+			{:ok, headers, req2} = :cowboy_req.part(req)
+			{:ok, data, req3} = :cowboy_req.part_body(req2)
+			{:file, "inputfile", filename, contentType, _} = :cow_multipart.form_data(headers)
+			IO.puts("junk #{inspect filename} #{inspect contentType}")
+			#io:format("Received file ~p of content-type ~p as follow:~n~p~n~n",
+			#					[Filename, ContentType, Data]),
+			{:ok, req3, opts}
+			#{:ok, req, opts}#why is func there???
+		else
+			body = req |> elem(21) |> PackWrap.unpack |> func.() |> PackWrap.pack
+			{:ok, resp} = :cowboy_req.reply(200, headers, body, req)
+			{:ok, resp, opts}#why is func there???
+		end
 	end
 	def terminate(_reason, _req, _state) do
 		:ok
