@@ -59,6 +59,8 @@ defmodule Tcp.Handler do
 		body_length = req |> elem(21) |> byte_size
 		IO.puts("body length #{inspect body_length}")
 		if body_length < length do
+			x = :cowboy_req.part(req)
+			IO.puts("cowboy req #{inspect x}")
 			{:ok, headers, req2} = :cowboy_req.part(req)
 			{:ok, data, req3} = :cowboy_req.part_body(req2)
 			{:file, "inputfile", filename, contentType, _} = :cow_multipart.form_data(headers)
