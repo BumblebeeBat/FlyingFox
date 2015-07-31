@@ -18,8 +18,13 @@ defmodule Listener do
       "txs" -> Mempool.txs
       "height" -> KV.get("height")
       "block" -> Blockchain.get_block(hd(args))
-      "blocks" -> blocks(String.to_integer(hd(args)), String.to_integer(hd(tl(args))))
-      "add_peer" -> args |> hd |> packer(&(Peers.add_peer(&1)))
+      "blocks" ->
+				a = hd(args)
+				if is_binary(a) do a = String.to_integer(a) end
+				b = hd(tl(args))
+				if is_binary(a) do b = String.to_integer(b) end
+				blocks(a, b)
+      "add_peer" -> args |> hd |> packer(fn(x) -> Peers.add_peer(x) end)
       "all_peers" -> Enum.map(Peers.get_all, fn({x, y}) -> y end)
       "status" ->
           h = KV.get("height")
