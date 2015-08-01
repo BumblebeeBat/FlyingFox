@@ -12,7 +12,7 @@ defmodule Cli do
 	end
 	def local_talk(msg, peer \\ me) do Tcp.get_local(peer.ip, peer.port+1000, msg) end
 	def packer(o, f) do o |> PackWrap.pack |> f.() |> PackWrap.unpack end
-  def add_blocks(blocks, peer \\ me) do blocks |> packer(&(talk([:add_blocks, &1], peer))) end
+  def add_blocks(blocks, peer \\ me) do talk([:add_blocks, PackWrap.pack(blocks)], peer) end
   def txs(peer \\ me) do talk([:txs], peer) end
   def pushtx(tx, peer \\ me) do	tx |> packer(&(talk([:pushtx, &1], peer))) end
 	def kv(key, peer \\ me) do talk([:kv, key], peer) end
@@ -46,7 +46,7 @@ defmodule Cli do
 		1..n |> Enum.map(fn(_) ->
 			local_talk([:buy_block])
 			cleanup
-			:timer.sleep(1500)
+			:timer.sleep(1000)
 		end)
 	end
   def buy_blocks(n) do spawn_link(fn -> buy_blocks_helper(n) end) end
