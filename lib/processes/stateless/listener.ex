@@ -13,7 +13,9 @@ defmodule Listener do
 	def main(type, args) do
     case type do
 			"kv" -> args |> hd |> KV.get
-      "add_blocks" -> Task.start_link(fn() -> args |> hd |> packer(&(BlockAbsorber.absorb(&1))) end)
+      "add_blocks" ->
+				Task.start_link(fn() -> args |> hd |> packer(&(BlockAbsorber.absorb(&1))) end)
+				0
       "pushtx" -> args |> hd |> packer(&(Mempool.add_tx(&1)))
       "txs" -> Mempool.txs
       "height" -> KV.get("height")
