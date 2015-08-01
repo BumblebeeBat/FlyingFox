@@ -6,11 +6,11 @@ defmodule BlockAbsorber do
     {:ok, []} 
   end
   def start_link do     GenServer.start_link(__MODULE__, :ok, name: @name) end
-  def absorb(blocks) do GenServer.call(@name, {:blocks, blocks}) end
-  def buy_block do      GenServer.call(@name, {:blocks, [Blockchain.buy_block]}) end
-  def handle_call({:blocks, blocks}, _from, []) do
+  def absorb(blocks) do GenServer.cast(@name, {:blocks, blocks}) end
+  def buy_block do      GenServer.cast(@name, {:blocks, [Blockchain.buy_block]}) end
+  def handle_cast({:blocks, blocks}, []) do
 		Blocktree.add_blocks(blocks)
-		{:reply, :ok, []}
+		{:noreply, []}
   end
   def buy_blocks(n) do 
     Enum.map(1..n, fn(_) -> 

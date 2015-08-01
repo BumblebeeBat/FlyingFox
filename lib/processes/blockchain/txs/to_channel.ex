@@ -2,7 +2,6 @@ defmodule ToChannel do
 	#pub is always the person who is spending money into the channel.
   defstruct nonce: 0, to: "amount", amount: 0, new: false, delay: 100, fee: 10000, pub: "", pub2: "", create: false
 	def key(a, b) do
-		IO.puts("to channel key #{inspect a} #{inspect b}")
 		cond do
 			a > b -> a <> b
 			true -> b <> a

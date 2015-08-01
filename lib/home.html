@@ -262,7 +262,15 @@ function empty() {
     div.innerHTML = "";
 
     var x = document.createElement("font");
-    var t = document.createTextNode("passphrase to unlock: ");
+    var t = document.createTextNode("Creating new account.");
+    x.appendChild(t);
+    div.appendChild(x);
+
+    var x = document.createElement("br");
+    div.appendChild(x);
+
+    var x = document.createElement("font");
+    var t = document.createTextNode("choose a passphrase: ");
     x.appendChild(t);
     div.appendChild(x);
 
@@ -295,6 +303,7 @@ function empty() {
 	confirm = document.getElementById("confirm").value;
 	if (passphrase === confirm) {
 	    local_get(["change_password_key", "", passphrase]);
+	    refresh_page();
 	};
     };
 

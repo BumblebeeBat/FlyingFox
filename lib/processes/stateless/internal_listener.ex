@@ -82,7 +82,6 @@ defmodule InternalListener do
 			"channel_get" -> args |> hd |> ToChannel.key(Keys.pubkey) |> KV.get |> PackWrap.pack
 			"channel_peers" -> Dict.keys(ChannelManager.get_all)
 			"channel_balance" ->
-				IO.puts("internal listener channel balance #{inspect args}")
 				pub = hd(args)
 				on_blockchain = KV.get(ToChannel.key(Keys.pubkey, hd(args)))
 				on_channel_manager = ChannelManager.get(pub) |> ChannelManager.top_block

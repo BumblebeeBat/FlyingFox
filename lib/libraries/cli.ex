@@ -46,7 +46,7 @@ defmodule Cli do
 		1..n |> Enum.map(fn(_) ->
 			local_talk([:buy_block])
 			cleanup
-			:timer.sleep(1000)
+			:timer.sleep(1500)
 		end)
 	end
   def buy_blocks(n) do spawn_link(fn -> buy_blocks_helper(n) end) end

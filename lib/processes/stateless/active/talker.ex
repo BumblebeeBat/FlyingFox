@@ -19,12 +19,10 @@ defmodule Talker do
 	def flip([head|tail], out \\ []) do flip(tail, [head|out]) end
   def download_blocks(i, u, p) do
 		blocks = Cli.blocks(i, min(i+50, u), p) |> flip
-		IO.puts("got blocks #{inspect blocks}")
-		IO.puts("got blocks  u #{inspect u}")
-		IO.puts("got blocks p #{inspect p}")
 		if blocks != [] do
 			parent = hd(blocks).data.hash |> KV.get
-			Task.start(fn() -> BlockAbsorber.absorb(blocks) end)
+			#Task.start_link(fn() -> BlockAbsorber.absorb(blocks) end)
+			BlockAbsorber.absorb(blocks)
 			if parent == nil do download_blocks(i-5, i, p) end 
 		end
   end
@@ -43,17 +41,17 @@ defmodule Talker do
       Enum.map(not_mine, &(Peers.add_peer(&1)))
     end
   end
-  def check_peer(p) do
+  def check_peer(p, n) do
 		#first we should check if the peer has been connected to before. If we never connected before, then only connect to them with probability 10%.
 		#IO.puts("check peer #{inspect p}")
 		:random.seed(:erlang.now)
 		r = trunc(10*:random.uniform)
 		cond do
 			p.height == 0 and r > 0 -> nil
-			true -> check_peer_1(p)
+			true -> check_peer_1(p, n)
 		end
 	end
-	def check_peer_1(p) do
+	def check_peer_1(p, n) do
     status = Cli.status(p)
     cond do
 			not is_map(status) -> status
@@ -62,17 +60,24 @@ defmodule Talker do
         |> Map.put(:height, status.height)
         |> Map.put(:hash, status.hash)
 				x |> Peers.add_peer
-        check_peer_2(x, status)
+        check_peer_2(x, status, n)
 			true -> IO.puts("nothing to do")
     end
   end
-  def check_peer_2(p, status) do
+	def push_till(u, i, p) do
+		Enum.map((u+1)..min((u+5), i), &(Blockchain.get_block(&1)))
+		|> Cli.add_blocks(p)
+		IO.puts("push blocks #{inspect u} #{inspect i}")
+		if u+5 < i do push_till(u+5, i, p) end
+	end
+  def check_peer_2(p, status, n) do
 		#IO.puts("check peer 2 #{inspect p}")
     trade_peers(p)
     txs = Cli.txs(p)
     u = status.height
     i = KV.get("height")
 		hash = Blockchain.blockhash(Blockchain.get_block(u))
+		often = rem(n, 6) == 0
     cond do
       txs == :ok -> IO.puts("txs shouldn't be :ok")
       (txs != []) and length(txs)>0 and is_tuple(hd(txs)) ->
@@ -83,34 +88,35 @@ defmodule Talker do
       u == i ->
 				Enum.map(txs, &(Mempool.add_tx(&1)))
 				Cli.txs |> Enum.filter(&(not &1 in txs)) |> Enum.map(&(Cli.pushtx(&1, p)))
-			status.hash == hash ->
-				Enum.map((u+1)..min((u+10), i), &(Blockchain.get_block(&1)))
+			status.hash == hash and often ->
+				IO.puts("hash match")
+				Enum.map((u+1)..min((u+50), i), &(Blockchain.get_block(&1)))
 				|> Cli.add_blocks(p)
-      true ->
-				#blocks = Enum.map((u-10)..min((u+2), i), &(Blockchain.get_block(&1)))
-				#IO.puts("send block #{inspect blocks}")
-				Enum.map((u-10)..min((u+2), i), &(Blockchain.get_block(&1)))
+	    often ->
+				Enum.map((u-20)..min(u, i), &(Blockchain.get_block(&1)))
 				|> Cli.add_blocks(p)
-        true
+			true -> true
     end
   end
-  def check_peers do
+  def check_peers(n) do
     Cli.all_peers
-    |> Enum.map(&(Task.start_link(fn -> check_peer(&1) end)))
+    |> Enum.map(&(Task.start_link(fn -> check_peer(&1, n) end)))
    end
   def init(_) do
 		Task.start_link(fn() -> timer end)
 		Constants.server |> Peers.add_peer
-    {:ok, []}
+    {:ok, 0}
   end
   def doit do GenServer.cast(@name, :doit) end
-  def handle_cast(:doit, state) do
-    check_peers
-    {:noreply, state}
+  def handle_cast(:doit, n) do
+    check_peers(n)
+    {:noreply, n+1}
   end
   def timer do
-    :timer.sleep(3000)
-    doit
+		before = KV.get("height")
+    :timer.sleep(1000)
+		a = KV.get("height")
+		if a == before do doit end
     timer
   end
 end
