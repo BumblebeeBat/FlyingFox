@@ -10,30 +10,39 @@ defmodule ChannelManager do
 		if x == "" do x = %{} end
 		{:ok, x}
 	end
+	def common(key) do if is_binary(key) do String.to_atom(key) else key end end
+	def dict_put(dict, key, val) do
+		key = common(key)
+		Dict.put(dict, key, val)
+	end
+	def dict_get(dict, key) do
+		key = common(key)
+		Dict.get(dict, key)
+	end
   def start_link() do   GenServer.start_link(__MODULE__, 0, name: @name) end
 	def get(pub) do       GenServer.call(@name, {:get, pub}) end
   def get_all do        GenServer.call(@name, :get_all) end
   def handle_call(:get_all, _from, mem) do {:reply, mem, mem} end
   def handle_call({:get, pub}, _from, mem) do
-		out = mem[pub]
+		out = dict_get(mem, pub)
 		if out == nil do
 			out = %ChannelManager{sent: %CryptoSign{data: %ChannelBlock{pub: Keys.pubkey, pub2: pub}}}
 		end
 		{:reply, out, mem} end
   def handle_cast({:send, pub, channel},  mem) do
-		out = mem[pub]
+		out = dict_get(mem, pub)
 		if out == nil do out = %ChannelManager{} end
 		out = %{out | sent: channel}
-		mem = Dict.put(mem, pub, out)
+		mem = dict_put(mem, pub, out)
 		IO.puts("channel manager spend #{inspect mem}")
-		DB.put_function(db_location, fn() -> mem end)#crashes here I think.
+		DB.put_function(db_location, fn() -> mem end)
 		{:noreply, mem}
 	end
 	def handle_cast({:recieve, pub, channel},  mem) do
-		out = mem[pub]
+		out = dict_get(mem, pub)
 		if out == nil do out = %ChannelManager{} end
 		out = %{out | recieved: channel}
-		mem = Dict.put(mem, pub, out)
+		mem = dict_put(mem, pub, out)
 		DB.put_function(db_location, fn() -> mem end)
 		{:noreply, mem}
 	end
@@ -65,7 +74,7 @@ defmodule ChannelManager do
 		d = -1
 		d2 = -1
 		if Keys.pubkey == tx.data.pub do d = d * -1 end
-		if mem != [] do x = mem[other] else x = get(other) end
+		if mem != [] do x = dict_get(mem, other) else x = get(other) end
 		x = x |> top_block
 		if Keys.pubkey == x.data.pub do d2 = d2 * -1 end
 		if is_binary(min_amount) do min_amount = String.to_integer(min_amount) end
@@ -133,4 +142,3 @@ defmodule ChannelManager do
 		cb
 	end
 end
-
