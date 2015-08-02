@@ -62,7 +62,7 @@ defmodule Tcp.Handler do
 			f = fn(x) -> tl(tl(tl(tl(tl(tl(x)))))) end
 		end
 		headers = [{"content-type", "application/octet-stream"},
-							 {"access-control-allow-origin", "*"}]
+							 {"Access-Control-Allow-Origin", "*"}]
 		b = body(req, opts) |> PackWrap.unpack |> func.() |> PackWrap.pack
 		{:ok, resp} = :cowboy_req.reply(200, headers, b, req)
 		{:ok, resp, opts}

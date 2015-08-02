@@ -34,7 +34,7 @@ function unlocked_2() {
     interval_unlocked(refresh_mail_nodes, 2000);
     refresh_txs();
     interval_unlocked(refresh_txs, 2000);
-    setTimeout(register_1, 10000);
+    register_1();
 
     var x = document.createElement("font");
     x.id = "height";
@@ -438,7 +438,12 @@ function refresh_channel_balance() {
 my_balance = -1;
 function refresh_my_balance() {
     var x = get(["kv", my_status.pubkey]);
-    refresh_helper(x, function(){ my_balance = JSON.parse(xml_out(x)).amount; });
+    refresh_helper(x, function(){ 
+	x = JSON.parse(xml_out(x)).amount; 
+	if (x > -1) { my_balance = JSON.parse(xml_out(x)).amount; };
+});
+    //console.log("my balance ".concat(my_balance));
+    //console.log("my status ".concat(JSON.stringify(my_status)));
     if (my_balance > 0) {
 	document.getElementById("bal").innerHTML = "balance: ".concat(my_balance).concat("<br>");
     } else {
@@ -448,7 +453,6 @@ function refresh_my_balance() {
 
 channel = "nil";
 function refresh_channel() {
-    console.log("refresh channel ");
     if (server_status !== "nil") {
 	var x = local_get(["channel_get", server_status.pubkey]);
 	refresh_helper(x, function(){ channel = JSON.parse(JSON.parse(xml_out(x)));});
@@ -527,21 +531,27 @@ function to_channel(pub, amount) {
     x = local_get(["to_channel", pub, amount]);
     refresh_helper(x, function(){ return "success";});
 };
-function register() {
-    x = local_get(["register", JSON.stringify(server())]); // I think this one is broken.
-    refresh_helper(x, function(){return xml_out(x) ;} );
-};
 
 function register_1() {
     //did we make the channel yet? if not, make it, and update registeration status. recurse.
-    s = server_status;
-    console.log("server status ".concat(JSON.stringify(s)));
+    //s = server_status;
+    //console.log("server status ".concat(JSON.stringify(s)));
     pub = s.pubkey;
     s = my_status;
     my_pub = s.pubkey;
+    //console.log("my balance ".concat(my_balance));
+    //console.log("s ".concat(JSON.stringify(s)));
+    if (my_balance < 10000) {
+	x = document.getElementById("reg");
+	if (!!x) { x.innerHTML = "registration status: insufficient funds to register<br>"; };
+    };
     if (my_balance == undefined || s == "nil" || my_balance < 10000) {
-	setTimeout(register_1, 2000);
-    } else if (channel == "nil") {
+	return setTimeout(register_1, 2000);
+    } else { register_2(my_pub, pub, my_balance); }
+};
+
+function register_2(my_pub, pub, my_balance) {
+    if (channel == "nil") {
 	amount = 10000000;
 	txss = txs.filter(function (tx) {
 	    return tx.data.__struct__ == "Elixir.ToChannel";
@@ -558,19 +568,20 @@ function register_1() {
 	    to_channel(pub, Math.min(amount, my_balance - 10000));
 	}
     }
+
     document.getElementById("reg").innerHTML = "registration status: wait for next block".concat("<br>");
-    return register_2(pub);
+    return register_3(pub);
 }
 
-function register_2(pub) {
+function register_3(pub) {
     // is the channel ready to use yet? if not, wait a while, then recurse.
     // did we register the mailnode yet? if not, do it, and update registration status and exit.
     if (channel == "nil") {
-	setTimeout(function() {register_2(pub);}, 3000);
+	setTimeout(function() {register_3(pub);}, 1000);
     } else if (mail_nodes.length == 0) {
 	console.log("mail node needs to be registered");
 	setTimeout(function(){ //if they don't have the block yet, then your registration channel-tx will look invalid.
-	    register();
+	    register_4();
 	    document.getElementById("reg").innerHTML = "registration status: registered".concat("<br>"); },
 		   5000);
     } else {
@@ -578,6 +589,11 @@ function register_2(pub) {
 	document.getElementById("reg").innerHTML = "registration status: registered".concat("<br>");
     }
 }
+
+function register_4() {
+    x = local_get(["register", JSON.stringify(server())]);
+    refresh_helper(x, function(){return xml_out(x) ;} );
+};
 
 </script>
     </html>
