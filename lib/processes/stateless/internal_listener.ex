@@ -15,7 +15,10 @@ defmodule InternalListener do
 	end
   def main(type, args) do
     case type do
-      "buy_block" -> BlockAbsorber.buy_block
+      "buy_block" ->
+				BlockAbsorber.buy_block
+				TxCreator.sign
+				TxCreator.reveal
       "spend" -> TxCreator.spend(hd(args), hd(tl(args)))
       "close_channel_fast" -> TxCreator.close_channel_fast(hd(args))
       "close_channel_slasher" ->
@@ -65,7 +68,9 @@ defmodule InternalListener do
 				IO.puts("args #{inspect args}")
 				msg = hd(tl(tl(args))) |> PackWrap.unpack
 				node_pub = Cli.status(node).pubkey
+				IO.puts("node pub #{inspect node_pub}")
 				tx = ChannelManager.spend(node_pub, max(round(Cli.cost(node)*1.01), Constants.min_channel_spend)) #this isn't creating a tx. something is wrong.
+				IO.puts("tx #{inspect tx}")
 				Inbox.record_message(%Msg{msg: msg, to: pub, from: Keys.pubkey})
 				%SendMessage{payment: tx, to: pub, msg: Encryption.send_msg(msg, pub)}
 				|> Cli.packer(&(Cli.talk(["send_message", &1], node)))

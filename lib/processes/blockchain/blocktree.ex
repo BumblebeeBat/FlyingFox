@@ -32,11 +32,9 @@ defmodule Blocktree do
     ac = Constants.initial_coins
     b = ac/3
     a = %Account{amount: 2*b, bond: b}
-    #Keys.master
     creator_pub = Constants.creator_pub
     KV.put(creator_pub, a)
     KV.put("tot_bonds", b)
-    #sign_reveal
   end
 	def num_signers(txs) do txs |> Enum.filter(&(&1.data.__struct__ == :Elixir.Sign)) |> length end
 	def back do

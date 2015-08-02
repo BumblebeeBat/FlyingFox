@@ -64,9 +64,7 @@ defmodule Sign do
 				false
       m != 0 ->
 				false
-      not(height == 0) and tx_prev != prev_hash ->
-        IO.puts("hash not match")
-        false
+      not(height == 0) and tx_prev != prev_hash -> false
       true -> true
     end
 	end

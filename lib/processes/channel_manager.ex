@@ -1,5 +1,6 @@
 #channel manager needs to keep track of the highest-nonced transaction from the peer, and it also needs to keep track of the highest-nonced transaction we sent to the peer.
 #eventually we need to store multiple hash_locked transactions from the peer.
+#we need to watch for our peer to reveal the secret on the blockchain!
 defmodule ChannelManager do
 	defstruct recieved: %CryptoSign{data: %ChannelBlock{}}, sent: %CryptoSign{data: %ChannelBlock{}}#, hash_locked: []
   use GenServer
@@ -30,20 +31,24 @@ defmodule ChannelManager do
 		end
 		{:reply, out, mem} end
   def handle_cast({:send, pub, channel},  mem) do
-		out = dict_get(mem, pub)
-		if out == nil do out = %ChannelManager{} end
-		out = %{out | sent: channel}
-		mem = dict_put(mem, pub, out)
-		IO.puts("channel manager spend #{inspect mem}")
-		DB.put_function(db_location, fn() -> mem end)
+		if is_map(channel) do
+			out = dict_get(mem, pub)
+			if out == nil do out = %ChannelManager{} end
+			out = %{out | sent: channel}
+			mem = dict_put(mem, pub, out)
+			IO.puts("channel manager spend #{inspect mem}")
+			DB.put_function(db_location, fn() -> mem end)
+		end
 		{:noreply, mem}
 	end
 	def handle_cast({:recieve, pub, channel},  mem) do
-		out = dict_get(mem, pub)
-		if out == nil do out = %ChannelManager{} end
-		out = %{out | recieved: channel}
-		mem = dict_put(mem, pub, out)
-		DB.put_function(db_location, fn() -> mem end)
+		if is_map(channel) do
+			out = dict_get(mem, pub)
+			if out == nil do out = %ChannelManager{} end
+			out = %{out | recieved: channel}
+			mem = dict_put(mem, pub, out)
+			DB.put_function(db_location, fn() -> mem end)
+		end
 		{:noreply, mem}
 	end
 	def other(tx) do

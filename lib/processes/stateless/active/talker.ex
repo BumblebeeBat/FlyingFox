@@ -89,7 +89,6 @@ defmodule Talker do
 				Enum.map(txs, &(Mempool.add_tx(&1)))
 				Cli.txs |> Enum.filter(&(not &1 in txs)) |> Enum.map(&(Cli.pushtx(&1, p)))
 			status.hash == hash and often ->
-				IO.puts("hash match")
 				Enum.map((u+1)..min((u+50), i), &(Blockchain.get_block(&1)))
 				|> Cli.add_blocks(p)
 	    often ->
