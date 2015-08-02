@@ -48,8 +48,10 @@ defmodule InternalListener do
 				peer = args |> hd |> PackWrap.unpack
 				IO.puts("peer #{inspect peer}")
 				pub = Cli.status(peer).pubkey
-				%{payment: MailNodes.register(peer, pub), pub: Keys.pubkey}
-				|> Cli.packer(&(Cli.talk(["register", &1], peer)))
+				x = %{payment: MailNodes.register(peer, pub), pub: Keys.pubkey}
+				|> PackWrap.pack
+				Cli.talk(["register", x], peer)
+				#|> Cli.packer(&(Cli.talk(["register", &1], peer)))
 			"delete_account" ->
 				#maybe MailNodes.delete_account shoule contain all this logic
 				peer = hd(args)
