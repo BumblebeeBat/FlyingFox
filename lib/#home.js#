@@ -8,8 +8,8 @@
 
 function set_interval(l2, f, t) {
     if (lock_status == l2){
-	      f();
-	      setTimeout(function(){set_interval(l2, f, t)}, t);
+	f();
+	setTimeout(function(){set_interval(l2, f, t)}, t);
     }
 };
 function interval_unlocked(f, t) { set_interval("unlocked", f, t); };//this function is so that when we change back to locked mode, all the threads that we don't need turn off.
@@ -113,16 +113,16 @@ function unlocked_2() {
     x.appendChild(t);
     div.appendChild(x);
     document.getElementById("send_button").onclick=function() {
-	      var msg = document.getElementById("msg").value;
-	      pub = document.getElementById("other").value;
-	      var node = JSON.stringify(server());
-	      msg = JSON.stringify(msg);
-	      URL = ["send_message", node, pub, msg];
-	      console.log("url ".concat(URL));
-	      local_get(URL);
-	      document.getElementById("msg").value = "";
+	var msg = document.getElementById("msg").value;
+	pub = document.getElementById("other").value;
+	var node = JSON.stringify(server());
+	msg = JSON.stringify(msg);
+	URL = ["send_message", node, pub, msg];
+	console.log("url ".concat(URL));
+	local_get(URL);
+	document.getElementById("msg").value = "";
     };
-    
+
     var x = document.createElement("br");
     div.appendChild(x);
 
@@ -132,6 +132,7 @@ function unlocked_2() {
     div.appendChild(x);
 
     interval_unlocked(refresh_messages_3, 1000);
+    // window.setInterval(refresh_messages_3, 1000);
 
     var x = document.createElement("br");
     div.appendChild(x);
@@ -143,10 +144,10 @@ function unlocked_2() {
     x.appendChild(t);
     div.appendChild(x);
     document.getElementById("delete").onclick=function() {
-	      pub = document.getElementById("other").value;
-	      URL = ["delete_all_messages", pub];
-	      local_get(URL);
-	      refresh_messages();
+	pub = document.getElementById("other").value;
+	URL = ["delete_all_messages", pub];
+	local_get(URL);
+	refresh_messages();
     };
 
     var x = document.createElement("button");
@@ -250,13 +251,14 @@ function change_password() {
     var t = document.createTextNode("Update Passphrase");
     x.appendChild(t);
     x.onclick=function() {
-	      old = document.getElementById("old").value;
-	      new_pass = document.getElementById("new").value;
-	      confirm_pass = document.getElementById("confirm").value;
-	      if (new_pass === confirm_pass) {
-	          refresh_page();
-	          local_get(["change_password_key", old, new_pass]);
-	      };
+	old = document.getElementById("old").value;
+	new_pass = document.getElementById("new").value;
+	confirm_pass = document.getElementById("confirm").value;
+	if (new_pass === confirm_pass) {
+	    refresh_page();
+	    local_get(["change_password_key", old, new_pass]);
+	    //unlocked();
+	};
     };
     div.appendChild(x);
 
@@ -264,7 +266,10 @@ function change_password() {
     x.type = "button";
     var t = document.createTextNode("cancel");
     x.appendChild(t);
-    x.onclick=function() { locked(); };
+    x.onclick=function() {
+	locked();
+	//refresh_page();
+    };
     div.appendChild(x);
 };
 function empty() {
@@ -314,11 +319,11 @@ function empty_2(){
     var t = document.createTextNode("Unlock");
     div.appendChild(x);
     x.onclick=function() {
-	      passphrase = document.getElementById("passphrase").value;
-	      confirm = document.getElementById("confirm").value;
-	      if (passphrase === confirm) {
-	          refresh_page();
-	          local_get(["change_password_key", "", passphrase]);
+	passphrase = document.getElementById("passphrase").value;
+	confirm = document.getElementById("confirm").value;
+	if (passphrase === confirm) {
+	    refresh_page();
+	    local_get(["change_password_key", "", passphrase]);
 	};
     };
 
@@ -328,6 +333,7 @@ function empty_2(){
 // we need a function for loading new pub/priv pairs into the node.
 function url(port, ip) { return "http://".concat(ip).concat(":").concat(port.toString().concat("/")); }
 PORT = 46666;
+my_port = 46666;
 function xml_check(x) { return ((x.readyState === 4) && (x.status === 200)); };
 function xml_out(x) { return x.responseText; }
 function refresh_helper(x, callback) {
@@ -337,6 +343,7 @@ function refresh_helper(x, callback) {
 function getter(t, u, callback){
     t = JSON.stringify(t);
     //console.log("getter ".concat(t));
+    //u = u.concat(btoa(t)); // don't append to the url any more.
     var xmlhttp=new XMLHttpRequest();
     xmlhttp.onreadystatechange = callback;
     xmlhttp.open("POST",u,true);
@@ -344,7 +351,7 @@ function getter(t, u, callback){
     return xmlhttp
 }
 function get(t, callback) {
-    u = url(PORT, "localhost");
+    u = url(my_port, "localhost");
     return getter(t, u, callback);
 }
 function server() {return {"ip":"45.55.5.85","port":PORT,"__struct__":"Elixir.Peer"}};
@@ -354,7 +361,7 @@ function server_get(t, callback) {
     return getter(t, u, callback);
 }
 function local_get(t, callback) {
-    u = url(PORT + 1000, "localhost");
+    u = url(my_port + 1000, "localhost");
     u = u.concat("priv/");
     return getter(t, u, callback);
 }
@@ -431,12 +438,7 @@ function refresh_channel_balance() {
 my_balance = -1;
 function refresh_my_balance() {
     var x = get(["kv", my_status.pubkey]);
-    refresh_helper(x, function(){ 
-	x = JSON.parse(xml_out(x)).amount; 
-	if (x > -1) { my_balance = JSON.parse(xml_out(x)).amount; };
-});
-    //console.log("my balance ".concat(my_balance));
-    //console.log("my status ".concat(JSON.stringify(my_status)));
+    refresh_helper(x, function(){ my_balance = JSON.parse(xml_out(x)).amount; });
     if (my_balance > 0) {
 	document.getElementById("bal").innerHTML = "balance: ".concat(my_balance).concat("<br>");
     } else {
@@ -446,6 +448,7 @@ function refresh_my_balance() {
 
 channel = "nil";
 function refresh_channel() {
+    console.log("refresh channel ");
     if (server_status !== "nil") {
 	var x = local_get(["channel_get", server_status.pubkey]);
 	refresh_helper(x, function(){ channel = JSON.parse(JSON.parse(xml_out(x)));});
@@ -523,6 +526,10 @@ function to_channel(pub, amount) {
     x = local_get(["to_channel", pub, amount]);
     refresh_helper(x, function(){ return "success";});
 };
+function register() {
+    x = local_get(["register", JSON.stringify(server())]); // I think this one is broken.
+    refresh_helper(x, function(){return xml_out(x) ;} );
+};
 
 function register_1() {
     //did we make the channel yet? if not, make it, and update registeration status. recurse.
@@ -531,19 +538,9 @@ function register_1() {
     pub = s.pubkey;
     s = my_status;
     my_pub = s.pubkey;
-    //console.log("my balance ".concat(my_balance));
-    //console.log("s ".concat(JSON.stringify(s)));
-    if (my_balance < 10000) {
-	x = document.getElementById("reg");
-	if (!!x) { x.innerHTML = "registration status: insufficient funds to register<br>"; };
-    };
     if (my_balance == undefined || s == "nil" || my_balance < 10000) {
-	return setTimeout(register_1, 2000);
-    } else { register_2(my_pub, pub, my_balance); }
-};
-
-function register_2(my_pub, pub, my_balance) {
-    if (channel == "nil") {
+	setTimeout(register_1, 2000);
+    } else if (channel == "nil") {
 	amount = 10000000;
 	txss = txs.filter(function (tx) {
 	    return tx.data.__struct__ == "Elixir.ToChannel";
@@ -560,32 +557,26 @@ function register_2(my_pub, pub, my_balance) {
 	    to_channel(pub, Math.min(amount, my_balance - 10000));
 	}
     }
-
     document.getElementById("reg").innerHTML = "registration status: wait for next block".concat("<br>");
-    return register_3(pub);
+    return register_2(pub);
 }
 
-function register_3(pub) {
+function register_2(pub) {
     // is the channel ready to use yet? if not, wait a while, then recurse.
     // did we register the mailnode yet? if not, do it, and update registration status and exit.
     if (channel == "nil") {
-	      setTimeout(function() {register_3(pub);}, 1000);
+	setTimeout(function() {register_2(pub);}, 3000);
     } else if (mail_nodes.length == 0) {
-	      console.log("mail node needs to be registered");
-	      setTimeout(function(){ //if they don't have the block yet, then your registration channel-tx will look invalid.
-	          register_4();
-	          document.getElementById("reg").innerHTML = "registration status: registered".concat("<br>"); },
-		               5000);
+	console.log("mail node needs to be registered");
+	setTimeout(function(){ //if they don't have the block yet, then your registration channel-tx will look invalid.
+	    register();
+	    document.getElementById("reg").innerHTML = "registration status: registered".concat("<br>"); },
+		   5000);
     } else {
-	      console.log("mail node works");
-	      document.getElementById("reg").innerHTML = "registration status: registered".concat("<br>");
+	console.log("mail node works");
+	document.getElementById("reg").innerHTML = "registration status: registered".concat("<br>");
     }
 }
-
-function register_4() {
-    x = local_get(["register", JSON.stringify(server())]);
-    refresh_helper(x, function(){return xml_out(x) ;} );
-};
 
 </script>
     </html>

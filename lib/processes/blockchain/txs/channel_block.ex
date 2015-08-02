@@ -12,6 +12,9 @@ defmodule ChannelBlock do
 		d = 1
 		if channel.pub != da.pub do d = -1 end
     cond do
+			channel == nil ->
+				IO.puts("channel doesn't exist yet, so you can't spend on it.")
+				false
 			da.bets != [] ->
 				IO.puts("bets not yet programmed")
 				false

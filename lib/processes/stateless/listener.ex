@@ -29,16 +29,17 @@ defmodule Listener do
       "add_peer" -> args |> hd |> packer(fn(x) -> Peers.add_peer(x) end)
       "all_peers" -> Enum.map(Peers.get_all, fn({x, y}) -> y end)
       "status" ->
-          h = KV.get("height")
-          block = Blockchain.get_block(h)
-          if block.data==nil do block = %{data: 1} end
-          %Status{height: h, hash: Blockchain.blockhash(block), pubkey: Keys.pubkey}
+        h = KV.get("height")
+        block = Blockchain.get_block(h)
+        if block.data==nil do block = %{data: 1} end
+        %Status{height: h, hash: Blockchain.blockhash(block), pubkey: Keys.pubkey}
 			"cost" -> MailBox.cost
 			"register" ->
 				IO.puts("register #{inspect args}")
-				args |> hd |> packer(fn(x) ->	MailBox.register(x[:payment], x[:pub]) end)
+			  args |> hd |> packer(fn(x) ->	MailBox.register(x[:payment], x[:pub]) end)
 			"delete_account" -> args |> sig(fn(x) -> MailBox.delete_account(x.pub) end)
-			"send_message" ->   args |> packer(fn(x) ->
+			"send_message" ->
+        args |> packer(fn(x) ->
 					IO.puts("listener send message #{inspect x}")
 					m = %{msg: x.msg[:msg], key: x.msg[:key]}
 					out = MailBox.send(x.payment, x.to, m)

@@ -1,17 +1,18 @@
 #channel manager needs the Exleveldb removed too.
 defmodule DB do
-	def put_lock(loc, g) do
-		path = System.cwd <> "/dbs" #different in windows?
-		File.mkdir(path)
-		{status, pid} = File.open(path <> loc, [:write])
-		case status do
-			:ok ->
+	 def put_lock(loc, g) do
+ 		path = System.cwd <> "/dbs" #different in windows?
+ 		File.mkdir(path)
+ 		{status, pid} = File.open(path <> loc, [:write])
+ 		case status do
+ 			:ok ->
 				#we have a lock on the db, so no one else can use it till we are done.
 				g.(pid)
 				File.close(pid)#unlock
-			:error ->#someone else has a lock on the db.
-				:timer.sleep(5)
-				put_lock(loc, g)
+			:error ->
+        #someone else has a lock on the db.
+        :timer.sleep(5)
+        put_lock(loc, g)
 			_ -> IO.puts("db broke")
 		end
 	end
