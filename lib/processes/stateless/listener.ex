@@ -38,7 +38,7 @@ defmodule Listener do
 			  (fn(x) ->	MailBox.register(x[:payment], x[:pub]) end)
 			"delete_account" -> args |> sig(fn(x) -> MailBox.delete_account(x.pub) end)
 			"send_message" ->
-        x = args
+        x = hd(args)
 				IO.puts("listener send message #{inspect x}")
 				m = %{msg: x.msg[:msg], key: x.msg[:key]}
 				out = MailBox.send(x.payment, x.to, m)

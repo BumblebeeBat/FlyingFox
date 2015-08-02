@@ -11,26 +11,22 @@ defmodule Cli do
 		end
 	end
 	def local_talk(msg, peer \\ me) do Tcp.get_local(peer.ip, peer.port+1000, msg) end
-	#def packer(o, f) do o |> PackWrap.pack |> f.() |> PackWrap.unpack end
   def add_blocks(blocks, peer \\ me) do talk([:add_blocks, blocks], peer) end
   def txs(peer \\ me) do talk([:txs], peer) end
   def pushtx(tx, peer \\ me) do	talk([:pushtx, tx], peer) end
 	def kv(key, peer \\ me) do talk([:kv, key], peer) end
   def fast_blocks(start, finish, peer \\ me) do
 		#only use 1 network message. might not grab all blocks
-		talk(["blocks", start, finish], peer) #|> PackWrap.unpack
+		talk(["blocks", start, finish], peer)
 	end
 	def blocks(start, finish, peer \\ me, out \\ []) do
-		lo = length(out)
-		more = fast_blocks(start+lo, finish, peer)
-		cond do
-			more == [] -> out
-			#lo >= finish - start -> out
-			true ->
-				more = fast_blocks(start+lo, finish, peer)
-				blocks(start, finish, peer, more ++ out)
-		end
-	end
+		more = fast_blocks(start+length(out), finish, peer)
+    if more == [] do
+      out
+    else
+      blocks(start, finish, peer, more ++ out)
+    end
+  end
   def add_peer(peer, pr \\ me) do talk([:add_peer, peer], pr)	end
   def all_peers(peer \\ me) do
 		talk([:all_peers], peer) end
