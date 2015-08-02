@@ -55,6 +55,8 @@ defmodule Sign do
         false
       tx.data.height != prev_block.data.height->
         IO.puts("bad height")
+        IO.puts("tx #{inspect tx}")
+        IO.puts("prev_block #{inspect prev_block}")
         false
       not l ->
         IO.puts("not l")
