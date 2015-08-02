@@ -18,6 +18,7 @@ function unlocked() {
     if (state !== "unlocked") { unlocked_2(); };
 }
 function unlocked_2() {
+    console.log("UNLOCKED 2");
     state = "unlocked";
     var div = document.getElementById("main");
     div.innerHTML = "";
@@ -131,6 +132,7 @@ function unlocked_2() {
     div.appendChild(x);
 
     interval_unlocked(refresh_messages_3, 1000);
+    interval_unlocked(refresh_messages, 1000);
 
     var x = document.createElement("br");
     div.appendChild(x);
@@ -145,7 +147,7 @@ function unlocked_2() {
 	      pub = document.getElementById("other").value;
 	      URL = ["delete_all_messages", pub];
 	      local_get(URL);
-	      refresh_messages();
+	      //refresh_messages();
     };
 
     var x = document.createElement("button");
@@ -154,8 +156,8 @@ function unlocked_2() {
     x.appendChild(t);
     div.appendChild(x);
     x.onclick=function() {
-	refresh_page();
-	local_get(["lock"]);
+	      refresh_page();
+	      local_get(["lock"]);
     };
 };
 //setTimeout(unlocked, 1000);
@@ -185,9 +187,9 @@ function locked_2() {
     x.appendChild(t);
     div.appendChild(x);
     x.onclick=function() {
-	passphrase = document.getElementById("passphrase").value;
-	refresh_page();
-	local_get(["unlock", passphrase]);
+	      passphrase = document.getElementById("passphrase").value;
+	      refresh_page(); //this is failing...
+	      local_get(["unlock", passphrase]);
     };
 
     var x = document.createElement("button");
@@ -404,11 +406,10 @@ function refresh_inbox_size() {
     pub = document.getElementById("other").value;
     var x = local_get(["inbox_size", pub]);
     refresh_helper(x, function(){
-	old_size = inbox_size;
-	inbox_size = xml_out(x);
-	if (old_size !== inbox_size) { refresh_messages(); };
+	      inbox_size = xml_out(x);
+        //if (inbox_size !== messages.length) { refresh_messages(); };
     });
-    //console.log("inbox_size ".concat(inbox_size));
+    console.log("inbox_size ".concat(inbox_size));
 };
 
 channel_peers = [];
@@ -483,18 +484,17 @@ setInterval(refresh_page, 500);
 
 messages = [];
 function refresh_messages() {
-    messages = [];
-    console.log("refresh messages");
+    // messages = [];
     for (i = 0; i < inbox_size; i++) {
-	refresh_messages_2(i);
+	      refresh_messages_2(i);
     };
 };
 function refresh_messages_2(i) {
     pub = document.getElementById("other").value;
     var x = local_get(["read_message", i, pub]);
     refresh_helper(x, function(){
-	msg = JSON.parse(xml_out(x));
-	messages[inbox_size - i] = msg;
+	      msg = JSON.parse(xml_out(x));
+	      messages[inbox_size - i] = msg;
     });
 };
 function add_message(message) {
@@ -513,9 +513,9 @@ function refresh_messages_3() {
     pub = document.getElementById("other").value;
     empty_messages();
     messages.map(function(m) {
-	if (m === undefined)  { false; }
-	else if (m.to == pub) { add_message(m.msg); }
-	else                  { recieve_message(m.msg); }
+	      if (m === undefined)  { false; }
+	      else if (m.to == pub) { add_message(m.msg); }
+	      else                  { recieve_message(m.msg); }
     });
 };
 

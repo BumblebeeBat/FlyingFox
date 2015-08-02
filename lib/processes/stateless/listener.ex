@@ -34,8 +34,8 @@ defmodule Listener do
         %Status{height: h, hash: Blockchain.blockhash(block), pubkey: Keys.pubkey}
 			"cost" -> MailBox.cost
 			"register" ->
-				IO.puts("register #{inspect args}")
-			  (fn(x) ->	MailBox.register(x[:payment], x[:pub]) end)
+        x = hd(args)
+			  MailBox.register(x.payment, x.pub)
 			"delete_account" -> args |> sig(fn(x) -> MailBox.delete_account(x.pub) end)
 			"send_message" ->
         x = hd(args)
