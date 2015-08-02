@@ -16,18 +16,20 @@ defmodule CheckMail do
 			true ->
 				x = %PopMessage{pub: Keys.pubkey}
 				|> Keys.sign
-				|> Cli.packer(fn(x) -> Cli.talk([:pop, x], p)	end)
-			Task.start(fn() -> doit3(times - 1, p) end)
-			%{msg: x.msg.msg[:msg], key: x.msg.msg[:key]}
-			|> Encryption.recieve_msg |> Inbox.record_message
-			x.payment |> ChannelManager.accept(0)
+        x = Cli.talk([:pop, x], p)
+        if x != nil do
+			    x.payment |> ChannelManager.accept(0)
+			    Task.start(fn() -> doit3(times - 1, p) end)
+			    %{msg: x.msg.msg[:msg], key: x.msg.msg[:key]}
+			    |> Encryption.recieve_msg |> Inbox.record_message
+        end
 		end
 	end
 	def doit2(peer) do
 		fn() ->
-			%InboxSize{pub: Keys.pubkey}
+			x = %InboxSize{pub: Keys.pubkey}
 			|> Keys.sign
-			|> Cli.packer(fn(x) -> Cli.talk([:inbox_size, x], peer) end)
+			Cli.talk([:inbox_size, x], peer)
 			|> doit3(peer)
 		end
 	end

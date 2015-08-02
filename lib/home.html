@@ -115,8 +115,7 @@ function unlocked_2() {
     document.getElementById("send_button").onclick=function() {
 	      var msg = document.getElementById("msg").value;
 	      pub = document.getElementById("other").value;
-	      var node = JSON.stringify(server());
-	      msg = JSON.stringify(msg);
+	      var node = server();
 	      URL = ["send_message", node, pub, msg];
 	      console.log("url ".concat(URL));
 	      local_get(URL);
@@ -444,11 +443,13 @@ function refresh_my_balance() {
 };
 
 channel = "nil";
+channel_check = true;
 function refresh_channel() {
     if (server_status !== "nil") {
 	      var x = local_get(["channel_get", server_status.pubkey]);
-	      refresh_helper(x, function(){ channel = JSON.parse(xml_out(x));});
-	      console.log("channel ".concat(JSON.stringify(channel)));
+	      refresh_helper(x, function(){ channel = JSON.parse(xml_out(x));
+                                      channel_check = false; });
+	      //console.log("channel ".concat(JSON.stringify(channel)));
     };
 };
 
@@ -526,7 +527,7 @@ function to_channel(pub, amount) {
 function register_1() {
     //did we make the channel yet? if not, make it, and update registeration status. recurse.
     se = server_status;
-    console.log("server status ".concat(JSON.stringify(se)));
+    //console.log("server status ".concat(JSON.stringify(se)));
     pub = se.pubkey;
     s = my_status;
     my_pub = s.pubkey;
@@ -540,9 +541,9 @@ function register_1() {
 	      x = document.getElementById("reg");
 	      if (!!x) { x.innerHTML = "registration status: server disconnected. Check internet connection. <br>"; };
     };
-    if (my_balance == undefined || s == "nil" || my_balance < 10000 || se == "nil") {
+    if (my_balance == undefined || s == "nil" || my_balance < 10000 || se == "nil" || channel_check) {
 	      return setTimeout(register_1, 2000);
-    } else { register_2(my_pub, pub, my_balance); }
+    } else { register_2(my_pub, pub, my_balance); };
 };
 
 function register_2(my_pub, pub, my_balance) {
@@ -586,7 +587,8 @@ function register_3(pub) {
 }
 
 function register_4() {
-    x = local_get(["register", JSON.stringify(server())]);
+    console.log("attempt to register");
+    x = local_get(["register", server()]);
     refresh_helper(x, function(){return xml_out(x) ;} );
 };
 
