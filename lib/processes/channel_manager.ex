@@ -137,7 +137,7 @@ defmodule ChannelManager do
 		if pub1 != cb.pub do d = -1 end
 		if Keys.pubkey != cb.pub do amount = -amount end
     new_amount = (d * cb.amount) + amount
-		cb = %{cb | amount: new_amount, nonce: cb.nonce + 1} |> Keys.sign
+		cb = %{cb | amount: amount, nonce: cb.nonce + 1} |> Keys.sign
 		if on_chain.amount <= new_amount or on_chain.amount2 <= -new_amount do #This isn't working. sometimes we make a channel block that spends more than we have.
       #amount is how much we are spending this time. not how much we spend in total!
 			IO.puts("not enough money in the channel to spend that much")

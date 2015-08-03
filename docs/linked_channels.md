@@ -1,22 +1,39 @@
-SMPC is a popular example of what is possible with this new technique.
+New things are possible for channels:
 
-Poker is a popular example of the new type of contract that is possible. These new contracts allow people to win money from each other's channels without having a central node lock up liquidity, and without publishing anything to the blockchain.
+It is possible for participants in a channel to win each other's money without publishing anything to the blockchain. This allows for SMPC and Market Makers. So we can make from the Truthcoin project.
+
+Poker is a popular example of the new type of contract that is possible. 
+
+
+How do you decide if it is cost-effective to use side-channel techniques for your contract?
+
+N = The number of participants in your contract times the maximum amount of money a participant could recieve from the contract.
+
+If you don't use sidechains, then you will need a loan for at least N amount of money for the entire diration of the contract. This can be cost prohibitive for some applications.
+
+If you do use sidechain, then you will need to publish 2 transactions onto the blockchain. One at the beginning of te contract, and one at the end. This can be cost prohibitive for some applications.
+
+Depending on the current cost of getting a loan, and the cost of publishing to the blockchain, your optimal type may switch over time.
+
+Channels are more simple, and explained elsewhere in the docs. I am focusing on side chains here.
 
 imagining a game with 9 players. Each player makes a channel with a central node. They agree upon a judge.
 
 So long as none of the players have modified the software, and the central node uses normal software, they will never actually need the judge. The computer will only let you play normally.
 
+At the beginning, you all sign a transaction explaining who is betting, where the money comes from, and who the central node is.
+
 You are really only transacting with the central node, not your peers. So if you and the node disagree on your current balance, then the node will refuse to sign the next channel-state.
 If the node is lying to hold your money ransom, then you can get your channel block signed by the pre-agreed upon judge. The judge writes down how much money each of you would get if the game were to end right now.
 
-If the node still refuses to sign the next channel block, then you publish the channel block the judge had signed to the blockchain, along with a part of the channel-state I call the conserved quantity. The conserved quantity is used to protect the node from the judge, and to provide additional liquidity. It allows money to move between the differen't player's channels.
+If the node still refuses to sign the next channel block, then you publish the channel block the judge had signed to the blockchain.
 
 Attack: What if the judge signs in conflicting ways on each channel to steal all the node's money?
 It can't happen because of how the conserved quantities works. When the first player leaves the game, their channel block explains how much money is left in the pot.
 Now when other player's leave the game, their is left money left that they could possibly take. The extra-big channel block costs a larger than normal fee.
 
 Attack: Can't the first player to leave just take all the money?
-No. Everyone's channel is over the same channel state. Everyone has to sign their own channel. The first player to leave can only take as much money as he fairly won while playing.
+No. Everyone has to sign their own channel. The first player to leave can only take as much money as he fairly won while playing. Other channel blocks are invalid, because they don't obey the sidechain creation tx.
 
 Instead of programming in a turing complete language like EVM, all we need is a simple language for describing conserved quantities between groups of addresses.
 
