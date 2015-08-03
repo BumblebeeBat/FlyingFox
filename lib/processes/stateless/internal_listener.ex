@@ -54,22 +54,23 @@ defmodule InternalListener do
 				#|> Cli.packer(&(Cli.talk(["delete_account", &1], peer)))
 				|> ChannelManager.accept(0)
 			"send_message" ->
-				#maybe a function in inbox shoule contain all this logic
+				#maybe a function in inbox should contain all this logic
 				IO.puts("send message node #{inspect args}")
-				node = hd(args) #|> PackWrap.unpack
+				node = hd(args)
 				IO.puts("send message node #{inspect node}")
 				pub = hd(tl(args))
 				IO.puts("send message pub #{inspect pub}")
 				IO.puts("args #{inspect args}")
-				msg = hd(tl(tl(args))) #|> PackWrap.unpack
+				msg = hd(tl(tl(args)))
 				node_pub = Cli.status(node).pubkey
 				IO.puts("node pub #{inspect node_pub}")
-				tx = ChannelManager.spend(node_pub, max(round(Cli.cost(node)*1.01), Constants.min_channel_spend)) #this isn't creating a tx. something is wrong.
-				IO.puts("tx #{inspect tx}")
-				Inbox.record_message(%Msg{msg: msg, to: pub, from: Keys.pubkey})
-				sm =%SendMessage{payment: tx, to: pub, msg: Encryption.send_msg(msg, pub)}
-				Cli.talk(["send_message", sm], node)
-				#|> Cli.packer(&(Cli.talk(["send_message", &1], node)))
+				tx = ChannelManager.spend(node_pub, max(round(Cli.cost(node)*1.01), Constants.min_channel_spend))
+        if tx.data.amount < channel_balance do
+				  IO.puts("tx #{inspect tx}")
+				  Inbox.record_message(%Msg{msg: msg, to: pub, from: Keys.pubkey})
+				  sm = %SendMessage{payment: tx, to: pub, msg: Encryption.send_msg(msg, pub)}
+				  Cli.talk(["send_message", sm], node)
+        end
 			"read_message" ->
 				index = hd(args)
 				if is_binary(index) do index = String.to_integer(index) end
