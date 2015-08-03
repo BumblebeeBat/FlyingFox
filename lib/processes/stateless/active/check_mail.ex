@@ -16,29 +16,24 @@ defmodule CheckMail do
 			true ->
 				x = %PopMessage{pub: Keys.pubkey}
 				|> Keys.sign
-				|> Cli.packer(fn(x) -> 
-							IO.puts("checkmail doit3 #{inspect x}")
-							out = Cli.talk([:pop, x], p)
-							IO.puts("checkmail doit3 #{inspect out}")
-							out
-						end)
-			Task.start(fn() -> doit3(times - 1, p) end)
-			IO.puts("check mail #{inspect x}")
-			%{msg: x.msg.msg[:msg], key: x.msg.msg[:key]}
-			|> Encryption.recieve_msg |> Inbox.record_message
-			x.payment |> ChannelManager.accept(0)
+        x = Cli.talk([:pop, x], p)
+        if x != nil do
+			    x.payment |> ChannelManager.accept(0)
+			    Task.start(fn() -> doit3(times - 1, p) end)
+			    %{msg: x.msg.msg[:msg], key: x.msg.msg[:key]}
+			    |> Encryption.recieve_msg |> Inbox.record_message
+        end
 		end
 	end
 	def doit2(peer) do
 		fn() ->
-			s = %InboxSize{pub: Keys.pubkey}
+			x = %InboxSize{pub: Keys.pubkey}
 			|> Keys.sign
-			|> Cli.packer(fn(x) -> Cli.talk([:inbox_size, x], peer) end)
+			Cli.talk([:inbox_size, x], peer)
 			|> doit3(peer)
 		end
 	end
 	def doit do MailNodes.all |> Enum.map(&(Task.start(doit2(&1)))) end
-
   def timer do
     :timer.sleep(3000)
     doit

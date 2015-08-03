@@ -30,13 +30,11 @@ defmodule Blocktree do
   def genesis_state do
     genesis_block
     ac = Constants.initial_coins
-    b = ac/21
-    a = %Account{amount: 20*b, bond: b}
-    Keys.master
-    creator_pub = Keys.pubkey
+    b = ac/3
+    a = %Account{amount: 2*b, bond: b}
+    creator_pub = Constants.creator_pub
     KV.put(creator_pub, a)
     KV.put("tot_bonds", b)
-    sign_reveal
   end
 	def num_signers(txs) do txs |> Enum.filter(&(&1.data.__struct__ == :Elixir.Sign)) |> length end
 	def back do
@@ -47,7 +45,7 @@ defmodule Blocktree do
       txs = block.data.txs
       n = num_signers(txs)
       TxUpdate.txs_updates(txs, -1, round(block.data.bond_size/n))
-      TxUpdate.sym_increment(block.pub, :amount, -Constants.block_creation_fee, -1)
+      TxUpdate.sym_increment(block.data.pub, :amount, -Constants.block_creation_fee, -1)
       b = prev.data.height
       if b == nil do b = 0 end
       KV.put("height", b)
@@ -83,21 +81,17 @@ defmodule Blocktree do
         KV.put(n, [hash|bh])
     end
   end
-  def goto(hash) do
-    h = hash |> Blockchain.get_block
-		height = h.data.height
-		b = Blockchain.get_block(height+1)
-		if b.data.hash == Blockchain.blockhash(h) do
-			goto(Blockchain.blockhash(b))
-			#goto(b.data.height)
+	def goto(hash, acc \\ []) do
+		goal_chain_block = hash |> Blockchain.get_block
+		my_chain_block = goal_chain_block.data.height |> Blockchain.get_block
+		if my_chain_block == goal_chain_block do
+			goto_helper([goal_chain_block|acc])
 		else
-			to = h.data.height
-			me = KV.get("height")
-			Enum.map(me..to, &(Blockchain.get_block(&1)))
-			|> goto_helper
+			goto(goal_chain_block.data.hash, [goal_chain_block|acc])
 		end
-  end
+	end
 	def goto_helper(last_blocks) do
+		#this should back up until we are on the same fork, then walk forward through last_blocks till the end.
     h = KV.get("height")
     my_block = Blockchain.get_block(h).data
 		add_block = hd(last_blocks).data
@@ -136,8 +130,8 @@ defmodule Blocktree do
 				IO.puts("adding block #{inspect height}")
         block_hash = put_block(head)
         current_height = KV.get("height")
-        add_blocks(tail)
         if height > current_height do goto(block_hash) end
+        add_blocks(tail)
     end
   end
 end

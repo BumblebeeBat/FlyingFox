@@ -10,7 +10,7 @@ defmodule Constants do
   def chances_per_address do 200 end
 	#def port_d do 1111 end
 	def oracle_fee do 50_000_000 end
-	def message_size do 10000 end #in bytes
+	def message_size do 100000 end #in bytes
 	# constants below here can be edited.
   def min_tx_fee_this_node do 10000 end
   def tcp_port do 7778 end
@@ -19,4 +19,5 @@ defmodule Constants do
 	def registration do 1000000 end
 	def default_channel_balance do 500_000_000 end
 	def min_channel_spend do 1000 end
+	def creator_pub do "BMYocgxkguE9/5JJcV8enkZNTLNT6NTiDztK60n/hth9YhztV9nENKjr9NSrotm+V0nXMhf6/gyRShAupstxiHo=" end
 end

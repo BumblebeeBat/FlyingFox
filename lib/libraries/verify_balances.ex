@@ -54,7 +54,11 @@ defmodule VerifyBalances do
       :Elixir.Sign         -> addresses = lose_bond(addresses, pub, bond_size*length(da.winners))
       :Elixir.Slasher      -> true
       :Elixir.Reveal       -> true
-      :Elixir.ToChannel    -> addresses = lose_cash(addresses, pub, da.amount+da.fee)
+      :Elixir.ToChannel    ->
+				IO.puts("verify balances #{inspect addresses}")
+				IO.puts("verify balances #{inspect pub}")
+				IO.puts("verify balances #{inspect da.amount+da.fee}")
+				addresses = lose_cash(addresses, pub, da.amount+da.fee)
       :Elixir.ChannelBlock -> true
       :Elixir.CloseChannel -> true
       :Elixir.Oracle       -> addresses = lose_cash(addresses, pub, Constants.oracle_fee) #maybe it is easiest if one person pays for the oracle.

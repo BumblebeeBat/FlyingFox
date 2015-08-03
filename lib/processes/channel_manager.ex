@@ -1,31 +1,55 @@
 #channel manager needs to keep track of the highest-nonced transaction from the peer, and it also needs to keep track of the highest-nonced transaction we sent to the peer.
 #eventually we need to store multiple hash_locked transactions from the peer.
+#we need to watch for our peer to reveal the secret on the blockchain!
 defmodule ChannelManager do
 	defstruct recieved: %CryptoSign{data: %ChannelBlock{}}, sent: %CryptoSign{data: %ChannelBlock{}}#, hash_locked: []
   use GenServer
   @name __MODULE__
-  def init(args) do {:ok, args} end
-  def start_link() do   GenServer.start_link(__MODULE__, %HashDict{}, name: @name) end
+	def db_location do "/channeldb" end
+  def init(_) do
+		x = DB.get_raw(db_location)
+		if x == "" do x = %{} end
+		{:ok, x}
+	end
+	def common(key) do if is_binary(key) do String.to_atom(key) else key end end
+	def dict_put(dict, key, val) do
+		key = common(key)
+		Dict.put(dict, key, val)
+	end
+	def dict_get(dict, key) do
+		key = common(key)
+		Dict.get(dict, key)
+	end
+  def start_link() do   GenServer.start_link(__MODULE__, 0, name: @name) end
 	def get(pub) do       GenServer.call(@name, {:get, pub}) end
   def get_all do        GenServer.call(@name, :get_all) end
   def handle_call(:get_all, _from, mem) do {:reply, mem, mem} end
   def handle_call({:get, pub}, _from, mem) do
-		out = mem[pub]
+		out = dict_get(mem, pub)
 		if out == nil do
 			out = %ChannelManager{sent: %CryptoSign{data: %ChannelBlock{pub: Keys.pubkey, pub2: pub}}}
 		end
 		{:reply, out, mem} end
   def handle_cast({:send, pub, channel},  mem) do
-		out = mem[pub]
-		if out == nil do out = %ChannelManager{} end
-		out = %{out | sent: channel}
-		{:noreply, HashDict.put(mem, pub, out)}
+		if is_map(channel) do
+			out = dict_get(mem, pub)
+			if out == nil do out = %ChannelManager{} end
+			out = %{out | sent: channel}
+			mem = dict_put(mem, pub, out)
+			IO.puts("channel manager spend #{inspect mem}")
+			DB.put_function(db_location, fn() -> mem end)
+		end
+		{:noreply, mem}
 	end
 	def handle_cast({:recieve, pub, channel},  mem) do
-		out = mem[pub]
-		if out == nil do out = %ChannelManager{} end
-		out = %{out | recieved: channel}
-		{:noreply, HashDict.put(mem, pub, out)}
+		if is_map(channel) do
+			out = dict_get(mem, pub)
+			if out == nil do out = %ChannelManager{} end
+			out = %{out | recieved: channel}
+			mem = dict_put(mem, pub, out)
+			DB.put_function(db_location, fn() -> mem end)
+		end
+		{:noreply, mem}
 	end
 	def other(tx) do
 		tx = [tx.data.pub, tx.data.pub2] |> Enum.filter(&(&1 != Keys.pubkey))
@@ -34,16 +58,20 @@ defmodule ChannelManager do
 			true -> hd(tx)
 		end
 	end
-	def accept(tx, min_amount, mem \\ []) do
+	def accept(tx, min_amount \\ -Constants.initial_coins, mem \\ []) do
 		cond do
-			tx == nil -> "no channel"
+			tx == nil ->
+				IO.puts("no payment")
+				false
 			accept_check(tx, min_amount, mem) ->
 				other = other(tx)
 				GenServer.cast(@name, {:recieve, other, tx})
 				d = 1
 				if tx.data.pub2 == Keys.pubkey do d = d * -1 end
 				tx.data.amount * d
-			true -> IO.puts("bad channel #{inspect tx}")
+			true ->
+				IO.puts("bad payment #{inspect tx}")
+				false
 		end
 	end
 	def accept_check(tx, min_amount \\ -Constants.initial_coins, mem \\ []) do
@@ -51,7 +79,7 @@ defmodule ChannelManager do
 		d = -1
 		d2 = -1
 		if Keys.pubkey == tx.data.pub do d = d * -1 end
-		if mem != [] do x = mem[other] else x = get(other) end
+		if mem != [] do x = dict_get(mem, other) else x = get(other) end
 		x = x |> top_block
 		if Keys.pubkey == x.data.pub do d2 = d2 * -1 end
 		if is_binary(min_amount) do min_amount = String.to_integer(min_amount) end
@@ -108,15 +136,16 @@ defmodule ChannelManager do
 		d = 1
 		if pub1 != cb.pub do d = -1 end
 		if Keys.pubkey != cb.pub do amount = -amount end
-		cb = %{cb | amount: (d * cb.amount) + amount, nonce: cb.nonce + 1} |> Keys.sign
-		if on_chain.amount <= amount or on_chain.amount2 <= -amount do
+    new_amount = (d * cb.amount) + amount
+		cb = %{cb | amount: new_amount, nonce: cb.nonce + 1} |> Keys.sign
+		if on_chain.amount <= new_amount or on_chain.amount2 <= -new_amount do #This isn't working. sometimes we make a channel block that spends more than we have.
+      #amount is how much we are spending this time. not how much we spend in total!
 			IO.puts("not enough money in the channel to spend that much")
 			IO.puts("on chain #{inspect on_chain}")
-			IO.puts("amount #{inspect amount}")
+			IO.puts("amount #{inspect new_amount}")
 		else
 			GenServer.cast(@name, {:send, pub, cb})
 		end
 		cb
 	end
 end
-

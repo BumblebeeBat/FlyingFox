@@ -31,12 +31,18 @@ defmodule Sign do
   end
 	def check(tx, txs, prev_hash) do
     acc = KV.get(tx.data.pub)
+		if acc == nil do
+			false
+		else
+			check_2(tx, txs, prev_hash, acc)
+		end
+	end
+	def check_2(tx, txs, prev_hash, acc) do
     tot_bonds = KV.get("tot_bonds")
     ran = rng(prev_hash)
     prev_block = KV.get(prev_hash)
-    l = Enum.map(tx.data.winners, fn(x)->winner?(acc.bond, tot_bonds, ran, tx.data.pub, x) end)
-    l1 = l
-    l = Enum.reduce(l, true, fn(x, y) -> x and y end)
+		l = Enum.map(tx.data.winners, fn(x)->winner?(acc.bond, tot_bonds, ran, tx.data.pub, x) end)
+		l = Enum.reduce(l, true, fn(x, y) -> x and y end)
     m = length(Enum.filter(txs, fn(t) -> t.data.pub == tx.data.pub and t.data.__struct__ == :Elixir.Sign end))
     height = KV.get("height")
     tx_prev = tx.data.prev_hash
@@ -58,9 +64,7 @@ defmodule Sign do
 				false
       m != 0 ->
 				false
-      not(height == 0) and tx_prev != prev_hash ->
-        IO.puts("hash not match")
-        false
+      not(height == 0) and tx_prev != prev_hash -> false
       true -> true
     end
 	end
