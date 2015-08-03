@@ -142,7 +142,7 @@ defmodule ChannelManager do
       #amount is how much we are spending this time. not how much we spend in total!
 			IO.puts("not enough money in the channel to spend that much")
 			IO.puts("on chain #{inspect on_chain}")
-			IO.puts("amount #{inspect amount}")
+			IO.puts("amount #{inspect new_amount}")
 		else
 			GenServer.cast(@name, {:send, pub, cb})
 		end
