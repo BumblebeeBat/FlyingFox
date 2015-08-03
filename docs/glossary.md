@@ -28,4 +28,11 @@ validator - On every block a random sample of bond holders is selected. This gro
 
 contract for difference - betting in flying fox uses contract for difference (CFD). It is a type of betting that happens between pairs of people. The pair of people promise to trade an amount of money based upon some future price. It is useful for hedging your risk, for example if you own 3 tons of onions and want to be protected from the possibility of onion price dropping.
 
-sidechain - a channel that has more than 2 participants
+sidechain - a channel that has more than 2 participants (we probably wont use this)
+
+channel link - channels that are linked together can have money flow between them. If you don't un-link channels before broadcasting them, then you have to pay an extra fee. Un-linking channels requires putting enough money into each channel so that all the channels have non-negative amounts of money in them.
+
+channel loop - example. if Alice has a channel with Bob, and Bob has a channel with Charlie, and Charlie has a channel with Alice, then they are in a 3 node channel loop. Channel loops are convenient because they can provide extra liquidity.
+If Alice wants to play poker with Bob, but doens't have any money in the channel with Bob, she can still use money from her channel with Charlie to play poker.
+Alice sends charlie money in their channel, and charlie simultaniously sends bob money in their channel, and bob simultaniously sends Alice money in their channel. It all cancels out so no one gains or loses anything.
+Now Alice has enough money in her channel to gamble with Bob, and no one had to publish anything to the blockchain.
