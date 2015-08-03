@@ -30,7 +30,7 @@ contract for difference - betting in flying fox uses contract for difference (CF
 
 sidechain - a channel that has more than 2 participants (we probably wont use this)
 
-channel link - channels that are linked together can have money flow between them. If you don't un-link channels before broadcasting them, then you have to pay an extra fee. Un-linking channels requires putting enough money into each channel so that all the channels have non-negative amounts of money in them.
+channel link - channels that are linked together can have money flow between them. If you don't unlink channels before broadcasting them, then you have to pay an extra fee. Unlinking channels requires putting enough money into each channel so that all the channels have non-negative amounts of money in them. Channel loops can help make each channel non-negative.
 
 channel loop - example. if Alice has a channel with Bob, and Bob has a channel with Charlie, and Charlie has a channel with Alice, then they are in a 3 node channel loop. Channel loops are convenient because they can provide extra liquidity.
 If Alice wants to play poker with Bob, but doens't have any money in the channel with Bob, she can still use money from her channel with Charlie to play poker.
