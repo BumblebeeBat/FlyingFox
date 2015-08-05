@@ -533,15 +533,15 @@ function register_1() {
     my_pub = s.pubkey;
     //console.log("my balance ".concat(my_balance));
     //console.log("s ".concat(JSON.stringify(s)));
+	  var x = document.getElementById("reg");
     if (my_balance < 10000) {
-	      x = document.getElementById("reg");
 	      if (!!x) { x.innerHTML = "registration status: insufficient funds to register<br>"; };
     };
     if (se == "nil") {
 	      x = document.getElementById("reg");
 	      if (!!x) { x.innerHTML = "registration status: server disconnected. Check internet connection. <br>"; };
     };
-    if (my_balance == undefined || s == "nil" || my_balance < 10000 || se == "nil" || channel_check) {
+    if (!x || my_balance == undefined || s == "nil" || my_balance < 10000 || se == "nil" || channel_check) {
 	      return setTimeout(register_1, 2000);
     } else { register_2(my_pub, pub, my_balance); };
 };

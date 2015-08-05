@@ -65,12 +65,10 @@ defmodule InternalListener do
 				node_pub = Cli.status(node).pubkey
 				IO.puts("node pub #{inspect node_pub}")
 				tx = ChannelManager.spend(node_pub, max(round(Cli.cost(node)*1.01), Constants.min_channel_spend))
-        if tx.data.amount < channel_balance do
-				  IO.puts("tx #{inspect tx}")
-				  Inbox.record_message(%Msg{msg: msg, to: pub, from: Keys.pubkey})
-				  sm = %SendMessage{payment: tx, to: pub, msg: Encryption.send_msg(msg, pub)}
-				  Cli.talk(["send_message", sm], node)
-        end
+				IO.puts("tx #{inspect tx}")
+				Inbox.record_message(%Msg{msg: msg, to: pub, from: Keys.pubkey})
+				sm = %SendMessage{payment: tx, to: pub, msg: Encryption.send_msg(msg, pub)}
+				Cli.talk(["send_message", sm], node)
 			"read_message" ->
 				index = hd(args)
 				if is_binary(index) do index = String.to_integer(index) end
