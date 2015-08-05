@@ -1,6 +1,9 @@
 #channel manager needs to keep track of the highest-nonced transaction from the peer, and it also needs to keep track of the highest-nonced transaction we sent to the peer.
 #eventually we need to store multiple hash_locked transactions from the peer.
 #we need to watch for our peer to reveal the secret on the blockchain!
+
+#Lets change how we are designing hashlock.
+
 defmodule ChannelManager do
 	defstruct recieved: %CryptoSign{data: %ChannelBlock{}}, sent: %CryptoSign{data: %ChannelBlock{}}#, hash_locked: []
   use GenServer

@@ -1,5 +1,5 @@
 defmodule Meta do
-	defstruct sig: nil, sig2: nil, revealed: []
+	defstruct sig: nil, sig2: nil, revealed: [], evidence: %{}
 end
 
 defmodule CryptoSign do
