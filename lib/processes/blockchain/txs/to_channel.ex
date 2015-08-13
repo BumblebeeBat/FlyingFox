@@ -1,6 +1,8 @@
+#when we create a channel, we need to have a flag on the blockchain for if the money in this channel is waiting in line to be a validator.
+
 defmodule ToChannel do
 	#pub is always the person who is spending money into the channel.
-  defstruct nonce: 0, to: "amount", amount: 0, new: false, delay: 100, fee: 10000, pub: "", pub2: "", create: false
+  defstruct nonce: 0, to: "amount", amount: 0, new: false, delay: 100, fee: 10000, pub: "", pub2: "", create: false, validator_deposit: 0
 	def key(a, b) do
 		cond do
 			a > b -> a <> b
@@ -62,19 +64,24 @@ defmodule ToChannel do
     da = tx.data
 		channel = key(da.pub, da.pub2)
     TxUpdate.sym_increment(da.pub, :amount, -da.amount - da.fee, d)
-		cb = %Channel{pub: da.pub,
-									pub2: da.pub2,
-									delay: da.delay}
 		if da.create do
 			cond do
+        #add stuff for creating wait-money
 				d == 1 -> KV.put(da.to, %Account{})
 				true -> KV.put(da.to, nil)
 			end
 		end
-		if da.new and d==1 do
+		if da.new and d == 1 do
+		  cb = %Channel{pub: da.pub,
+									  pub2: da.pub2,
+									  delay: da.delay,
+                    wait_height: KV.get("height"),
+                    validator_deposit: da.validator_deposit}
 			KV.put(channel, cb)
 		end
     TxUpdate.sym_increment(channel, String.to_atom(da.to), da.amount, d)
-		if da.new and d==-1 do KV.put(channel, nil)	end
-		end
+		if da.new and d == -1 do
+      KV.put(channel, nil)
+    end
+	end
 end

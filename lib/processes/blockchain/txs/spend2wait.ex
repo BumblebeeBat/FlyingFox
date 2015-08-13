@@ -1,4 +1,5 @@
 defmodule Spend2Wait do
+  #instead of bonding your money to wait in line to be a validator, this should be a flag on each channel. That way people with money in channels can instantly take it out and validate.
   defstruct nonce: 0, amount: 0, pub: ""
 	def check(tx, txs) do
     pub = tx.data.pub

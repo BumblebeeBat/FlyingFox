@@ -1,0 +1,10 @@
+Scalability
+
+
+Channels - A channel is a 2-party contract on the blockchain. While the channel is open, the 2 participants can send money back and forth as quickly as they can send messages.
+
+NodeChain - A nodechain is a blockchain without a consensus mechanism. It has a parent chain which is either a blockchain, or another nodechain. It regularly posts it's root hash to it's parent chain. Users recieve reciepts from the nodechain when they submit txs. If the nodechain fails to process the tx, then the user can use the reciept to punish the nodechain.
+
+Reciept 
+
+Atomic Swap

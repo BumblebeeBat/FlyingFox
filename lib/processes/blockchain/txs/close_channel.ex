@@ -14,7 +14,7 @@ defmodule CloseChannel do #maybe this should have a negative fee, since it frees
     #sender = tx[sender]
     keys = Dict.keys(evidence)
     if bet.root in keys do
-      reciever = tx[bet.to]
+      #reciever = tx[bet.to]
       ev = evidence[bet.root]
       settle_bet_2(pub, pub2, bet, ev)
     else

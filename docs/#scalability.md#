@@ -1,0 +1,12 @@
+Scalability
+
+
+Channels - A channel is a 2-party contract on the blockchain. While the channel is open, the 2 participants can send money back and forth as quickly as they can send messages.
+
+hash-locked channel transactions (aka lightening transactions) - 2 channel transactions are linked together so they don't become valid until a secret is revealed. That way the transactions are either both valid, or both invalid. 
+
+NodeChain - A nodechain is a blockchain without a consensus mechanism. It has a parent chain which is either a blockchain, or another nodechain. It regularly posts it's root hash to it's parent chain. If the nodechain operator disappears, then it's parent chain will download it's state from a backup server, 
+
+Reciept - Users recieve reciepts from the nodechain when they submit txs. If the nodechain fails to process the tx, then the user can use the reciept to punish the nodechain. Reciepts contain: a merkle proof of the part of the state we care about before it got changed, the tx, and a merkle proof of the same part of the state after it got changed. The reciepts is signed by the nodechain-operator who gave it to you. Your tx will get pruned very quickly. The only way to keep your money is to keep your reciept.
+
+Atomic Swap - A lightning transaction across 2 chains.
