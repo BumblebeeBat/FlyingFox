@@ -30,14 +30,11 @@ The patritia tree may be added at some point to help light nodes.
 Ethan Buchman's idea:
 The total amount of money spent in a block must be less than or equal to 1/3 of the total amount of safety deposits left by the people who signed on that block. That way, any double-spend attack ends up costing more money than can be stolen. 
 
-From the Jae Kwon's tendermint I take the idea of bonded verifiers. Signers are only selected from the subset of people who have bonded some money. 
+Jae Kwon realized that I needed to save a tree of blocks instead of a chain.
 
 from Joseph Poon http://lightning.network I take the idea of channels.
 
-from truthcoin https://github.com/psztorc/Truthcoin I take the idea of oracles, I may take the oracle mechanism too. I plan on using CFD contract for difference instead of LMSR, because CFD can fit into a channel.
-
-
-
+from truthcoin https://github.com/psztorc/Truthcoin I take the idea of oracles, I may take the oracle mechanism too. I plan on using CFD contract for difference instead of LMSR, because CFD can fit into a channel. from http://www.truthcoin.info/blog/pow-cheapest/ I realized that minimizing the amount of bonded money is so important.
 
 
 From a mailing list, forgot to write his name down. I didn't add this feature yet, but I may in the future.
