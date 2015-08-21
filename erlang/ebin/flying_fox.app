@@ -1,0 +1,9 @@
+{application,flying_fox,
+             [{description,"blockchain"},
+              {vsn,"1"},
+              {registered,[]},
+              {applications,[kernel,stdlib,jiffy,cowboy,crypto]},
+              {mod,{flying_fox_app,[]}},
+              {env,[]},
+              {modules,[db,encryption,flying_fox_app,flying_fox_sup,hash,
+                        packer,sign]}]}.

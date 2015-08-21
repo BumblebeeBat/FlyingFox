@@ -1,0 +1,10 @@
+-module(encryption).
+-export([doit/0]).
+
+si(Key) -> crypto:stream_init(rc4, crypto:hmac(sha256, "", Key)).
+sym_enc(Key, Msg) ->
+    {ok, X} = crypto:stream_encrypt(si(Key), packer:pack(Msg)),
+    base64.encode(X).
+doit() ->
+    sym_enc("abc", "1234").
+        

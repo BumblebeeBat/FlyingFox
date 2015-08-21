@@ -1,0 +1,2 @@
+rebar get
+rebar compile

@@ -1,0 +1,13 @@
+-module(sign).
+-export([doit/1]).
+
+-record(signed, {data="", sig="", sig2="", revealed=[]}).
+
+params() -> crypto:ec_curve(secp256k1).
+shared_secret(Pub, Priv) -> crypto:compute_key(ecdh, Pub, Priv, params()).
+new_key() -> crypto:generate_key(ecdh, params()).
+sign(s, priv) -> crypto:sign(ecdsa, sha256, s, [priv, params]).
+verify(s, sig, pub) -> crypto:verify(ecdsa, sha256, s, sig, [pub, params]).
+
+doit() ->
+    {priv, pub} = new_key().

@@ -1,0 +1,12 @@
+{application, flying_fox,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { flying_fox_app, []}},
+  {env, []}
+ ]}.

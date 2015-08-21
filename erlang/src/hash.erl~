@@ -1,0 +1,8 @@
+-module(hash).
+-export([doit/0]).
+
+-record(person, {name = "", phone = [], address}).
+
+
+
+hash(s) -> crypto:hmac(sha256, S, "")
