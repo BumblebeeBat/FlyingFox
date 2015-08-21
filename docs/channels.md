@@ -11,7 +11,7 @@ It is possible to create secure channels with all these features:
 7. Spend money as fast as sending a message.
 8. Payments and bets inside of a channel can be private.
 
-Bitcoin channels will eventually be able to do everything except #3, in bitcoin's case each additional hash-lock in a channel increases the computation and space requirements exponentially.
+Bitcoin channels will eventually be able to do everything except #3, in bitcoin's case each additional hash-lock in a channel increases the computation and space requirements exponentially. 
 
 #### Limitations that channels have, compared with on-blockchain tx:
 
@@ -95,13 +95,14 @@ There are at least 3 types of bets: hashlock, oracle, and signature. All 3 types
 
 `merkle` is the merkle root of a datastructure explaining the bet.
 
-`default` is a number between 0 and 100. It is the percent of the money that goes to participant 2.
+`default` is a number between 0 and 100. If the channel closes and a bet is not unlocked, then where the money goes is determined by `default`. `default` is the percent of the money that goes to participant 2. Extra money goes to participant 1.
 
-Each type of bet gets unlocked in a different way. If the channel closes and a bet is not unlocked, then where the money goes is determined by `default`.
+Each type of bet gets unlocked in a different way. 
 
-If a bet is a hashlock bet, then it should be possible to find 256 bits called the secret such that `SHA256(secret)=Merkle`. The secret unlocks this type of bet.
+Signature bet are unlocked by `{pubkey:Pubkey, data:Binary, sig:Signature}` where `sig` is a valid signature over `data` for `pubkey`.
+`pubkey` and `data` needs to satisfy: `SHA256([pubkey, data])==Merkle`.
+If unlocked, the money goes opposite of `default`.
 
-If the bet is an oracle bet, then `SHA256([oracle_pubkey, bet_hash])=Merkle`, where `bet_hash` is the hash of the unicode text explaining the bet. To unlock this type of bet you need `{oracle_sig:Signature, judgement:Integer}` where `oracle_sig` is a valid signature for the `oracle_pubkey`, over `SHA256([judgement, bet_hash])`. If it is unlocked, then judgement is the percentage of money that goes to participant 2.
+Hashlock bets are unlocked by a 256 bits called `secret`. It needs to satisfy `SHA256(secret)=Merkle`. If unlocked, the money goes opposite of `default`.
 
-If it is a signature bet, then `SHA256([pubkey, bits])=Merkle`.
-To unlock this type of bet you need valid signature for pubkey over bits.
+If the bet is an oracle bet, then unlocking requires `{oracle_sig:Signature, judgement:Integer, bet_hash:Hash}` where `oracle_sig` is a valid signature for the `oracle_pubkey`, over `SHA256([judgement, bet_hash])`. They need to satisfy `SHA256([oracle_pubkey, SHA256("Text of bet...")])=Merkle`. If it is unlocked, then judgement is the percentage of money that goes to participant 2, extra money goes to participant 1.
