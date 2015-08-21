@@ -95,12 +95,20 @@ There are at least 3 types of bets: hashlock, oracle, and signature. All 3 types
 
 `merkle` is the merkle root of a datastructure explaining the bet.
 
-`default` is a number between 0 and 100. If the channel closes and a bet is not unlocked, then where the money goes is determined by `default`. `default` is the percent of the money that goes to participant 2. Extra money goes to participant 1.
+`default` is a number between 0 and 100. If the channel closes and a bet is not unlocked, then `default` is the percent of the money that goes to participant 2. Extra money goes to participant 1.
 
 #### Unlocking Bets:
 
 ##### Signature bets
-are unlocked by `{pubkey:Pubkey, data:Binary, sig:Signature}` where `sig` is a valid signature over `data` for `pubkey`.
+are unlocked by 
+```
+{
+   pubkey:Pubkey, 
+   data:Binary, 
+   sig:Signature          
+}
+``` 
+where `sig` is a valid signature over `data` for `pubkey`.
 `pubkey` and `data` needs to satisfy: `SHA256([pubkey, data])==Merkle`.
 If unlocked, the money goes opposite of `default`.
 
@@ -108,4 +116,19 @@ If unlocked, the money goes opposite of `default`.
 are unlocked by a 256 bits called `secret`. It needs to satisfy `SHA256(secret)=Merkle`. If unlocked, the money goes opposite of `default`.
 
 ##### Oracle bets
-are unlocked by `{oracle_sig:Signature, judgement:Integer, bet_hash:Hash}` where `oracle_sig` is a valid signature for the `oracle_pubkey`, over `SHA256([judgement, bet_hash])`. They need to satisfy `SHA256([oracle_pubkey, SHA256("Text of bet...")])=Merkle`. If it is unlocked, then judgement is the percentage of money that goes to participant 2, extra money goes to participant 1.
+are unlocked by 
+```
+{
+oracle_pubkey:Pubkey,
+bet_hash:Hash,
+oracle_sig:Signature,
+judgement:Integer
+}
+``` 
+They need to satisfy:
+```
+SHA256([oracle_pubkey, bet_hash])=Merkle
+```
+where `oracle_sig` is a valid signature for `oracle_pubkey`, over `SHA256([judgement, bet_hash])`. 
+
+If it is unlocked, then judgement is the percentage of money that goes to participant 2, extra money goes to participant 1.
