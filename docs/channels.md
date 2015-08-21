@@ -101,7 +101,7 @@ There are at least 3 types of bets: hashlock, oracle, and signature. All 3 types
 
 Each of the 3 types of bet gets unlocked in a different way. 
 
-## Signature bets
+##### Signature bets
 
 are unlocked by `{pubkey:Pubkey, data:Binary, sig:Signature}` where `sig` is a valid signature over `data` for `pubkey`.
 `pubkey` and `data` needs to satisfy: `SHA256([pubkey, data])==Merkle`.
