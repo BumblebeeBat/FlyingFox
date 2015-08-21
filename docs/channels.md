@@ -22,9 +22,13 @@ Limitations that channels have compared with on-blockchain tx:
 Example of the part of a channel that lives in the blockchain consensus state:
 
 {pub1:Pubkey,
+
 pub2:Pubkey,
+
 amount1:Integer,
+
 amount2:Integer,
+
 delay:Integer}
 
 amount1 is how much money pub1 has deposited into the channel. amount2 is how much money pub2 has deposited into the channel.
@@ -32,10 +36,15 @@ amount1 is how much money pub1 has deposited into the channel. amount2 is how mu
 Example of a channel contract that lives in channel state:
 
 {nonce:Integer,
+
 pub1:Pubkey,
+
 pub2:Pubkey,
+
 bets:[Bet,Bet...],
+
 fast:Bool,
+
 amount:Integer}
 
 amount is how much money is moved from the amount1 pile to the amount2 pile on the blockchain. 
@@ -47,9 +56,13 @@ The nonce increases when new payments are made. Only the highest-nonced signed c
 Creating a channel, or increasing the amount of money in a channel:
 
 {to:Bool,
+
 amount:Integer,
+
 delay:Integer,
+
 pub1:Pubkey,
+
 pub2:Pubkey}
 
 to- tells which side of the channel to put your money into. It is possible to put money into channels you don't control.
