@@ -1,21 +1,17 @@
 # Channels
 
-Why would you want to use channels?
-
-1. You can spend money as fast as sending a message.
-2. Your payments and bets inside of a channel can be private.
-3. No fee.
-4. Blockchain scalability.
-
-It is possible to create channels with all these properties:
+It is possible to create secure channels with all these features:
 
 1. You can spend money in them without publishing anything to the blockchain.
 2. The money can spend in either direction.
-3. Each additional hash-locked transaction increases the memory requirements linearly.
+3. Each additional hash-locked transaction or bet increases the memory requirements linearly.
 4. No expiration date on the channel.
 5. You don't trust your partner.
+6. No fee.
+7. Spend money as fast as sending a message.
+8. Payments and bets inside of a channel can be private.
 
-Bitcoin channels will eventually be able to do everything except #3.
+Bitcoin channels will eventually be able to do everything except #3, in bitcoin's case each additional hash-lock in a channel increases the computation and space requirements exponentially.
 
 #### Limitations that channels have, compared with on-blockchain tx:
 
