@@ -2,23 +2,18 @@
 
 It is possible to create channels with all these properties:
 
-1) You can spend money in them without publishing anything to the blockchain.
-
-2) The money can spend in either direction.
-
-3) Each additional hash-locked transaction or bet increases the memory requirements linearly.
-
-4) No expiration date on the channel.
-
-5) You don't trust your partner.
+1. You can spend money in them without publishing anything to the blockchain.
+2. The money can spend in either direction.
+3. Each additional hash-locked transaction or bet increases the memory requirements linearly.
+4. No expiration date on the channel.
+5. You don't trust your partner.
 
 Bitcoin channels will eventually be able to do everything except #3.
 
-Limitations that channels have, compared with on-blockchain tx:
+#### Limitations that channels have, compared with on-blockchain tx:
 
-1) There is a limit of how much money is in the channel, you have to post on-chain to change this limit.
-
-2) Each channel has a delay. If your partner disappears, it takes this long to get your money out. You need to log on once every delay, or else your partner could take the money. 
+1. There is a limit of how much money is in the channel, you have to post on-chain to change this limit.
+2. Each channel has a delay. If your partner disappears, it takes this long to get your money out. You need to log on once every delay, or else your partner could take the money. 
 
 Example of the part of a channel that lives in the blockchain consensus state:
 
@@ -34,7 +29,7 @@ Example of the part of a channel that lives in the blockchain consensus state:
 
 `amount1` is how much money `pub1` has deposited into the channel. `amount2` is how much money `pub2` has deposited into the channel.
 
-Example of a channel contract that lives in channel state:
+#### Example of a channel contract that lives in channel state:
 
 ```
 {
@@ -53,7 +48,7 @@ The entire channel state consists of 2 channel contracts. One is the most recent
 
 The nonce increases when new payments are made. Only the highest-nonced signed contract is valid.
 
-Creating a channel, or increasing the amount of money in a channel:
+#### Creating a channel, or increasing the amount of money in a channel:
 
 ```
 { 
