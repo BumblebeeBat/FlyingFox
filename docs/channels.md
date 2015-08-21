@@ -97,9 +97,13 @@ There are at least 3 types of bets: hashlock, oracle, and signature. All 3 types
 
 `default` is a number between 0 and 100. If the channel closes and a bet is not unlocked, then where the money goes is determined by `default`. `default` is the percent of the money that goes to participant 2. Extra money goes to participant 1.
 
-Each type of bet gets unlocked in a different way. 
+#### Unlocking Bets:
 
-Signature bet are unlocked by `{pubkey:Pubkey, data:Binary, sig:Signature}` where `sig` is a valid signature over `data` for `pubkey`.
+Each of the 3 types of bet gets unlocked in a different way. 
+
+## Signature bets
+
+are unlocked by `{pubkey:Pubkey, data:Binary, sig:Signature}` where `sig` is a valid signature over `data` for `pubkey`.
 `pubkey` and `data` needs to satisfy: `SHA256([pubkey, data])==Merkle`.
 If unlocked, the money goes opposite of `default`.
 
