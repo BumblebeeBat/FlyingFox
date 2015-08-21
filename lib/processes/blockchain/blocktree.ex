@@ -1,3 +1,4 @@
+#we should delete uncles from older than the epoch ago.
 defmodule Blocktree do
   def genesis_block do
     b = %Block{height: 1, txs: [], hash: "z5cVID5hEmZcWNVRmVPRUtSN7e2Z5nXecc+8KWbxk+4=", bond_size: 1_000_000, pub: "BCmhaRq42NNQe6ZpRHIvDxHBThEE3LDBN68KUWXmCTKUZvMI8Ol1g9yvDVTvMsZbqHQZ5j8E7sKVCgZMJR7lQWc="}
