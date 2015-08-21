@@ -3,9 +3,12 @@ Channels
 It is possible to create channels with all these properties:
 
 1) You can spend money in them without publishing anything to the blockchain.
+
 2) The money can spend in either direction.
 3) Each additional hash-locked transaction or bet increases the memory requirements linearly.
+
 4) No expiration date on the channel.
+
 5) You don't trust your partner.
 
 Bitcoin channels will eventually be able to do everything except #3.
@@ -13,9 +16,11 @@ Bitcoin channels will eventually be able to do everything except #3.
 Limitations that channels have compared with on-blockchain tx:
 
 1) There is a limit of how much money is in the channel, you have to post on-chain to change this limit.
+
 2) Each channel has a delay. If your partner disappears, it takes this long to get your money out. You need to log on once every delay, or else your partner could take the money. 
 
 Example of the part of a channel that lives in the blockchain consensus state:
+
 {pub1:Pubkey,
 pub2:Pubkey,
 amount1:Integer,
@@ -25,6 +30,7 @@ delay:Integer}
 amount1 is how much money pub1 has deposited into the channel. amount2 is how much money pub2 has deposited into the channel.
 
 Example of a channel contract that lives in channel state:
+
 {nonce:Integer,
 pub1:Pubkey,
 pub2:Pubkey,
@@ -39,6 +45,7 @@ The entire channel state consists of 2 channel contracts. One is the most recent
 The nonce increases when new payments are made. Only the highest-nonced signed contract is valid.
 
 Creating a channel, or increasing the amount of money in a channel:
+
 {to:Bool,
 amount:Integer,
 delay:Integer,
@@ -53,6 +60,7 @@ Change "fast" to True, have both parties sign the channel contract, and publish 
 
 Closing a channel when your partner is gone:
 Take the most recent channel contract that your partner paid you with, sign it, and publish it to the blockchain. You have to wait "delay" blocks, then you can publish a close-channel tx like
+
 {pub1:Pubkey,
 pub2:Pubkey}
 
