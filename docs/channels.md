@@ -52,7 +52,7 @@ Example of the part of a channel that lives in the blockchain consensus state:
 
 The entire channel state consists of 2 channel contracts. One is the most recent payment you sent your peer, and the other is the most recent payment your peer sent you.
 
-The nonce increases when new payments are made. Only the highest-nonced signed contract is valid.
+`nonce` increases when new payments are made. Only the highest-nonced contract that was signed by both participants is valid.
 
 #### Creating a channel, or increasing the amount of money in a channel:
 
@@ -68,10 +68,10 @@ The nonce increases when new payments are made. Only the highest-nonced signed c
 `to` tells which side of the channel to put your money into. It is possible to put money into channels you don't control. `delay` is only used when you first create a new channel. 
 
 #### Closing a channel normally:
-Change "fast" to True, have both parties sign the channel contract, and publish to the blockchain.
+Change `fast` to `True`, have both parties sign the channel contract, and publish to the blockchain.
 
 #### Closing a channel when your partner is gone:
-Take the most recent channel contract that your partner paid you with, sign it, and publish it to the blockchain. You have to wait "delay" blocks, then you can publish a close-channel tx like
+Take the most recent channel contract that your partner paid you with, sign it, and publish it to the blockchain. You have to wait `delay` blocks, then you can publish a close-channel tx like
 
 ```
 {
@@ -81,7 +81,7 @@ Take the most recent channel contract that your partner paid you with, sign it, 
 ```
 
 #### Stopping your partner when they try to cheat:
-Your partner has to wait at least delay amount of time before they can take the money, which give you time to publish the highest-nonce channel block.
+Your partner has to wait at least delay amount of time before they can take the money, which give you time to publish the highest-nonced channel block.
 
 #### About bets:
 The total amount of money in a channel is conserved. Some money could be locked to either participant, and some money could be locked into bets.
@@ -91,18 +91,20 @@ There are at least 3 types of bets: hashlock, oracle, and signature. All 3 types
 ```
 {
    amount:Integer,
-   hash:Hash,
+   merkle:Merkle,
    default:Integer
 }
 ```
 
-`hash` is the merkle root of a datastructure explaining the bet.
+`merkle` is the merkle root of a datastructure explaining the bet.
 
-Each type of bet gets unlocked in a different way. If the channel block gets published and a bet is not unlocked, then where the money goes is determined by `default`.
+`default` is a number between 0 and 100. It is the percent of the money that goes to participant 2.
 
-If a bet is a hashlock bet, then it should be possible to find 256 bits called the secret such that SHA256(secret)=Hash. The secret unlocks this type of bet.
+Each type of bet gets unlocked in a different way. If the channel closes and a bet is not unlocked, then where the money goes is determined by `default`.
 
-If the bet is an oracle bet, then `SHA256([oracle_pubkey, bet_hash])=Hash`, where `bet_hash` is the hash of the ascii text explaining the bet. To unlock this type of bet you need `{oracle_sig:Signature, judgement:Integer}` where `oracle_sig` is a valid signature for the `oracle_pubkey`, over `SHA256([judgement, bet_hash])`. If it is unlocked, then judgement is used to dermine how much of the money moves.
+If a bet is a hashlock bet, then it should be possible to find 256 bits called the secret such that `SHA256(secret)=Merkle`. The secret unlocks this type of bet.
 
-If it is a signature bet, then `SHA256([pubkey, bits])=Hash`.
-To unlock this type of bet you need `{sig:Signature}` where sig is a valid signature for pubkey over bits.
+If the bet is an oracle bet, then `SHA256([oracle_pubkey, bet_hash])=Merkle`, where `bet_hash` is the hash of the unicode text explaining the bet. To unlock this type of bet you need `{oracle_sig:Signature, judgement:Integer}` where `oracle_sig` is a valid signature for the `oracle_pubkey`, over `SHA256([judgement, bet_hash])`. If it is unlocked, then judgement is the percentage of money that goes to participant 2.
+
+If it is a signature bet, then `SHA256([pubkey, bits])=Merkle`.
+To unlock this type of bet you need valid signature for pubkey over bits.
