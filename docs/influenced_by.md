@@ -30,7 +30,7 @@ The patritia tree may be added at some point to help light nodes.
 Ethan Buchman's idea:
 The total amount of money spent in a block must be less than or equal to 1/3 of the total amount of safety deposits left by the people who signed on that block. That way, any double-spend attack ends up costing more money than can be stolen. 
 
-Jae Kwon realized that I needed to save a tree of blocks instead of a chain.
+Jae Kwon realized that I needed to save a tree of blocks instead of a chain. He also showed me how to do ephemeral encryption.
 
 from Joseph Poon http://lightning.network I take the idea of channels.
 

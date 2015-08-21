@@ -6,9 +6,7 @@ decision - A yes/no question submitted to an oracle. The oracle decides the outc
 
 cash - the basic form of currency in FlyingFox. Cash is an asset, but not a liability. It can be spent at any time. 
 
-wait-money - This form of money is unspendable. Wait-money is made out of cash. If you hold it long enough, eventually you can turn it into bonds.
-
-bonds - Users who want to earn profit by contributing to the consensus mechanism bond some of their wait-money, and it becomes bonds. Bonds are an asset and a liability. If you fail to participate in the consensus mechanism, then your bonds quickly lose value. You can turn the bond back into cash at any time.
+bonds - When validators sign over the next valid block, some of their money becomes temporarily unaccessable. If the validator tries to cheat by signing another block at the same height, then their money is taken away.
 
 blockchain - a method of maintaining consensus over some data. 
 
