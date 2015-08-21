@@ -22,7 +22,7 @@ Limitations that channels have, compared with on-blockchain tx:
 
 Example of the part of a channel that lives in the blockchain consensus state:
 
-```json
+```
 {
   pub1:Pubkey,
   pub2:Pubkey,
@@ -36,7 +36,7 @@ Example of the part of a channel that lives in the blockchain consensus state:
 
 Example of a channel contract that lives in channel state:
 
-```json
+```
 {
   nonce:Integer,
   pub1:Pubkey,
@@ -55,7 +55,7 @@ The nonce increases when new payments are made. Only the highest-nonced signed c
 
 Creating a channel, or increasing the amount of money in a channel:
 
-```json
+```
 { 
   to:Bool,
   amount:Integer,
@@ -72,7 +72,7 @@ Change "fast" to True, have both parties sign the channel contract, and publish 
 #### Closing a channel when your partner is gone:
 Take the most recent channel contract that your partner paid you with, sign it, and publish it to the blockchain. You have to wait "delay" blocks, then you can publish a close-channel tx like
 
-```json
+```
 {
   pub1:Pubkey,
   pub2:Pubkey
@@ -87,7 +87,7 @@ The total amount of money in a channel is conserved. Some money could be locked 
 
 There are at least 3 types of bets: hashlock, oracle, and signature. All 3 types look like:
 
-```json
+```
 {
    amount:Integer,
    hash:Hash,
