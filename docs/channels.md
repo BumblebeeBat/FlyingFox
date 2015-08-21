@@ -1,10 +1,16 @@
 # Channels
 
+Why would you want to use channels?
+1. You can spend money as fast as sending a message.
+2. Your payments and bets inside of a channel can be private.
+3. No fee.
+4. Blockchain scalability.
+
 It is possible to create channels with all these properties:
 
 1. You can spend money in them without publishing anything to the blockchain.
 2. The money can spend in either direction.
-3. Each additional hash-locked transaction or bet increases the memory requirements linearly.
+3. Each additional hash-locked transaction increases the memory requirements linearly.
 4. No expiration date on the channel.
 5. You don't trust your partner.
 
@@ -13,7 +19,7 @@ Bitcoin channels will eventually be able to do everything except #3.
 #### Limitations that channels have, compared with on-blockchain tx:
 
 1. There is a limit of how much money is in the channel, you have to post on-chain to change this limit.
-2. Each channel has a delay. If your partner disappears, it takes this long to get your money out. You need to log on once every delay, or else your partner could take the money. 
+2. Each channel has a number written on it called delay. If your partner disappears, it takes this long to get your money out. You need to log on once every delay, or else your partner could take the money. 
 
 Example of the part of a channel that lives in the blockchain consensus state:
 
@@ -92,7 +98,7 @@ There are at least 3 types of bets: hashlock, oracle, and signature. All 3 types
 
 `hash` is the merkle root of a datastructure explaining the bet.
 
-Each type of bet gets unlocked in a different way. If the channel block gets published and a bet is not unlocked, then where the money goes is determined by default.
+Each type of bet gets unlocked in a different way. If the channel block gets published and a bet is not unlocked, then where the money goes is determined by `default`.
 
 If a bet is a hashlock bet, then it should be possible to find 256 bits called the secret such that SHA256(secret)=Hash. The secret unlocks this type of bet.
 
