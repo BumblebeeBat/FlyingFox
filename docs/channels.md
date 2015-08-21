@@ -1,6 +1,7 @@
 # Channels
 
 Why would you want to use channels?
+
 1. You can spend money as fast as sending a message.
 2. Your payments and bets inside of a channel can be private.
 3. No fee.
