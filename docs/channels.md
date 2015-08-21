@@ -107,6 +107,10 @@ are unlocked by `{pubkey:Pubkey, data:Binary, sig:Signature}` where `sig` is a v
 `pubkey` and `data` needs to satisfy: `SHA256([pubkey, data])==Merkle`.
 If unlocked, the money goes opposite of `default`.
 
-Hashlock bets are unlocked by a 256 bits called `secret`. It needs to satisfy `SHA256(secret)=Merkle`. If unlocked, the money goes opposite of `default`.
+##### Hashlock bets
 
-If the bet is an oracle bet, then unlocking requires `{oracle_sig:Signature, judgement:Integer, bet_hash:Hash}` where `oracle_sig` is a valid signature for the `oracle_pubkey`, over `SHA256([judgement, bet_hash])`. They need to satisfy `SHA256([oracle_pubkey, SHA256("Text of bet...")])=Merkle`. If it is unlocked, then judgement is the percentage of money that goes to participant 2, extra money goes to participant 1.
+are unlocked by a 256 bits called `secret`. It needs to satisfy `SHA256(secret)=Merkle`. If unlocked, the money goes opposite of `default`.
+
+##### Oracle bets
+
+are unlocked by `{oracle_sig:Signature, judgement:Integer, bet_hash:Hash}` where `oracle_sig` is a valid signature for the `oracle_pubkey`, over `SHA256([judgement, bet_hash])`. They need to satisfy `SHA256([oracle_pubkey, SHA256("Text of bet...")])=Merkle`. If it is unlocked, then judgement is the percentage of money that goes to participant 2, extra money goes to participant 1.
