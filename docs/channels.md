@@ -84,7 +84,7 @@ Your partner has to wait at least delay amount of time before they can take the 
 #### About bets:
 The total amount of money in a channel is conserved. Some money could be locked to either participant, and some money could be locked into bets.
 
-There are at least 3 types of bets: hashlock, oracle, and signature. All 3 types look like:
+There are at least 3 types of bets: hashlock, oracle, burn, and signature. All 3 types look like:
 
 ```
 {
@@ -96,7 +96,8 @@ There are at least 3 types of bets: hashlock, oracle, and signature. All 3 types
 
 `merkle` is the merkle root of a datastructure explaining the bet.
 
-`default` is a number between 0 and 100. If the channel closes and a bet is not unlocked, then `default` is the percent of the money that goes to participant 2. Extra money goes to participant 1.
+
+`default` is the part of money that goes to participant 2 if the bet is still locked when the channel closes. Extra money goes to participant 1.
 
 #### Unlocking Bets:
 
@@ -115,6 +116,9 @@ If unlocked, the money goes opposite of `default`.
 
 ##### Hashlock bets
 are unlocked by a 256 bits called `secret`. It needs to satisfy `SHA256(secret)=Merkle`. If unlocked, the money goes opposite of `default`.
+
+##### Burn bets
+burn bets cannot be unlocked. If the channel closes when money is in a burn bet, then that money gets burned.
 
 ##### Oracle bets
 are unlocked by 
