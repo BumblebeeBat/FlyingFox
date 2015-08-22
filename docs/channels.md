@@ -133,3 +133,5 @@ SHA256([oracle_pubkey, bet_hash])=Merkle
 where `oracle_sig` is a valid signature for `oracle_pubkey`, over `SHA256([judgement, bet_hash])`. 
 
 If it is unlocked, then judgement is the percentage of money that goes to participant 2, extra money goes to participant 1.
+
+step by step of spending money.
