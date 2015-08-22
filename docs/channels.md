@@ -3,7 +3,7 @@
 It is possible to create secure channels with all these features:
 
 1. You can spend money in them without publishing anything to the blockchain.
-2. The money can spend in either direction.
+2. The money can be spent in either direction.
 3. Each additional hash-locked transaction or bet increases the memory requirements linearly.
 4. No expiration date requiring the channel be closed by any particular date.
 5. You don't trust your partner.
