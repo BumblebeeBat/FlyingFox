@@ -5,5 +5,5 @@
               {applications,[kernel,stdlib,jiffy,cowboy,crypto]},
               {mod,{flying_fox_app,[]}},
               {env,[]},
-              {modules,[db,encryption,flying_fox_app,flying_fox_sup,hash,
+              {modules,[db,encryption,flying_fox_app,flying_fox_sup,hash,keys,
                         packer,sign]}]}.

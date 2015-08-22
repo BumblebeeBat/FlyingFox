@@ -10,7 +10,7 @@ read(F) ->
         {error, Reason} -> Reason
     end.
     
-doit()->
+doit() ->
     X = <<"{abcd:1}">>,
     save(file(), X),
     X == read(file()).
