@@ -11,7 +11,7 @@ It is possible to create secure channels with all these features:
 7. Spend money as fast as sending a message, you don't have to wait for any confirmations.
 8. Payments and bets inside of a channel can be secret from everyone except your partner.
 
-Bitcoin channels will eventually be able to do everything except #3, in bitcoin's case each additional hash-lock in a channel increases the computation and space requirements exponentially. `X^2`
+Bitcoin channels will eventually be able to do everything except #3, in bitcoin's case each additional hash-lock in a channel increases the computation and space requirements exponentially. `O(N^2)`
 
 #### Limitations that channels have, compared with on-blockchain tx:
 
@@ -19,7 +19,7 @@ Bitcoin channels will eventually be able to do everything except #3, in bitcoin'
 2. Each channel has a number written on it called delay. If your partner disappears, it takes this long to get your money out. 
 3. You need to log on once every delay, or else your partner could take the money. 
 
-Example of the part of a channel that lives in the blockchain consensus state:
+#### Example of the part of a channel that lives in the blockchain consensus state:
 
 ```
 {
