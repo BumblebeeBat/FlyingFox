@@ -66,7 +66,7 @@ The entire channel state consists of 2 channel contracts. One is the most recent
 `to` tells which side of the channel to put your money into. It is possible to put money into channels you don't control. `delay` is only used when you first create a new channel. 
 
 #### Closing a channel normally:
-Change `fast` to `True`, have both parties sign the channel contract, and publish to the blockchain.
+Create a new channel block with `fast` set to `True`, have both parties sign the channel contract, and publish to the blockchain.
 
 #### Closing a channel when your partner is gone:
 Take the most recent channel contract that your partner paid you with, sign it, and publish it to the blockchain. You have to wait `delay` blocks, then you can publish a close-channel tx like
@@ -84,7 +84,10 @@ Your partner has to wait at least delay amount of time before they can take the 
 #### About bets:
 The total amount of money in a channel is conserved. Some money could be locked to either participant, and some money could be locked into bets.
 
-There are at least 3 types of bets: hashlock, oracle, burn, and signature. All 3 types look like:
+There are at least 3 types of bets: hashlock, oracle, burn, and signature. 
+
+
+All 3 types look like:
 
 ```
 {
@@ -102,6 +105,16 @@ There are at least 3 types of bets: hashlock, oracle, burn, and signature. All 3
 #### Unlocking Bets:
 
 ##### Signature bets
+example signature bet:
+
+```
+{
+   amount:Integer,
+   merkle:Merkle,
+   to:Bool
+}
+```
+
 are unlocked by 
 ```
 {
@@ -111,16 +124,43 @@ are unlocked by
 }
 ``` 
 where `sig` is a valid signature over `data` for `pubkey`.
-`pubkey` and `data` needs to satisfy: `SHA256([pubkey, data])==Merkle`.
-If unlocked, the money goes opposite of `default`.
+`pubkey` and `data` needs to satisfy: `SHA256([pubkey, data])==merkle`.
+If the channel closes and this bet is still locked, the money goes opposite of `to`.
 
 ##### Hashlock bets
-are unlocked by a 256 bits called `secret`. It needs to satisfy `SHA256(secret)=Merkle`. If unlocked, the money goes opposite of `default`.
+
+example hashlock bet:
+
+```
+{
+   amount:Integer,
+   merkle:Merkle,
+   to:Bool
+}
+```
+
+are unlocked by a 256 bits called `secret`. It needs to satisfy `SHA256(secret)=Merkle`. If the channel is closed and this bet is still locked, the money goes opposite of `to`.
 
 ##### Burn bets
+example burn bet:
+
+```
+{
+   amount:Integer
+}
+```
 burn bets cannot be unlocked. If the channel closes when money is in a burn bet, then that money gets burned.
 
 ##### Oracle bets
+example oracle bet:
+```
+{
+   amount:Integer,
+   merkle:Merkle,
+   default:Integer
+}
+```
+
 are unlocked by 
 ```
 {
@@ -132,8 +172,8 @@ judgement:Integer
 ``` 
 They need to satisfy:
 ```
-SHA256([oracle_pubkey, bet_hash])=Merkle
+SHA256([oracle_pubkey, bet_hash])=merkle
 ```
 where `oracle_sig` is a valid signature for `oracle_pubkey`, over `SHA256([judgement, bet_hash])`. 
 
-If it is unlocked, then judgement is the percentage of money that goes to participant 2, extra money goes to participant 1.
+If it is unlocked, then judgement is the percentage of money that goes to participant 2, extra money goes to participant 1. If it is left locked, then `default` is how much goes to participant 2, and the extra goes to participant 1.
