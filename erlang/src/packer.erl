@@ -11,10 +11,9 @@ retup(X) when is_binary(hd(tl(X))) -> list_to_tuple([list_to_atom(binary_to_list
 retup(X) when hd(X) == ?KEY -> list_to_tuple(retup(tl(X)));
 retup(X) -> lists:map(fun(Z)->retup(Z) end, X).
 unpack(JSON) -> unpack_helper(jiffy:decode(JSON)).
-unpack_helper(J) when is_list(J) and (hd(J) == ?KEY) -> 
-    retup([hd(J)|unpack_helper(tl(J))]);
-unpack_helper(J) when is_list(J) -> lists:map(fun(X) -> unpack_helper(X) end, J);
-unpack_helper(J) -> J.
+unpack_helper(J) when not is_list(J) -> J;
+unpack_helper(J) when hd(J) == ?KEY -> retup([hd(J)|unpack_helper(tl(J))]);
+unpack_helper(J) -> lists:map(fun(X) -> unpack_helper(X) end, J).
 pack(X) when is_tuple(X) or is_list(X) -> jiffy:encode(untup(X));
 pack(X) -> jiffy:encode(X).
 
