@@ -3,7 +3,7 @@
 It is possible to create secure channels with all these features:
 
 1. You can spend money in them without publishing anything to the blockchain.
-2. The money can spend in either direction.
+2. The money can be spent in either direction.
 3. Each additional hash-locked transaction or bet increases the memory requirements linearly.
 4. No expiration date requiring the channel be closed by any particular date.
 5. You don't trust your partner.
@@ -176,4 +176,10 @@ SHA256([oracle_pubkey, bet_hash])=merkle
 ```
 where `oracle_sig` is a valid signature for `oracle_pubkey`, over `SHA256([judgement, bet_hash])`. 
 
+<<<<<<< HEAD
 If it is unlocked, then judgement is the percentage of money that goes to participant 2, extra money goes to participant 1. If it is left locked, then `default` is how much goes to participant 2, and the extra goes to participant 1.
+=======
+If it is unlocked, then judgement is the percentage of money that goes to participant 2, extra money goes to participant 1.
+
+step by step of spending money.
+>>>>>>> 1b502babe9c587989e0b2378aba69627293c1bf6
