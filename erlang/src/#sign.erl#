@@ -48,6 +48,6 @@ test() ->
     {Pub2, Priv2} = new_key(),
     Tx = {"", Pub, Pub2},
     Signed = sign_tx(sign_tx(Tx, Pub, Priv), Pub2, Priv2),
-    verify_both(Signed, Pub2, Pub) and
-        verify_both(Signed, Pub, Pub2) and
-        not verify_both(Signed, Pub, Pub).
+    verify_both(Signed, Pub2, Pub) 
+        and verify_both(Signed, Pub, Pub2)
+        and not verify_both(Signed, Pub, Pub).

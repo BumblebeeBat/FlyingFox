@@ -16,25 +16,17 @@ defmodule Keys do
 		end
 	end
 	def store(pub, priv, brainwallet) do DB.put_function(db_location, fn() -> %{pub: pub, priv: Encryption.sym_enc(brainwallet, priv)}	end) end
-  #def handle_cast({:new, brainwallet}, x) do
-	#	{pub, priv} = CryptoSign.new_key
-	#	IO.puts("new key #{inspect pub}")
-	#	store(pub, priv, brainwallet)
-		#DB.put_function(db_location, fn() -> %{pub: pub, priv: Encryption.sym_enc(brainwallet, priv)}	end)
-	#	{:noreply, {pub, priv}}
-	#end
   def handle_cast({:load, pub, priv, brainwallet}, x) do
 		#store on harddrive. If you already have a pub/priv pair loaded, it will NOT replace it.
 		x = DB.get_raw(db_location)
 		if x.priv == nil do	store(pub, priv, brainwallet) end
-		#DB.put_function(db_location, fn() -> %{pub: pub, priv: Encryption.sym_enc(brainwallet, priv)}	end)
 		{:noreply, {pub, priv}}
 	end
 	def handle_cast({:unlock, brainwallet}, _) do
 		x = DB.get_raw(db_location)
 		priv = Encryption.sym_dec(brainwallet, x.priv)
 		{:noreply, {x.pub, priv}}
-		end
+	end
 	def handle_cast(:lock, {pub, priv}) do {:noreply, {pub, nil}}	end
 	def handle_cast({:change_password, current, new}, {pub, priv}) do
 		x = DB.get_raw(db_location)
