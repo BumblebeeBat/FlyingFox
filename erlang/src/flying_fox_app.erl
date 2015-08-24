@@ -10,11 +10,13 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
+    %application:ensure_all_started(flying_fox).
     flying_fox_sup:start_link().
 
 start() ->
     io:fwrite("here"),
-    application:start(flying_fox).
+    application:ensure_all_started(flying_fox).
+%flying_fox_sup:start_link().
 %flying_fox_sup:start_link().
 
 stop(_State) ->

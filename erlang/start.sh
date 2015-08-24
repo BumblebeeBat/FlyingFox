@@ -1,2 +1,2 @@
 rebar compile
-erl -pa ebin -pa deps/jiffy/ebin/ -pa deps/cowboy/ebin/
+erl -pa ebin deps/*/ebin/ -eval "application:ensure_all_started(flying_fox)"

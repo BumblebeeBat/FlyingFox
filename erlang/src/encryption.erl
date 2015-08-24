@@ -1,5 +1,5 @@
 -module(encryption).
--export([doit/0]).
+-export([doit/0,sym_enc/2,sym_dec/2]).
 
 si(Key) -> crypto:stream_init(rc4, crypto:hmac(sha256, "", Key)).
 sym_enc(Key, Msg) ->

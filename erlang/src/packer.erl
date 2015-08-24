@@ -19,7 +19,7 @@ pack(X) -> jiffy:encode(X).
 
 -record(p, {p = ""}).
 test() -> 
-    Tuple = {a, 123, {c}},%is_atom(element(1, Tuple)) = True.
+    Tuple = {a, 123, {c}},%is_atom(element(1, Tuple))
     Record = #p{p=123},
     List = [[],3,[4]],
     Int = 123,
@@ -35,6 +35,4 @@ test() ->
     Record = unpack(pack(Record)),
     Complex = unpack(pack(Complex)),
     "success".
-
-    
 
