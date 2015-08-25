@@ -1,5 +1,5 @@
 -module(sign).
--export([test/0,new_key/0,verify_1/2,verify_2/2,verify_both/3,sign_tx/3,sign/2,verify_sig/3]).
+-export([test/0,new_key/0,verify_1/2,verify_2/2,verify_both/3,sign_tx/3,sign/2,verify_sig/3,shared_secret/2]).
 
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
 en(X) -> base64:encode(X).
@@ -48,6 +48,6 @@ test() ->
     {Pub2, Priv2} = new_key(),
     Tx = {"", Pub, Pub2},
     Signed = sign_tx(sign_tx(Tx, Pub, Priv), Pub2, Priv2),
-    verify_both(Signed, Pub2, Pub) and
-        verify_both(Signed, Pub, Pub2) and
-        not verify_both(Signed, Pub, Pub).
+    verify_both(Signed, Pub2, Pub) 
+        and verify_both(Signed, Pub, Pub2)
+        and not verify_both(Signed, Pub, Pub).

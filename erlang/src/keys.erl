@@ -59,7 +59,6 @@ handle_cast({change_password, Current, New}, R) ->
     {noreply, R};
 handle_cast(_, X) -> {noreply, X}.
 handle_info(_, X) -> {noreply, X}.
-
 pubkey() -> gen_server:call(?MODULE, pubkey).
 sign(M) -> gen_server:call(?MODULE, {sign, M}).
 raw_sign(M) -> gen_server:call(?MODULE, {raw_sign, M}).
