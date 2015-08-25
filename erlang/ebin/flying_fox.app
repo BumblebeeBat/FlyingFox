@@ -6,4 +6,4 @@
               {mod,{flying_fox_app,[]}},
               {env,[]},
               {modules,[db,encryption,flying_fox_app,flying_fox_sup,hash,keys,
-                        packer,sign]}]}.
+                        kv,packer,sign]}]}.

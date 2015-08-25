@@ -23,6 +23,9 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-    Children = [ ?CHILD(keys, worker) ],
+    Children = [ 
+                 ?CHILD(keys, worker),
+                 ?CHILD(kv, worker)
+ ],
     {ok, { {one_for_one, 5, 10}, Children} }.
 
