@@ -2,7 +2,7 @@
 %We should add some rules about which atoms can be used with tuples. If peers can trick us into decoding new atoms, they can overflow erlang with too many atoms.
 -module(packer).
 -export([pack/1,unpack/1,test/0]).
--define(KEY, "tp").
+-define(KEY, <<"tp">>).
 untup(X) when is_tuple(X) -> [?KEY|untup(tuple_to_list(X))];
 untup(X) when is_list(X) -> lists:map(fun(Z)->untup(Z) end, X);
 untup(X) -> X.

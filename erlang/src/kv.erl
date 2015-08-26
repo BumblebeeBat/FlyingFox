@@ -4,7 +4,7 @@
 init(ok) -> {ok, dict:new()}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
-terminate(_, _) -> io:format("kv died"), ok.
+terminate(_, _) -> io:format("kv died!"), ok.
 handle_info(_, X) -> {noreply, X}.
 handle_call(keys, _From, D) -> {reply, dict:fetch_keys(D), D};
 handle_call({get, V}, _From, D) -> 
