@@ -87,7 +87,7 @@ defmodule ChannelManager do
 		if Keys.pubkey == x.data.pub do d2 = d2 * -1 end
 		if is_binary(min_amount) do min_amount = String.to_integer(min_amount) end
 		cond do
-			#checking if nil is a joke. you need to see if it is a valid signature or not.
+			#you need to see if it is a valid signature or not.
 			not Keys.pubkey in [tx.data.pub, tx.data.pub2] ->
 				IO.puts("channel isn't for me")
 				false

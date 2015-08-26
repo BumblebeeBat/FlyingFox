@@ -12,6 +12,8 @@ glossary.md is a list of words useful for understanding this project.
 
 goal.md gives a non-technical explanation of what is being made.
 
+channels.md is a spec for channels that is supposed to be good enough that you could implement channels on another blockchain after reading it.
+
 failure_modes.md explains 3 types of attacks that can be conducted against proof of stake, and compares flying foxes defences to existing byzantine fault tolerant ideas especially tendermint.
 
 security.py is where I calculate that 1/2 need to be byzantine in order to successfully attack.

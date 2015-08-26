@@ -10,8 +10,9 @@ It is possible to create secure channels with all these features:
 6. No fee for spending funds through the channel.
 7. Spend money as fast as sending a message, you don't have to wait for any confirmations.
 8. Payments and bets inside of a channel can be secret from everyone except your partner.
+9. Channel block can be OTR encrypted, so that the participants can have deniability for non-final channel blocks, allowing betting and trading in secret.
 
-Bitcoin channels will eventually be able to do everything except #3, in bitcoin's case each additional hash-lock in a channel increases the computation and space requirements exponentially. `O(N^2)`
+Bitcoin channels will eventually be able to do everything except #9 and #3. For #3 in bitcoin, each additional hash-lock in a channel doubles the time and space requirements. `O(N^2)`
 
 #### Limitations that channels have, compared with on-blockchain tx:
 
@@ -176,10 +177,5 @@ SHA256([oracle_pubkey, bet_hash])=merkle
 ```
 where `oracle_sig` is a valid signature for `oracle_pubkey`, over `SHA256([judgement, bet_hash])`. 
 
-<<<<<<< HEAD
 If it is unlocked, then judgement is the percentage of money that goes to participant 2, extra money goes to participant 1. If it is left locked, then `default` is how much goes to participant 2, and the extra goes to participant 1.
-=======
-If it is unlocked, then judgement is the percentage of money that goes to participant 2, extra money goes to participant 1.
 
-step by step of spending money.
->>>>>>> 1b502babe9c587989e0b2378aba69627293c1bf6
