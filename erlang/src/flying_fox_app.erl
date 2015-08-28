@@ -10,8 +10,19 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
-    internal(),
-    external(),
+    Dispatch = cowboy_router:compile(
+                 [{'_', [
+                         {"/", echo_handler, []}
+                        ]}
+                  ]),
+    {ok, _} = cowboy:start_http(http, 100, [{port, 8080}], 
+                                [{env, [{dispatch, Dispatch}]}
+                                ]),
+                                                            
+    %ssl:start(),
+    %application:start(inets),
+    %application:start(cowboy),
+    %application:ensure_all_started(flying_fox).
     flying_fox_sup:start_link().
 
 %start() ->
@@ -20,6 +31,8 @@ start(_StartType, _StartArgs) ->
 
 stop(_State) ->
     ok.
+internal_listener(X) -> X.
+external_listener(X) -> X.
 internal() ->
     Func = internal_listener,
     R = "/priv/",
@@ -40,3 +53,4 @@ external() ->
     Opts = [{port, P}, {ip, IP}],
     Env = [{env, [{dispatch, Dispatch}]}],
     {ok, _Pid} = cowboy:start_http(http_external, 100, Opts, Env).
+    

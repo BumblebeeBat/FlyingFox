@@ -2,8 +2,11 @@
              [{description,"blockchain"},
               {vsn,"1"},
               {registered,[]},
-              {applications,[kernel,stdlib,jiffy,cowboy,crypto]},
+              {applications,[kernel,stdlib,jiffy,cowboy]},
               {mod,{flying_fox_app,[]}},
               {env,[]},
-              {modules,[blocks_db,blocktree,db,encryption,flying_fox_app,
-                        flying_fox_sup,hash,keys,kv,packer,sign,tcp,txs]}]}.
+              {modules,[block_dump,block_finality,block_pointers,blocks_db,
+                        blocktree,blocktree_kv,constants,db,db_array,
+                        db_blocks,db_dump,encryption,flying_fox_app,
+                        flying_fox_sup,hash,keys,kv,packer,sign,spend_tx,tcp,
+                        txs]}]}.

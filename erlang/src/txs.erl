@@ -18,5 +18,15 @@ add_tx_helper(Tx) ->
     true = valid_tx(Tx, txs(), Prev_hash),
     gen_server:cast(?MODULE, {add_tx, Tx}).
 add_tx(Tx) -> spawn(txs, add_tx_helper, Tx).
-
-valid_tx(_Tx, _Txs, _Prev_hash) -> false.
+-record(tx, {t="", d=""}).
+valid_tx(Tx, Txs, Prev_hash) ->
+    case Tx#tx.t of
+        <<"spend">> -> spend_tx:check(Tx#tx.d, Txs);
+        <<"sign">> -> sign_tx:check(Tx#tx.d, Txs);
+        <<"slasher">> -> sign_tx:check(Tx#tx.d, Txs);
+        <<"reveal">> -> reveal_tx:check(Tx#tx.d, Txs);
+        <<"to_channel">> -> to_channel_tx:check(Tx#tx.d, Txs);
+        <<"channel_block">> -> channel_block_tx:check(Tx#tx.d, Txs);
+        <<"close_channel">> -> close_channel_tx:check(Tx#tx.d, Txs)
+    end.
+        
