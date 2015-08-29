@@ -15,16 +15,17 @@ handle_call({read, Location, Bytes}, _From, X) ->
     {reply, Y, X};
 handle_call({write, Bytes}, _From, X) ->
     {ok, File} = file:open(?file, [read, write, raw]),
-    Location = filelib:file_size(File),
+    Location = filelib:file_size(?file),
     file:pwrite(File, Location, Bytes),
     file:close(File),
     {reply, {Location, size(Bytes)}, X}.
-read(Location, Bytes) -> gen_server:call(?MODULE, {read, Location, Bytes}).
-write(Bytes) -> gen_server:call(?MODULE, {write, Bytes}).
+read(Location, Bytes) -> zlib:uncompress(gen_server:call(?MODULE, {read, Location, Bytes})).
+write(Bytes) -> gen_server:call(?MODULE, {write, zlib:compress(Bytes)}).
 
 test() ->
     S = <<"1234567abcdef">>,
     {X, Y} = write(S),
+    timer:sleep(10),
     {A, Y} = write(S),
     false = A == X,
     T = read(X, Y),

@@ -29,6 +29,7 @@ init([]) ->
                  ?CHILD(blocktree_kv, worker),
                  ?CHILD(block_dump, worker),
                  ?CHILD(block_pointers, worker),
+                 ?CHILD(accounts, worker),
                  ?CHILD(block_finality, worker)
  ],
     {ok, { {one_for_one, 5, 10}, Children} }.

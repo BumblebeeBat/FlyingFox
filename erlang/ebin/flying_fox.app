@@ -5,8 +5,8 @@
               {applications,[kernel,stdlib,jiffy,cowboy]},
               {mod,{flying_fox_app,[]}},
               {env,[]},
-              {modules,[block_dump,block_finality,block_pointers,blocks_db,
-                        blocktree,blocktree_kv,constants,db,db_array,
-                        db_blocks,db_dump,encryption,flying_fox_app,
+              {modules,[accounts,block_dump,block_finality,block_pointers,
+                        blocks_db,blocktree,blocktree_kv,constants,db,
+                        db_array,db_blocks,db_dump,encryption,flying_fox_app,
                         flying_fox_sup,hash,keys,kv,packer,sign,spend_tx,tcp,
                         txs]}]}.

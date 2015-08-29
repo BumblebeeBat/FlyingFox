@@ -1,2 +1,0 @@
-%Uses a key-value store in seperate module to keep track of each address and balance.
-%genserver.
