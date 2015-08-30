@@ -1,7 +1,6 @@
 -module(db).
 -export([doit/0, save/2, read/1]).
-
-file() -> "database".
+-define(file, "database.db").
 save(F, X) -> file:write_file(F, packer:pack(X)).
 read(F) ->
     case file:read_file(F) of
@@ -14,6 +13,6 @@ read(F) ->
     
 doit() ->
     X = <<"{abcd:1}">>,
-    save(file(), X),
-    X == read(file()).
+    save(?file, X),
+    X == read(?file).
 
