@@ -1,0 +1,5 @@
+-module(create_account_tx).
+-export([check/2, doit/1]).
+-record(create_account, {pub = "", from=0, to=0, amount=0}).
+-record(acc, {balance = 0, nonce = 0, pub = ""}).
+doit(Tx) ->

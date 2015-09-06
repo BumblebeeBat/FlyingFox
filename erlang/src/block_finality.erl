@@ -14,14 +14,14 @@ handle_call(_, _From, X) -> {reply, 0, X}.
 handle_cast({append, X}, D) -> 
     {A, B} = block_dump:write(X),
     N = <<A:38, B:26>>,%2**26 ~60 mb is how long blocks can be, 2**38 ~250 GB is how big the blockchain can be. 38+26=64 bits is 8 bytes, so I defined word as 8.
-    block_pointers:append(N, ?word),
+    block_pointers:append(N),
     {noreply, D}.
 append(Block) -> gen_server:cast(?MODULE, {append, packer:pack(Block)}).
-top() -> block_pointers:height(?word).
+top() -> block_pointers:height().
 read(N) -> 
     C = top(),
     true = N < C,
-    <<A:38, B:26>> = block_pointers:get(N, 1, ?word),
+    <<A:38, B:26>> = block_pointers:read(N, 1),
     X = block_dump:read(A, B),
     packer:unpack(X).
 test() ->

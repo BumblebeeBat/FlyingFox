@@ -5,9 +5,9 @@
               {applications,[kernel,stdlib,jiffy,cowboy]},
               {mod,{flying_fox_app,[]}},
               {env,[]},
-              {modules,[block_blacklist,block_digests,block_dump,
-                        block_finality,block_pointers,blocks_db,blocktree,
-                        blocktree_kv,constants,db,db_array,db_blocks,db_dump,
-                        encryption,finality_accounts,flying_fox_app,
-                        flying_fox_sup,hash,keys,kv,packer,sign,spend_tx,tcp,
-                        txs]}]}.
+              {modules,[block_blacklist,block_dump,block_finality,
+                        block_pointers,block_tester,block_tree,blocks_db,
+                        blocktree_kv,constants,create_account_tx,db,db_array,
+                        db_blocks,db_dump,encryption,finality_accounts,
+                        finality_channels,flying_fox_app,flying_fox_sup,hash,
+                        hashmath,keys,kv,packer,sign,spend_tx,tcp,txs]}]}.

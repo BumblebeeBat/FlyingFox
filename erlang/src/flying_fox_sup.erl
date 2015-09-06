@@ -26,11 +26,12 @@ init([]) ->
     Children = [ 
                  ?CHILD(keys, worker),
                  ?CHILD(kv, worker),
-                 %?CHILD(accounts, worker),
+                 %?CHILD(finality_accounts, worker),
+                 ?CHILD(finality_channels, worker),
                  ?CHILD(blocktree_kv, worker),
                  ?CHILD(block_dump, worker),
                  ?CHILD(block_pointers, worker),
-                 ?CHILD(block_digests, worker),
+                 ?CHILD(block_tree, worker),
                  ?CHILD(block_finality, worker)
  ],
     {ok, { {one_for_one, 5, 10}, Children} }.

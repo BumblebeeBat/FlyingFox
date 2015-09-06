@@ -1,0 +1,36 @@
+write(Signed_Block) -> 
+    %if we already calculated the digest for this block before, then don't do it again, and don't do the blacklist stuff.
+    Block = Signed_block#signed.data,
+    BH = hash:doit(Block),
+    false = contains(keys(), BH),%because of the way keys is used here, we are creating a race condition. the write/1 function needs to be owned by a thread. how about: block_tester.erl
+    BL = block_blacklist:read(),
+    false = contains(BL, BH),
+    block_blacklist:append(BH),
+    %make sure the signature matches the pubkey in data.
+%Slasher needs to be general enough to punish validators for signing on anything that could get accepted by this function.
+%use hashmath to make sure validators are valid.
+%only add blocks that 
+%were validated by enough signers,
+%can be used to slash those signers, if they double-signed.
+%if it passes all the tests, add it to the blocks kv.
+%if it is heigher than our current height, call goto on it.
+    
+    true = is_record(Block, block),
+    Size = size(packer:pack(Block)),
+    true = Block#block.bond_size > constants:consensus_byte_price() * Size,
+    Parent = block_digests:get(Block#block.hash),
+    Parent#block.height = Block#block.height - 1,
+    Accounts_dict = dict:new(),
+    Channels_dict = dict:new(),
+%give out rewards for validators in the digest.
+%take fee from block creator in the digest.
+    Parent_key = 0,
+    Key = hash:doit(Block),
+    %store signed block, by hash, in blocktree_kv.
+    gen_server:cast(?MODULE, {write, Key, Accounts_dict, Channels_dict, Parent_key, Signed_Block}),
+    block_blacklist:remove(BH),
+    block_blacklist:remove_old(Height).
+    
+%if we changed top block:
+  %if we are above height epoch, we may need to prune one or more blocks.
+  %dump the mempool.
