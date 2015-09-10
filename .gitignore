@@ -56,3 +56,5 @@ target/
 /erl_crash.dump
 /deps/
 /dbs/
+
+/erlang/deps/

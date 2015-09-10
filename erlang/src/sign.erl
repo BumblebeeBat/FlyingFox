@@ -35,7 +35,7 @@ sign_tx(S, Pub, Priv) when element(1, S) == signed ->
     Sig = sign(T, Priv),
     if
         Pub == element(2, T) -> #signed{data=T, sig=Sig, sig2=S#signed.sig2, revealed=V};
-        Pub == element(3, T) -> U = #signed{data=T, sig=S#signed.sig, sig2=Sig, revealed=V}
+        Pub == element(3, T) -> #signed{data=T, sig=S#signed.sig, sig2=Sig, revealed=V}
     end;
 sign_tx(S, Pub, Priv) ->
     Sig = sign(S, Priv),

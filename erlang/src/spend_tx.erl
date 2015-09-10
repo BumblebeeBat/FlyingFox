@@ -1,16 +1,22 @@
 -module(spend_tx).
--export([doit/1]).
--record(spend, {pub = "", from=0, to=0, amount=0}).
+-export([doit/4]).
+-record(spend, {from = 0, nonce = 0, to = 0, amount = 0}).
 -record(acc, {balance = 0, nonce = 0, pub = ""}).
-doit(Tx) ->
-    To = block_tree:acc(Tx#spend.to),
-    F = block_tree:acc(Tx#spend.from),
+doit(Tx, ParentKey, Accounts, Channels) ->
+    To = block_tree:account(Tx#spend.to, ParentKey, Accounts),
+    F = block_tree:account(Tx#spend.from, ParentKey, Accounts),
     A = Tx#spend.amount,
     NT = #acc{nonce = To#acc.nonce, 
               pub = To#acc.pub, 
               balance = To#acc.balance + A},
-    NF = #acc{nonce = F#acc.nonce, 
+    NF = #acc{nonce = F#acc.nonce + 1, 
               pub = F#acc.pub, 
               balance = F#acc.balance - A},
-    {[NT, NF], []}.
+    Nonce = NF#acc.nonce,
+    Nonce = Tx#spend.nonce,
+    true = NT#acc.balance > 0,
+    true = NF#acc.balance > 0,
+    Accounts2 = dict:store(Tx#spend.to, NT, Accounts),
+    Accounts3 = dict:store(Tx#spend.from, NF, Accounts2),
+    {Accounts3, Channels}.
 

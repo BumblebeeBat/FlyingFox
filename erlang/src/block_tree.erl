@@ -1,6 +1,6 @@
 -module(block_tree).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/5,top/0,read/1,account/2,channel/2,keys/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,account/3,channel/2,keys/0]).
 -record(block, {height = 0, txs = [], hash = "", bond_size = 1000000, pub = ""}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
 -record(x, {accounts = 0, channels = 0, block = 0, parent = finality}).
@@ -49,10 +49,32 @@ handle_cast({write, K, V}, D) ->
 top() -> gen_server:call(?MODULE, top).
 keys() -> gen_server:call(?MODULE, keys).
 read(K) -> gen_server:call(?MODULE, {read, K}).
-write(Key, AccountsDict, ChannelsDict, ParentKey, SignedBlock) ->
+write(SignedBlock) ->
+    Block = SignedBlock#signed.data,
+    ParentKey = Block#block.hash,
+    Parent = get(ParentKey),
+    Height = Parent#block.height + 1,
+    Height = Block#block.height,
+%were validated by enough signers,
+%check that the amount bonded is sufficiently big compared to the amount being spent, and the size of the block.
+    Size = size(packer:pack(Block)),
+    true = Block#block.bond_size > constants:consensus_byte_price() * Size,
+    {AccountsDict, ChannelsDict} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new()),
+%give out rewards for validators in the digest.
+%take fee from block creator in the digest.
+    %make sure there is no negative money
+
+    Key = hash:doit(SignedBlock#signed.data),
     V = #x{accounts = AccountsDict, channels = ChannelsDict, block = SignedBlock, parent = ParentKey},
     %possibly change top block, and prune one or more blocks, and merge a block with the finality databases.
     gen_server:cast(?MODULE, {write, Key, V}).
+account(N, H, AccountsDict) ->
+    %Keys = dict:keys(AccountsDict),
+    B = dict:is_key(N, AccountsDict),
+    if
+        B -> dict:fetch(N, AccountsDict);
+        true -> account(N, H)
+    end.
 account(N, finality) -> finality_accounts:read(N);
 account(N, H) ->
     X = read(H),

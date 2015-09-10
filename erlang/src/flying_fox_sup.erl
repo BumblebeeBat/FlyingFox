@@ -26,7 +26,7 @@ init([]) ->
     Children = [ 
                  ?CHILD(keys, worker),
                  ?CHILD(kv, worker),
-                 %?CHILD(finality_accounts, worker),
+                 ?CHILD(finality_accounts, worker),
                  ?CHILD(finality_channels, worker),
                  ?CHILD(blocktree_kv, worker),
                  ?CHILD(block_dump, worker),

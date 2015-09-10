@@ -1,4 +1,0 @@
--module(hashmath).
--export([htoi/1, itoh/1, test/0]).
-
-test() -> 0.
