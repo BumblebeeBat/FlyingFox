@@ -1,5 +1,3 @@
 /deps/
 /ebin/
-keys
-accounts.db
-d_accounts.db
+*.db
