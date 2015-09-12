@@ -1,6 +1,6 @@
 -module(block_tree).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,account/3,channel/2,keys/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,account/3,channel/2, is_key/1]).
 -record(block, {height = 0, txs = [], hash = "", bond_size = 1000000, pub = ""}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
 -record(x, {accounts = 0, channels = 0, block = 0, parent = finality}).
@@ -26,7 +26,7 @@ handle_call(top, _From, D) ->
         end,
 %if it is finality, block_finality:top()
 {reply, Y, D};
-handle_call(keys, _From, D) -> {reply, dict:keys(D), D};
+handle_call({key, X}, _From, D) -> {reply, dict:is_key(X, D), D};
 handle_call({read, finality}, _From, D) -> {reply, block_finality:top(), D};
 handle_call({read, V}, _From, D) -> 
     F = dict:find(V, D),
@@ -47,7 +47,7 @@ handle_cast({write, K, V}, D) ->
     end,
     {noreply, dict:store(K, V, ND)}.
 top() -> gen_server:call(?MODULE, top).
-keys() -> gen_server:call(?MODULE, keys).
+is_key(X) -> gen_server:call(?MODULE, {key, X}).
 read(K) -> gen_server:call(?MODULE, {read, K}).
 write(SignedBlock) ->
     Block = SignedBlock#signed.data,
@@ -59,6 +59,7 @@ write(SignedBlock) ->
 %check that the amount bonded is sufficiently big compared to the amount being spent, and the size of the block.
     Size = size(packer:pack(Block)),
     true = Block#block.bond_size > constants:consensus_byte_price() * Size,
+    io:fwrite("block tree write"),
     {AccountsDict, ChannelsDict} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new()),
 %give out rewards for validators in the digest.
 %take fee from block creator in the digest.
@@ -69,7 +70,6 @@ write(SignedBlock) ->
     %possibly change top block, and prune one or more blocks, and merge a block with the finality databases.
     gen_server:cast(?MODULE, {write, Key, V}).
 account(N, H, AccountsDict) ->
-    %Keys = dict:keys(AccountsDict),
     B = dict:is_key(N, AccountsDict),
     if
         B -> dict:fetch(N, AccountsDict);
@@ -98,7 +98,7 @@ channel(N, H) ->
 
 test() -> 0.
 %S = #signed{data = {}},
- %   write([S]).
+%   write([S]).
 
     
 %this file should be block_tree.erl

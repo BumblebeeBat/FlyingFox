@@ -38,10 +38,10 @@ handle_call(status, _From, R) ->
           end,
     {reply, Out, R};
 handle_call(pubkey, _From, R) -> {reply, R#f.pub, R}.
-handle_cast({load, Pub, Priv, Brainwallet}, _R) ->
+handle_cast({load, Pub, Priv, Brainwallet}, R) ->
     store(Pub, Priv, Brainwallet),
     {noreply, #f{pub=Pub, priv=Priv}};
-handle_cast({new, Brainwallet}, _R) ->
+handle_cast({new, Brainwallet}, R) ->
     {Pub, Priv} = sign:new_key(),
     store(Pub, Priv, Brainwallet),
     {noreply, #f{pub=Pub, priv=Priv}};

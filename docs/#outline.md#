@@ -26,8 +26,11 @@ spend:
 For users to give money to each other. Creator of the tx has a fee which is >=0. The fee pays the creator of the block.
 
 sign:
+Should the size of the safety deposit be exponential by the size between the parent-grandparent gap?
 Includes hash(entropy_bit+salt).
-~54 signers are selected every block. A block requires at least 37 of them to sign for it to be valid. The balance of each signer is shrunk to pay a safety deposit. They all pay the same amount. The amount they pay is based off how much money is spent in the spend txs in this block. Total safety deposits needs to be 2.0x as big as the total amount of money spent in spend-type txs, that way if they double-spend they destroy as much money as they could be stealing.
+The balance of each signer is shrunk to pay a safety deposit. They all pay the same amount. The size of the safety deposit can only change by a small percentage from the size of safety deposit for the last block.
+Total safety deposits needs to be 2.0x as big as the total amount of money spent in spend-type txs, that way if they double-spend they destroy as much money as they could be stealing.
+
 You can be selected as a signer based on how much money you have in channels. Only one of the 2 participants in a channel is taking part in the validation process. You can make a channel with yourself. If the money in a channel is selected as signer, you don't have to close the channel. You pay the safety deposit from your address.
 If a channel is participating in the validation process, then one of the participants money will slowly shrink to zero. While their balance is non-zero, all the money in the channel is taking part in the validation process.This fee is used to pay people who actually make the sign transactions. It is a punishment for people who fail to participate.
 

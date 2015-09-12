@@ -32,7 +32,9 @@ init([]) ->
                  ?CHILD(block_dump, worker),
                  ?CHILD(block_pointers, worker),
                  ?CHILD(block_tree, worker),
-                 ?CHILD(block_finality, worker)
+                 ?CHILD(block_tester, worker),
+                 ?CHILD(block_finality, worker),
+                 ?CHILD(block_blacklist, worker)
  ],
     {ok, { {one_for_one, 5, 10}, Children} }.
 

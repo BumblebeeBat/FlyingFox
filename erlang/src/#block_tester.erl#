@@ -19,15 +19,11 @@ handle_cast(Blocks, D) ->
     {noreply, D}.
 write(SignedBlock) -> 
 %Slasher needs to be general enough to punish validators for signing on anything that could get accepted by this function.
-    io:fwrite("write\n"),
     Block = SignedBlock#signed.data,
     BH = hash:doit(Block),
-    io:fwrite("write 0\n"),
     false = block_tree:is_key(BH),
     %false = contains(block_tree:keys(), BH),
-    io:fwrite("write 1\n"),
     BL = block_blacklist:read(),
-    io:fwrite("write 1.4\n"),
     false = contains(BL, BH),
     io:fwrite("write 1.5\n"),
     block_blacklist:append(BH, Block#block.height),
