@@ -5,17 +5,28 @@
 -behaviour(gen_server).
 -export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read/1,append/1,top/0,test/0]).
 -define(word, 8).
-init(ok) -> {ok, []}.
+-record(block, {height = 0, txs = [], hash = "", bond_size = 1000000, pub = ""}).
+-record(signed, {data="", sig="", sig2="", revealed=[]}).
+init(ok) -> 
+    H = top(),
+    Genesis = #signed{data = #block{}},
+    if
+	H == 0 -> append_helper(packer:pack(Genesis));%store the genesis block into the database.
+	true -> 0 = 0
+    end,
+    {ok, []}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 terminate(_, _) -> io:format("died!"), ok.
 handle_info(_, X) -> {noreply, X}.
 handle_call(_, _From, X) -> {reply, 0, X}.
 handle_cast({append, X}, D) -> 
+    append_helper(X),
+    {noreply, D}.
+append_helper(X) ->
     {A, B} = block_dump:write(X),
     N = <<A:38, B:26>>,%2**26 ~60 mb is how long blocks can be, 2**38 ~250 GB is how big the blockchain can be. 38+26=64 bits is 8 bytes, so I defined word as 8.
-    block_pointers:append(N),
-    {noreply, D}.
+    block_pointers:append(N).
 append(Block) -> gen_server:cast(?MODULE, {append, packer:pack(Block)}).
 top() -> block_pointers:height().
 read(N) -> 

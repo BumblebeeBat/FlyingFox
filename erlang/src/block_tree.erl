@@ -7,6 +7,7 @@
 %-record(signed, {data="", sig="", sig2="", revealed=[]}).
 init(ok) -> 
     D = dict:new(),
+    %Need a hard-coded genesis block, otherwise the first block can't have a parent. but if
     %TopBlock = block_finality:top(),
     %BH = hash:doit(TopBlock#signed.data),
     %Top = #x{accounts = A, channels = C, block = TopBlock},
@@ -53,7 +54,7 @@ write(SignedBlock) ->
     Block = SignedBlock#signed.data,
     ParentKey = Block#block.hash,
     Parent = get(ParentKey),
-    Height = Parent#block.height + 1,
+    Height = Parent#signed.data#block.height + 1,%we need to add more if this skipped height. We also need to check for a higher creation fee.
     Height = Block#block.height,
 %were validated by enough signers,
 %check that the amount bonded is sufficiently big compared to the amount being spent, and the size of the block.

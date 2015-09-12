@@ -9,30 +9,22 @@ start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 terminate(_, _) -> io:format("block tester died!"), ok.
 handle_info(_, X) -> {noreply, X}.
-contains([], _) -> false;
-contains(L, X) when hd(L) == X -> true;
-contains(L, X) -> contains(tl(L), X).
 handle_call(_, _Test, D) -> {reply, 0, D}.
 handle_cast(Blocks, D) -> 
     io:fwrite("cast\n"),
+    %io:fwrite(packer:pack(hd(Blocks))),
     lists:map(fun(X) -> write(X) end, Blocks),
     {noreply, D}.
 write(SignedBlock) -> 
 %Slasher needs to be general enough to punish validators for signing on anything that could get accepted by this function.
-    io:fwrite("write\n"),
     Block = SignedBlock#signed.data,
     BH = hash:doit(Block),
-    io:fwrite("write 0\n"),
     false = block_tree:is_key(BH),
-    %false = contains(block_tree:keys(), BH),
-    io:fwrite("write 1\n"),
-    BL = block_blacklist:read(),
-    io:fwrite("write 1.4\n"),
-    false = contains(BL, BH),
+    false = block_blacklist:is_key(BH),
     io:fwrite("write 1.5\n"),
     block_blacklist:append(BH, Block#block.height),
     io:fwrite("write 2\n"),
-    block_tree:write(SignedBlock),
+    block_tree:write(SignedBlock),%err
     block_blacklist:remove(BH),
     block_blacklist:remove_old(Block#block.height).
 absorb(Blocks) -> 
@@ -42,6 +34,10 @@ test() ->
     io:fwrite("test\n"),
     Tx = [],
     Txs = [#signed{data = Tx}],
-    Block = #block{txs = Txs},
+    SignedParent = block_finality:read(block_finality:top()-1),
+    Parent = SignedParent#signed.data,
+    PHash = hash:doit(Parent),
+    Block = #block{txs = Txs, hash = PHash},
     SignedBlock = #signed{data = Block},
+    io:fwrite(packer:pack(SignedBlock)),
     absorb([SignedBlock]).
