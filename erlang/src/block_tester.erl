@@ -34,7 +34,7 @@ test() ->
     io:fwrite("test\n"),
     Tx = [],
     Txs = [#signed{data = Tx}],
-    SignedParent = block_finality:read(block_finality:top()-1),
+    SignedParent = block_finality:top_block(),
     Parent = SignedParent#signed.data,
     PHash = hash:doit(Parent),
     Block = #block{txs = Txs, hash = PHash},

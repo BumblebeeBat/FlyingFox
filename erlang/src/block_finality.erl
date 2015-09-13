@@ -3,7 +3,7 @@
 %this is made up of 2 files. the block_pointers.db file uses 8 bytes for each block. The 8 bytes encodes the position and size of the block in blocks.db file.
 -module(block_finality).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read/1,append/1,top/0,test/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read/1,append/1,top/0,top_block/0,test/0]).
 -define(word, 8).
 -record(block, {height = 0, txs = [], hash = "", bond_size = 1000000, pub = ""}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
@@ -35,6 +35,7 @@ read(N) ->
     <<A:38, B:26>> = block_pointers:read(N, 1),
     X = block_dump:read(A, B),
     packer:unpack(X).
+top_block() -> read(top()-1).
 test() ->
     append([25]),
     timer:sleep(5),

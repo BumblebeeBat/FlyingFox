@@ -5,14 +5,12 @@
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
 -record(x, {accounts = 0, channels = 0, block = 0, parent = finality}).
 %-record(signed, {data="", sig="", sig2="", revealed=[]}).
+add_block(Block, D) -> 
+    BH = hash:doit(Block#signed.data),
+    dict:store(BH, Block, D).%store blocks by hash
 init(ok) -> 
-    D = dict:new(),
-    %Need a hard-coded genesis block, otherwise the first block can't have a parent. but if
-    %TopBlock = block_finality:top(),
-    %BH = hash:doit(TopBlock#signed.data),
-    %Top = #x{accounts = A, channels = C, block = TopBlock},
-    E = dict:store(top, finality, D),
-    %F = dict:store(BH, Top, E),
+    Block = block_finality:top_block(),
+    E = add_block(Block, dict:new()),
     {ok, E}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
@@ -25,10 +23,9 @@ handle_call(top, _From, D) ->
             X == finality -> block_finality:top();
             true -> dict:fetch(top, D)
         end,
-%if it is finality, block_finality:top()
-{reply, Y, D};
+    {reply, Y, D};
 handle_call({key, X}, _From, D) -> {reply, dict:is_key(X, D), D};
-handle_call({read, finality}, _From, D) -> {reply, block_finality:top(), D};
+%handle_call({read, finality}, _From, D) -> {reply, block_finality:top(), D};%shouldn't just be top...
 handle_call({read, V}, _From, D) -> 
     F = dict:find(V, D),
     case F of
@@ -53,7 +50,9 @@ read(K) -> gen_server:call(?MODULE, {read, K}).
 write(SignedBlock) ->
     Block = SignedBlock#signed.data,
     ParentKey = Block#block.hash,
-    Parent = get(ParentKey),
+    Parent = read(ParentKey),%"undefined"
+    %io:fwrite(Parent),
+    io:fwrite("\n"),
     Height = Parent#signed.data#block.height + 1,%we need to add more if this skipped height. We also need to check for a higher creation fee.
     Height = Block#block.height,
 %were validated by enough signers,

@@ -15,16 +15,16 @@ pack(X) when is_binary(X) -> base64:encode(X);
 pack(X) when is_tuple(X) or is_list(X) -> jiffy:encode(untup(X));
 pack(X) -> jiffy:encode(X).
 
--record(p, {p = "", b = "" }).
+-record(d, {a = "", b = "" }).
 test() -> 
-    Record = #p{p=[1, 2, <<"abc">>, []], b = <<1,2,3,200>> },
+    Record = #d{a=[1, 2, <<"abc">>, []], b = <<1,2,3,200>> },
     List = [[],3,[4]],
     Int = 123,
     Bin = <<"abc">>,
     Int = unpack(pack(Int)),
     Bin = unpack_helper(pack(Bin)),
     List = unpack(pack(List)),
-    true = is_record(unpack(pack(Record)), p),
+    true = is_record(unpack(pack(Record)), d),
     Record = unpack(pack(Record)),
     true = is_binary(pack(Record)),
     "success".
