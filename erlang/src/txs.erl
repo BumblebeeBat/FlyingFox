@@ -42,10 +42,10 @@ digest([SignedTx|Txs], ParentKey, Accounts, Channels) ->
             Acc2 = block_tree:account(N2, ParentKey, Accounts),
             true = sign:verify_both(SignedTx, Acc1#acc.pub, Acc2#acc.pub);
 	true -> 
-	    N = element(2, Tx), 
+	    N = element(2, Tx),
             Acc = block_tree:account(N, ParentKey, Accounts),
-	    true = sign:verify_1(SignedTx, Acc#acc.pub)
-            %Acc#acc.nonce + 1 = element(3, Tx)
+	    io:fwrite(packer:pack(Acc)),
+	    true = sign:verify_1(SignedTx, Acc#acc.pub) %err here!!
     end,
     {NewAccounts, NewChannels} = 
         if

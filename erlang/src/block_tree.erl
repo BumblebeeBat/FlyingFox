@@ -3,14 +3,13 @@
 -export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,account/3,channel/2, is_key/1]).
 -record(block, {height = 0, txs = [], hash = "", bond_size = 1000000, pub = ""}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
--record(x, {accounts = 0, channels = 0, block = 0, parent = finality}).
-%-record(signed, {data="", sig="", sig2="", revealed=[]}).
-add_block(Block, D) -> 
-    BH = hash:doit(Block#signed.data),
-    dict:store(BH, Block, D).%store blocks by hash
+-record(x, {accounts = dict:new(), channels = dict:new(), block = 0, parent = finality}).
 init(ok) -> 
-    Block = block_finality:top_block(),
-    E = add_block(Block, dict:new()),
+    SignedBlock = block_finality:top_block(),
+    X = #x{block = SignedBlock},
+    BH = hash:doit(SignedBlock#signed.data),
+    D = dict:store(BH, X, dict:new()),%store blocks by hash
+    E = dict:store(top, BH, D),%store blocks by hash
     {ok, E}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
@@ -53,13 +52,14 @@ write(SignedBlock) ->
     Parent = read(ParentKey),%"undefined"
     %io:fwrite(Parent),
     io:fwrite("\n"),
-    Height = Parent#signed.data#block.height + 1,%we need to add more if this skipped height. We also need to check for a higher creation fee.
-    Height = Block#block.height,
+    Height = Parent#x.block#signed.data#block.height,%we need to add more if this skipped height. We also need to check for a higher creation fee.
+    NewHeight = Block#block.height,
+    true = NewHeight > Height,
 %were validated by enough signers,
 %check that the amount bonded is sufficiently big compared to the amount being spent, and the size of the block.
     Size = size(packer:pack(Block)),
     true = Block#block.bond_size > constants:consensus_byte_price() * Size,
-    io:fwrite("block tree write"),
+    io:fwrite("block tree write\n"),
     {AccountsDict, ChannelsDict} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new()),
 %give out rewards for validators in the digest.
 %take fee from block creator in the digest.
@@ -75,9 +75,10 @@ account(N, H, AccountsDict) ->
         B -> dict:fetch(N, AccountsDict);
         true -> account(N, H)
     end.
-account(N, finality) -> finality_accounts:read(N);
+account(N, finality) -> finality_accounts:read_account(N);
 account(N, H) ->
     X = read(H),
+    io:fwrite(packer:pack(X)),
     Accounts = X#x.accounts,
     Parent = X#x.parent,
     case dict:find(N, Accounts) of

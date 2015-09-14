@@ -32,12 +32,12 @@ absorb(Blocks) ->
     gen_server:cast(?MODULE, Blocks).
 test() -> 
     io:fwrite("test\n"),
-    Tx = [],
-    Txs = [#signed{data = Tx}],
+    Tx = {spend, 0},
+    Txs = [keys:sign(Tx)],
     SignedParent = block_finality:top_block(),
     Parent = SignedParent#signed.data,
     PHash = hash:doit(Parent),
-    Block = #block{txs = Txs, hash = PHash},
+    Block = #block{txs = Txs, hash = PHash, height = 1},
     SignedBlock = #signed{data = Block},
     io:fwrite(packer:pack(SignedBlock)),
     absorb([SignedBlock]).
