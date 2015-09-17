@@ -1,6 +1,6 @@
 -module(txs).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, dump/0,add_tx/1,txs/0,add_tx_helper/1,digest/4,test/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, dump/0,add_tx/1,txs/0,add_tx_helper/1,digest/3,test/0]).
 init(ok) -> {ok, []}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
@@ -30,34 +30,24 @@ add_tx(Tx) -> spawn(txs, add_tx_helper, Tx).
 -record(to_channel, {}).
 -record(close_channel, {}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
--record(acc, {balance = 0, nonce = 0, pub = ""}).
-digest([], _, Accounts, Channels) -> {Accounts, Channels};
-digest([SignedTx|Txs], ParentKey, Accounts, Channels) ->
+%-record(acc, {balance = 0, nonce = 0, pub = ""}).
+digest([], Accounts, Channels) -> {Accounts, Channels};
+digest([SignedTx|Txs], Accounts, Channels) ->
+    true = sign:verify(SignedTx, Accounts),
     Tx = SignedTx#signed.data,
-    if
-        is_record(Tx, channel_block) ->
-	    N1 = element(2, Tx), 
-            N2 = element(3, Tx), 
-            Acc1 = block_tree:account(N1, ParentKey, Accounts),
-            Acc2 = block_tree:account(N2, ParentKey, Accounts),
-            true = sign:verify_both(SignedTx, Acc1#acc.pub, Acc2#acc.pub);
-	true -> 
-	    N = element(2, Tx),
-            Acc = block_tree:account(N, ParentKey, Accounts),
-	    io:fwrite(packer:pack(Acc)),
-	    true = sign:verify_1(SignedTx, Acc#acc.pub) %err here!!
-    end,
+    io:fwrite(packer:pack(Tx)),%[-6,"x",[-6,"dict",0,16,16,8,80,48,[-6,[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]],[-6,[-6,[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]]],[-6,"dict",0,16,16,8,80,48,[-6,[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]],[-6,[-6,[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]]],[-6,"signed",[-6,"block",0,[],[],1000000,[]],[],[],[]],"finality"][-6,"spend",0]
+    io:fwrite("\nzack\n"),
     {NewAccounts, NewChannels} = 
         if
-            is_record(Tx, spend) -> spend_tx:doit(Tx, ParentKey, Accounts, Channels);
-            is_record(Tx, sign) -> sign_tx:doit(Tx, ParentKey, Accounts, Channels);%use hashmath to make sure validators are valid.
-            is_record(Tx, slasher) -> slasher_tx:doit(Tx, ParentKey, Accounts, Channels);
-            is_record(Tx, reveal) -> reveal_tx:doit(Tx, ParentKey, Accounts, Channels);
-            is_record(Tx, to_channel) -> to_channel_tx:doit(Tx, ParentKey, Accounts, Channels);
-            is_record(Tx, channel_block) -> channel_block_tx:doit(Tx, ParentKey, Accounts, Channels);
-            is_record(Tx, close_channel) -> close_channel_tx:doit(Tx, ParentKey, Accounts, Channels);
+            is_record(Tx, spend) -> spend_tx:doit(Tx, Accounts, Channels);
+            is_record(Tx, sign) -> sign_tx:doit(Tx, Accounts, Channels);%use hashmath to make sure validators are valid.
+            is_record(Tx, slasher) -> slasher_tx:doit(Tx, Accounts, Channels);
+            is_record(Tx, reveal) -> reveal_tx:doit(Tx, Accounts, Channels);
+            is_record(Tx, to_channel) -> to_channel_tx:doit(Tx, Accounts, Channels);
+            is_record(Tx, channel_block) -> channel_block_tx:doit(Tx, Accounts, Channels);
+            is_record(Tx, close_channel) -> close_channel_tx:doit(Tx, Accounts, Channels);
             true -> 1=2
         end,
-    digest(Txs, ParentKey, NewAccounts, NewChannels).
+    digest(Txs, NewAccounts, NewChannels).
 
 test() -> 0.
