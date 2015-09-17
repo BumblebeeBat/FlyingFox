@@ -1,27 +1,22 @@
 -module(block_tree).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,account/2,channel/2,absorb/1,is_key/1]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,account/2,account/3,channel/2,absorb/1,is_key/1]).
 -record(block, {height = 0, txs = [], hash = "", bond_size = 1000000, pub = ""}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
--record(x, {accounts = dict:new(), channels = dict:new(), block = 0, parent = finality}).
+-record(x, {block = 0, parent = finality, accounts = dict:new(), channels = dict:new()}).
 init(ok) -> 
     SignedBlock = block_finality:top_block(),
     X = #x{block = SignedBlock},
     BH = hash:doit(SignedBlock#signed.data),
-    D = dict:store(BH, X, dict:new()),%store blocks by hash
-    E = dict:store(top, BH, D),%store blocks by hash
+    D = dict:store(top, BH, dict:new()),
+    E = dict:store(BH, X, D),%store blocks by hash
     {ok, E}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
-terminate(_, _) -> io:format("block digest died!"), ok.
+terminate(_, _) -> io:format("block tree died!"), ok.
 handle_info(_, X) -> {noreply, X}.
 handle_call(top, _From, D) -> 
-    X = dict:fetch(top, D),
-    Y = if
-            X == finality -> block_finality:top();
-            true -> X
-        end,
-    {reply, Y, D};
+    {reply, dict:fetch(dict:fetch(top, D), D), D};
 handle_call({key, X}, _From, D) -> {reply, dict:is_key(X, D), D};
 %handle_call({read, finality}, _From, D) -> {reply, block_finality:top(), D};%shouldn't just be top...
 handle_call({read, V}, _From, D) -> 
@@ -31,11 +26,11 @@ handle_call({read, V}, _From, D) ->
         error -> {reply, "none", D}
     end.
 handle_cast({write, K, V}, D) -> 
-    Signed = read(top()),
-    CurrentTop = Signed#signed.data#block.height,
+    Top = dict:fetch(dict:fetch(top, D), D),
+    TopHeight = Top#x.block#signed.data#block.height,
     NewHeight = V#x.block#signed.data#block.height,
     ND = if
-        NewHeight > CurrentTop -> 
+        NewHeight > TopHeight -> 
                  %possible pruning, and merge digests into finality.
                  txs:dump(),
                  dict:store(top, hash:doit(V#x.block#signed.data), D);
@@ -61,7 +56,9 @@ write(SignedBlock) ->
     Size = size(packer:pack(Block)),
     true = Block#block.bond_size > constants:consensus_byte_price() * Size,
     io:fwrite("block tree write\n"),
-    {AccountsDict, ChannelsDict} = txs:digest(Block#block.txs, dict:new(), dict:new()),
+    io:fwrite(packer:pack(Block#block.txs)),
+    io:fwrite("\n"),
+    {AccountsDict, ChannelsDict} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new()),
 %give out rewards for validators in the digest.
 %take fee from block creator in the digest.
     %make sure there is no negative money
@@ -73,7 +70,9 @@ write(SignedBlock) ->
 absorb([]) -> [];
 absorb([Block|T]) -> [write(Block)|absorb(T)].
 account(N, AccountsDict) ->
-    H = read(top),
+    %H = read(top),
+    account(N, read(top), AccountsDict).
+account(N, H, AccountsDict) ->
     B = dict:is_key(N, AccountsDict),
     if
         B -> dict:fetch(N, AccountsDict);
@@ -81,8 +80,8 @@ account(N, AccountsDict) ->
     end.
 account_helper(N, finality) -> finality_accounts:read_account(N);
 account_helper(N, H) ->
-    X = read(H),
-    io:fwrite(packer:pack(X)),
+    X = read(H),%none
+    %io:fwrite(packer:pack(X)),
     Accounts = X#x.accounts,
     Parent = X#x.parent,
     case dict:find(N, Accounts) of
@@ -100,9 +99,10 @@ channel(N, H) ->
         error -> channel(N, Parent);
         {ok, Val} -> Val
     end.
+-record(spend, {from=0, to=0, nonce = 0, amount=0}).
 test() -> 
     io:fwrite("test\n"),
-    Tx = {spend, 0},%constants:master_pub()},
+    Tx = #spend{from = 0, to = 1, amount=10},
     Txs = [keys:sign(Tx)],
     SignedParent = block_finality:top_block(),
     Parent = SignedParent#signed.data,
@@ -110,4 +110,5 @@ test() ->
     Block = #block{txs = Txs, hash = PHash, height = 1},
     SignedBlock = #signed{data = Block},
     io:fwrite(packer:pack(SignedBlock)),
+    io:fwrite("\n signed block ^^^ \n"),
     absorb([SignedBlock]).
