@@ -1,8 +1,8 @@
 -module(create_account_tx).
--export([doit/4]).
+-export([doit/3]).
 -record(ca, {from = 0, nonce = 0, to = 0, pub = <<"">>, amount = 0}).
 -record(acc, {balance = 0, nonce = 0, pub = 0}).
-doit(Tx, ParentKey, Accounts, Channels) ->
+doit(Tx, ParentKey, Accounts) ->
     F = block_tree:account(Tx#ca.from, ParentKey, Accounts),
     To = block_tree:account(Tx#ca.to, ParentKey, Accounts),
     To = #acc{},%You can only fill space in the database that are empty.
@@ -20,6 +20,5 @@ doit(Tx, ParentKey, Accounts, Channels) ->
     true = NT#acc.balance > 0,
     true = NF#acc.balance > 0,
     Accounts2 = dict:store(Tx#ca.to, NT, Accounts),
-    Accounts3 = dict:store(Tx#ca.from, NF, Accounts2),
-    {Accounts3, Channels}.
+    dict:store(Tx#ca.from, NF, Accounts2).
 

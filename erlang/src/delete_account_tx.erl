@@ -1,8 +1,8 @@
 -module(delete_account_tx).
--export([doit/4]).
+-export([doit/3]).
 -record(da, {from = 0, nonce = 0, to = <<"0">>}).
 -record(acc, {balance = 0, nonce = 0, pub = ""}).
-doit(Tx, ParentKey, Accounts, Channels) ->
+doit(Tx, ParentKey, Accounts) ->
     F = block_tree:account(Tx#da.from, ParentKey, Accounts),
     To = block_tree:account(Tx#da.to, ParentKey, Accounts),
     NT = #acc{nonce = 0,
@@ -15,6 +15,5 @@ doit(Tx, ParentKey, Accounts, Channels) ->
     Nonce = Tx#da.nonce,
     true = NT#acc.balance > 0,
     Accounts2 = dict:store(Tx#da.to, NT, Accounts),
-    Accounts3 = dict:store(Tx#da.from, NF, Accounts2),
-    {Accounts3, Channels}.
+    dict:store(Tx#da.from, NF, Accounts2).
 

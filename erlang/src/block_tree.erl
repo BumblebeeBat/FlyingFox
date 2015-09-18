@@ -1,9 +1,9 @@
 -module(block_tree).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,account/2,account/3,channel/2,absorb/1,is_key/1,height/1]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,account/2,account/3,absorb/1,is_key/1,height/1]).
 -record(block, {height = 0, txs = [], hash = "", bond_size = 1000000, pub = ""}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
--record(x, {block = 0, parent = finality, accounts = dict:new(), channels = dict:new()}).
+-record(x, {block = 0, parent = finality, accounts = dict:new()}).
 init(ok) -> 
     SignedBlock = block_finality:top_block(),
     X = #x{block = SignedBlock},
@@ -58,12 +58,12 @@ write(SignedBlock) ->
 %check that the amount bonded is sufficiently big compared to the amount being spent, and the size of the block.
     Size = size(packer:pack(Block)),
     true = Block#block.bond_size > constants:consensus_byte_price() * Size,
-    {AccountsDict, ChannelsDict} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new()),
+    AccountsDict = txs:digest(Block#block.txs, ParentKey, dict:new()),
 %give out rewards for validators in the digest.
 %take fee from block creator in the digest.
 
     Key = hash:doit(SignedBlock#signed.data),
-    V = #x{accounts = AccountsDict, channels = ChannelsDict, block = SignedBlock, parent = ParentKey},
+    V = #x{accounts = AccountsDict, block = SignedBlock, parent = ParentKey},
     %possibly change top block, and prune one or more blocks, and merge a block with the finality databases.
     gen_server:cast(?MODULE, {write, Key, V}).
 absorb([]) -> ok;
@@ -88,15 +88,6 @@ account_helper(N, H) ->
         {ok, Val} -> 
             <<Balance:48, Nonce:32, P/binary>> = Val,
             {P, Nonce, Balance}
-    end.
-channel(N, finality) -> finality_channels:read(N);
-channel(N, H) ->
-    X = read(H),
-    Channels = X#x.channels,
-    Parent = X#x.parent,
-    case dict:find(N, Channels) of
-        error -> channel(N, Parent);
-        {ok, Val} -> Val
     end.
 -record(spend, {from = 0, nonce = 0, to = 0, amount = 0}).
 -record(ca, {from = 0, nonce = 0, to = 0, pub = <<"">>, amount = 0}).
