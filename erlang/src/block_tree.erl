@@ -1,6 +1,6 @@
 -module(block_tree).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,account/2,account/3,channel/2,absorb/1,is_key/1]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,account/2,account/3,channel/2,absorb/1,is_key/1,height/1]).
 -record(block, {height = 0, txs = [], hash = "", bond_size = 1000000, pub = ""}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
 -record(x, {block = 0, parent = finality, accounts = dict:new(), channels = dict:new()}).
@@ -40,6 +40,9 @@ handle_cast({write, K, V}, D) ->
 top() -> gen_server:call(?MODULE, top).
 is_key(X) -> gen_server:call(?MODULE, {key, X}).
 read(K) -> gen_server:call(?MODULE, {read, K}).
+height(K) -> 
+    X = read(K),
+    X#x.block#signed.data#block.height.
 write(SignedBlock) ->
     Block = SignedBlock#signed.data,
     BH = hash:doit(Block),
@@ -55,20 +58,16 @@ write(SignedBlock) ->
 %check that the amount bonded is sufficiently big compared to the amount being spent, and the size of the block.
     Size = size(packer:pack(Block)),
     true = Block#block.bond_size > constants:consensus_byte_price() * Size,
-    io:fwrite("block tree write\n"),
-    io:fwrite(packer:pack(Block#block.txs)),
-    io:fwrite("\n"),
     {AccountsDict, ChannelsDict} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new()),
 %give out rewards for validators in the digest.
 %take fee from block creator in the digest.
-    %make sure there is no negative money
 
     Key = hash:doit(SignedBlock#signed.data),
     V = #x{accounts = AccountsDict, channels = ChannelsDict, block = SignedBlock, parent = ParentKey},
     %possibly change top block, and prune one or more blocks, and merge a block with the finality databases.
     gen_server:cast(?MODULE, {write, Key, V}).
-absorb([]) -> [];
-absorb([Block|T]) -> [write(Block)|absorb(T)].
+absorb([]) -> ok;
+absorb([Block|T]) -> write(Block), absorb(T).
 account(N, AccountsDict) ->
     %H = read(top),
     account(N, read(top), AccountsDict).
@@ -99,11 +98,15 @@ channel(N, H) ->
         error -> channel(N, Parent);
         {ok, Val} -> Val
     end.
--record(spend, {from=0, to=0, nonce = 0, amount=0}).
+-record(spend, {from = 0, nonce = 0, to = 0, amount = 0}).
+-record(ca, {from = 0, nonce = 0, to = 0, pub = <<"">>, amount = 0}).
 test() -> 
     io:fwrite("test\n"),
-    Tx = #spend{from = 0, to = 1, amount=10},
-    Txs = [keys:sign(Tx)],
+    {Pub, _Priv} = sign:new_key(),
+    Tx1 = #ca{from = 0, nonce = 1, to=1, pub=Pub, amount=10},
+    Tx2 = #spend{from = 0, to = 1, amount=10, nonce=2},
+    
+    Txs = [keys:sign(Tx1), keys:sign(Tx2)],
     SignedParent = block_finality:top_block(),
     Parent = SignedParent#signed.data,
     PHash = hash:doit(Parent),

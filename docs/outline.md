@@ -14,10 +14,13 @@ Rules for tx:
 Every address has a nonce that updates on each tx. To be valid, the tx must include the current nonce. Each tx must reference the hash of a recent block. Block-creator, tx-creator, and signers benefit if the tx references a more recent block.
 
 tx types:
+create_account
 spend
+delete_account
 sign
 slasher
 reveal
+create_channel
 to_channel
 channel_block
 close_channel

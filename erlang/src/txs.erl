@@ -22,13 +22,15 @@ add_tx_helper(Tx) ->
     gen_server:cast(?MODULE, {add_tx, Tx}).
 add_tx(Tx) -> spawn(txs, add_tx_helper, Tx).
 %-record(tx, {pub = "", t="", d=""}).
--record(channel_block, {amount = 0, addressInt1 = 1, addressInt2 = 1}).
+-record(channel_block, {amount = 0, acc1 = 1, acc2 = 1}).
 -record(spend, {from=0, to=0, nonce = 0, amount=0}).
 -record(sign, {}).
 -record(slasher, {}).
 -record(reveal, {}).
 -record(to_channel, {}).
 -record(close_channel, {}).
+-record(ca, {from = 0, nonce = 0, to = 0, pub = <<"">>, amount = 0}).
+-record(da, {from = 0, nonce = 0, to = <<"0">>}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
 %-record(acc, {balance = 0, nonce = 0, pub = ""}).
 digest([], _, Accounts, Channels) -> {Accounts, Channels};
@@ -39,7 +41,9 @@ digest([SignedTx|Txs], ParentKey, Accounts, Channels) ->
     io:fwrite("\nzack\n"),
     {NewAccounts, NewChannels} = 
         if
+            is_record(Tx, ca) -> create_account_tx:doit(Tx, ParentKey, Accounts, Channels);
             is_record(Tx, spend) -> spend_tx:doit(Tx, ParentKey, Accounts, Channels);
+            is_record(Tx, da) -> delete_account_tx:doit(Tx, ParentKey, Accounts, Channels);
             is_record(Tx, sign) -> sign_tx:doit(Tx, ParentKey, Accounts, Channels);%use hashmath to make sure validators are valid.
             is_record(Tx, slasher) -> slasher_tx:doit(Tx, ParentKey, Accounts, Channels);
             is_record(Tx, reveal) -> reveal_tx:doit(Tx, ParentKey, Accounts, Channels);
