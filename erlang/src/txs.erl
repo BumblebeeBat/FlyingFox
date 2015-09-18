@@ -1,6 +1,6 @@
 -module(txs).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, dump/0,add_tx/1,txs/0,add_tx_helper/1,digest/3,test/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, dump/0,txs/0,digest/3,test/0]).
 init(ok) -> {ok, []}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
@@ -12,15 +12,6 @@ handle_cast(dump, _) -> {noreply, []};
 handle_cast({add_tx, Tx}, X) -> {noreply, [Tx|X]}.
 dump() -> gen_server:cast(?MODULE, dump).
 txs() -> gen_server:call(?MODULE, txs).
-add_tx_helper(Tx) ->
-    _Prev_hash = "",
-    Tx = {},
-    %true = valid_tx(Tx, txs(), Prev_hash),
-    %get digest as it currently is, and try growing it with the new tx.
-    %make sure new digest pieces don't have negative money.
-    %run checks from block_tester.
-    gen_server:cast(?MODULE, {add_tx, Tx}).
-add_tx(Tx) -> spawn(txs, add_tx_helper, Tx).
 -record(channel_block, {amount = 0, acc1 = 1, acc2 = 1}).
 -record(spend, {from=0, to=0, nonce = 0, amount=0}).
 -record(sign, {}).
