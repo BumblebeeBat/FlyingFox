@@ -5,7 +5,7 @@
 -behaviour(gen_server).
 -export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read/1,append/1,top/0,top_block/0,test/0]).
 -define(word, 8).
--record(block, {height = 0, txs = [], hash = "", bond_size = 1000000, pub = ""}).
+-record(block, {pub = "", height = 0, txs = [], hash = "", bond_size = 5000000}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
 init(ok) -> 
     H = top(),

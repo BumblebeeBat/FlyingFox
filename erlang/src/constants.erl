@@ -8,7 +8,8 @@ minimum_validators_per_block() -> 36.
 master_pub() -> <<"BPbEUW6szoYLoRBm94Ky0rxtuoXGhhGfv6r8fteMtkl1sl4ahEIhUDrAM5h6FJuz/pjQspIkN2yh5nD15HAZEPU=">>.
 max_size() -> 200000000000.%should be 200 gigabytes, does not include old blocks.
 consensus_byte_price() -> initial_coins() div max_size().
-max_address() -> max_size() div 2 div 75.%use about 50% of space to store addresses. Each one is 75 bytes
+max_address() -> max_size() div 10 div 75.%use about 10% of space to store addresses. Each one is 75 bytes
+max_channel() -> max_size() div 10 div 8.%use about 10% of space to store addresses. Each one is 75 bytes
 create_channel_fee() -> consensus_byte_price() * 75.
 create_account_fee() -> consensus_byte_price() * 75.
 delete_account_reward() -> create_account_fee() * 3 div 4. % 3/4th refund.

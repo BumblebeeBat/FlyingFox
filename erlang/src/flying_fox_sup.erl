@@ -9,11 +9,12 @@ init([]) ->
 	  ?CHILD(keys, worker),
 	  ?CHILD(kv, worker),
 	  ?CHILD(finality_accounts, worker),%rename to accounts
+	  ?CHILD(finality_channels, worker),
 	  ?CHILD(blocktree_kv, worker),
 	  ?CHILD(block_dump, worker),
 	  ?CHILD(block_pointers, worker),
-	  ?CHILD(block_tree, worker),
 	  ?CHILD(block_finality, worker),
+	  ?CHILD(block_tree, worker),
 	  ?CHILD(block_blacklist, worker)
 	],
     {ok, { {one_for_one, 5, 10}, Children} }.
