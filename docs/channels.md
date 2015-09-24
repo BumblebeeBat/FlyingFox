@@ -126,7 +126,7 @@ are unlocked by
 ``` 
 where `sig` is a valid signature over `data` for `pubkey`.
 `pubkey` and `data` needs to satisfy: `SHA256([pubkey, data])==merkle`.
-If the channel closes and this bet is still locked, the money goes opposite of `to`.
+If the channel closes and this bet is still locked, the money goes as default. If it is unlocked, then the money goes as amount.
 
 ##### Hashlock bets
 

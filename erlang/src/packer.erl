@@ -3,6 +3,8 @@
 -export([pack/1,unpack/1,test/0, untup/1, unpack_helper/1]).
 -define(KEY, -6).
 untup(X) when is_tuple(X) -> [?KEY|untup(tuple_to_list(X))];
+untup([]) -> [];
+untup([H|T]) -> [untup(H)|untup(T)];
 untup(X) when is_list(X) -> lists:map(fun(Z)->untup(Z) end, X);
 untup(X) when is_binary(X) -> base64:encode(X);
 untup(X) -> X.

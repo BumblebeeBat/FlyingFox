@@ -17,7 +17,6 @@ start(_StartType, _StartArgs) ->
     flying_fox_sup:start_link().
 
 %start() ->
-%    io:fwrite("here"),
 %    application:ensure_all_started(flying_fox).
 
 stop(_State) ->

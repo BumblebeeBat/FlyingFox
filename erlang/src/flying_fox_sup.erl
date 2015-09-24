@@ -7,8 +7,8 @@ init([]) ->
     Children = 
 	[ 
 	  ?CHILD(keys, worker),
-	  ?CHILD(finality_accounts, worker),%rename to accounts
-	  ?CHILD(finality_channels, worker),
+	  ?CHILD(accounts, worker),
+	  ?CHILD(channels, worker),
 	  ?CHILD(blocktree_kv, worker),
 	  ?CHILD(block_dump, worker),
 	  ?CHILD(block_pointers, worker),

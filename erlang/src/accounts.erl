@@ -1,11 +1,17 @@
--module(finality_channels).
+%depending on how complicated it is to compute the next top, we may have to charge an additional fee when people delete in bad spots.
+
+
+%The byte array should be backed up to disk. Instead of writing the entire thing to disk at each block, we should manipulate individual bits in the file at each block. 
+%If the bit is set to zero, then that address is ready to be written in.
+%Top should point to the lowest known address that is deleted.
+-module(accounts).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_channel/1,write/2,test/0,size/0,write_helper/3,top/0,delete/1]).
--define(file, "channels.db").
--define(empty, "d_channels.db").
-%20 bits for height. for creator... log(2, constants:max_address()) =~ at least 32 bits. The nonce needs to be at least as big as log(2, number of channels created per block). 12 bits should be fine. This limits us to creating 4096 channels per block at most.
--define(word, 8).%20+12+32 = 64 bits = 8 bytes
--record(channel, {height = 0, nonce = 0, creator = 0}).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_account/1,write/2,test/0,size/0,write_helper/3,top/0,delete/1]).
+-define(file, "accounts.db").
+-define(empty, "d_accounts.db").
+%Pub is 65 bytes. balance is 48 bits. Nonce is 32 bits. bringing the total to 75 bytes.
+-define(word, 75).
+-record(acc, {balance = 0, nonce = 0, pub = 0}).
 write_helper(N, Val, File) ->
 %since we are reading it a bunch of changes at a time for each block, there should be a way to only open the file once, make all the changes, and then close it. 
     case file:open(File, [write, read, raw]) of
@@ -18,8 +24,11 @@ write_helper(N, Val, File) ->
 init(ok) -> 
     case file:read_file(?empty) of
         {error, enoent} -> 
-            Top = 0,
-            DeletedArray = << 0:8 >>,
+            P = base64:decode(constants:master_pub()),
+            Balance = constants:initial_coins(),
+            write_helper(0, <<Balance:48, 0:32, P/binary>>, ?file),
+            Top = 1,
+            DeletedArray = << 1:1 , 0:7 >>,
             write_helper(0, DeletedArray, ?empty);
         {ok, DeletedArray} ->
             Top = walk(0, DeletedArray)
@@ -43,7 +52,7 @@ handle_cast({delete, N}, {Top, Array}) ->
     write_helper(N div 8, <<NewByte>>, ?empty),
     <<A:N,_:1,B/bitstring>> = Array,
     NewArray = <<A:N,0:1,B/bitstring>>,
-    write_helper(N, #channel{}, ?file),
+    write_helper(N, #acc{}, ?file),
     {noreply, {min(Top, N), NewArray}};
 handle_cast({write, N, Val}, {Top, Array}) -> 
     S = size(),
@@ -65,33 +74,28 @@ top() -> gen_server:call(?MODULE, top).
 delete(N) -> gen_server:cast(?MODULE, {delete, N}).
 read(N, Bytes, F) -> 
     {ok, File} = file:open(F, [read, binary, raw]),
-    io:fwrite("finality channels read\n"),
-    io:fwrite(F),
-    io:fwrite("\n"),
-    io:fwrite(integer_to_list(N)),
-    io:fwrite("\n"),
-    io:fwrite(integer_to_list(Bytes)),
-    io:fwrite("\n"),
     {ok, X} = file:pread(File, N, Bytes),
     file:close(File),
     X.
-read_channel(N) -> %maybe this should be a call too, that way we can use the ram to see if it is already deleted?
+read_account(N) -> %maybe this should be a call too, that way we can use the ram to see if it is already deleted?
     T = top(),
     if
-	N >= T -> #channel{};
+	N >= T -> #acc{};
 	true ->
 	    X = read(N*?word, ?word, ?file),%if this is above the end of the file, then just return an account of all zeros.
-	    <<Height:20, Nonce:12, Creator:32>> = X,
-	    #channel{height = Height, nonce = Nonce, creator = Creator}
-	    
+	    <<Balance:48, Nonce:32, P/binary>> = X,
+	    Pub = base64:encode(P),
+	    #acc{balance = Balance, nonce = Nonce, pub = Pub}
     end.
-write(N, Ch) ->
-    Val = << (Ch#channel.height):20,
-	     (Ch#channel.nonce):12,
-	     (Ch#channel.creator):32 >>,
+write(N, Acc) ->
+    P = base64:decode(Acc#acc.pub),
+    65 = size(P),
+    Val = << (Acc#acc.balance):48, 
+             (Acc#acc.nonce):32, 
+             P/binary >>,
     gen_server:cast(?MODULE, {write, N, Val}).
 size() -> filelib:file_size(?file) div ?word.
-append(Ch) -> write(top(), Ch).
+append(Acc) -> write(top(), Acc).
 test() -> 
     << 13:4 >> = << 1:1, 1:1, 0:1, 1:1 >>,%13=8+4+1
     0 = walk(0, << >>),
@@ -104,13 +108,10 @@ test() ->
     5 = walk(0, << 31:5 >>),
     5 = walk(2, << 31:5 >>),
     5 = walk(5, << 31:5 >>),
-    %channels.db needs to be empty before starting node to run this test.
-    Height = 2,
-    Creator = 0,
-    Nonce = 1837,
-    A = #channel{height = Height, creator = Creator, nonce = Nonce},
-    0 = top(),
-    append(A),
+    %accounts.db needs to be empty before starting node to run this test.
+    Pub = <<"BIXotG1x5BhwxVKxjsCyrgJASovEJ5Yk/PszEdIoS/nKRNRv0P0E8RvNloMnBrFnggjV/F7pso/2PA4JDd6WQCE=">>,
+    Balance = 50000000,
+    A = #acc{pub = Pub, nonce = 0, balance = Balance},
     1 = top(),
     append(A),
     2 = top(),
@@ -131,8 +132,7 @@ test() ->
     1 = top(),
     append(A),
     3 = top(),
-    Ch = read_channel(0),
-    Height = Ch#channel.height,
-    Creator = Ch#channel.creator,
-    Nonce = Ch#channel.nonce,
+    Acc = read_account(0),
+    Pub = Acc#acc.pub,
+    Balance = Acc#acc.balance,
     success.

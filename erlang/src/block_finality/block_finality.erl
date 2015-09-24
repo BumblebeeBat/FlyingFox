@@ -1,11 +1,13 @@
+%Each block has both a height, and number. Blocks reference each other by height, and the database looks up blocks by height.
 %Blocks only get appended to this once we are sure that block will be part of the blockchain.
-%gives O(1) lookup time for blocks. Adding more blocks doesn't slow it down.
-%this is made up of 2 files. the block_pointers.db file uses 8 bytes for each block. The 8 bytes encodes the position and size of the block in blocks.db file.
+%O(1) lookup time for blocks. Adding more blocks doesn't slow it down.
+%this is made up of 3 modules. the block_pointers.db file uses 8 bytes for each block. The 8 bytes encodes the position and size of the block in block_dump.db file. block_finality.erl module gives an interface.
 -module(block_finality).
 -behaviour(gen_server).
 -export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read/1,append/1,top/0,top_block/0,test/0]).
 -define(word, 8).
--record(block, {pub = "", height = 0, txs = [], hash = "", bond_size = 5000000}).
+
+-record(block, {acc = 0, number = 0, hash = "", bond_size = 5000000, txs = []}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
 init(ok) -> 
     H = top(),

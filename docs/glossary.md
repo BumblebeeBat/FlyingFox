@@ -34,3 +34,7 @@ channel loop - example. if Alice has a channel with Bob, and Bob has a channel w
 If Alice wants to play poker with Bob, but doens't have any money in the channel with Bob, she can still use money from her channel with Charlie to play poker.
 Alice sends charlie money in their channel, and charlie simultaniously sends bob money in their channel, and bob simultaniously sends Alice money in their channel. It all cancels out so no one gains or loses anything.
 Now Alice has enough money in her channel to gamble with Bob, and no one had to publish anything to the blockchain.
+
+block height - This is how many blocks there are between the genesis, and the top of the block tree. Blocks are looked up from the database by height. 
+
+block number - This number starts at 0, and usually increments by 1 per block. This number determines who the signers are for the block. If insufficient signers can be found for number N, then the signers for block N+1 can go first, but it costs more exponentially. In the situation where a block number is skipped, the height is NOT skipped. So the block number starts equal to block height at 0, and block number grows equal to or faster than height.

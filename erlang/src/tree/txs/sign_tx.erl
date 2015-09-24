@@ -1,4 +1,4 @@
--module(hashmath).
+-module(sign_tx).
 -export([htoi/1, itoh/1, test/0]).
 htoi(H) -> << I:256 >> = H, I.
 itoh(I) -> << I:256 >>.
