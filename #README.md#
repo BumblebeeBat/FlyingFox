@@ -4,7 +4,9 @@ The goals of this project: Written as erlang OTP package This is a proof of stak
 
 Code of conduct, development guidelines: Submit pull request. If I like, I will accept. Feel free to ask me questions.
 
-#requires rebar. 
-
+#requires rebar
+git clone git://github.com/rebar/rebar.git
+cd rebar
+./bootstrap
 sh install.sh
 sh start.sh
