@@ -66,6 +66,8 @@ The entire channel state consists of 2 channel contracts. One is the most recent
 ```
 `to` tells which side of the channel to put your money into. It is possible to put money into channels you don't control. `delay` is only used when you first create a new channel. 
 
+Preferably it should be possible to make one tx that both participants sign that moves some of each of their money into the channel. That way neither person has to go first.
+
 #### Closing a channel normally:
 Create a new channel block with `fast` set to `True`, have both parties sign the channel contract, and publish to the blockchain.
 
