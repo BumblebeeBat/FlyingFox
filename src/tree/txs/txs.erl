@@ -17,12 +17,13 @@ txs() -> gen_server:call(?MODULE, txs).
 -record(sign, {}).
 -record(slasher, {}).
 -record(reveal, {}).
--record(to_channel, {}).
 -record(close_channel, {}).
 -record(ca, {from = 0, nonce = 0, to = 0, pub = <<"">>, amount = 0}).
 -record(da, {from = 0, nonce = 0, to = <<"0">>}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
--record(cc, {acc1 = 0, nonce = 0, acc2 = 1, bal1 = 0, bal2 = 0, consensus_flag = false, id = 0, fee = 0}).
+-record(tc, {acc1 = 0, acc2 = 1, nonce1 = 0, nonce2 = 0, bal1 = 0, bal2 = 0, consensus_flag = false, id = 0, fee = 0}).
+%-record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, id = 0, fee = 0}).
+%-record(tc, {acc1 = 0, nonce = 0, acc2 = 1, bal1 = 0, bal2 = 0, consensus_flag = false, id = 0, fee = 0}).
 digest([], _, Channels, Accounts, _) -> {Channels, Accounts};
 digest([SignedTx|Txs], ParentKey, Channels, Accounts, BlockGap) ->
     true = sign:verify(SignedTx, Accounts),
@@ -35,8 +36,7 @@ digest([SignedTx|Txs], ParentKey, Channels, Accounts, BlockGap) ->
             is_record(Tx, sign) -> sign_tx:doit(Tx, ParentKey, Channels, Accounts);%use hashmath to make sure validators are valid.
             is_record(Tx, slasher) -> slasher_tx:doit(Tx, ParentKey, Channels, Accounts);
             is_record(Tx, reveal) -> reveal_tx:doit(Tx, ParentKey, Channels, Accounts);
-            is_record(Tx, cc) -> create_channel_tx:doit(Tx, ParentKey, Channels, Accounts, BlockGap);
-            is_record(Tx, to_channel) -> to_channel_tx:doit(Tx, ParentKey, Channels, Accounts);
+            is_record(Tx, tc) -> to_channel_tx:doit(Tx, ParentKey, Channels, Accounts, BlockGap);
             is_record(Tx, channel_block) -> channel_block_tx:doit(SignedTx, ParentKey, Channels, Accounts);
             is_record(Tx, close_channel) -> close_channel_tx:doit(Tx, ParentKey, Channels, Accounts);
             true -> 

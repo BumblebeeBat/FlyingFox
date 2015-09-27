@@ -16,7 +16,9 @@ handle_cast({write, X, N}, D) ->
     file:pwrite(File, N*?word, X),
     file:close(File),
     {noreply, D}.
-write(X, N) -> gen_server:cast(?MODULE, {write, X, N}).
+write(X, N) -> 
+    8 = size(X),
+    gen_server:cast(?MODULE, {write, X, N}).
 append(X) -> write(X, height()).
 read(N, Many) -> 
     {ok, File } = file:open(?file, [read, binary, raw]),
@@ -25,13 +27,17 @@ read(N, Many) ->
     X.
 height() -> filelib:file_size(?file) div ?word.
 test() -> 
-    A = round(math:pow(2, 48)) - 1,
-    C = <<A:48>>,
+    A = round(math:pow(2, 32)) - 1,
+    C = <<A:32>>,
     B = <<"ABCD">>,
-    X = << B/binary, C/binary >>,
-    write(X, 2),
-    write(<<"          ">>, 1),
-    write(<<"asdfghjkl;">>, 0),
+    X2 = << B/binary, C/binary >>,
+    write(X2, 2),
+    X1 = <<"        ">>,
+    X0 = <<"asdfghjk">>,
+    write(X1, 1),
+    write(X0, 0),
     timer:sleep(200),
-    read(0, 3).
+    X = << X0/binary, X1/binary, X2/binary>>,
+    X = read(0, 3),
+    success.
 

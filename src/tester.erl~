@@ -1,0 +1,6 @@
+-module(tester).
+-export([doit/0]).
+doit() ->
+    success = block_dump:test(),
+    success.
+    

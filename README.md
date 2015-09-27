@@ -1,10 +1,15 @@
 Donations: 1GbpRPE83Vjg73KFvTVZ4EnS2qNkiLY5TT
 
-The goals of this project: Written as erlang OTP package This is a proof of stake blockchain a betting blockchain in any language, including EVM, Spanish, Python, C, Chinese, and English. Uses channels for payments and for betting. Can connect channels to bet on things in common, to play a game like poker accross channels.
+The goals of this project: 
+*An Erlang/OTP package 
+*Allows betting blockchain in any language, including EVM, Spanish, Python, C, Chinese, and English. 
+*Uses lightening network channels for payments and for betting. 
+*Proof of stake blockchain where each peer's power in the consensus process is determined by how much money they have locked in channels.
 
-Code of conduct, development guidelines: Submit pull request. If I like, I will accept. Feel free to ask me questions.
+Code of conduct, development guidelines: Submit pull requests. If I like, I will accept. Feel free to ask me questions.
 
-#requires rebar. 
+Install script:
+install.sh
 
-sh install.sh
+Start your node so you can spend money:
 sh start.sh

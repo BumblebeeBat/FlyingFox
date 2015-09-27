@@ -28,6 +28,6 @@ test() ->
     timer:sleep(10),
     {A, Y} = write(S),
     false = A == X,
-    T = read(X, Y),
-    true = T == S.
-    
+    S = read(X, Y),
+    S = read(A, Y),
+    success.

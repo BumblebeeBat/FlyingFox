@@ -29,4 +29,4 @@ test() ->
     Record = {f, Binary},
     Sig = recieve_msg(send_msg(Record, keys:pubkey())),
     true = Sig#msg.msg == Record,
-    "success".
+    success.

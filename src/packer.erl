@@ -29,4 +29,4 @@ test() ->
     true = is_record(unpack(pack(Record)), d),
     Record = unpack(pack(Record)),
     true = is_binary(pack(Record)),
-    "success".
+    success.

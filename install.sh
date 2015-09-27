@@ -1,3 +1,4 @@
+#first install rebar package manager
 if [ -e "rebar" ]
 then
     echo "rebar already installed"
@@ -8,5 +9,6 @@ else
     cp rebar ..
     cd ..
 fi
+#use rebar to install other dependencies, explained in rebar.config
 ./rebar get
 ./rebar compile

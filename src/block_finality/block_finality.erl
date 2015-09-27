@@ -39,7 +39,12 @@ read(N) ->
     packer:unpack(X).
 top_block() -> read(top()-1).
 test() ->
-    append([25]),
+    X = [25],
+    Y = {a, 1, <<"abc">>},
+    append(X),
+    append(Y),
     timer:sleep(5),
-    read(top() - 1).
-%read(0).
+    X = read(top() - 2),
+    Y = read(top() - 1),
+    success.
+

@@ -9,7 +9,6 @@ init([]) ->
 	  ?CHILD(keys, worker),
 	  ?CHILD(accounts, worker),
 	  ?CHILD(channels, worker),
-	  ?CHILD(blocktree_kv, worker),
 	  ?CHILD(block_dump, worker),
 	  ?CHILD(block_pointers, worker),
 	  ?CHILD(block_finality, worker),

@@ -1,0 +1,39 @@
+-module(to_channel_tx).%used to create a channel, or increase the amount of money in it.
+-export([doit/5]).
+-record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, id = 0, fee = 0}).
+%-record(tc, {acc1 = 0, nonce = 0, acc2 = 1, bal1 = 0, bal2 = 0, consensus_flag = false, id = 0, fee = 0}).%id is used to decide how deep on the hard-drive to store it.
+-record(channel, {height = 0, creator = 0, nonce = 0}).
+-record(acc, {balance = 0, nonce = 0, pub = ""}).
+doit(Tx, ParentKey, Channels, Accounts, BlockGap) ->
+    From = Tx#tc.acc1,
+    false = From == Tx#tc.acc2,
+    Acc1 = block_tree:account(Tx#tc.acc1, ParentKey, Accounts),
+    Channel = block_tree:channel(Tx#tc.id, ParentKey, Channels),
+    EmptyChannel = #channel{},
+    if% the space isn't empty, then we don't necessarily crash. If the same pair of addresses want to increment their balances, we should let them. 
+	Channel == EmptyChannel ->
+	    OneBelow = block_tree:channel(Tx#tc.id-1, ParentKey, Channels),%You can only fill a space if the space below you is already filled.
+	    if
+		Tx#tc.id == 0 -> 1=1;
+		true -> EmptyChannel = OneBelow
+	    end,
+	    %make sure nonces match tx, and incement nonces.
+	    1=1;
+	true ->
+	    %make sure Accn in Channel match the tx.
+	    1=1
+    end,
+    true = Tx#tc.id < constants:max_channel(),
+    %Only if we are creating a new channel, the tx should match their nonce and it should increment both of their nonces
+    N1 = #acc{balance = Acc1#acc.balance - Tx#tc.bal1 - Tx#tc.bal2 - Tx#tc.fee,
+	      nonce = Acc1#acc.nonce + 1, 
+	      pub = Acc1#acc.pub},
+    true = N1#acc.balance > 0,
+    Nonce = N1#acc.nonce,
+    Nonce = Tx#tc.nonce,
+    T = block_tree:read(top),
+    Top = block_tree:height(T),
+    Ch = #channel{height = Top + BlockGap, creator = Tx#tc.acc1, nonce = Tx#tc.nonce},
+    NewAccounts = dict:store(Tx#tc.acc1, N1, Accounts),
+    NewChannels = dict:store(Tx#tc.id, Ch, Channels),
+    {NewChannels, NewAccounts}.

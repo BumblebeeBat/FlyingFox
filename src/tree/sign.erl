@@ -32,15 +32,14 @@ verify(SignedTx, Accounts) ->
     Tx = SignedTx#signed.data,
     N1 = element(2, Tx),
     Acc1 = block_tree:account(N1, Accounts),
-    case element(1, Tx) of
-	channel_block -> 
+    Type = element(1, Tx),
+    if
+	(Type == channel_block) or (Type == tc) ->
 	    N2 = element(3, Tx),
 	    Acc2 = block_tree:account(N2, Accounts),
 	    verify_both(SignedTx, Acc1#acc.pub, Acc2#acc.pub);
-	_ ->
-	    verify_1(SignedTx, Acc1#acc.pub)
+	true -> verify_1(SignedTx, Acc1#acc.pub)
     end.
-%instead of having N as an input, we should look up both N's and see if either matches our pubkey. Pub should be an input.
 sign_tx(SignedTx, Pub, Priv, Accounts) when element(1, SignedTx) == signed ->
     Tx = SignedTx#signed.data,
     R = SignedTx#signed.revealed,
