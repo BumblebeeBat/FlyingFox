@@ -10,7 +10,7 @@ The goals of this project:
 
 *Proof of stake blockchain where each peer's power in the consensus process is determined by how much money they have locked in channels.
 
-Code of conduct, development guidelines: Submit pull requests. If I like, I will accept. Feel free to ask me questions.
+Code of conduct, development guidelines: Submit pull requests. If I like, and it passes tests, I will accept. Feel free to ask me questions.
 
 Install script:
 
