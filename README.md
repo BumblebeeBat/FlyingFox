@@ -1,10 +1,12 @@
-Donations: 1GbpRPE83Vjg73KFvTVZ4EnS2qNkiLY5TT
+Bitcoin Donations: 1GbpRPE83Vjg73KFvTVZ4EnS2qNkiLY5TT
 
 The goals of this project: 
 
 *An Erlang/OTP package 
 
-*Allows betting blockchain in any language, including EVM, Spanish, Python, C, Chinese, and English. 
+*A blockchain that securely holds money.
+
+*Allows betting in any language, including EVM, Spanish, Python, C, Chinese, and English. 
 
 *Uses lightening network channels for payments and for betting. 
 
