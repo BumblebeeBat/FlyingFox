@@ -1,3 +1,6 @@
+#Each fact that the oracle judges on costs. It is best if we can reuse judgments as often as possible.
+#This language allows you to combine the outcome of bets in arbitrary ways, to create new bets.
+
 import copy
 import tools
 do={'swap':(lambda l: [l[1]]+[l[0]]+l[2:]), 

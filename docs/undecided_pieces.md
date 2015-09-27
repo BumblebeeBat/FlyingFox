@@ -1,6 +1,4 @@
-I am not very confident in the decisions on this todo list, that is why they are here instead of on github issues. I may make different decisions later.
-
-faster syncing
+I am not very confident in the decisions on this todo list, that is why they are here instead of on github issues. 
 
 maybe make random number generator better with game to stop people from revealing:
 When you commit to a bet, you at the same time open up the opportunity for anyone to make a bet against you at a 2:1 ratio (eg. someone can claim "I think you'll be heads", and if it's heads they get 1 and if it's tails they lose 2, and similarly someone can claim "I think you'll be tails", and if it's tails they get 1 and if it's heads they lose 2). So if you reveal the bit to anyone else, even via a funky scheme like ZKP, they can anonymously take expected profit from you.

@@ -1,3 +1,5 @@
+%each tx with a fee needs a to reference a recent hash. Everyone needs to be incentivized to make the hash as recent as possible.
+
 -module(txs).
 -behaviour(gen_server).
 -export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, dump/0,txs/0,digest/5,test/0]).

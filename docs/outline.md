@@ -1,5 +1,7 @@
 ## Initial State
 
+This outline has a lot of information in it that users of the blockchain wont ever need to be aware of. It is to help programmers understand how the code is organized, and some simple datastructures.
+
 One address has all the money, and there is 1 genesis block. Additional blocks can be built on top of existing blocks to build a tree. The highest block in the tree is used to determine the current state. Each block contains transactions which modify the state from the block before.
 
 ###Rules for blocks to be considered valid:
@@ -23,7 +25,6 @@ Every address has a nonce that updates on each tx. To be valid, the tx must incl
 - sign
 - slasher
 - reveal
-- create_channel
 - to_channel
 - channel_block
 - close_channel
