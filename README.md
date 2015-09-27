@@ -14,11 +14,13 @@ The goals of this project:
 
 Code of conduct, development guidelines: Submit pull requests. If I like, and it passes tests, I will accept. Feel free to ask me questions.
 
-Install script:
+Install instructions:
 
-install.sh
+First, make sure you have erlang installed. Version 18 is prefered, but older versions will probably work. Here is one way to download it: http://www.erlang.org/download.html , then run the script.
+
+sh install.sh
 
 
-Start your node so you can spend money:
+Start your node with this script:
 
 sh start.sh
