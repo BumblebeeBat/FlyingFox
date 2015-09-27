@@ -5,4 +5,5 @@
 .#*
 \#*
 rebar
-rebar_source/*
+rebar_source
+.rebar
