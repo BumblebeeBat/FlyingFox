@@ -4,8 +4,9 @@
 -define(file, "channels.db").
 -define(empty, "d_channels.db").
 %20 bits for height. for creator... log(2, constants:max_address()) =~ at least 32 bits. The nonce needs to be at least as big as log(2, number of channels created per block). 12 bits should be fine. This limits us to creating 4096 channels per block at most.
--define(word, 8).%20+12+32 = 64 bits = 8 bytes
--record(channel, {height = 0, nonce = 0, creator = 0}).
+-define(word, 9).%20+20+32 = 64 bits = 9 bytes
+-record(channel, {tc = 0, creator = 0, timeout = 0}).
+%-record(channel, {height = 0, nonce = 0, creator = 0}).
 write_helper(N, Val, File) ->
 %since we are reading it a bunch of changes at a time for each block, there should be a way to only open the file once, make all the changes, and then close it. 
     case file:open(File, [write, read, raw]) of
@@ -19,7 +20,7 @@ init(ok) ->
     case file:read_file(?empty) of
         {error, enoent} -> 
             Top = 0,
-            DeletedArray = << 0:8 >>,
+            DeletedArray = << 0:9 >>,
             write_helper(0, DeletedArray, ?empty);
         {ok, DeletedArray} ->
             Top = walk(0, DeletedArray)
@@ -33,14 +34,14 @@ walk(Top, Array) ->
     << _:Top, Tail/bitstring>> = Array,
     walk_helper(Tail, Top).
 walk_helper(<<>>, Counter) -> Counter;
-walk_helper(<< 127:8, B/bitstring>>, Counter) -> walk_helper(B, Counter + 8);
+walk_helper(<< 257:9, B/bitstring>>, Counter) -> walk_helper(B, Counter + 9);
 walk_helper(<< 1:1, B/bitstring>>, Counter) -> walk_helper(B, Counter + 1);
 walk_helper(<< 0:1, _B/bitstring>>, Counter) -> Counter.
 handle_cast({delete, N}, {Top, Array}) -> 
-    Byte = hd(binary_to_list(read(N div 8, 1, ?empty))),
-    Remove = bnot round(math:pow(2, N rem 8)),
+    Byte = hd(binary_to_list(read(N div 9, 1, ?empty))),
+    Remove = bnot round(math:pow(2, N rem 9)),
     NewByte = Byte band Remove,
-    write_helper(N div 8, <<NewByte>>, ?empty),
+    write_helper(N div 9, <<NewByte>>, ?empty),
     <<A:N,_:1,B/bitstring>> = Array,
     NewArray = <<A:N,0:1,B/bitstring>>,
     write_helper(N, #channel{}, ?file),
@@ -48,13 +49,13 @@ handle_cast({delete, N}, {Top, Array}) ->
 handle_cast({write, N, Val}, {Top, Array}) -> 
     S = size(),
     if
-        N > S -> write_helper(N div 8, <<0>>, ?empty);
+        N > S -> write_helper(N div 9, <<0>>, ?empty);
         true -> 0 = 0
     end,
-    Byte = hd(binary_to_list(read(N div 8, 1, ?empty))),
-    Remove = round(math:pow(2, N rem 8)),
+    Byte = hd(binary_to_list(read(N div 9, 1, ?empty))),
+    Remove = round(math:pow(2, N rem 9)),
     NewByte = Byte bor Remove,
-    write_helper(N div 8, <<NewByte>>, ?empty),
+    write_helper(N div 9, <<NewByte>>, ?empty),
     <<A:N,_:1,B/bitstring>> = Array,
     NewArray = <<A:N,1:1,B/bitstring>>,
     false = N > size(),
@@ -74,13 +75,13 @@ read_channel(N) -> %maybe this should be a call too, that way we can use the ram
 	N >= T -> #channel{};
 	true ->
 	    X = read(N*?word, ?word, ?file),%if this is above the end of the file, then just return an account of all zeros.
-	    <<Height:20, Nonce:12, Creator:32>> = X,
-	    #channel{height = Height, nonce = Nonce, creator = Creator}
+	    <<Tc:20, Timeout:20, Creator:32>> = X,
+	    #channel{tc = Tc, timeout = Timeout, creator = Creator}
 	    
     end.
 write(N, Ch) ->
-    Val = << (Ch#channel.height):20,
-	     (Ch#channel.nonce):12,
+    Val = << (Ch#channel.tc):20,
+	     (Ch#channel.timeout):20,
 	     (Ch#channel.creator):32 >>,
     gen_server:cast(?MODULE, {write, N, Val}).
 size() -> filelib:file_size(?file) div ?word.
@@ -98,10 +99,10 @@ test() ->
     5 = walk(2, << 31:5 >>),
     5 = walk(5, << 31:5 >>),
     %channels.db needs to be empty before starting node to run this test.
-    Height = 2,
+    Tc = 2,
     Creator = 0,
-    Nonce = 1837,
-    A = #channel{height = Height, creator = Creator, nonce = Nonce},
+    Timeout = 555,
+    A = #channel{tc = Tc, creator = Creator, timeout = Timeout},
     0 = top(),
     append(A),
     1 = top(),
@@ -125,7 +126,9 @@ test() ->
     append(A),
     3 = top(),
     Ch = read_channel(0),
-    Height = Ch#channel.height,
+    %Height = Ch#channel.height,
     Creator = Ch#channel.creator,
-    Nonce = Ch#channel.nonce,
+    %Nonce = Ch#channel.nonce,
+    Timeout = Ch#channel.timeout,
+    Tc = Ch#channel.tc,
     success.

@@ -27,7 +27,9 @@ Every address has a nonce that updates on each tx. To be valid, the tx must incl
 - reveal
 - to_channel
 - channel_block
-- close_channel
+- channel_timeout
+- channel_slash
+- channel_close
 
 #### spend:
 For users to give money to each other. Creator of the tx has a fee which is >=0. The fee pays the creator of the block.
@@ -68,24 +70,22 @@ Spends money into a channel. Possibly creates new channel. This extends the amou
 - Re-using existing predictions should be free.
 - Should be possible to make some money in the channel state dependent on the existence of a signature valid for some given address and data. This way we can hash lock the existence of a signature to a payment.
 
-#### close_channel:
-Deletes the channel, and gives it's money to users
-
 When bets are made, there is space for the oracle to write a number between 0 and 1, and sign. This determines how the outcome. This signature can be reused on other `channel_blocks` that were gambling on the same contract, so you don't have to consult the judge more than once for the same question. Eventually we want to allow the Sztorc consensus protocol for combining groups of judges' decisions.
 
 It needs to be possible to hash-lock the judges' signing of the channel block with a `spend` on a different channel block. That way you can trustlessly pay the judge to provide his signature even if the judge isn't on a channel path between you and your partner.
 
-Optionally allows you to simultaniously create a new channel between the same people with a smaller total amount of money in it.
+#### channel_timeout
 
-This comes in 2 flavors: `slasher`, `normal`, and `timeout`.
+If your partner is not helping you, this is how you start the process of closing the channel. 
+You can only use the final channel-state, or else your partner can punish you for cheating.
 
-If your channel partner uses a `channel_block` transaction to publish back in history, you should publish a `slasher` with a more recent `channel_block` that you and your partner both signed. The more recent history is the valid one.
+#### channel_slash
 
-If your partner won't show up, and you published a `channel_block`, eventually you can publish a `timeout` tx, and this closes the channel.
+If you partner tries closing the channel at the wrong point in history, this is how you provide evidence of the true final state, and punish him for cheating.
 
-Normal requires both signatures. It closes the channel immediately, so you don't have to wait.
+#### channel_close
 
-
+If you did not get slashed, and you waited delay since channel_timeout, then this is how you close the channel and get the money out.
 
 ##Who gets paid, and when?
 
