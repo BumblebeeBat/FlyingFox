@@ -1,6 +1,6 @@
 -module(block_tree).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,read_int/2,account/2,account/3,channel/2,channel/3,absorb/1,is_key/1,height/1,txs/1]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,read_int/2,account/1,account/2,account/3,channel/2,channel/3,absorb/1,is_key/1,height/1,txs/1]).
 -record(block, {acc = 0, number = 0, hash = "", bond_size = 5000000, txs = []}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
 -record(x, {block = 0, height = 0, parent = finality, accounts = dict:new(), channels = dict:new()}).
@@ -81,8 +81,10 @@ write(SignedBlock) ->
     V = #x{accounts = AccountsDict, channels = ChannelsDict, block = SignedBlock, parent = ParentKey, height = Parent#x.height + 1},
     %possibly change top block, and prune one or more blocks, and merge a block with the finality databases.
     gen_server:cast(?MODULE, {write, Key, V}).
+    %look in AccountsDict to see if any new accounts use my pubkey. If they do, add them to id module.
 absorb([]) -> ok;
 absorb([Block|T]) -> write(Block), absorb(T).
+account(N) -> account(N, read(top), dict:new()).
 account(N, AccountsDict) -> account(N, read(top), AccountsDict).
 account(N, H, AccountsDict) ->
     B = dict:is_key(N, AccountsDict),
@@ -117,29 +119,36 @@ channel_helper(N, H) ->
         {ok, Val} -> Val
     end.
 -record(spend, {from = 0, nonce = 0, to = 0, amount = 0}).
--record(ca, {from = 0, nonce = 0, to = 0, pub = <<"">>, amount = 0}).
--record(tc, {acc1 = 0, acc2 = 1, nonce1 = 0, nonce2 = 0, bal1 = 0, bal2 = 0, consensus_flag = false, id = 0, fee = 0}).
+-record(ca, {from = 0, nonce = 0, pub = <<"">>, amount = 0}).
+-record(tc, {acc1 = 0, acc2 = 1, nonce1 = 0, nonce2 = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1}).
 -record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0}).
 -record(timeout, {acc = 0, nonce = 0, fee = 0, channel_block = 0}).
-%-record(channel_slash, {acc = 0, nonce = 0, id = 0, channel_block = 0}).
 -record(channel_slash, {acc = 0, nonce = 0, channel_block = 0}).
+%-record(acc, {balance = 0, nonce = 0, pub = ""}).
 
 
 sign_all([]) -> [];
 sign_all([Tx|Txs]) -> [keys:sign(Tx)|sign_all(Txs)].
+buy_block(Txs) -> buy_block(Txs, 1).
+buy_block(Txs, BlockGap) ->
+    ParentX = read(read(top)),
+    Parent = ParentX#x.block#signed.data,
+    PHash = hash:doit(Parent),
+    N = Parent#block.number + BlockGap,
+    Block = #block{txs = Txs, hash = PHash, number = N},
+    keys:sign(Block).
 test() -> 
     {Pub, Priv} = sign:new_key(),
     Txs = sign_all(
-	    [#ca{from = 0, nonce = 1, to=1, pub=Pub, amount=10000},
-	     #spend{from = 0, nonce = 2, to = 1, amount=10}
-	    ]),
+	[#ca{from = 0, nonce = 1, pub=Pub, amount=10000},
+	 #spend{from = 0, nonce = 2, to = 1, amount=10}]),
     SignedParent = block_finality:top_block(),
     SP = read_int(0, read(top)),
     SignedParent = SP#x.block,
     SP = read(hash:doit(SignedParent#signed.data)),
     PHash = hash:doit(SignedParent#signed.data),
     Block = #block{txs = Txs, hash = PHash, number = 1},
-    SignedBlock = keys:sign(Block),
+    SignedBlock = buy_block(Txs),
     absorb([SignedBlock]),
     SP = read_int(0, hash:doit(Block)),
     SB = read_int(1, hash:doit(Block)),
@@ -147,42 +156,39 @@ test() ->
     SignedBlock = SB#x.block,
     SB = read(hash:doit(SignedBlock#signed.data)),
 
-    CreateTx1 = #tc{acc1 = 0, acc2 = 1, nonce1 = 4, nonce2 = 1, bal1 = 10000, bal2 = 1000, consensus_flag = true, id = 1, fee = 0},
-    CreateTx2 = #tc{acc1 = 0, acc2 = 1, nonce1 = 5, nonce2 = 2, bal1 = 10000, bal2 = 1000, consensus_flag = true, id = 2, fee = 0},
-    CreateTx3 = #tc{acc1 = 0, acc2 = 1, nonce1 = 6, nonce2 = 3, bal1 = 10000, bal2 = 1000, consensus_flag = true, id = 3, fee = 0},
+    CreateTx1 = #tc{acc1 = 0, acc2 = 1, nonce1 = 4, nonce2 = 1, bal1 = 10000, bal2 = 1000, consensus_flag = true, fee = 0},%When first creating a new channel, don't add the id. It will be selected for you by next available.
+    CreateTx2 = #tc{acc1 = 0, acc2 = 1, nonce1 = 5, nonce2 = 2, bal1 = 10000, bal2 = 1000, consensus_flag = true, fee = 0},
+    CreateTx3 = #tc{acc1 = 0, acc2 = 1, nonce1 = 6, nonce2 = 3, bal1 = 10000, bal2 = 1000, consensus_flag = true, fee = 0},
     SignedCreateTx1 = sign:sign_tx(CreateTx1, Pub, Priv, dict:new()),
     SignedCreateTx2 = sign:sign_tx(CreateTx2, Pub, Priv, dict:new()),
     SignedCreateTx3 = sign:sign_tx(CreateTx3, Pub, Priv, dict:new()),
+    SCTR1 = #signed{data = SignedCreateTx1#signed.data, sig2 = SignedCreateTx1#signed.sig2, revealed = 0},
+    SCTR2 = #signed{data = SignedCreateTx2#signed.data, sig2 = SignedCreateTx2#signed.sig2, revealed = 1},
+    SCTR3 = #signed{data = SignedCreateTx3#signed.data, sig2 = SignedCreateTx3#signed.sig2, revealed = 2},
     Txs2 = sign_all(
 	     [#spend{from = 0, nonce = 3, to = 1, amount=10},
-	      SignedCreateTx1,
-	      SignedCreateTx2,
-	      SignedCreateTx3
+	      SCTR1,
+	      SCTR2,
+	      SCTR3
 	     ]),
-    PHash2 = hash:doit(SignedBlock#signed.data),
-    Block2 = #block{txs = Txs2, hash = PHash2, number = 2},
-    SignedBlock2 = keys:sign(Block2),
+    SignedBlock2 = buy_block(Txs2),
     absorb([SignedBlock2]),
+    SB = read_int(1, read(top)),
     SB2 = read_int(2, read(top)),
     SignedBlock2 = SB2#x.block,
     SB2 = read(hash:doit(SignedBlock2#signed.data)),
 
-    CreateTxb = #tc{acc1 = 0, acc2 = 1, nonce1 = 7, nonce2 = 4, bal1 = 10000, bal2 = 1010, consensus_flag = true, id = 1, fee = 0},
+    CreateTxb = #tc{acc1 = 0, acc2 = 1, nonce1 = 7, nonce2 = 4, bal1 = 10000, bal2 = 1010, consensus_flag = true, id = 0, fee = 0},
     SignedCreateTxb = sign:sign_tx(CreateTxb, Pub, Priv, dict:new()),
+    SCTRb = #signed{data = SignedCreateTxb#signed.data, sig2 = SignedCreateTxb#signed.sig2, revealed = 0},
     Txs3 = sign_all(
 	     [
-	      SignedCreateTxb
+	      SCTRb
 	     ]),
-    PHash3 = hash:doit(SignedBlock2#signed.data),
-    Block3 = #block{txs = Txs3, hash = PHash3, number = 3},
-    SignedBlock3 = keys:sign(Block3),
-    absorb([SignedBlock3]),
-    SB3 = read_int(3, read(top)),
-    SignedBlock3 = SB3#x.block,
-    SB3 = read(hash:doit(SignedBlock3#signed.data)),
-    ChannelTx = #channel_block{acc1 = 0, acc2 = 1, amount = -200, nonce = 1, id = 1, fast = true},
-    TimeoutTx = #channel_block{acc1 = 0, acc2 = 1, amount = -200, nonce = 1, id = 2, fast = false, delay = 0},
-    SlasherTx = #channel_block{acc1 = 0, acc2 = 1, amount = -200, nonce = 1, id = 3, fast = false},%slash/timeout names flipped.
+    absorb([buy_block(Txs3)]),
+    ChannelTx = #channel_block{acc1 = 0, acc2 = 1, amount = -200, nonce = 1, id = 0, fast = true},
+    TimeoutTx = #channel_block{acc1 = 0, acc2 = 1, amount = -200, nonce = 1, id = 1, fast = false, delay = 0},
+    SlasherTx = #channel_block{acc1 = 0, acc2 = 1, amount = -200, nonce = 1, id = 2, fast = false},%slash/timeout names flipped.
     SignedChannelTx = sign:sign_tx(ChannelTx, Pub, Priv, dict:new()),
     SignedTimeoutTx = sign:sign_tx(TimeoutTx, Pub, Priv, dict:new()),
     SignedSlasherTx = sign:sign_tx(SlasherTx, Pub, Priv, dict:new()),
@@ -190,26 +196,19 @@ test() ->
     DSignedSlasherTx = keys:sign(SignedSlasherTx),
     Timeout = #timeout{acc = 0, nonce = 8, channel_block = DSignedTimeoutTx},
     Timeout2 = #timeout{acc = 0, nonce = 9, channel_block = DSignedSlasherTx},
-    %ChannelSlashTx = #channel_slash{acc = 0, nonce = 8, channel_block = DSignedSlasherTx},
     Txs4 = sign_all(
 	     [SignedChannelTx,
 	      Timeout,
 	      Timeout2
 	     ]),
-    PHash4 = hash:doit(SignedBlock3#signed.data),
-    Block4 = #block{txs = Txs4, hash = PHash4, number = 4},
-    SignedBlock4 = keys:sign(Block4),
-    absorb([SignedBlock4]),
-    SlashBlock = #channel_block{acc1 = 0, acc2 = 1, amount = 0, nonce = 2, id = 3, fast = true},
+    absorb([buy_block(Txs4)]),
+    SlashBlock = #channel_block{acc1 = 0, acc2 = 1, amount = 0, nonce = 2, id = 2, fast = true},
     SignedSlashBlock = sign:sign_tx(SlashBlock, Pub, Priv,dict:new()),
     DSignedSlashBlock = keys:sign(SignedSlashBlock),
-    CloseChannel = #channel_close{acc = 0, nonce = 10, id = 2},
+    CloseChannel = #channel_close{acc = 0, nonce = 10, id = 1},
     SlashChannel = #channel_slash{acc = 0, nonce = 11, channel_block = DSignedSlashBlock},
     Txs5 = sign_all(
 	     [CloseChannel,
 	      SlashChannel]),
-    Phash5 = hash:doit(SignedBlock4#signed.data),
-    Block5 = #block{txs = Txs5, hash = Phash5, number = 5},
-    SignedBlock5 = keys:sign(Block5),
-    absorb([SignedBlock5]),
+    absorb([buy_block(Txs5)]),
     success.

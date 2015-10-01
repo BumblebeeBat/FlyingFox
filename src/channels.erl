@@ -1,17 +1,15 @@
 -module(channels).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_channel/1,write/2,test/0,size/0,write_helper/3,top/0,delete/1]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_channel/1,write/2,test/0,size/0,write_helper/3,top/0,array/0,delete/1,walk/2]).
 -define(file, "channels.db").
 -define(empty, "d_channels.db").
-%20 bits for height. for creator... log(2, constants:max_address()) =~ at least 32 bits. The nonce needs to be at least as big as log(2, number of channels created per block). 12 bits should be fine. This limits us to creating 4096 channels per block at most.
--define(word, 9).%20+20+32 = 64 bits = 9 bytes
+-define(word, 9).%20+20+32 = 72 bits = 9 bytes
 -record(channel, {tc = 0, creator = 0, timeout = 0}).
-%-record(channel, {height = 0, nonce = 0, creator = 0}).
 write_helper(N, Val, File) ->
 %since we are reading it a bunch of changes at a time for each block, there should be a way to only open the file once, make all the changes, and then close it. 
     case file:open(File, [write, read, raw]) of
         {ok, F} ->
-            file:pwrite(F, N*?word, Val),
+            file:pwrite(F, N, Val),
             file:close(F);
         {error, _Reason} ->
             write_helper(N, Val, File)
@@ -20,7 +18,7 @@ init(ok) ->
     case file:read_file(?empty) of
         {error, enoent} -> 
             Top = 0,
-            DeletedArray = << 0:9 >>,
+            DeletedArray = << 0 >>,
             write_helper(0, DeletedArray, ?empty);
         {ok, DeletedArray} ->
             Top = walk(0, DeletedArray)
@@ -38,43 +36,54 @@ walk_helper(<< 257:9, B/bitstring>>, Counter) -> walk_helper(B, Counter + 9);
 walk_helper(<< 1:1, B/bitstring>>, Counter) -> walk_helper(B, Counter + 1);
 walk_helper(<< 0:1, _B/bitstring>>, Counter) -> Counter.
 handle_cast({delete, N}, {Top, Array}) -> 
-    Byte = hd(binary_to_list(read(N div 9, 1, ?empty))),
+    Byte = hd(binary_to_list(read_empty(N))),
     Remove = bnot round(math:pow(2, N rem 9)),
     NewByte = Byte band Remove,
-    write_helper(N div 9, <<NewByte>>, ?empty),
+    write_helper(N div 8, <<NewByte>>, ?empty),
     <<A:N,_:1,B/bitstring>> = Array,
     NewArray = <<A:N,0:1,B/bitstring>>,
-    write_helper(N, #channel{}, ?file),
+    write_helper(N*?word, #channel{}, ?file),
     {noreply, {min(Top, N), NewArray}};
 handle_cast({write, N, Val}, {Top, Array}) -> 
     S = size(),
     if
-        N > S -> write_helper(N div 9, <<0>>, ?empty);
+        N > S -> write_helper(N div 8, <<0>>, ?empty);
         true -> 0 = 0
     end,
-    Byte = hd(binary_to_list(read(N div 9, 1, ?empty))),
-    Remove = round(math:pow(2, N rem 9)),
+    Byte = hd(binary_to_list(read_empty(N))),
+    Remove = round(math:pow(2, N rem 8)),
     NewByte = Byte bor Remove,
-    write_helper(N div 9, <<NewByte>>, ?empty),
+    write_helper(N div 8, <<NewByte>>, ?empty),
     <<A:N,_:1,B/bitstring>> = Array,
     NewArray = <<A:N,1:1,B/bitstring>>,
     false = N > size(),
-    write_helper(N, Val, ?file),
+    write_helper(N*?word, Val, ?file),
     {noreply, {walk(Top, NewArray), NewArray}}.
+handle_call(array, _From, {Top, Array}) -> {reply, Array, {Top, Array}};
 handle_call(top, _From, {Top, Array}) -> {reply, Top, {Top, Array}}.
 top() -> gen_server:call(?MODULE, top).
+array() -> gen_server:call(?MODULE, array).
 delete(N) -> gen_server:cast(?MODULE, {delete, N}).
-read(N, Bytes, F) -> 
-    {ok, File} = file:open(F, [read, binary, raw]),
-    {ok, X} = file:pread(File, N, Bytes),
-    file:close(File),
-    X.
+read_empty(N) -> 
+    {ok, File} = file:open(?empty, [read, binary, raw]),
+    case file:pread(File, N div 8, 1) of
+	eof -> write_helper(N div 8, <<0>>, ?empty),
+	       read_empty(N);
+	{ok, X} -> file:close(File), X
+    end.
+read_file(N) -> 
+    {ok, File} = file:open(?file, [read, binary, raw]),
+    case file:pread(File, N*?word, ?word) of
+	eof -> write_helper(N*?word, <<0:72>>, ?file),% 600=8*?word.
+	       read_file(N);
+	{ok, X} -> file:close(File), X
+    end.
 read_channel(N) -> %maybe this should be a call too, that way we can use the ram to see if it is already deleted?
     T = top(),
     if
 	N >= T -> #channel{};
 	true ->
-	    X = read(N*?word, ?word, ?file),%if this is above the end of the file, then just return an account of all zeros.
+	    X = read_file(N),%if this is above the end of the file, then just return an account of all zeros.
 	    <<Tc:20, Timeout:20, Creator:32>> = X,
 	    #channel{tc = Tc, timeout = Timeout, creator = Creator}
 	    
@@ -118,6 +127,8 @@ test() ->
     1 = top(),
     append(A),
     3 = top(),
+    Ch = read_channel(2),
+    Ch = read_channel(1),
     delete(1),
     delete(0),
     0 = top(),

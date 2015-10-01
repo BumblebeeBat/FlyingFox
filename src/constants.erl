@@ -5,7 +5,7 @@ initial_coins() -> round(math:pow(2, 48)) - 1.
 finality() -> 26.%/docs/security.py explains why.
 validators_elected_per_block() -> 54.
 minimum_validators_per_block() -> 36.
-master_pub() -> <<"BPbEUW6szoYLoRBm94Ky0rxtuoXGhhGfv6r8fteMtkl1sl4ahEIhUDrAM5h6FJuz/pjQspIkN2yh5nD15HAZEPU=">>.
+master_pub() -> <<"BEuR+aFDJUclPTzlGWU1zWoSph9Zos7qPqOza4VsQ5B1gp8lT5gdzvFaX/sFzdz1Sy2vfKaCvaubVjjGpPDenLo=">>.
 max_size() -> 200000000000.%should be 200 gigabytes, does not include old blocks.
 consensus_byte_price() -> initial_coins() div max_size().
 max_address() -> max_size() div 10 div 75.%use about 10% of space to store addresses. Each one is 75 bytes

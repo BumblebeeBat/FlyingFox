@@ -10,7 +10,8 @@
 doit(Tx, ParentKey, Channels, Accounts) ->
     Id = Tx#channel_close.id,
     ChannelPointer = block_tree:channel(Id, ParentKey, Channels),
-    OriginTimeout = channel_block_tx:origin_tx(ChannelPointer#channel.timeout, ParentKey, Id),
+    SignedOriginTimeout = channel_block_tx:origin_tx(ChannelPointer#channel.timeout, ParentKey, Id),
+    OriginTimeout = SignedOriginTimeout#signed.data,
     OriginTx = OriginTimeout#timeout.channel_block#signed.data,
     T = block_tree:read(top),
     Top = block_tree:height(T),

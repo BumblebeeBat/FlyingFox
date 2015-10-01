@@ -6,7 +6,7 @@
 %Top should point to the lowest known address that is deleted.
 -module(accounts).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_account/1,write/2,test/0,size/0,write_helper/3,top/0,delete/1]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_account/1,write/2,test/0,size/0,write_helper/3,top/0,delete/1,array/0]).
 -define(file, "accounts.db").
 -define(empty, "d_accounts.db").
 %Pub is 65 bytes. balance is 48 bits. Nonce is 32 bits. bringing the total to 75 bytes.
@@ -16,7 +16,7 @@ write_helper(N, Val, File) ->
 %since we are reading it a bunch of changes at a time for each block, there should be a way to only open the file once, make all the changes, and then close it. 
     case file:open(File, [write, read, raw]) of
         {ok, F} ->
-            file:pwrite(F, N*?word, Val),
+            file:pwrite(F, N, Val),%multiplying by word is no good for empty...
             file:close(F);
         {error, _Reason} ->
             write_helper(N, Val, File)
@@ -46,13 +46,13 @@ walk_helper(<< 127:8, B/bitstring>>, Counter) -> walk_helper(B, Counter + 8);
 walk_helper(<< 1:1, B/bitstring>>, Counter) -> walk_helper(B, Counter + 1);
 walk_helper(<< 0:1, _B/bitstring>>, Counter) -> Counter.
 handle_cast({delete, N}, {Top, Array}) -> 
-    Byte = hd(binary_to_list(read(N div 8, 1, ?empty))),
+    Byte = hd(binary_to_list(read_empty(N))),
     Remove = bnot round(math:pow(2, N rem 8)),
     NewByte = Byte band Remove,
     write_helper(N div 8, <<NewByte>>, ?empty),
     <<A:N,_:1,B/bitstring>> = Array,
     NewArray = <<A:N,0:1,B/bitstring>>,
-    write_helper(N, #acc{}, ?file),
+    write_helper(N*?word, #acc{}, ?file),
     {noreply, {min(Top, N), NewArray}};
 handle_cast({write, N, Val}, {Top, Array}) -> 
     S = size(),
@@ -60,29 +60,40 @@ handle_cast({write, N, Val}, {Top, Array}) ->
         N > S -> write_helper(N div 8, <<0>>, ?empty);
         true -> 0 = 0
     end,
-    Byte = hd(binary_to_list(read(N div 8, 1, ?empty))),
+    Byte = hd(binary_to_list(read_empty(N))),
     Remove = round(math:pow(2, N rem 8)),
     NewByte = Byte bor Remove,
     write_helper(N div 8, <<NewByte>>, ?empty),
     <<A:N,_:1,B/bitstring>> = Array,
     NewArray = <<A:N,1:1,B/bitstring>>,
     false = N > size(),
-    write_helper(N, Val, ?file),
+    write_helper(N*?word, Val, ?file),
     {noreply, {walk(Top, NewArray), NewArray}}.
+handle_call(array, _From, {Top, Array}) -> {reply, Array, {Top, Array}};
 handle_call(top, _From, {Top, Array}) -> {reply, Top, {Top, Array}}.
 top() -> gen_server:call(?MODULE, top).
+array() -> gen_server:call(?MODULE, array).
 delete(N) -> gen_server:cast(?MODULE, {delete, N}).
-read(N, Bytes, F) -> 
-    {ok, File} = file:open(F, [read, binary, raw]),
-    {ok, X} = file:pread(File, N, Bytes),
-    file:close(File),
-    X.
+read_empty(N) -> 
+    {ok, File} = file:open(?empty, [read, binary, raw]),
+    case file:pread(File, N div 8, 1) of
+	eof -> write_helper(N div 8, <<0>>, ?empty),
+	       read_empty(N);
+	{ok, X} -> file:close(File), X
+    end.
+read_file(N) -> 
+    {ok, File} = file:open(?file, [read, binary, raw]),
+    case file:pread(File, N*?word, ?word) of
+	eof -> write_helper(N*?word, <<0:600>>, ?file),% 600=8*?word.
+	       read_file(N);
+	{ok, X} -> file:close(File), X
+    end.
 read_account(N) -> %maybe this should be a call too, that way we can use the ram to see if it is already deleted?
     T = top(),
     if
 	N >= T -> #acc{};
 	true ->
-	    X = read(N*?word, ?word, ?file),%if this is above the end of the file, then just return an account of all zeros.
+	    X = read_file(N),%if this is above the end of the file, then just return an account of all zeros.
 	    <<Balance:48, Nonce:32, P/binary>> = X,
 	    Pub = base64:encode(P),
 	    #acc{balance = Balance, nonce = Nonce, pub = Pub}
@@ -108,10 +119,12 @@ test() ->
     5 = walk(0, << 31:5 >>),
     5 = walk(2, << 31:5 >>),
     5 = walk(5, << 31:5 >>),
-    %accounts.db needs to be empty before starting node to run this test.
     Pub = <<"BIXotG1x5BhwxVKxjsCyrgJASovEJ5Yk/PszEdIoS/nKRNRv0P0E8RvNloMnBrFnggjV/F7pso/2PA4JDd6WQCE=">>,
     Balance = 50000000,
     A = #acc{pub = Pub, nonce = 0, balance = Balance},
+    delete(3),
+    delete(2),
+    delete(1),
     1 = top(),
     append(A),
     2 = top(),
@@ -125,6 +138,8 @@ test() ->
     1 = top(),
     append(A),
     3 = top(),
+    Acc = read_account(1),
+    Acc = read_account(2),
     delete(1),
     delete(0),
     0 = top(),

@@ -1,14 +1,24 @@
 -module(create_account_tx).
 -export([doit/4]).
--record(ca, {from = 0, nonce = 0, to = 0, pub = <<"">>, amount = 0}).
+-record(ca, {from = 0, nonce = 0, pub = <<"">>, amount = 0}).
 -record(acc, {balance = 0, nonce = 0, pub = 0}).
+
+next_top(DBroot, Accounts) -> next_top_helper(accounts:array(), accounts:top(), DBroot, Accounts).
+next_top_helper(Array, Top, DBroot, Accounts) ->
+    EmptyAcc = #acc{},
+    case block_tree:account(Top, DBroot, Accounts) of
+	EmptyAcc -> Top;
+	_ ->
+	    <<A:Top,_:1,B/bitstring>> = Array,
+	    NewArray = <<A:Top,1:1,B/bitstring>>,
+	    NewTop = accounts:walk(Top, NewArray),
+	    next_top_helper(NewArray, NewTop, DBroot, Accounts)
+    end.
+    
 doit(Tx, ParentKey, Channels, Accounts) ->
     F = block_tree:account(Tx#ca.from, ParentKey, Accounts),
-    To = block_tree:account(Tx#ca.to, ParentKey, Accounts),
-    To = #acc{},%You can only fill space in the database that are empty.
-    true = Tx#ca.to < constants:max_address(),
-    OneUnder = block_tree:account(Tx#ca.to-1, ParentKey, Accounts),
-    false = (OneUnder == #acc{}),%You can only fill a space if the space below you is already filled.
+    NewId = next_top(ParentKey, Accounts),
+    true = NewId < constants:max_address(),
     NT = #acc{nonce = 0,
               pub = Tx#ca.pub,
               balance = Tx#ca.amount},
@@ -19,7 +29,13 @@ doit(Tx, ParentKey, Channels, Accounts) ->
     Nonce = Tx#ca.nonce,
     true = NT#acc.balance > 0,
     true = NF#acc.balance > 0,
-    Accounts2 = dict:store(Tx#ca.to, NT, Accounts),
+    Accounts2 = dict:store(NewId, NT, Accounts),
     Accounts3 = dict:store(Tx#ca.from, NF, Accounts2),
+    MyId = keys:id(),
+    MyPub = keys:pubkey(),
+    if
+	((Tx#ca.pub == MyPub) and (MyId == -1)) -> keys:update_id(NewId);
+	true -> 1 = 1
+    end,
     {Channels, Accounts3}.
 

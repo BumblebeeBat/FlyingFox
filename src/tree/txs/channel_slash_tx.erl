@@ -13,6 +13,6 @@ doit(Tx, ParentKey, Channels, Accounts) ->
     Id = CB#channel_block.id,
     ChannelPointer = block_tree:channel(Id, ParentKey, Channels),
     OriginTimeout = channel_block_tx:origin_tx(ChannelPointer#channel.timeout, ParentKey, Id),
-    OriginTx = OriginTimeout#timeout.channel_block#signed.data,
+    OriginTx = OriginTimeout#signed.data#timeout.channel_block#signed.data,
     true = CB#channel_block.nonce > OriginTx#channel_block.nonce,
     channel_block_tx:channel(CB, ParentKey, Channels, Accounts).
