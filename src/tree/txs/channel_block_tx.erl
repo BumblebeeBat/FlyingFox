@@ -48,6 +48,11 @@ channel(Tx, ParentKey, Channels, Accounts) ->
     N2 = #acc{balance = Acc2#acc.balance + StartAmount - Tx#channel_block.amount,
 	      nonce = Acc2#acc.nonce,
 	      pub = Acc2#acc.pub},
+    MyKey = keys:pubkey(),
+    if
+	(Acc1#acc.pub == MyKey) or (Acc2#acc.pub == MyKey) -> my_channels:remove(Tx#channel_block.id);
+	true -> 1=1
+    end,
     NewChannels = dict:store(Tx#channel_block.id, #channel{},Channels),
     NewAccounts1 = dict:store(Tx#channel_block.acc1, N1, Accounts),
     NewAccounts2 = dict:store(Tx#channel_block.acc2, N2, NewAccounts1),

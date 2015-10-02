@@ -13,6 +13,7 @@ init([]) ->
 	  ?CHILD(block_pointers, worker),
 	  ?CHILD(block_finality, worker),
 	  ?CHILD(block_tree, worker),
-	  ?CHILD(tx_pool, worker)
+	  ?CHILD(tx_pool, worker),
+	  ?CHILD(my_channels, worker)
 	],
     {ok, { {one_for_one, 5, 10}, Children} }.

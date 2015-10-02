@@ -20,5 +20,6 @@ test1() ->
     S = db:test(),
     S = sign:test(),
     S = accounts:test(),
+    S = my_channels:test(),
     S.
     

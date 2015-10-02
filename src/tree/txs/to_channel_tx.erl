@@ -25,17 +25,21 @@ doit(SignedTx, ParentKey, Channels, Accounts, BlockGap) ->
     Acc2 = block_tree:account(Tx#tc.acc2, ParentKey, Accounts),
     ChannelPointer = block_tree:channel(NewId, ParentKey, Channels),
     EmptyChannel = #channel{},
-    Nonce1 = Acc1#acc.nonce + 1,
-    Nonce2 = Acc2#acc.nonce + 1,
-    Nonce1 = Tx#tc.nonce1,
-    Nonce2 = Tx#tc.nonce2,
     if% the space isn't empty, then we don't necessarily crash. If the same pair of addresses want to increment their balances, we should let them. 
 	ChannelPointer == EmptyChannel ->
+	    Nonce1 = Acc1#acc.nonce + 1,
+	    Nonce2 = Acc2#acc.nonce + 1,
+	    Nonce1 = Tx#tc.nonce1,
+	    Nonce2 = Tx#tc.nonce2,
 	    NewId = next_top(ParentKey, Channels),
 	    Balance1 = Acc1#acc.balance - Tx#tc.bal1 - Tx#tc.fee,
 	    Balance2 = Acc2#acc.balance - Tx#tc.bal2 - Tx#tc.fee,
+	    %check if one of the pubkeys is keys:pubkey().
+	    %If so, then add it to the mychannels module.
             1=1;
         true ->
+	    Nonce1 = Acc1#acc.nonce,
+	    Nonce2 = Acc2#acc.nonce,
 	    NewId = Tx#tc.id,
             SignedOriginTx = channel_block_tx:origin_tx(ChannelPointer#channel.tc, ParentKey, NewId),
 	    OriginTx = SignedOriginTx#signed.data,
@@ -58,6 +62,11 @@ doit(SignedTx, ParentKey, Channels, Accounts, BlockGap) ->
     true = NewId < constants:max_channel(),
     true = N1#acc.balance > 0,
     true = N2#acc.balance > 0,
+    MyKey = keys:pubkey(),
+    if
+	(ChannelPointer == EmptyChannel and ((Acc1#acc.pub == MyKey) or (Acc2#acc.pub == MyKey))) -> my_channels:add(NewId);
+	true -> 1=1
+    end,
     T = block_tree:read(top),
     Top = block_tree:height(T),
     Ch = #channel{tc = Top + BlockGap, creator = Tx#tc.acc1},
