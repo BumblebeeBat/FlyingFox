@@ -139,7 +139,8 @@ buy_block(Txs, BlockGap) ->
     PHash = hash:doit(Parent),
     N = Parent#block.number + BlockGap,
     Block = #block{txs = Txs, hash = PHash, number = N},
-    absorb([keys:sign(Block)]).
+    absorb([keys:sign(Block)]),
+    tx_pool:dump().
 create_account(Pub, Amount) ->
     Id = keys:id(),
     Acc = account(Id),
@@ -154,13 +155,19 @@ spend(To, Amount) ->
 to_channel(ChannelId, Inc1, Inc2, Fee) ->
     Id = keys:id(),
     Acc = account(Id),
-    ChannelPointer = channel(ChannelId),
-    #tc{acc1 = 0, acc2 = 1, bal1 = 10000, bal2 = 1010, consensus_flag = true, id = 0, fee = Fee}.
+    ChannelPointer = channel(ChannelId),%[-6,"channel",2,0,3]
+    SignedToChannel = channel_block_tx:origin_tx(ChannelPointer#channel.tc, read(top), ChannelId),
+    TC = SignedToChannel#signed.data,
+    SignedTx = keys:sign(#tc{acc1 = TC#tc.acc1, acc2 = TC#tc.acc2, bal1 = TC#tc.bal1 + Inc1, bal2 = TC#tc.bal2 + Inc2, consensus_flag = true, id = ChannelId, fee = Fee, nonce = Acc#acc.nonce + 1}),
+    #signed{data = SignedTx#signed.data, sig2 = SignedTx#signed.sig2, sig = SignedTx#signed.sig, revealed = ChannelId}.
+
 create_channel(To, MyBalance, TheirBalance, ConsensusFlag, Fee) ->
 %When first creating a new channel, don't add the id. It will be selected for you by next available.    
     Id = keys:id(),
     Acc = account(Id),
     ToAcc = account(To),
+    true = Acc#acc.balance > MyBalance,
+    true = ToAcc#acc.balance > TheirBalance,
     Tx = #tc{acc1 = Id, acc2 = To, nonce = Acc#acc.nonce + 1, bal1 = MyBalance, bal2 = TheirBalance, consensus_flag = ConsensusFlag, fee = Fee},
     keys:sign(Tx).
 test() -> 
@@ -172,7 +179,6 @@ test() ->
     SignedParent = SP#x.block,
     SP = read(hash:doit(SignedParent#signed.data)),
     buy_block(),
-    tx_pool:dump(),
     SB = read_int(1, read(top)),
     SignedBlock = SB#x.block,
     SB = read(hash:doit(SignedBlock#signed.data)),
@@ -190,15 +196,11 @@ test() ->
     SB2 = read_int(2, read(top)),
     SignedBlock2 = SB2#x.block,
     SB2 = read(hash:doit(SignedBlock2#signed.data)),
+    ToChannel = to_channel(0, 0, 10, 0),
+    SignedToChannel = sign:sign_tx(ToChannel, Pub, Priv, dict:new()),
+    tx_pool:absorb(SignedToChannel),
+    buy_block(),
 
-    CreateTxb = #tc{acc1 = 0, acc2 = 1, nonce = 6, bal1 = 10000, bal2 = 1010, consensus_flag = true, id = 0, fee = 0},
-    SignedCreateTxb = sign:sign_tx(CreateTxb, Pub, Priv, dict:new()),
-    SCTRb = #signed{data = SignedCreateTxb#signed.data, sig2 = SignedCreateTxb#signed.sig2, revealed = 0},
-    Txs3 = sign_all(
-	     [
-	      SCTRb
-	     ]),
-    buy_block(Txs3),
     ChannelTx = #channel_block{acc1 = 0, acc2 = 1, amount = -200, nonce = 1, id = 0, fast = true},
     TimeoutTx = #channel_block{acc1 = 0, acc2 = 1, amount = -200, nonce = 1, id = 1, fast = false, delay = 0},
     SlasherTx = #channel_block{acc1 = 0, acc2 = 1, amount = -200, nonce = 1, id = 2, fast = false},%slash/timeout names flipped.

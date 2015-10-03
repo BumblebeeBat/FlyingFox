@@ -42,8 +42,7 @@ doit(SignedTx, ParentKey, Channels, Accounts, BlockGap) ->
             AccN1 = Tx#tc.acc1,
             AccN2 = OriginTx#tc.acc2,
             AccN2 = Tx#tc.acc2,
-            true = OriginTx#tc.bal1 < Tx#tc.bal1 + 1,%to_channel can only be used to increase the amount of money in a channel, for consensus reasons. (maybe if consensus flag is off, we should let them decrease too?)
-            true = OriginTx#tc.bal2 < Tx#tc.bal2 + 1,
+            true = OriginTx#tc.bal1 + OriginTx#tc.bal2 < Tx#tc.bal2 + Tx#tc.bal1 + 1,%to_channel can only be used to increase the amount of money in a channel, for consensus reasons. 
 	    Balance1 = Acc1#acc.balance - Tx#tc.bal1 + OriginTx#tc.bal1 - Tx#tc.fee,
 	    Balance2 = Acc2#acc.balance - Tx#tc.bal2 + OriginTx#tc.bal2 - Tx#tc.fee,
             1=1
