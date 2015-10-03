@@ -22,11 +22,19 @@ flip(In) -> flip(In, []).
 flip([], Out) -> Out;
 flip([H|T], Out) -> flip(T, [H|Out]).
 txs() -> flip(gen_server:call(?MODULE, txs)).
+-record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1}).
+-record(signed, {data="", sig="", sig2="", revealed=[]}).
 absorb(Tx) -> 
     Accounts = accounts(),
     Channels = channels(),
-    {NewChannels, NewAccounts} = txs:digest([Tx], block_tree:read(top), Channels, Accounts, 1),%Usually blocks are one after the other. Some txs may have to get removed if we change this number to a 2 before creating the block.
-    gen_server:cast(?MODULE, {absorb, Tx, NewChannels, NewAccounts}).
+    if
+	is_record(Tx#signed.data, tc) and (Tx#signed.revealed == []) ->
+	    Revealed = to_channel_tx:next_top(block_tree:read(top), Channels),
+	    NewTx = #signed{data = Tx#signed.data, sig = Tx#signed.sig, sig2 = Tx#signed.sig2, revealed = Revealed};
+	true -> NewTx = Tx
+    end,
+    {NewChannels, NewAccounts} = txs:digest([NewTx], block_tree:read(top), Channels, Accounts, 1),%Usually blocks are one after the other. Some txs may have to get removed if we change this number to a 2 before creating the block.
+    gen_server:cast(?MODULE, {absorb, NewTx, NewChannels, NewAccounts}).
 
 -record(spend, {from = 0, nonce = 0, to = 0, amount = 0}).
 -record(ca, {from = 0, nonce = 0, pub = <<"">>, amount = 0}).

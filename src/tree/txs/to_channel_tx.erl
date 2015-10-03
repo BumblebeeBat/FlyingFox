@@ -1,6 +1,6 @@
 -module(to_channel_tx).%used to create a channel, or increase the amount of money in it.
--export([doit/5]).
--record(tc, {acc1 = 0, acc2 = 1, nonce1 = 0, nonce2 = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1}).
+-export([next_top/2,doit/5]).
+-record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1}).
 -record(channel, {tc = 0, creator = 0, timeout = 0}).
 -record(acc, {balance = 0, nonce = 0, pub = ""}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
@@ -27,19 +27,14 @@ doit(SignedTx, ParentKey, Channels, Accounts, BlockGap) ->
     EmptyChannel = #channel{},
     if% the space isn't empty, then we don't necessarily crash. If the same pair of addresses want to increment their balances, we should let them. 
 	ChannelPointer == EmptyChannel ->
-	    Nonce1 = Acc1#acc.nonce + 1,
-	    Nonce2 = Acc2#acc.nonce + 1,
-	    Nonce1 = Tx#tc.nonce1,
-	    Nonce2 = Tx#tc.nonce2,
-	    NewId = next_top(ParentKey, Channels),
+	    %use channel.timeout to store the nonce of the account creator. That way the pointer uniquely points to 1 tx in the block that created it.
+	    NewId = next_top(ParentKey, Channels),%err
 	    Balance1 = Acc1#acc.balance - Tx#tc.bal1 - Tx#tc.fee,
 	    Balance2 = Acc2#acc.balance - Tx#tc.bal2 - Tx#tc.fee,
 	    %check if one of the pubkeys is keys:pubkey().
 	    %If so, then add it to the mychannels module.
             1=1;
         true ->
-	    Nonce1 = Acc1#acc.nonce,
-	    Nonce2 = Acc2#acc.nonce,
 	    NewId = Tx#tc.id,
             SignedOriginTx = channel_block_tx:origin_tx(ChannelPointer#channel.tc, ParentKey, NewId),
 	    OriginTx = SignedOriginTx#signed.data,
@@ -53,11 +48,13 @@ doit(SignedTx, ParentKey, Channels, Accounts, BlockGap) ->
 	    Balance2 = Acc2#acc.balance - Tx#tc.bal2 + OriginTx#tc.bal2 - Tx#tc.fee,
             1=1
     end,
+    Nonce = Acc1#acc.nonce + 1,
+    Nonce = Tx#tc.nonce,
     N1 = #acc{balance = Balance1,
-	      nonce = Nonce1,
+	      nonce = Nonce,
 	      pub = Acc1#acc.pub},
     N2 = #acc{balance = Balance2,
-	      nonce = Nonce2,
+	      nonce = Acc2#acc.nonce,
 	      pub = Acc2#acc.pub},
     true = NewId < constants:max_channel(),
     true = N1#acc.balance > 0,
@@ -69,7 +66,7 @@ doit(SignedTx, ParentKey, Channels, Accounts, BlockGap) ->
     end,
     T = block_tree:read(top),
     Top = block_tree:height(T),
-    Ch = #channel{tc = Top + BlockGap, creator = Tx#tc.acc1},
+    Ch = #channel{tc = Top + BlockGap, creator = Tx#tc.acc1, timeout = Tx#tc.nonce},
     NewAccounts1 = dict:store(Tx#tc.acc1, N1, Accounts),
     NewAccounts = dict:store(Tx#tc.acc2, N2, NewAccounts1),
     NewChannels = dict:store(NewId, Ch, Channels),

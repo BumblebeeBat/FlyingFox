@@ -3,7 +3,8 @@
 -record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0}).
 -record(channel, {tc = 0, creator = 0, timeout = 0}).
 -record(bet, {amount = 0, merkle = <<"">>, default = 0}).%signatures
--record(tc, {acc1 = 0, acc2 = 1, nonce1 = 0, nonce2 = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1}).
+-record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1}).
+%-record(tc, {acc1 = 0, acc2 = 1, nonce1 = 0, nonce2 = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1}).
 -record(acc, {balance = 0, nonce = 0, pub = ""}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
 -record(timeout, {acc = 0, nonce = 0, fee = 0, channel_block = 0}).

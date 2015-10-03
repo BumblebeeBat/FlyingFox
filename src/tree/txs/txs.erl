@@ -24,7 +24,8 @@ txs() -> gen_server:call(?MODULE, txs).
 %-record(ca, {from = 0, nonce = 0, to = 0, pub = <<"">>, amount = 0}).
 -record(da, {from = 0, nonce = 0, to = <<"0">>}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
--record(tc, {acc1 = 0, acc2 = 1, nonce1 = 0, nonce2 = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1}).
+-record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1}).
+%-record(tc, {acc1 = 0, acc2 = 1, nonce1 = 0, nonce2 = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1}).
 -record(timeout, {acc = 0, nonce = 0, fee = 0, channel_block = 0}).
 %-record(channel_slash, {acc = 0, nonce = 0, id = 0, channel_block = 0}).
 -record(channel_slash, {acc = 0, nonce = 0, channel_block = 0}).
