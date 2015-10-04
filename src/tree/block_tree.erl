@@ -127,10 +127,6 @@ channel_helper(N, H) ->
 -record(timeout, {acc = 0, nonce = 0, fee = 0, channel_block = 0}).
 -record(channel_slash, {acc = 0, nonce = 0, channel_block = 0}).
 -record(acc, {balance = 0, nonce = 0, pub = ""}).
-
-
-sign_all([]) -> [];
-sign_all([Tx|Txs]) -> [keys:sign(Tx)|sign_all(Txs)].
 buy_block() -> buy_block(tx_pool:txs()).
 buy_block(Txs) -> buy_block(Txs, 1).
 buy_block(Txs, BlockGap) ->
@@ -170,18 +166,38 @@ create_channel(To, MyBalance, TheirBalance, ConsensusFlag, Fee) ->
     true = ToAcc#acc.balance > TheirBalance,
     Tx = #tc{acc1 = Id, acc2 = To, nonce = Acc#acc.nonce + 1, bal1 = MyBalance, bal2 = TheirBalance, consensus_flag = ConsensusFlag, fee = Fee},
     keys:sign(Tx).
+timeout_channel(ChannelTx) ->
+    Id = keys:id(),
+    Acc = account(Id),
+    Tx = #timeout{acc = Id, nonce = Acc#acc.nonce + 1, channel_block = keys:sign(ChannelTx)},
+    tx_pool:absorb(keys:sign(Tx)).
+close_channel(Id, Amount, Nonce) ->
+    ChannelPointer = channel(Id),
+    SignedToChannel = channel_block_tx:origin_tx(ChannelPointer#channel.tc, read(top), Id),
+    TC = SignedToChannel#signed.data,
+    keys:sign(#channel_block{acc1 = TC#tc.acc1, acc2 = TC#tc.acc2, amount = Amount, nonce = Nonce, id = Id, fast = true}).
+channel_block(Id, Amount, Nonce, Delay) ->
+    ChannelPointer = channel(Id),
+    SignedToChannel = channel_block_tx:origin_tx(ChannelPointer#channel.tc, read(top), Id),
+    TC = SignedToChannel#signed.data,
+    keys:sign(#channel_block{acc1 = TC#tc.acc1, acc2 = TC#tc.acc2, amount = Amount, nonce = Nonce, id = Id, fast = false, delay = Delay}).
+slow_close(Id) ->
+    %ChannelPointer = channel(Id),
+    %SignedTimeoutChannel = channel_block_tx:origin_tx(ChannelPointer#channel.timeout, read(top), Id),
+    %Timeout = SignedTimeoutChannel#signed.data,
+    MyId = keys:id(),
+    Acc = account(MyId),
+    tx_pool:absorb(keys:sign(#channel_close{acc = MyId, nonce = Acc#acc.nonce + 1, id = Id})).
+channel_slash(ChannelTx) ->
+    MyId = keys:id(),
+    Acc = account(MyId),
+    tx_pool:absorb(keys:sign(#channel_slash{acc = MyId, nonce = Acc#acc.nonce, channel_block = ChannelTx})).
+    
 test() -> 
     {Pub, Priv} = sign:new_key(),
     create_account(Pub, 10000),
     spend(1, 10),
-    SignedParent = block_finality:top_block(),
-    SP = read_int(0, read(top)),
-    SignedParent = SP#x.block,
-    SP = read(hash:doit(SignedParent#signed.data)),
     buy_block(),
-    SB = read_int(1, read(top)),
-    SignedBlock = SB#x.block,
-    SB = read(hash:doit(SignedBlock#signed.data)),
     CreateTx1 = create_channel(1, 10000, 1000, true, 0),
     SignedCreateTx1 = sign:sign_tx(CreateTx1, Pub, Priv, dict:new()),
     tx_pool:absorb(SignedCreateTx1),
@@ -192,39 +208,23 @@ test() ->
     SignedCreateTx3 = sign:sign_tx(CreateTx3, Pub, Priv, dict:new()),
     tx_pool:absorb(SignedCreateTx3),
     buy_block(),
-    SB = read_int(1, read(top)),
-    SB2 = read_int(2, read(top)),
-    SignedBlock2 = SB2#x.block,
-    SB2 = read(hash:doit(SignedBlock2#signed.data)),
     ToChannel = to_channel(0, 0, 10, 0),
     SignedToChannel = sign:sign_tx(ToChannel, Pub, Priv, dict:new()),
     tx_pool:absorb(SignedToChannel),
     buy_block(),
-
-    ChannelTx = #channel_block{acc1 = 0, acc2 = 1, amount = -200, nonce = 1, id = 0, fast = true},
-    TimeoutTx = #channel_block{acc1 = 0, acc2 = 1, amount = -200, nonce = 1, id = 1, fast = false, delay = 0},
-    SlasherTx = #channel_block{acc1 = 0, acc2 = 1, amount = -200, nonce = 1, id = 2, fast = false},%slash/timeout names flipped.
+    ChannelTx = close_channel(0, -200, 1),
+    TimeoutTx = channel_block(1, -200, 1, 0),
+    SlasherTx = channel_block(2, -200, 1, 10),
     SignedChannelTx = sign:sign_tx(ChannelTx, Pub, Priv, dict:new()),
     SignedTimeoutTx = sign:sign_tx(TimeoutTx, Pub, Priv, dict:new()),
     SignedSlasherTx = sign:sign_tx(SlasherTx, Pub, Priv, dict:new()),
-    DSignedTimeoutTx = keys:sign(SignedTimeoutTx),
-    DSignedSlasherTx = keys:sign(SignedSlasherTx),
-    %These nonces are no good...
-    Timeout = #timeout{acc = 0, nonce = 7, channel_block = DSignedTimeoutTx},
-    Timeout2 = #timeout{acc = 0, nonce = 8, channel_block = DSignedSlasherTx},
-    Txs4 = sign_all(
-	     [SignedChannelTx,
-	      Timeout,
-	      Timeout2
-	     ]),
-    buy_block(Txs4),
-    SlashBlock = #channel_block{acc1 = 0, acc2 = 1, amount = 0, nonce = 2, id = 2, fast = true},
+    tx_pool:absorb(SignedChannelTx),
+    timeout_channel(SignedTimeoutTx),
+    timeout_channel(SignedSlasherTx),
+    buy_block(),
+    SlashBlock = channel_block(2, 0, 2, 5),
     SignedSlashBlock = sign:sign_tx(SlashBlock, Pub, Priv,dict:new()),
-    DSignedSlashBlock = keys:sign(SignedSlashBlock),
-    CloseChannel = #channel_close{acc = 0, nonce = 9, id = 1},
-    SlashChannel = #channel_slash{acc = 0, nonce = 10, channel_block = DSignedSlashBlock},
-    Txs5 = sign_all(
-	     [CloseChannel,
-	      SlashChannel]),
-    buy_block(Txs5),
+    slow_close(1),
+    channel_slash(SignedSlashBlock),
+    buy_block(),
     success.
