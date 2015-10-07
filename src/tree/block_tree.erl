@@ -98,7 +98,6 @@ write(SignedBlock) ->
     Size = size(zlib:compress(packer:pack(Block))),
     true = Block#block.bond_size > constants:consensus_byte_price() * Size,
     {ChannelsDict, AccountsDict} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new(), BlockGap),
-%give out rewards for validators in the digest.
 %take fee from block creator in the digest.
     TcIncreases = tc_increases(NewNumber),
     CCLosses = cc_losses(Block#block.txs),
@@ -109,7 +108,6 @@ write(SignedBlock) ->
     Key = hash:doit(SignedBlock#signed.data),
     gen_server:cast(?MODULE, {write, Key, V}),
     tx_pool:dump().
-    %look in AccountsDict to see if any new accounts use my pubkey. If they do, add them to id module.
 absorb([]) -> ok;
 absorb([Block|T]) -> write(Block), absorb(T).
 -record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0}).
