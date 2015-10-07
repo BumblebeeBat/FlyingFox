@@ -1,7 +1,12 @@
 -module(spend_tx).
--export([doit/4]).
+-export([doit/4, spend/2]).
 -record(spend, {from = 0, nonce = 0, to = 0, amount = 0}).
 -record(acc, {balance = 0, nonce = 0, pub = "", delegated = 0}).
+spend(To, Amount) ->
+    Id = keys:id(),
+    Acc = block_tree:account(Id),
+    Tx = #spend{from = Id, nonce = Acc#acc.nonce + 1, to = To, amount =Amount},
+    tx_pool:absorb(keys:sign(Tx)).
 doit(Tx, ParentKey, Channels, Accounts) ->
     From = Tx#spend.from,
     false = From == Tx#spend.to,

@@ -14,23 +14,8 @@ handle_cast(dump, _) -> {noreply, []};
 handle_cast({add_tx, Tx}, X) -> {noreply, [Tx|X]}.
 dump() -> gen_server:cast(?MODULE, dump).
 txs() -> gen_server:call(?MODULE, txs).
--record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0}).
--record(spend, {from = 0, nonce = 0, to = 0, amount = 0}).
--record(sign, {}).
--record(slasher, {}).
--record(reveal, {}).
-%-record(close_channel, {}).
--record(ca, {from = 0, nonce = 0, pub = <<"">>, amount = 0}).
-%-record(ca, {from = 0, nonce = 0, to = 0, pub = <<"">>, amount = 0}).
--record(da, {from = 0, nonce = 0, to = <<"0">>}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
--record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
--record(timeout, {acc = 0, nonce = 0, fee = 0, channel_block = 0}).
-%-record(channel_slash, {acc = 0, nonce = 0, id = 0, channel_block = 0}).
--record(channel_slash, {acc = 0, nonce = 0, channel_block = 0}).
--record(channel_close, {acc = 0, nonce = 0, id = 0}).
 -record(sign_tx, {acc = 0, nonce = 0, secret_hash = [], winners = [], prev_hash = ""}).
-
 winners(Txs) -> winners(Txs, 0).
 winners([], X) -> X;
 winners([#signed{data = Tx}|T], X) when is_record(Tx, sign_tx) -> 
@@ -44,20 +29,20 @@ digest([SignedTx|Txs], ParentKey, Channels, Accounts, BlockGap, Winners) ->
     true = sign:verify(SignedTx, Accounts),
     Tx = SignedTx#signed.data,
     {NewChannels, NewAccounts} = 
-        if
-            is_record(Tx, sign_tx) -> sign_tx:doit(Tx, ParentKey, Channels, Accounts, Winners);
-            is_record(Tx, ca) -> create_account_tx:doit(Tx, ParentKey, Channels, Accounts);
-            is_record(Tx, spend) -> spend_tx:doit(Tx, ParentKey, Channels, Accounts);
-            is_record(Tx, da) -> delete_account_tx:doit(Tx, ParentKey, Channels, Accounts);
-            is_record(Tx, sign) -> sign_tx:doit(Tx, ParentKey, Channels, Accounts);%use hashmath to make sure validators are valid.
-            is_record(Tx, slasher) -> slasher_tx:doit(Tx, ParentKey, Channels, Accounts);
-            is_record(Tx, reveal) -> reveal_tx:doit(Tx, ParentKey, Channels, Accounts);
-            is_record(Tx, tc) -> to_channel_tx:doit(SignedTx, ParentKey, Channels, Accounts, BlockGap);
-            is_record(Tx, channel_block) -> channel_block_tx:doit(Tx, ParentKey, Channels, Accounts);
-            is_record(Tx, timeout) -> channel_timeout_tx:doit(Tx, ParentKey, Channels, Accounts, BlockGap);
-            is_record(Tx, channel_slash) -> channel_slash_tx:doit(Tx, ParentKey, Channels, Accounts);
-            is_record(Tx, channel_close) -> channel_close_tx:doit(Tx, ParentKey, Channels, Accounts);
-            true -> 
+	case element(1, Tx) of
+            sign_tx -> sign_tx:doit(Tx, ParentKey, Channels, Accounts, Winners);
+            ca -> create_account_tx:doit(Tx, ParentKey, Channels, Accounts);
+            spend -> spend_tx:doit(Tx, ParentKey, Channels, Accounts);
+            da -> delete_account_tx:doit(Tx, ParentKey, Channels, Accounts);
+            sign -> sign_tx:doit(Tx, ParentKey, Channels, Accounts);
+            slasher -> slasher_tx:doit(Tx, ParentKey, Channels, Accounts);
+            reveal -> reveal_tx:doit(Tx, ParentKey, Channels, Accounts);
+            tc -> to_channel_tx:doit(SignedTx, ParentKey, Channels, Accounts, BlockGap);
+            channel_block -> channel_block_tx:doit(Tx, ParentKey, Channels, Accounts);
+            timeout -> channel_timeout_tx:doit(Tx, ParentKey, Channels, Accounts, BlockGap);
+            channel_slash -> channel_slash_tx:doit(Tx, ParentKey, Channels, Accounts);
+            channel_close -> channel_close_tx:doit(Tx, ParentKey, Channels, Accounts);
+            _ -> 
 		io:fwrite(packer:pack(Tx)),
 		1=2
         end,

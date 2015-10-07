@@ -1,12 +1,17 @@
 -module(channel_timeout_tx).
--export([doit/5]).
+-export([doit/5, timeout_channel/1, channel_block/1]).
 -record(timeout, {acc = 0, nonce = 0, fee = 0, channel_block = 0}).
--record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0}).
 -record(channel, {tc = 0, creator = 0, timeout = 0}).
 -record(acc, {balance = 0, nonce = 0, pub = "", delegated = 0}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
 %If your partner is not helping you, this is how you start the process of closing the channel. 
 %You should only use the final channel-state, or else your partner can punish you for cheating.
+channel_block(X) -> X#timeout.channel_block.
+timeout_channel(ChannelTx) ->
+    Id = keys:id(),
+    Acc = block_tree:account(Id),
+    Tx = #timeout{acc = Id, nonce = Acc#acc.nonce + 1, channel_block = keys:sign(ChannelTx)},
+    tx_pool:absorb(keys:sign(Tx)).
 
 doit(Tx, ParentKey, Channels, Accounts, BlockGap) ->
     SignedCB = Tx#timeout.channel_block, 
@@ -21,7 +26,7 @@ doit(Tx, ParentKey, Channels, Accounts, BlockGap) ->
     Nonce = N#acc.nonce,
     Nonce = Tx#timeout.nonce,
     true = N#acc.balance > 0,
-    Id = CB#channel_block.id,
+    Id = channel_block_tx:id(CB),
     NewAccounts = dict:store(Tx#timeout.acc, N, Accounts),
     T = block_tree:read(top),
     Top = block_tree:height(T),

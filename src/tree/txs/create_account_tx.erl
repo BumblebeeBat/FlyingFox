@@ -1,8 +1,13 @@
 -module(create_account_tx).
--export([doit/4]).
+-export([doit/4, create_account/2]).
 -record(ca, {from = 0, nonce = 0, pub = <<"">>, amount = 0}).
 -record(acc, {balance = 0, nonce = 0, pub = "", delegated = 0}).
 
+create_account(Pub, Amount) ->
+    Id = keys:id(),
+    Acc = block_tree:account(Id),
+    Tx = #ca{from = Id, nonce = Acc#acc.nonce + 1, pub = Pub, amount = Amount},
+    tx_pool:absorb(keys:sign(Tx)).
 next_top(DBroot, Accounts) -> next_top_helper(accounts:array(), accounts:top(), DBroot, Accounts).
 next_top_helper(Array, Top, DBroot, Accounts) ->
     EmptyAcc = #acc{},
