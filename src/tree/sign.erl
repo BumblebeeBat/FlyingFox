@@ -2,7 +2,7 @@
 -export([test/0,new_key/0,sign_tx/4,sign/2,verify_sig/3,shared_secret/2,verify/2]).
 
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
--record(acc, {balance = 0, nonce = 0, pub = ""}).
+-record(acc, {balance = 0, nonce = 0, pub = "", delegated = 0}).
 en(X) -> base64:encode(X).
 de(X) -> base64:decode(X).
 params() -> crypto:ec_curve(secp256k1).

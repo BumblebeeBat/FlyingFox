@@ -3,18 +3,17 @@
 -record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0}).
 -record(channel, {tc = 0, creator = 0, timeout = 0}).
 -record(bet, {amount = 0, merkle = <<"">>, default = 0}).%signatures
--record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1}).
-%-record(tc, {acc1 = 0, acc2 = 1, nonce1 = 0, nonce2 = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1}).
--record(acc, {balance = 0, nonce = 0, pub = ""}).
+-record(tc, {acc1 = 0, acc2 = 0, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
+-record(acc, {balance = 0, nonce = 0, pub = "", delegated = 0}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
 -record(timeout, {acc = 0, nonce = 0, fee = 0, channel_block = 0}).
 %`merkle` is the merkle root of a datastructure explaining the bet.
 %`default` is the part of money that goes to participant 2 if the bet is still locked when the channel closes. Extra money goes to participant 1.
 %There are at least 4 types of bets: hashlock, oracle, burn, and signature. 
-creator([], _) -> 1=2;
+creator([], _) -> #signed{data = #tc{}};
 %creator([Tx|Txs], X) when not is_record(Tx, tc) -> creator(Txs, X);
-creator([Tx|_], Id) when Tx#signed.revealed == Id -> Tx;
-creator([Tx|_], Id) when Tx#signed.data#timeout.channel_block#signed.data#channel_block.id == Id -> Tx;
+creator([Tx = #signed{revealed = Id}|_], Id) -> Tx;
+creator([Tx = #signed{data = #timeout{channel_block = #signed{data = #channel_block{id = Id}}}}|_], Id) -> Tx;
 creator([_|Txs], Id) -> creator(Txs, Id).
 bet_amount(X) -> bet_amount(X, 0).
 bet_amount([], X) -> X;
@@ -22,6 +21,12 @@ bet_amount([Tx|Txs], X) -> bet_amount(Txs, X+Tx#bet.amount).
 origin_tx(BlockNumber, ParentKey, ID) ->
     OriginBlock = block_tree:read_int(BlockNumber, ParentKey),
     OriginTxs = block_tree:txs(OriginBlock),
+    %io:fwrite("number\n"),
+    %io:fwrite(integer_to_list(BlockNumber)),
+    %io:fwrite("\n"),
+    %io:fwrite("txs\n"),
+    %io:fwrite(packer:pack(OriginTxs)),
+    %io:fwrite("\n"),
     %OriginTxs = unwrap_sign(OriginSignedTxs),
     creator(OriginTxs, ID).
 doit(Tx, ParentKey, Channels, Accounts) ->
@@ -41,14 +46,26 @@ channel(Tx, ParentKey, Channels, Accounts) ->
     StartAmount = OriginTx#tc.bal1 + OriginTx#tc.bal2,
     BetAmount = bet_amount(Tx#channel_block.bets),
     true = Tx#channel_block.amount + BetAmount < StartAmount + 1,
+    true = BetAmount - Tx#channel_block.amount < StartAmount + 1,
     true = (Tx#channel_block.expiration == 0) or (Tx#channel_block.expiration > CurrentHeight),
     true = (Tx#channel_block.nlock < CurrentHeight),
+    %one of their delegations should decrease, since we are closing the channel. Depends on OriginTx#tc.consensus_flag...
+    if
+        OriginTx#tc.consensus_flag ->
+            D1 = StartAmount,
+            D2 = 0;
+        true ->
+            D1 = 0,
+            D2 = StartAmount
+    end,
     N1 = #acc{balance = Acc1#acc.balance + Tx#channel_block.amount,
-	      nonce = Acc1#acc.nonce,
-	      pub = Acc1#acc.pub},
+              nonce = Acc1#acc.nonce,
+              pub = Acc1#acc.pub,
+              delegated = Acc1#acc.delegated - D1},
     N2 = #acc{balance = Acc2#acc.balance + StartAmount - Tx#channel_block.amount,
-	      nonce = Acc2#acc.nonce,
-	      pub = Acc2#acc.pub},
+              nonce = Acc2#acc.nonce,
+              pub = Acc2#acc.pub,
+              delegated = Acc2#acc.delegated - D2},
     MyKey = keys:pubkey(),
     if
 	(Acc1#acc.pub == MyKey) or (Acc2#acc.pub == MyKey) -> my_channels:remove(Tx#channel_block.id);

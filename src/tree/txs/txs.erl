@@ -24,19 +24,28 @@ txs() -> gen_server:call(?MODULE, txs).
 %-record(ca, {from = 0, nonce = 0, to = 0, pub = <<"">>, amount = 0}).
 -record(da, {from = 0, nonce = 0, to = <<"0">>}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
--record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1}).
-%-record(tc, {acc1 = 0, acc2 = 1, nonce1 = 0, nonce2 = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1}).
+-record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
 -record(timeout, {acc = 0, nonce = 0, fee = 0, channel_block = 0}).
 %-record(channel_slash, {acc = 0, nonce = 0, id = 0, channel_block = 0}).
 -record(channel_slash, {acc = 0, nonce = 0, channel_block = 0}).
 -record(channel_close, {acc = 0, nonce = 0, id = 0}).
+-record(sign_tx, {acc = 0, nonce = 0, secret_hash = [], winners = [], prev_hash = ""}).
 
-digest([], _, Channels, Accounts, _) -> {Channels, Accounts};
-digest([SignedTx|Txs], ParentKey, Channels, Accounts, BlockGap) ->
+winners(Txs) -> winners(Txs, 0).
+winners([], X) -> X;
+winners([#signed{data = Tx}|T], X) when is_record(Tx, sign_tx) -> 
+    winners(T, X+length(Tx#sign_tx.winners));
+winners([_|T], X) -> winners(T, X).
+digest(Txs, ParentKey, Channels, Accounts, BlockGap) ->
+    Winners = winners(Txs),
+    digest(Txs, ParentKey, Channels, Accounts, BlockGap, Winners).
+digest([], _, Channels, Accounts, _, _) -> {Channels, Accounts};
+digest([SignedTx|Txs], ParentKey, Channels, Accounts, BlockGap, Winners) ->
     true = sign:verify(SignedTx, Accounts),
     Tx = SignedTx#signed.data,
     {NewChannels, NewAccounts} = 
         if
+            is_record(Tx, sign_tx) -> sign_tx:doit(Tx, ParentKey, Channels, Accounts, Winners);
             is_record(Tx, ca) -> create_account_tx:doit(Tx, ParentKey, Channels, Accounts);
             is_record(Tx, spend) -> spend_tx:doit(Tx, ParentKey, Channels, Accounts);
             is_record(Tx, da) -> delete_account_tx:doit(Tx, ParentKey, Channels, Accounts);
@@ -52,6 +61,6 @@ digest([SignedTx|Txs], ParentKey, Channels, Accounts, BlockGap) ->
 		io:fwrite(packer:pack(Tx)),
 		1=2
         end,
-    digest(Txs, ParentKey, NewChannels, NewAccounts, BlockGap).
+    digest(Txs, ParentKey, NewChannels, NewAccounts, BlockGap, Winners).
 
 test() -> 0.

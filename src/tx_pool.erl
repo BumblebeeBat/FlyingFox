@@ -22,7 +22,7 @@ flip(In) -> flip(In, []).
 flip([], Out) -> Out;
 flip([H|T], Out) -> flip(T, [H|Out]).
 txs() -> flip(gen_server:call(?MODULE, txs)).
--record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1}).
+-record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
 absorb(Tx) -> 
     Accounts = accounts(),

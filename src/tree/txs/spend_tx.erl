@@ -1,7 +1,7 @@
 -module(spend_tx).
 -export([doit/4]).
 -record(spend, {from = 0, nonce = 0, to = 0, amount = 0}).
--record(acc, {balance = 0, nonce = 0, pub = ""}).
+-record(acc, {balance = 0, nonce = 0, pub = "", delegated = 0}).
 doit(Tx, ParentKey, Channels, Accounts) ->
     From = Tx#spend.from,
     false = From == Tx#spend.to,
@@ -10,10 +10,12 @@ doit(Tx, ParentKey, Channels, Accounts) ->
     A = Tx#spend.amount,
     NT = #acc{nonce = To#acc.nonce, 
               pub = To#acc.pub, 
-              balance = To#acc.balance + A},
+              balance = To#acc.balance + A,
+              delegated = To#acc.delegated},
     NF = #acc{nonce = F#acc.nonce + 1, 
               pub = F#acc.pub, 
-              balance = F#acc.balance - A},
+              balance = F#acc.balance - A,
+              delegated = F#acc.delegated},
     %should subtract a fee too. The fee goes to the block creator.
     Nonce = NF#acc.nonce,
     Nonce = Tx#spend.nonce,
