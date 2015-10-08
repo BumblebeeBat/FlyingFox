@@ -1,10 +1,9 @@
 -module(channel_block_tx).
--export([doit/4, origin_tx/3, channel/4, channel_block/4, cc_losses/1, close_channel/3, id/1, delay/1, nonce/1]).
+-export([doit/5, origin_tx/3, channel/5, channel_block/4, cc_losses/1, close_channel/3, id/1, delay/1, nonce/1]).
 -record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0}).
 -record(channel, {tc = 0, creator = 0, timeout = 0}).
 -record(bet, {amount = 0, merkle = <<"">>, default = 0}).%signatures
 -record(tc, {acc1 = 0, acc2 = 0, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
--record(acc, {balance = 0, nonce = 0, pub = "", delegated = 0}).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
 %`merkle` is the merkle root of a datastructure explaining the bet.
 %`default` is the part of money that goes to participant 2 if the bet is still locked when the channel closes. Extra money goes to participant 1.
@@ -30,6 +29,7 @@ cc_losses([#signed{data = Tx}|T], X) when is_record(Tx, channel_block) ->
     FSignedOriginTx = channel_block_tx:origin_tx(FChannelPointer#channel.tc, ParentKey, Tx#channel_block.id),
     FOriginTx = FSignedOriginTx#signed.data,
     if
+	%if channel consensus flag is off, then SA = 0
         (FOriginTx#tc.acc1 == OriginTx#tc.acc1) and
         (FOriginTx#tc.acc2 == OriginTx#tc.acc2) ->
             SA = StartAmount;
@@ -77,10 +77,11 @@ origin_tx(BlockNumber, ParentKey, ID) ->
     %io:fwrite("\n"),
     %OriginTxs = unwrap_sign(OriginSignedTxs),
     creator(OriginTxs, ID).
-doit(Tx, ParentKey, Channels, Accounts) ->
+doit(Tx, ParentKey, Channels, Accounts, NewHeight) ->
     true = Tx#channel_block.fast,%If fast is false, then you have to use close_channel instead. 
-    channel(Tx, ParentKey, Channels, Accounts).
-channel(Tx, ParentKey, Channels, Accounts) ->
+    channel(Tx, ParentKey, Channels, Accounts, NewHeight).
+
+channel(Tx, ParentKey, Channels, Accounts, NewHeight) ->
     CurrentHeight = block_tree:height(ParentKey),
     Acc1 = block_tree:account(Tx#channel_block.acc1, ParentKey, Accounts),
     Acc2 = block_tree:account(Tx#channel_block.acc2, ParentKey, Accounts),
@@ -106,17 +107,14 @@ channel(Tx, ParentKey, Channels, Accounts) ->
             D1 = 0,
             D2 = StartAmount
     end,
-    N1 = #acc{balance = Acc1#acc.balance + Tx#channel_block.amount,
-              nonce = Acc1#acc.nonce,
-              pub = Acc1#acc.pub,
-              delegated = Acc1#acc.delegated - D1},
-    N2 = #acc{balance = Acc2#acc.balance + StartAmount - Tx#channel_block.amount,
-              nonce = Acc2#acc.nonce,
-              pub = Acc2#acc.pub,
-              delegated = Acc2#acc.delegated - D2},
+    %update height in each account, and have them pay fees for delegation.
+    N1 = accounts:update(Acc1, NewHeight, Tx#channel_block.amount, -D1, 0),
+    N2 = accounts:update(Acc2, NewHeight, StartAmount - Tx#channel_block.amount, -D2, 0),
     MyKey = keys:pubkey(),
+    APub1 = accounts:pub(Acc1),
+    APub2 = accounts:pub(Acc2),
     if
-	(Acc1#acc.pub == MyKey) or (Acc2#acc.pub == MyKey) -> my_channels:remove(Tx#channel_block.id);
+	(APub1 == MyKey) or (APub2 == MyKey) -> my_channels:remove(Tx#channel_block.id);
 	true -> 1=1
     end,
     NewChannels = dict:store(Tx#channel_block.id, #channel{},Channels),

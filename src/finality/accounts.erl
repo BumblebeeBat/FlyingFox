@@ -6,12 +6,34 @@
 %Top should point to the lowest known address that is deleted.
 -module(accounts).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_account/1,write/2,test/0,size/0,write_helper/3,top/0,delete/1,array/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_account/1,write/2,test/0,size/0,write_helper/3,top/0,delete/1,array/0,update/5,empty/0,empty/1,nonce/1,delegated/1,pub/1,balance/1]).
 -define(file, "accounts.db").
 -define(empty, "d_accounts.db").
-%Pub is 65 bytes. balance is 48 bits. Nonce is 32 bits. delegated is 48 bits. bringing the total to 81 bytes.
--define(word, 81).
--record(acc, {balance = 0, nonce = 0, pub = "", delegated = 0}).
+%Pub is 65 bytes. balance is 48 bits. Nonce is 32 bits. delegated is 48 bits. height is 32 bits, bringing the total to 85 bytes.
+-define(word, 85).
+-record(acc, {balance = 0, nonce = 0, pub = "", delegated = 0, height = 0}).%need to add entry for height. This is the height when delegation fees were last payed. 
+
+empty() -> #acc{}.
+empty(Pub) -> #acc{pub = Pub}.
+update(Acc, Height, Dbal, Ddelegated, N) ->
+    true = ((N == 0) or (N == 1)),
+    Nbal = Acc#acc.balance + Dbal, 
+    true = Nbal > -1,
+    if
+	Height == 0 -> H = Acc#acc.height;
+	true -> H = Height
+    end,
+    #acc{balance = Nbal,
+	 nonce = Acc#acc.nonce + N,
+	 pub = Acc#acc.pub,
+	 delegated = Acc#acc.delegated + Ddelegated,
+	 height = H}.
+
+nonce(Acc) -> Acc#acc.nonce.
+delegated(Acc) -> Acc#acc.delegated.
+pub(Acc) -> Acc#acc.pub.
+balance(Acc) -> Acc#acc.balance.
+
 
 write_helper(N, Val, File) ->
 %since we are reading it a bunch of changes at a time for each block, there should be a way to only open the file once, make all the changes, and then close it. 
@@ -28,7 +50,7 @@ init(ok) ->
             P = base64:decode(constants:master_pub()),
             Balance = constants:initial_coins(),
             Delegated = constants:initial_delegation(),
-            write_helper(0, <<Balance:48, 0:32, Delegated:48, P/binary>>, ?file),
+            write_helper(0, <<Balance:48, 0:32, Delegated:48, 0:32, P/binary>>, ?file),
             Top = 1,
             DeletedArray = << 1:1 , 0:7 >>,
             write_helper(0, DeletedArray, ?empty);
@@ -96,9 +118,9 @@ read_account(N) -> %maybe this should be a call too, that way we can use the ram
 	N >= T -> #acc{};
 	true ->
 	    X = read_file(N),%if this is above the end of the file, then just return an account of all zeros.
-	    <<Balance:48, Nonce:32, Delegated:48, P/binary>> = X,
+	    <<Balance:48, Nonce:32, Delegated:48, Height: 32, P/binary>> = X,
 	    Pub = base64:encode(P),
-	    #acc{balance = Balance, nonce = Nonce, pub = Pub, delegated = Delegated}
+	    #acc{balance = Balance, nonce = Nonce, pub = Pub, delegated = Delegated, height = Height}
     end.
 write(N, Acc) ->
     P = base64:decode(Acc#acc.pub),
@@ -106,6 +128,7 @@ write(N, Acc) ->
     Val = << (Acc#acc.balance):48, 
              (Acc#acc.nonce):32, 
              (Acc#acc.delegated):48, 
+	     (Acc#acc.height):32,
              P/binary >>,
     gen_server:cast(?MODULE, {write, N, Val}).
 size() -> filelib:file_size(?file) div ?word.

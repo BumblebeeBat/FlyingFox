@@ -1,6 +1,6 @@
 -module(block_tree).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,read_int/2,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,read_int/2,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/1]).
 -record(block, {acc = 0, number = 0, hash = "", bond_size = 5000000, txs = [], power = 1, entropy = 0}).
 %mix 1 bit of entropy in for each signer, order bits: ones first, then zeros.
 %mix about 256 div 26 bits into entropy from each block. 
@@ -150,7 +150,7 @@ buy_block(Txs, BlockGap) ->
     Block = #block{txs = Txs, hash = PHash, number = N, power = P},
     absorb([keys:sign(Block)]),
     tx_pool:dump().
-    
+sign_tx(Tx, Pub, Priv) -> sign:sign_tx(Tx, Pub, Priv, tx_pool:accounts()).
 test() -> 
     {Pub, Priv} = sign:new_key(),
     create_account_tx:create_account(Pub, 10000),
@@ -160,20 +160,20 @@ test() ->
     Top = read(read(top)),
     1 = Top#x.block#signed.data#block.power,
     CreateTx1 = to_channel_tx:create_channel(1, 10000, 1000, true, 0),
-    SignedCreateTx1 = sign:sign_tx(CreateTx1, Pub, Priv, dict:new()),
+    SignedCreateTx1 = sign_tx(CreateTx1, Pub, Priv),
     tx_pool:absorb(SignedCreateTx1),
     CreateTx2 = to_channel_tx:create_channel(1, 10000, 1000, true, 0),
-    SignedCreateTx2 = sign:sign_tx(CreateTx2, Pub, Priv, dict:new()),
+    SignedCreateTx2 = sign_tx(CreateTx2, Pub, Priv),
     tx_pool:absorb(SignedCreateTx2),
     CreateTx3 = to_channel_tx:create_channel(1, 10000, 1000, true, 0),
-    SignedCreateTx3 = sign:sign_tx(CreateTx3, Pub, Priv, dict:new()),
+    SignedCreateTx3 = sign_tx(CreateTx3, Pub, Priv),
     tx_pool:absorb(SignedCreateTx3),
     sign_tx:sign(),
     buy_block(),
     Top2 = read(read(top)),
     1 = Top2#x.block#signed.data#block.power,
     ToChannel = to_channel_tx:to_channel(0, 0, 10, 0),
-    SignedToChannel = sign:sign_tx(ToChannel, Pub, Priv, dict:new()),
+    SignedToChannel = sign_tx(ToChannel, Pub, Priv),
     tx_pool:absorb(SignedToChannel),
     sign_tx:sign(),
     buy_block(),
@@ -182,9 +182,9 @@ test() ->
     ChannelTx = channel_block_tx:close_channel(0, -200, 1),
     TimeoutTx = channel_block_tx:channel_block(1, -200, 1, 0),
     SlasherTx = channel_block_tx:channel_block(2, -200, 1, 10),
-    SignedChannelTx = sign:sign_tx(ChannelTx, Pub, Priv, dict:new()),
-    SignedTimeoutTx = sign:sign_tx(TimeoutTx, Pub, Priv, dict:new()),
-    SignedSlasherTx = sign:sign_tx(SlasherTx, Pub, Priv, dict:new()),
+    SignedChannelTx = sign_tx(ChannelTx, Pub, Priv),
+    SignedTimeoutTx = sign_tx(TimeoutTx, Pub, Priv),
+    SignedSlasherTx = sign_tx(SlasherTx, Pub, Priv),
     tx_pool:absorb(SignedChannelTx),
     channel_timeout_tx:timeout_channel(SignedTimeoutTx),
     channel_timeout_tx:timeout_channel(SignedSlasherTx),
@@ -193,7 +193,7 @@ test() ->
     Top4 = read(read(top)),
     1 = Top4#x.block#signed.data#block.power,
     SlashBlock = channel_block_tx:channel_block(2, 0, 2, 5),
-    SignedSlashBlock = sign:sign_tx(SlashBlock, Pub, Priv,dict:new()),
+    SignedSlashBlock = sign_tx(SlashBlock, Pub, Priv),
     channel_close_tx:slow_close(1),
     channel_slash_tx:channel_slash(SignedSlashBlock),
     sign_tx:sign(),

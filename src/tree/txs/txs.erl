@@ -23,29 +23,31 @@ winners([#signed{data = Tx}|T], X) when is_record(Tx, sign_tx) ->
 winners([_|T], X) -> winners(T, X).
 digest(Txs, ParentKey, Channels, Accounts, BlockGap) ->
     Winners = winners(Txs),
-    digest(Txs, ParentKey, Channels, Accounts, BlockGap, Winners).
+    T = block_tree:read(top),
+    Top = block_tree:height(T),
+    NewHeight = BlockGap + Top,
+    digest(Txs, ParentKey, Channels, Accounts, NewHeight, Winners).
 digest([], _, Channels, Accounts, _, _) -> {Channels, Accounts};
-digest([SignedTx|Txs], ParentKey, Channels, Accounts, BlockGap, Winners) ->
+digest([SignedTx|Txs], ParentKey, Channels, Accounts, NewHeight, Winners) ->
     true = sign:verify(SignedTx, Accounts),
     Tx = SignedTx#signed.data,
     {NewChannels, NewAccounts} = 
 	case element(1, Tx) of
-            sign_tx -> sign_tx:doit(Tx, ParentKey, Channels, Accounts, Winners);
-            ca -> create_account_tx:doit(Tx, ParentKey, Channels, Accounts);
-            spend -> spend_tx:doit(Tx, ParentKey, Channels, Accounts);
+            sign_tx -> sign_tx:doit(Tx, ParentKey, Channels, Accounts, Winners, NewHeight);
+            ca -> create_account_tx:doit(Tx, ParentKey, Channels, Accounts, NewHeight);
+            spend -> spend_tx:doit(Tx, ParentKey, Channels, Accounts, NewHeight);
             da -> delete_account_tx:doit(Tx, ParentKey, Channels, Accounts);
-            sign -> sign_tx:doit(Tx, ParentKey, Channels, Accounts);
             slasher -> slasher_tx:doit(Tx, ParentKey, Channels, Accounts);
             reveal -> reveal_tx:doit(Tx, ParentKey, Channels, Accounts);
-            tc -> to_channel_tx:doit(SignedTx, ParentKey, Channels, Accounts, BlockGap);
-            channel_block -> channel_block_tx:doit(Tx, ParentKey, Channels, Accounts);
-            timeout -> channel_timeout_tx:doit(Tx, ParentKey, Channels, Accounts, BlockGap);
-            channel_slash -> channel_slash_tx:doit(Tx, ParentKey, Channels, Accounts);
-            channel_close -> channel_close_tx:doit(Tx, ParentKey, Channels, Accounts);
+            tc -> to_channel_tx:doit(SignedTx, ParentKey, Channels, Accounts, NewHeight);
+            channel_block -> channel_block_tx:doit(Tx, ParentKey, Channels, Accounts, NewHeight);
+            timeout -> channel_timeout_tx:doit(Tx, ParentKey, Channels, Accounts, NewHeight);
+            channel_slash -> channel_slash_tx:doit(Tx, ParentKey, Channels, Accounts, NewHeight);
+            channel_close -> channel_close_tx:doit(Tx, ParentKey, Channels, Accounts, NewHeight);
             _ -> 
 		io:fwrite(packer:pack(Tx)),
 		1=2
         end,
-    digest(Txs, ParentKey, NewChannels, NewAccounts, BlockGap, Winners).
+    digest(Txs, ParentKey, NewChannels, NewAccounts, NewHeight, Winners).
 
 test() -> 0.

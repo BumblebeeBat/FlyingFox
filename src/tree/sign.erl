@@ -2,7 +2,6 @@
 -export([test/0,new_key/0,sign_tx/4,sign/2,verify_sig/3,shared_secret/2,verify/2]).
 
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
--record(acc, {balance = 0, nonce = 0, pub = "", delegated = 0}).
 en(X) -> base64:encode(X).
 de(X) -> base64:decode(X).
 params() -> crypto:ec_curve(secp256k1).
@@ -37,8 +36,8 @@ verify(SignedTx, Accounts) ->
 	(Type == channel_block) or (Type == tc) ->
 	    N2 = element(3, Tx),
 	    Acc2 = block_tree:account(N2, Accounts),
-	    verify_both(SignedTx, Acc1#acc.pub, Acc2#acc.pub);
-	true -> verify_1(SignedTx, Acc1#acc.pub)
+	    verify_both(SignedTx, accounts:pub(Acc1), accounts:pub(Acc2));
+	true -> verify_1(SignedTx, accounts:pub(Acc1))
     end.
 sign_tx(SignedTx, Pub, Priv, Accounts) when element(1, SignedTx) == signed ->
     Tx = SignedTx#signed.data,
@@ -46,32 +45,35 @@ sign_tx(SignedTx, Pub, Priv, Accounts) when element(1, SignedTx) == signed ->
     Sig = sign(Tx, Priv),
     N = element(2, Tx),
     Acc = block_tree:account(N, Accounts),
+    APub = accounts:pub(Acc),
     if
-	Acc#acc.pub == Pub -> #signed{data=Tx, sig=Sig, sig2=SignedTx#signed.sig2, revealed=R};
+	APub == Pub -> #signed{data=Tx, sig=Sig, sig2=SignedTx#signed.sig2, revealed=R};
 	true ->
 	    N2 = element(3, Tx),
 	    Acc2 = block_tree:account(N2, Accounts),
-	    Pub = Acc2#acc.pub,
+	    BPub = accounts:pub(Acc2),
+	    Pub = BPub,
 	    #signed{data=Tx, sig=SignedTx#signed.sig, sig2=Sig, revealed=R}
     end;
 sign_tx(Tx, Pub, Priv, Accounts) ->
     Sig = sign(Tx, Priv),
     N = element(2, Tx),
     Acc = block_tree:account(N, Accounts),
+    APub = accounts:pub(Acc),
     if
-	Acc#acc.pub == Pub -> #signed{data=Tx, sig=Sig};
+	APub == Pub -> #signed{data=Tx, sig=Sig};
 	true ->
 	    N2 = element(3, Tx),
 	    Acc2 = block_tree:account(N2, Accounts),
-	    Pub = Acc2#acc.pub,
+	    Pub = accounts:pub(Acc2),
 	    #signed{data=Tx, sig2=Sig}
     end.
 
 test() ->
     {Pub, Priv} = new_key(),
     {Pub2, Priv2} = new_key(),
-    Acc = #acc{pub = Pub},
-    Acc2 = #acc{pub = Pub2},
+    Acc = accounts:empty(Pub),
+    Acc2 = accounts:empty(Pub2),
     Accounts = dict:store(1, Acc2, dict:store(0, Acc, dict:new())),
     Tx = {channel_block, 0, 1},
     Signed = sign_tx(sign_tx(Tx, Pub, Priv, Accounts), Pub2, Priv2, Accounts),

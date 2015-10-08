@@ -1,5 +1,8 @@
 %When we sign a block, we record the hash of a secret. Later on, we need to reveal this secret.
 %This module holds a bunch of secrets, stored in a dict by hash.
+
+%needs garbage collection.
+%needs to be backed up to disk.
 -module(secrets).
 -behaviour(gen_server).
 -export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read/1,delete/1,new/0]).

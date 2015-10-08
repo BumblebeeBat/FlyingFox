@@ -1,6 +1,5 @@
 -module(sign_tx).
--export([test/0, doit/5, htoi/1, itoh/1, winner/5, sign/0, winners/1]).
--record(acc, {balance = 0, nonce = 0, pub = "", delegated = 0}).
+-export([test/0, doit/6, htoi/1, itoh/1, winner/5, sign/0, winners/1]).
 -record(sign_tx, {acc = 0, nonce = 0, secret_hash = [], winners = [], prev_hash = ""}).
 -record(block, {acc = 0, number = 0, hash = "", bond_size = 5000000, txs = [], power = 1, entropy = 0}).
 
@@ -24,12 +23,12 @@ sign() ->
     %PBlock = ParentX#x.block#signed.data,
     Entropy = PBlock#block.entropy,
     FinalityAcc = accounts:read_account(Id),
-    MyPower = min(Acc#acc.delegated, FinalityAcc#acc.delegated),
+    MyPower = min(accounts:delegated(Acc), accounts:delegated(FinalityAcc)),
     TotalPower = PBlock#block.power,
-    W = winners(MyPower, TotalPower, Entropy, Acc#acc.pub),
+    W = winners(MyPower, TotalPower, Entropy, accounts:pub(Acc)),
     if 
         length(W) > 0 ->
-            Tx = #sign_tx{acc = Id, nonce = Acc#acc.nonce + 1, secret_hash = secrets:new(), winners = W, prev_hash = ParentKey},
+            Tx = #sign_tx{acc = Id, nonce = accounts:nonce(Acc) + 1, secret_hash = secrets:new(), winners = W, prev_hash = ParentKey},
             tx_pool:absorb(keys:sign(Tx));
         true ->
             io:fwrite("cannot sign, did not win this round\n")
@@ -48,24 +47,20 @@ all_winners(_,_,_,_, []) -> 1=1;
 all_winners(MyBonds, TotalBonds, Seed, Pub, [H|T]) ->
     true = winner(MyBonds, TotalBonds, Seed, Pub, H),
     all_winners(MyBonds, TotalBonds, Seed, Pub, T).
-doit(Tx, ParentKey, Channels, Accounts, Winners) ->%signers is the number of signers for this block.
+doit(Tx, ParentKey, Channels, Accounts, Winners, NewHeight) ->%signers is the number of signers for this block.
     true = length(Tx#sign_tx.winners) > 0,
     Acc = block_tree:account(Tx#sign_tx.acc, ParentKey, Accounts),
     FinalityAcc = accounts:read_account(Tx#sign_tx.acc),
-    MyPower = min(Acc#acc.delegated, FinalityAcc#acc.delegated),
-    Block = block_tree:block(),%read(ParentKey)#signed.data,
-    all_winners(MyPower, Block#block.power, Block#block.entropy, Acc#acc.pub, Tx#sign_tx.winners),
+    MyPower = min(accounts:delegated(Acc), accounts:delegated(FinalityAcc)),
+    Block = block_tree:block(),
+    all_winners(MyPower, Block#block.power, Block#block.entropy, accounts:pub(Acc), Tx#sign_tx.winners),
     Bond = Block#block.bond_size,
     ParentKey = Tx#sign_tx.prev_hash,
     %make sure each validator only signs the block once.
     V = max(Winners, constants:minimum_validators_per_block()),
-    N = #acc{nonce = Acc#acc.nonce + 1, 
-             pub = Acc#acc.pub, 
-             balance = Acc#acc.balance - (Bond div V),
-             delegated = Acc#acc.delegated},
-    Nonce = N#acc.nonce,
-    Nonce = Tx#sign_tx.nonce,%err
-    true = N#acc.balance > 0,
+    N = accounts:update(Acc, NewHeight, (-(Bond div V)), 0, 1),
+    Nonce = accounts:nonce(N),
+    Nonce = Tx#sign_tx.nonce,
     NewAccounts = dict:store(Tx#sign_tx.acc, N, Accounts),
     {Channels, NewAccounts}.
 htoi(H) -> << I:256 >> = H, I.
