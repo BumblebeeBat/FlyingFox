@@ -153,7 +153,7 @@ buy_block(Txs, BlockGap) ->
 sign_tx(Tx, Pub, Priv) -> sign:sign_tx(Tx, Pub, Priv, tx_pool:accounts()).
 test() -> 
     {Pub, Priv} = sign:new_key(),
-    create_account_tx:create_account(Pub, 10000),
+    create_account_tx:create_account(Pub, 50000),
     spend_tx:spend(1, 10),
     sign_tx:sign(),
     buy_block(),
@@ -185,7 +185,12 @@ test() ->
     SignedChannelTx = sign_tx(ChannelTx, Pub, Priv),
     SignedTimeoutTx = sign_tx(TimeoutTx, Pub, Priv),
     SignedSlasherTx = sign_tx(SlasherTx, Pub, Priv),
+    Acc1 = account(1),
+    A1 = accounts:balance(Acc1),
     tx_pool:absorb(SignedChannelTx),
+    Acc2 = account(1),
+    A2 = accounts:balance(Acc2),
+    true = A2 < A1,%4000 fee per block, only gain 1010.
     channel_timeout_tx:timeout_channel(SignedTimeoutTx),
     channel_timeout_tx:timeout_channel(SignedSlasherTx),
     sign_tx:sign(),

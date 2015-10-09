@@ -12,7 +12,24 @@
 %Pub is 65 bytes. balance is 48 bits. Nonce is 32 bits. delegated is 48 bits. height is 32 bits, bringing the total to 85 bytes.
 -define(word, 85).
 -record(acc, {balance = 0, nonce = 0, pub = "", delegated = 0, height = 0}).%need to add entry for height. This is the height when delegation fees were last payed. 
-
+init(ok) -> 
+    case file:read_file(?empty) of
+        {error, enoent} -> 
+            P = base64:decode(constants:master_pub()),
+            Balance = constants:initial_coins(),
+            Delegated = constants:initial_delegation(),
+            write_helper(0, <<Balance:48, 0:32, Delegated:48, 0:32, P/binary>>, ?file),
+            Top = 1,
+            DeletedArray = << 1:1 , 0:7 >>,
+            write_helper(0, DeletedArray, ?empty);
+        {ok, DeletedArray} ->
+            Top = walk(0, DeletedArray)
+    end,
+    {ok, {Top, DeletedArray}}.
+start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
+code_change(_OldVsn, State, _Extra) -> {ok, State}.
+terminate(_, _) -> io:format("died!"), ok.
+handle_info(_, X) -> {noreply, X}.
 empty() -> #acc{}.
 empty(Pub) -> #acc{pub = Pub}.
 update(Acc, Height, Dbal, Ddelegated, N) ->
@@ -23,7 +40,9 @@ update(Acc, Height, Dbal, Ddelegated, N) ->
 	Height == 0 -> H = Acc#acc.height;
 	true -> H = Height
     end,
-    #acc{balance = Nbal,
+    DFee =math:pow(constants:delegation_fee(), (H - Acc#acc.height)),
+    AFee = constants:account_fee() * (H - Acc#acc.height),
+    #acc{balance = Nbal - round(Acc#acc.delegated * DFee) - AFee,
 	 nonce = Acc#acc.nonce + N,
 	 pub = Acc#acc.pub,
 	 delegated = Acc#acc.delegated + Ddelegated,
@@ -44,24 +63,7 @@ write_helper(N, Val, File) ->
         {error, _Reason} ->
             write_helper(N, Val, File)
     end.
-init(ok) -> 
-    case file:read_file(?empty) of
-        {error, enoent} -> 
-            P = base64:decode(constants:master_pub()),
-            Balance = constants:initial_coins(),
-            Delegated = constants:initial_delegation(),
-            write_helper(0, <<Balance:48, 0:32, Delegated:48, 0:32, P/binary>>, ?file),
-            Top = 1,
-            DeletedArray = << 1:1 , 0:7 >>,
-            write_helper(0, DeletedArray, ?empty);
-        {ok, DeletedArray} ->
-            Top = walk(0, DeletedArray)
-    end,
-    {ok, {Top, DeletedArray}}.
-start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
-code_change(_OldVsn, State, _Extra) -> {ok, State}.
-terminate(_, _) -> io:format("died!"), ok.
-handle_info(_, X) -> {noreply, X}.
+
 walk(Top, Array) -> 
     << _:Top, Tail/bitstring>> = Array,
     walk_helper(Tail, Top).

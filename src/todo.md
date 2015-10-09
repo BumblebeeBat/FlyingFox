@@ -6,3 +6,9 @@ Otherwise it would be possible to reduce the total number of validators without 
 Charge fee for delegation/channels of time * money * constant.
 
 Add third type for consensus_flag in channel_block, for people who ran out of money and can't validate any more.
+
+add another type of transaction for closing channels. This one should allow you to instantly close the channel, and take all the money, but only if your partner is very low on funds, and will soon lose his account.
+
+reveal tx type
+
+slasher tx type
