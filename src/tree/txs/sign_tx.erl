@@ -1,5 +1,5 @@
 -module(sign_tx).
--export([test/0, doit/6, htoi/1, itoh/1, winner/5, sign/0, winners/1]).
+-export([test/0, doit/5, htoi/1, itoh/1, winner/5, sign/0, winners/1]).
 -record(sign_tx, {acc = 0, nonce = 0, secret_hash = [], winners = [], prev_hash = ""}).
 -record(block, {acc = 0, number = 0, hash = "", bond_size = 5000000, txs = [], power = 1, entropy = 0}).
 
@@ -47,18 +47,18 @@ all_winners(_,_,_,_, []) -> 1=1;
 all_winners(MyBonds, TotalBonds, Seed, Pub, [H|T]) ->
     true = winner(MyBonds, TotalBonds, Seed, Pub, H),
     all_winners(MyBonds, TotalBonds, Seed, Pub, T).
-doit(Tx, ParentKey, Channels, Accounts, Winners, NewHeight) ->%signers is the number of signers for this block.
-    true = length(Tx#sign_tx.winners) > 0,
+doit(Tx, ParentKey, Channels, Accounts, NewHeight) ->%signers is the number of signers for this block.
+    WL = length(Tx#sign_tx.winners),
+    true = WL > 0,
     Acc = block_tree:account(Tx#sign_tx.acc, ParentKey, Accounts),
     FinalityAcc = accounts:read_account(Tx#sign_tx.acc),
     MyPower = min(accounts:delegated(Acc), accounts:delegated(FinalityAcc)),
     Block = block_tree:block(),
     all_winners(MyPower, Block#block.power, Block#block.entropy, accounts:pub(Acc), Tx#sign_tx.winners),
-    Bond = Block#block.bond_size,
+    %Bond = Block#block.bond_size,
     ParentKey = Tx#sign_tx.prev_hash,
     %make sure each validator only signs the block once.
-    V = max(Winners, constants:minimum_validators_per_block()),
-    N = accounts:update(Acc, NewHeight, (-(Bond div V)), 0, 1),
+    N = accounts:update(Acc, NewHeight, (-(constants:security_bonds_per_winner() * WL)), 0, 1),
     Nonce = accounts:nonce(N),
     Nonce = Tx#sign_tx.nonce,
     NewAccounts = dict:store(Tx#sign_tx.acc, N, Accounts),

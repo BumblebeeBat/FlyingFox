@@ -32,15 +32,12 @@ terminate(_, _) -> io:format("died!"), ok.
 handle_info(_, X) -> {noreply, X}.
 empty() -> #acc{}.
 empty(Pub) -> #acc{pub = Pub}.
-update(Acc, Height, Dbal, Ddelegated, N) ->
+update(Acc, H, Dbal, Ddelegated, N) ->
     true = ((N == 0) or (N == 1)),
     Nbal = Acc#acc.balance + Dbal, 
     true = Nbal > -1,
-    if
-	Height == 0 -> H = Acc#acc.height;
-	true -> H = Height
-    end,
-    DFee =math:pow(constants:delegation_fee(), (H - Acc#acc.height)),
+    DFee = 1 - math:pow((1 - constants:delegation_fee()), (H - Acc#acc.height)),
+    true = H > (Acc#acc.height - 1),
     AFee = constants:account_fee() * (H - Acc#acc.height),
     #acc{balance = Nbal - round(Acc#acc.delegated * DFee) - AFee,
 	 nonce = Acc#acc.nonce + N,

@@ -89,7 +89,7 @@ write(SignedBlock) ->
 %check that the amount bonded is within a small margin of the average of the last several blocks. Check that the amount being spent is less than 1/2 the amount bonded.
     Size = size(zlib:compress(packer:pack(Block))),
     true = Block#block.bond_size > constants:consensus_byte_price() * Size,
-    {ChannelsDict, AccountsDict} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new(), BlockGap),
+    {ChannelsDict, AccountsDict} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new(), NewNumber),
 %take fee from block creator in the digest.
     TcIncreases = to_channel_tx:tc_increases(NewNumber),
     CCLosses = channel_block_tx:cc_losses(Block#block.txs),

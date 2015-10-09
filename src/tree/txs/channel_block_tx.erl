@@ -69,12 +69,6 @@ channel_block(Id, Amount, Nonce, Delay) ->
 origin_tx(BlockNumber, ParentKey, ID) ->
     OriginBlock = block_tree:read_int(BlockNumber, ParentKey),
     OriginTxs = block_tree:txs(OriginBlock),
-    %io:fwrite("number\n"),
-    %io:fwrite(integer_to_list(BlockNumber)),
-    %io:fwrite("\n"),
-    %io:fwrite("txs\n"),
-    %io:fwrite(packer:pack(OriginTxs)),
-    %io:fwrite("\n"),
     %OriginTxs = unwrap_sign(OriginSignedTxs),
     creator(OriginTxs, ID).
 doit(Tx, ParentKey, Channels, Accounts, NewHeight) ->

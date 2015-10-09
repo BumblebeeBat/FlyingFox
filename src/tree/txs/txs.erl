@@ -15,25 +15,13 @@ handle_cast({add_tx, Tx}, X) -> {noreply, [Tx|X]}.
 dump() -> gen_server:cast(?MODULE, dump).
 txs() -> gen_server:call(?MODULE, txs).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
--record(sign_tx, {acc = 0, nonce = 0, secret_hash = [], winners = [], prev_hash = ""}).
-winners(Txs) -> winners(Txs, 0).
-winners([], X) -> X;
-winners([#signed{data = Tx}|T], X) when is_record(Tx, sign_tx) -> 
-    winners(T, X+length(Tx#sign_tx.winners));
-winners([_|T], X) -> winners(T, X).
-digest(Txs, ParentKey, Channels, Accounts, BlockGap) ->
-    Winners = winners(Txs),
-    T = block_tree:read(top),
-    Top = block_tree:height(T),
-    NewHeight = BlockGap + Top,
-    digest(Txs, ParentKey, Channels, Accounts, NewHeight, Winners).
-digest([], _, Channels, Accounts, _, _) -> {Channels, Accounts};
-digest([SignedTx|Txs], ParentKey, Channels, Accounts, NewHeight, Winners) ->
+digest([], _, Channels, Accounts, _) -> {Channels, Accounts};
+digest([SignedTx|Txs], ParentKey, Channels, Accounts, NewHeight) ->
     true = sign:verify(SignedTx, Accounts),
     Tx = SignedTx#signed.data,
     {NewChannels, NewAccounts} = 
 	case element(1, Tx) of
-            sign_tx -> sign_tx:doit(Tx, ParentKey, Channels, Accounts, Winners, NewHeight);
+            sign_tx -> sign_tx:doit(Tx, ParentKey, Channels, Accounts, NewHeight);
             ca -> create_account_tx:doit(Tx, ParentKey, Channels, Accounts, NewHeight);
             spend -> spend_tx:doit(Tx, ParentKey, Channels, Accounts, NewHeight);
             da -> delete_account_tx:doit(Tx, ParentKey, Channels, Accounts);
@@ -48,6 +36,6 @@ digest([SignedTx|Txs], ParentKey, Channels, Accounts, NewHeight, Winners) ->
 		io:fwrite(packer:pack(Tx)),
 		1=2
         end,
-    digest(Txs, ParentKey, NewChannels, NewAccounts, NewHeight, Winners).
+    digest(Txs, ParentKey, NewChannels, NewAccounts, NewHeight).
 
 test() -> 0.

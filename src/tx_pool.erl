@@ -33,7 +33,8 @@ absorb(Tx) ->
 	    NewTx = #signed{data = Tx#signed.data, sig = Tx#signed.sig, sig2 = Tx#signed.sig2, revealed = Revealed};
 	true -> NewTx = Tx
     end,
-    {NewChannels, NewAccounts} = txs:digest([NewTx], block_tree:read(top), Channels, Accounts, 1),%Usually blocks are one after the other. Some txs may have to get removed if we change this number to a 2 before creating the block.
+    H = block_tree:height(),
+    {NewChannels, NewAccounts} = txs:digest([NewTx], block_tree:read(top), Channels, Accounts, H+1),%Usually blocks are one after the other. Some txs may have to get removed if we change this number to a 2 before creating the block.
     gen_server:cast(?MODULE, {absorb, NewTx, NewChannels, NewAccounts}).
 
 -record(spend, {from = 0, nonce = 0, to = 0, amount = 0}).
