@@ -14,6 +14,7 @@ start(_StartType, _StartArgs) ->
     %ssl:start(),
     %application:start(inets),
     %application:ensure_all_started(flying_fox).
+
     flying_fox_sup:start_link().
 
 %start() ->

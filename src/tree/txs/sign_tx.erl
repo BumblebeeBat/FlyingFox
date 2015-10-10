@@ -1,8 +1,9 @@
 -module(sign_tx).
--export([test/0, doit/5, htoi/1, itoh/1, winner/5, sign/0, winners/1]).
+-export([test/0, doit/5, htoi/1, itoh/1, winner/5, sign/0, winners/1, acc/1]).
 -record(sign_tx, {acc = 0, nonce = 0, secret_hash = [], winners = [], prev_hash = ""}).
 -record(block, {acc = 0, number = 0, hash = "", bond_size = 5000000, txs = [], power = 1, entropy = 0}).
-
+winners_length(Tx) -> length(Tx#sign_tx.winners).
+acc(Tx) -> Tx#sign_tx.acc.
 winners(MyPower, TotalPower, Entropy, Pubkey) ->
     winners(MyPower, TotalPower, Entropy, Pubkey, 0, constants:chances_per_address(), []).
 winners(_, _, _, _, J, Limit, Out) when J > Limit -> Out;

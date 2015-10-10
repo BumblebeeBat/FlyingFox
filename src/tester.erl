@@ -1,5 +1,5 @@
 -module(tester).
--export([test/0]).
+-export([test/0, tc/1]).
 test() ->
     %this tests modules individually. To test all of them together, use block_tree:test() which adds some test blocks to the blocktree.
     %you need to run clean.sh to empty out the databases before running this test. Make sure you don't download anything from peers before running this test.
@@ -8,6 +8,12 @@ test() ->
 	unlocked -> test1();
 	_ -> "you need to unlock with keys:unlock(""password"") first"
     end.
+tc(F) -> 
+    B = now(), 
+    V = F(), 
+    A = now(), 
+    {timer:now_diff(A,B), V}.
+
 test1() ->
     S = success,
     S = block_dump:test(),
@@ -21,5 +27,8 @@ test1() ->
     S = sign:test(),
     S = accounts:test(),
     S = my_channels:test(),
+    S = secrets:test(),
+    S = constants:test(),
+    S = fractions:test(),
     S.
     

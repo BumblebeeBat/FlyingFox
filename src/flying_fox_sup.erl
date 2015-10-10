@@ -1,8 +1,11 @@
 -module(flying_fox_sup).
 -behaviour(supervisor).
--export([start_link/0,init/1]).
+-export([start_link/0,init/1,stop/0]).
 -define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
 start_link() -> supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+stop() -> 
+    %exit(keys, kill).
+    supervisor:terminate_child(flying_fox_sup, keys).
 init([]) ->
     Children = 
 	[ 
@@ -15,6 +18,9 @@ init([]) ->
 	  ?CHILD(block_tree, worker),
 	  ?CHILD(tx_pool, worker),
 	  ?CHILD(secrets, worker),
+	  ?CHILD(entropy, worker),
+	  ?CHILD(root_pid, worker),
 	  ?CHILD(my_channels, worker)
 	],
     {ok, { {one_for_one, 5, 10}, Children} }.
+

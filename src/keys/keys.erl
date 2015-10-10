@@ -7,14 +7,14 @@
 -define(SANE(), <<"sanity">>).
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
-terminate(_, _) -> io:format("keys died"), ok.
+terminate(_, _) -> io:fwrite("keys died"), ok.
 -record(f, {pub = "", priv = "", sanity = "", id = -1}).
 %sanity is only used on the hard drive, not in ram.
 init(ok) -> 
     X = db:read(?LOC()),
     if
         X == "" -> 
-            K = #f{},%we should probably make a new key instead.
+            K = #f{},
             db:save(?LOC(),K);
         true -> K = #f{pub=X#f.pub, id=X#f.id}
     end,
@@ -22,8 +22,7 @@ init(ok) ->
 store(Pub, Priv, Brainwallet, Id) -> 
     X = #f{pub=Pub, priv=encryption:bin_enc(Brainwallet, Priv), sanity=encryption:bin_enc(Brainwallet, ?SANE()), id = Id},
     db:save(?LOC(), X),
-    Y = db:read(?LOC()),
-    Y = X.
+    X.
 handle_call({ss, Pub}, _From, R) ->
     {reply, sign:shared_secret(Pub, R#f.priv), R};
 handle_call({raw_sign, _}, _From, R) when R#f.priv=="" ->

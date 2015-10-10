@@ -1,8 +1,9 @@
 -module(block_tree).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,read_int/2,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/1]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,read_int/2,read_int/1,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/1]).
 -record(block, {acc = 0, number = 0, hash = "", bond_size = 5000000, txs = [], power = 1, entropy = 0}).
-%mix 1 bit of entropy in for each signer, order bits: ones first, then zeros.
+%We need each block to say how much money is left.
+%mix 2 bit of entropy in for each signer, order bits: ones first, then zeros.
 %mix about 256 div 26 bits into entropy from each block. 
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
 -record(x, {block = 0, height = 0, parent = finality, accounts = dict:new(), channels = dict:new()}).
@@ -69,6 +70,7 @@ height() -> height(read(top)).
 height(K) -> 
     X = read(K),
     X#x.height.
+read_int(Height) -> read_int(Height, read(top)).
 read_int(Height, BlockPointer) ->
     gen_server:call(?MODULE, {read_int, Height, BlockPointer}).
     

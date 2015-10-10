@@ -4,7 +4,9 @@
 %It needs to use txs:digest to keep track of the Accounts and Channels dicts. This module needs to be ready to share either of those dicts.
 -export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, absorb/1,dump/0,accounts/0,channels/0,txs/0,test/0]).
 -record(f, {txs = [], accounts = dict:new(), channels = dict:new()}).
-init(ok) -> {ok, #f{}}.
+init(ok) -> 
+    process_flag(trap_exit, true),
+    {ok, #f{}}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 terminate(_, _) -> io:format("block tree died!"), ok.

@@ -1,6 +1,5 @@
 %depending on how complicated it is to compute the next top, we may have to charge an additional fee when people delete in bad spots.
 
-
 %The byte array should be backed up to disk. Instead of writing the entire thing to disk at each block, we should manipulate individual bits in the file at each block. 
 %If the bit is set to zero, then that address is ready to be written in.
 %Top should point to the lowest known address that is deleted.
@@ -36,21 +35,19 @@ update(Acc, H, Dbal, Ddelegated, N) ->
     true = ((N == 0) or (N == 1)),
     Nbal = Acc#acc.balance + Dbal, 
     true = Nbal > -1,
-    DFee = 1 - math:pow((1 - constants:delegation_fee()), (H - Acc#acc.height)),
-    true = H > (Acc#acc.height - 1),
-    AFee = constants:account_fee() * (H - Acc#acc.height),
-    #acc{balance = Nbal - round(Acc#acc.delegated * DFee) - AFee,
+    Gap = H - Acc#acc.height,
+    F = fractions:exponent(constants:delegation_fee(), Gap),
+    true = H > (Acc#acc.height - 1),%for sanity. not necessary.
+    AFee = constants:account_fee() * Gap,
+    #acc{balance = Nbal - round(fractions:multiply_int(F, Acc#acc.delegated)) - AFee,
 	 nonce = Acc#acc.nonce + N,
 	 pub = Acc#acc.pub,
 	 delegated = Acc#acc.delegated + Ddelegated,
 	 height = H}.
-
 nonce(Acc) -> Acc#acc.nonce.
 delegated(Acc) -> Acc#acc.delegated.
 pub(Acc) -> Acc#acc.pub.
 balance(Acc) -> Acc#acc.balance.
-
-
 write_helper(N, Val, File) ->
 %since we are reading it a bunch of changes at a time for each block, there should be a way to only open the file once, make all the changes, and then close it. 
     case file:open(File, [write, read, raw]) of
