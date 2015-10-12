@@ -9,8 +9,8 @@ bin_enc(Key, Bin) ->
 bin_dec(Key, Msg) ->
     {_, Y} = crypto:stream_decrypt(si(Key), Msg),
     Y.
-sym_enc(Key, Msg) -> bin_enc(Key, packer:pack(Msg)).
-sym_dec(Key, Emsg) -> packer:unpack(bin_dec(Key, Emsg)).
+sym_enc(Key, Msg) -> bin_enc(Key, term_to_binary(Msg)).
+sym_dec(Key, Emsg) -> binary_to_term(bin_dec(Key, Emsg)).
 send_msg(M, ToPub) -> 
     {EphPub, EphPriv} = sign:new_key(),
     Msg = #msg{from=keys:pubkey(), sig=keys:raw_sign(EphPub), msg=M},

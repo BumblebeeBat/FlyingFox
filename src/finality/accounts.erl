@@ -106,6 +106,10 @@ read_file(N) ->
     case file:pread(File, N*?word, ?word) of
 	eof -> write_helper(N*?word, <<0:600>>, ?file),% 600=8*?word.
 	       read_file(N);
+	{error, einval} ->
+	    io:fwrite("read file error \n"),
+	    io:fwrite(integer_to_list(N)),
+	    io:fwrite("\n");
 	{ok, X} -> file:close(File), X
     end.
 read_account(N) -> %maybe this should be a call too, that way we can use the ram to see if it is already deleted?

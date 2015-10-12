@@ -1,7 +1,10 @@
 -module(sign).
--export([test/0,new_key/0,sign_tx/4,sign/2,verify_sig/3,shared_secret/2,verify/2]).
-
+-export([test/0,new_key/0,sign_tx/4,sign/2,verify_sig/3,shared_secret/2,verify/2,data/1,revealed/1,empty/1,empty/0]).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
+empty() -> #signed{}.
+empty(X) -> #signed{data=X}.
+data(X) -> X#signed.data.
+revealed(X) -> X#signed.revealed.
 en(X) -> base64:encode(X).
 de(X) -> base64:decode(X).
 params() -> crypto:ec_curve(secp256k1).
@@ -9,18 +12,12 @@ shared_secret(Pub, Priv) -> en(crypto:compute_key(ecdh, de(Pub), de(Priv), param
 new_key() -> 
     {Pub, Priv} = crypto:generate_key(ecdh, params()),
     {en(Pub), en(Priv)}.
-sign(S, Priv) -> 
-    en(crypto:sign(ecdsa, sha256, packer:pack(S), [de(Priv), params()])).
-verify_sig(S, Sig, Pub) -> 
-    crypto:verify(ecdsa, sha256, packer:pack(S), de(Sig), [de(Pub), params()]).
-verify_1(Tx, Pub) ->
-    Data = Tx#signed.data,%
-    verify_sig(Data, Tx#signed.sig, Pub).
-verify_2(Tx, Pub) ->
-    Data = Tx#signed.data,
-    verify_sig(Data, Tx#signed.sig2, Pub).
+sign(S, Priv) -> en(crypto:sign(ecdsa, sha256, term_to_binary(S), [de(Priv), params()])).
+verify_sig(S, Sig, Pub) -> crypto:verify(ecdsa, sha256, term_to_binary(S), de(Sig), [de(Pub), params()]).
+verify_1(Tx, Pub) -> verify_sig(Tx#signed.data, Tx#signed.sig, Pub).
+verify_2(Tx, Pub) -> verify_sig(Tx#signed.data, Tx#signed.sig2, Pub).
 verify_both(Tx, Pub1, Pub2) ->
-    X = verify_1(Tx, Pub1),%
+    X = verify_1(Tx, Pub1),
     Y = verify_2(Tx, Pub1),
     if
         X -> verify_2(Tx, Pub2);

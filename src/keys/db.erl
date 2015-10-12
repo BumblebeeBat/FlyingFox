@@ -1,10 +1,10 @@
 -module(db).
 -export([test/0, save/2, read/1]).
 -define(file, "database.db").
-save(F, X) -> file:write_file(F, packer:pack(X)).
+save(F, X) -> file:write_file(F, term_to_binary(X)).
 read(F) ->
     case file:read_file(F) of
-        {ok, Out} -> packer:unpack(Out);
+        {ok, Out} -> binary_to_term(Out);
         {error, enoent} -> 
             io:fwrite("file does not exist\n"),
             "";

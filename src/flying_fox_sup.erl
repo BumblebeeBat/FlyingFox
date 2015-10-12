@@ -19,7 +19,7 @@ init([]) ->
 	  ?CHILD(tx_pool, worker),
 	  ?CHILD(secrets, worker),
 	  ?CHILD(entropy, worker),
-	  ?CHILD(root_pid, worker),
+	  ?CHILD(listener, worker),
 	  ?CHILD(my_channels, worker)
 	],
     {ok, { {one_for_one, 5, 10}, Children} }.

@@ -1,10 +1,11 @@
 -module(block_tree).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,read_int/2,read_int/1,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/1]).
--record(block, {acc = 0, number = 0, hash = "", bond_size = 5000000, txs = [], power = 1, entropy = 0}).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,read_int/2,read_int/1,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/1, block_power/1,block_entropy/1,empty_block/0]).
+-record(block, {acc = 0, number = 0, hash = "", bond_size = 5000000, txs = [], power = 1, entropy = 0, total_coins = 0}).
 %We need each block to say how much money is left.
-%mix 2 bit of entropy in for each signer, order bits: ones first, then zeros.
-%mix about 256 div 26 bits into entropy from each block. 
+block_power(B) -> B#block.power.
+block_entropy(B) -> B#block.entropy.
+empty_block() -> #block{}.
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
 -record(x, {block = 0, height = 0, parent = finality, accounts = dict:new(), channels = dict:new()}).
 init(ok) -> 
@@ -89,8 +90,10 @@ write(SignedBlock) ->
     Winners = sign_tx:winners(Block#block.txs),
     true = Winners > (constants:minimum_validators_per_block() - 1),
 %check that the amount bonded is within a small margin of the average of the last several blocks. Check that the amount being spent is less than 1/2 the amount bonded.
-    Size = size(zlib:compress(packer:pack(Block))),
+    Size = size(zlib:compress(term_to_binary(Block))),
     true = Block#block.bond_size > constants:consensus_byte_price() * Size,
+    Entropy = entropy:doit(NewNumber),
+    Entropy = Block#block.entropy, 
     {ChannelsDict, AccountsDict} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new(), NewNumber),
 %take fee from block creator in the digest.
     TcIncreases = to_channel_tx:tc_increases(NewNumber),
@@ -149,7 +152,8 @@ buy_block(Txs, BlockGap) ->
     TcIncreases = to_channel_tx:tc_increases(N),
     CCLosses = channel_block_tx:cc_losses(Txs),
     P = Parent#block.power + TcIncreases - CCLosses,
-    Block = #block{txs = Txs, hash = PHash, number = N, power = P},
+    Entropy = entropy:doit(N),
+    Block = #block{txs = Txs, hash = PHash, number = N, power = P, entropy = Entropy},
     absorb([keys:sign(Block)]),
     tx_pool:dump().
 sign_tx(Tx, Pub, Priv) -> sign:sign_tx(Tx, Pub, Priv, tx_pool:accounts()).

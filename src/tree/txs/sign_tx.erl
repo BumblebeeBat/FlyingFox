@@ -1,7 +1,6 @@
 -module(sign_tx).
 -export([test/0, doit/5, htoi/1, itoh/1, winner/5, sign/0, winners/1, acc/1]).
 -record(sign_tx, {acc = 0, nonce = 0, secret_hash = [], winners = [], prev_hash = ""}).
--record(block, {acc = 0, number = 0, hash = "", bond_size = 5000000, txs = [], power = 1, entropy = 0}).
 winners_length(Tx) -> length(Tx#sign_tx.winners).
 acc(Tx) -> Tx#sign_tx.acc.
 winners(MyPower, TotalPower, Entropy, Pubkey) ->
@@ -14,7 +13,7 @@ winners(MyPower, TotalPower, Entropy, Pubkey, J, Limit, Out) ->
         true -> NOut = Out
     end,
     winners(MyPower, TotalPower, Entropy, Pubkey, J+1, Limit, NOut).
--record(signed, {data="", sig="", sig2="", revealed=[]}).
+%-record(signed, {data="", sig="", sig2="", revealed=[]}).
 sign() ->
     Id = keys:id(),
     Acc = block_tree:account(Id),
@@ -22,10 +21,10 @@ sign() ->
     %ParentX = block_tree:read(ParentKey),
     PBlock = block_tree:block(ParentKey),
     %PBlock = ParentX#x.block#signed.data,
-    Entropy = PBlock#block.entropy,
+    Entropy = block_tree:block_entropy(PBlock),
     FinalityAcc = accounts:read_account(Id),
     MyPower = min(accounts:delegated(Acc), accounts:delegated(FinalityAcc)),
-    TotalPower = PBlock#block.power,
+    TotalPower = block_tree:block_power(PBlock),
     W = winners(MyPower, TotalPower, Entropy, accounts:pub(Acc)),
     if 
         length(W) > 0 ->
@@ -55,8 +54,7 @@ doit(Tx, ParentKey, Channels, Accounts, NewHeight) ->%signers is the number of s
     FinalityAcc = accounts:read_account(Tx#sign_tx.acc),
     MyPower = min(accounts:delegated(Acc), accounts:delegated(FinalityAcc)),
     Block = block_tree:block(),
-    all_winners(MyPower, Block#block.power, Block#block.entropy, accounts:pub(Acc), Tx#sign_tx.winners),
-    %Bond = Block#block.bond_size,
+    all_winners(MyPower, block_tree:block_power(Block), block_tree:block_entropy(Block), accounts:pub(Acc), Tx#sign_tx.winners),
     ParentKey = Tx#sign_tx.prev_hash,
     %make sure each validator only signs the block once.
     N = accounts:update(Acc, NewHeight, (-(constants:security_bonds_per_winner() * WL)), 0, 1),
@@ -68,10 +66,18 @@ htoi(H) -> << I:256 >> = H, I.
 itoh(I) -> << I:256 >>.
 winners(L) -> winners(L, 0).
 winners([], A) -> A;
-winners([#signed{data = Tx}|T], A) when is_record(Tx, sign_tx)-> 
-    B = A + length(Tx#sign_tx.winners),
-    winners(T, B);
-winners([_|T], A) -> winners(T, A).
+winners([SignedTx|T], A) ->
+    Tx = sign:data(SignedTx),
+    if
+	is_record(Tx, sign_tx) ->
+	    B = A + length(Tx#sign_tx.winners),
+	    winners(T, B);
+	true -> winners(T, A)
+    end.
+%winners([#signed{data = Tx}|T], A) when is_record(Tx, sign_tx)-> 
+%    B = A + length(Tx#sign_tx.winners),
+%    winners(T, B);
+%winners([_|T], A) -> winners(T, A).
 
 test() ->
     H = hash:doit(1),
