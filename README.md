@@ -1,16 +1,20 @@
 Bitcoin Donations: 1GbpRPE83Vjg73KFvTVZ4EnS2qNkiLY5TT
 
-Flying Fox is an effort achieve the goals of truthcoin, with more scalability: http://www.truthcoin.info/
+Flying Fox is my attempt to achieve the goals of the truthcoin project: http://www.truthcoin.info/ I respect Paul Sztorc, especially in his ability to communicate truthcoin, which he invented. Him and I are using very different strategies to try and build the same thing.
 
-It deviates from the design choices of truthcoin in several ways:
+Sztorc maintains a forum where the different teams trying to build truthcoin can share ideas: http://forum.truthcoin.info/
 
-*Not based on bitcoin, it is a new blockchain.
+Flying Fox deviates from Sztorc's design choices in several ways:
 
-*An Erlang/OTP package 
+*Not based on bitcoin, it is a new blockchain with a new consensus mechanism optimized for scalability.
 
-*Allows betting in any language, including EVM, Spanish, Python, C, Chinese, and English. 
+*Does not use bitcoin as the internal currency for betting, instead Flying Fox will be a seperate cryptocurrency.
 
-*Uses lightening network channels for payments and for betting. 
+*An Erlang/OTP package, because it is a lot easier to verify that erlang code is secure in comparison to C++.
+
+*Uses lightning network channels for betting. 
+
+*Judgement on the outcome of bets occurs off-chain, in the lightning network.
 
 *Proof of stake blockchain where each peer's power in the consensus process is determined by how much money they have locked in channels.
 
