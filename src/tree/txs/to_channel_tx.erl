@@ -2,7 +2,6 @@
 -export([next_top/2,doit/5,tc_increases/1,to_channel/4,create_channel/5]).
 -record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
 -record(channel, {tc = 0, creator = 0, timeout = 0}).
--record(signed, {data="", sig="", sig2="", revealed=[]}).
 
 create_channel(To, MyBalance, TheirBalance, ConsensusFlag, Fee) ->
 %When first creating a new channel, don't add the id. It will be selected for you by next available.    
@@ -19,9 +18,9 @@ to_channel(ChannelId, Inc1, Inc2, Fee) ->
     Acc = block_tree:account(Id),
     ChannelPointer = block_tree:channel(ChannelId),%[-6,"channel",2,0,3]
     SignedToChannel = channel_block_tx:origin_tx(ChannelPointer#channel.tc, block_tree:read(top), ChannelId),
-    TC = SignedToChannel#signed.data,
+    TC = sign:data(SignedToChannel),
     SignedTx = keys:sign(#tc{acc1 = TC#tc.acc1, acc2 = TC#tc.acc2, bal1 = TC#tc.bal1 + Inc1, bal2 = TC#tc.bal2 + Inc2, consensus_flag = true, id = ChannelId, fee = Fee, nonce = accounts:nonce(Acc) + 1, increment = Inc1 + Inc2}),
-    #signed{data = SignedTx#signed.data, sig2 = SignedTx#signed.sig2, sig = SignedTx#signed.sig, revealed = ChannelId}.
+    sign:set_revealed(SignedTx, ChannelId).
 
 next_top(DBroot, Channels) -> next_top_helper(channels:array(), channels:top(), DBroot, Channels).
 next_top_helper(Array, Top, DBroot, Channels) ->
@@ -35,8 +34,8 @@ next_top_helper(Array, Top, DBroot, Channels) ->
 	    next_top_helper(NewArray, NewTop, DBroot, Channels)
     end.
 doit(SignedTx, ParentKey, Channels, Accounts, NewHeight) ->
-    Tx = SignedTx#signed.data,
-    NewId = SignedTx#signed.revealed,
+    Tx = sign:data(SignedTx),
+    NewId = sign:revealed(SignedTx),
     From = Tx#tc.acc1,
     false = From == Tx#tc.acc2,
     Acc1 = block_tree:account(Tx#tc.acc1, ParentKey, Accounts),
@@ -62,7 +61,7 @@ doit(SignedTx, ParentKey, Channels, Accounts, NewHeight) ->
         true ->
             NewId = Tx#tc.id,
             SignedOriginTx = channel_block_tx:origin_tx(ChannelPointer#channel.tc, ParentKey, NewId),
-            OriginTx = SignedOriginTx#signed.data,
+            OriginTx = sign:data(SignedOriginTx),
             CF = OriginTx#tc.consensus_flag,
             AccN1 = OriginTx#tc.acc1,
             AccN1 = Tx#tc.acc1,
@@ -114,19 +113,21 @@ tc_increases(NewNumber) ->
     end.
 %filter out tc type txs. add up the amount of money in each channel. Exclude channels that aren't still open.
 tc_increases([], X) -> X;
-tc_increases([#signed{data = Tx}|T], X) when is_record(Tx, tc) ->
-    A = Tx#tc.increment,
-    Id = Tx#tc.id,
-    ChannelPointer = block_tree:channel(Id, dict:new()),
-    ParentKey = block_tree:read(top),
-    SignedOriginTx = channel_block_tx:origin_tx(ChannelPointer#channel.tc, ParentKey, channel_block:id(Tx)),
-    OriginTx = SignedOriginTx#signed.data,
+tc_increases([SignedTx|T], X) ->
+    Tx = sign:data(SignedTx),
     if
-	%if consensus flag is turned off, then SA = 0.
-        (Tx#tc.acc1 == OriginTx#tc.acc1) and
-        (Tx#tc.acc2 == OriginTx#tc.acc2) ->
-            SA = A;
-        true -> SA = 0
-    end,
-    
-    tc_increases(T, X+SA).
+	is_record(Tx, tc) ->
+	    A = Tx#tc.increment,
+	    Id = Tx#tc.id,
+	    ChannelPointer = block_tree:channel(Id, dict:new()),
+	    ParentKey = block_tree:read(top),
+	    SignedOriginTx = channel_block_tx:origin_tx(ChannelPointer#channel.tc, ParentKey, channel_block:id(Tx)),
+	    OriginTx = sign:data(SignedOriginTx),
+	    if 
+		not is_record(OriginTx, tc) -> tc_increases(T, X);
+		(Tx#tc.acc1 == OriginTx#tc.acc1) and (Tx#tc.acc2 == OriginTx#tc.acc2) ->
+		    tc_increases(T, X+A);
+		true -> tc_increases(T, X)
+	    end;
+	true -> tc_increases(T, X)
+    end.

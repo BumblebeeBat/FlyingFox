@@ -4,16 +4,15 @@
 -export([doit/5, slow_close/1, id/1]).
 -record(channel, {tc = 0, creator = 0, timeout = 0}).
 -record(channel_close, {acc = 0, nonce = 0, id = 0}).
--record(signed, {data="", sig="", sig2="", revealed=[]}).
 id(X) -> X#channel_close.id.
 
 doit(Tx, ParentKey, Channels, Accounts, NewHeight) ->
     Id = Tx#channel_close.id,
     ChannelPointer = block_tree:channel(Id, ParentKey, Channels),
     SignedOriginTimeout = channel_block_tx:origin_tx(ChannelPointer#channel.timeout, ParentKey, Id),
-    OriginTimeout = SignedOriginTimeout#signed.data,
+    OriginTimeout = sign:data(SignedOriginTimeout),
     SignedOriginTx = channel_timeout_tx:channel_block(OriginTimeout),
-    OriginTx = SignedOriginTx#signed.data,
+    OriginTx = sign:data(SignedOriginTx),
     T = block_tree:read(top),
     Top = block_tree:height(T),
     true = ChannelPointer#channel.timeout < Top - channel_block_tx:delay(OriginTx) + 1,

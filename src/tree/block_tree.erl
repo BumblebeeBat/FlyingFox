@@ -6,12 +6,11 @@
 block_power(B) -> B#block.power.
 block_entropy(B) -> B#block.entropy.
 empty_block() -> #block{}.
--record(signed, {data="", sig="", sig2="", revealed=[]}).
 -record(x, {block = 0, height = 0, parent = finality, accounts = dict:new(), channels = dict:new()}).
 init(ok) -> 
     SignedBlock = block_finality:top_block(),
     X = #x{block = SignedBlock},
-    BH = hash:doit(SignedBlock#signed.data),
+    BH = hash:doit(sign:data(SignedBlock)),
     D = dict:store(top, BH, dict:new()),
     E = dict:store(BH, X, D),
     {ok, E}.
@@ -43,13 +42,15 @@ handle_call({read, V}, _From, D) ->
     {reply, X, D}.
 handle_cast({write, K, V}, D) -> 
     Top = dict:fetch(dict:fetch(top, D), D),
-    TopHeight = Top#x.block#signed.data#block.number,
-    NewHeight = V#x.block#signed.data#block.number,
+    TopHeightB = sign:data(Top#x.block),
+    TopHeight = TopHeightB#block.number,
+    NewHeightB = sign:data(V#x.block),
+    NewHeight = NewHeightB#block.number,
     ND = if
         NewHeight > TopHeight -> 
                  %possible pruning, and merge digests into finality.
                  txs:dump(),
-                 dict:store(top, hash:doit(V#x.block#signed.data), D);
+                 dict:store(top, hash:doit(sign:data(V#x.block)), D);
         true -> D
     end,
     {noreply, dict:store(K, V, ND)}.
@@ -59,14 +60,15 @@ read(K) -> gen_server:call(?MODULE, {read, K}).
 block() -> block(read(top)).
 block(X) -> 
     Y = read(X),
-    Y#x.block#signed.data.
+    sign:data(Y#x.block).
 txs() -> txs(read(read(top))).
 txs(X) -> 
-    X#x.block#signed.data#block.txs.
+    B = sign:data(X#x.block),
+    B#block.txs.
 power() -> power(read(top)).
-power(K) -> 
-    X = read(K),
-    X#x.block#signed.data#block.power.
+power(X) -> 
+    B = sign:data(X),
+    B#block.power.
 height() -> height(read(top)).
 height(K) -> 
     X = read(K),
@@ -76,12 +78,13 @@ read_int(Height, BlockPointer) ->
     gen_server:call(?MODULE, {read_int, Height, BlockPointer}).
     
 write(SignedBlock) ->
-    Block = SignedBlock#signed.data,
+    Block = sign:data(SignedBlock),
     BH = hash:doit(Block),
     false = is_key(BH),
     ParentKey = Block#block.hash,
     Parent = read(ParentKey),
-    OldNumber = Parent#x.block#signed.data#block.number,%we need to charge more if this skipped height. 
+    OldNumberB = sign:data(Parent#x.block),%we need to charge more if this skipped height. 
+    OldNumber = OldNumberB#block.number,
     NewNumber = Block#block.number,
     BlockGap = NewNumber - OldNumber,
     true = BlockGap > 0,
@@ -98,11 +101,11 @@ write(SignedBlock) ->
 %take fee from block creator in the digest.
     TcIncreases = to_channel_tx:tc_increases(NewNumber),
     CCLosses = channel_block_tx:cc_losses(Block#block.txs),
-    NewPower = Parent#x.block#signed.data#block.power + TcIncreases - CCLosses,%increases from to_channel tx fed into finality (when the channel is still open) - decreases from channel closures in this block (for channels that have been open since finality).
-    NewPower = SignedBlock#signed.data#block.power,
+    NewPower = power(Parent#x.block) + TcIncreases - CCLosses,%increases from to_channel tx fed into finality (when the channel is still open) - decreases from channel closures in this block (for channels that have been open since finality).
+    NewPower = power(SignedBlock),
     V = #x{accounts = AccountsDict, channels = ChannelsDict, block = SignedBlock, parent = ParentKey, height = Parent#x.height + 1},
     %possibly change top block, and prune one or more blocks, and merge a block with the finality databases.
-    Key = hash:doit(SignedBlock#signed.data),
+    Key = hash:doit(sign:data(SignedBlock)),
     gen_server:cast(?MODULE, {write, Key, V}),
     tx_pool:dump().
 absorb([]) -> ok;
@@ -146,7 +149,7 @@ buy_block(Txs) -> buy_block(Txs, 1).
 buy_block(Txs, BlockGap) ->
     ParentKey = read(top),
     ParentX = read(ParentKey),
-    Parent = ParentX#x.block#signed.data,
+    Parent = sign:data(ParentX#x.block),
     PHash = hash:doit(Parent),
     N = Parent#block.number + BlockGap,
     TcIncreases = to_channel_tx:tc_increases(N),
@@ -164,7 +167,7 @@ test() ->
     sign_tx:sign(),
     buy_block(),
     Top = read(read(top)),
-    1 = Top#x.block#signed.data#block.power,
+    1 = power(Top#x.block),
     CreateTx1 = to_channel_tx:create_channel(1, 10000, 1000, true, 0),
     SignedCreateTx1 = sign_tx(CreateTx1, Pub, Priv),
     tx_pool:absorb(SignedCreateTx1),
@@ -177,14 +180,14 @@ test() ->
     sign_tx:sign(),
     buy_block(),
     Top2 = read(read(top)),
-    1 = Top2#x.block#signed.data#block.power,
+    1 = power(Top2#x.block),
     ToChannel = to_channel_tx:to_channel(0, 0, 10, 0),
     SignedToChannel = sign_tx(ToChannel, Pub, Priv),
     tx_pool:absorb(SignedToChannel),
     sign_tx:sign(),
     buy_block(),
     Top3 = read(read(top)),
-    1 = Top3#x.block#signed.data#block.power,
+    1 = power(Top3#x.block),
     ChannelTx = channel_block_tx:close_channel(0, -200, 1),
     TimeoutTx = channel_block_tx:channel_block(1, -200, 1, 0),
     SlasherTx = channel_block_tx:channel_block(2, -200, 1, 10),
@@ -202,7 +205,7 @@ test() ->
     sign_tx:sign(),
     buy_block(),
     Top4 = read(read(top)),
-    1 = Top4#x.block#signed.data#block.power,
+    1 = power(Top4#x.block),
     SlashBlock = channel_block_tx:channel_block(2, 0, 2, 5),
     SignedSlashBlock = sign_tx(SlashBlock, Pub, Priv),
     channel_close_tx:slow_close(1),
@@ -210,5 +213,5 @@ test() ->
     sign_tx:sign(),
     buy_block(),
     Top5 = read(read(top)),
-    1 = Top5#x.block#signed.data#block.power,
+    1 = power(Top5#x.block),
     success.

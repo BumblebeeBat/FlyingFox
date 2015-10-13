@@ -4,7 +4,6 @@
 -record(channel, {tc = 0, creator = 0, timeout = 0}).
 -record(bet, {amount = 0, merkle = <<"">>, default = 0}).%signatures
 -record(tc, {acc1 = 0, acc2 = 0, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
--record(signed, {data="", sig="", sig2="", revealed=[]}).
 %`merkle` is the merkle root of a datastructure explaining the bet.
 %`default` is the part of money that goes to participant 2 if the bet is still locked when the channel closes. Extra money goes to participant 1.
 %There are at least 4 types of bets: hashlock, oracle, burn, and signature. 
@@ -14,59 +13,72 @@ delay(X) -> X#channel_block.delay.
 close_channel(Id, Amount, Nonce) ->
     ChannelPointer = block_tree:channel(Id),
     SignedToChannel = origin_tx(ChannelPointer#channel.tc, block_tree:read(top), Id),
-    TC = SignedToChannel#signed.data,
+    TC = sign:data(SignedToChannel),
     keys:sign(#channel_block{acc1 = TC#tc.acc1, acc2 = TC#tc.acc2, amount = Amount, nonce = Nonce, id = Id, fast = true}).
 cc_losses(Txs) -> cc_losses(Txs, 0).%filter out channel_block, channel_slash, and channel_close type txs. add up the amount of money in each such channel. Exclude channels that Haven't been open since finality.
 cc_losses([], X) -> X;
-cc_losses([#signed{data = Tx}|T], X) when is_record(Tx, channel_block) -> 
-    ParentKey = block_tree:read(top),
-    ChannelPointer = block_tree:channel(Tx#channel_block.id, dict:new()),
-    SignedOriginTx = origin_tx(ChannelPointer#channel.tc, ParentKey, Tx#channel_block.id),
-    OriginTx = SignedOriginTx#signed.data,
-    StartAmount = OriginTx#tc.bal1 + OriginTx#tc.bal2,
-
-    FChannelPointer = channels:read_channel(Tx#channel_block.id),
-    FSignedOriginTx = channel_block_tx:origin_tx(FChannelPointer#channel.tc, ParentKey, Tx#channel_block.id),
-    FOriginTx = FSignedOriginTx#signed.data,
+cc_losses([SignedTx|T], X) -> 
+    Tx = sign:data(SignedTx),
+    case element(1, Tx) of
+	channel_block ->
+	    ParentKey = block_tree:read(top),
+	    ChannelPointer = block_tree:channel(Tx#channel_block.id, dict:new()),
+	    SignedOriginTx = origin_tx(ChannelPointer#channel.tc, ParentKey, Tx#channel_block.id),
+	    OriginTx = sign:data(SignedOriginTx),
+	    StartAmount = OriginTx#tc.bal1 + OriginTx#tc.bal2,
+	    
+	    FChannelPointer = channels:read_channel(Tx#channel_block.id),
+	    FSignedOriginTx = channel_block_tx:origin_tx(FChannelPointer#channel.tc, ParentKey, Tx#channel_block.id),
+	    FOriginTx = sign:data(FSignedOriginTx),
+	    if
+						%if channel consensus flag is off, then SA = 0
+		(FOriginTx#tc.acc1 == OriginTx#tc.acc1) and
+		(FOriginTx#tc.acc2 == OriginTx#tc.acc2) ->
+		    SA = StartAmount;
+		true -> SA = 0
+	    end,
+	    cc_losses(T, X+SA);
+	channel_slash ->
+	    cc_losses([channel_slash_tx:channel_block(Tx)|T], X);
+	channel_close ->
+	    ParentKey = block_tree:read(top),
+	    Id = channel_close_tx:id(Tx),
+	    ChannelPointer = block_tree:channel(Id, dict:new()),
+	    SignedOriginTimeout = channel_block_tx:origin_tx(ChannelPointer#channel.timeout, ParentKey, Id),
+	    OriginTimeout = sign:data(SignedOriginTimeout),
+	    CB = channel_timeout_tx:channel_block(OriginTimeout),
+	    cc_losses([CB|T], X);
+	_ -> cc_losses(T, X)
+    end.
+    
+creator([], _) -> sign:empty(#tc{});
+creator([SignedTx|T], Id) ->
+    Tx = sign:data(SignedTx),
+    R = sign:revealed(SignedTx),
+    Type = element(1, Tx),
     if
-	%if channel consensus flag is off, then SA = 0
-        (FOriginTx#tc.acc1 == OriginTx#tc.acc1) and
-        (FOriginTx#tc.acc2 == OriginTx#tc.acc2) ->
-            SA = StartAmount;
-        true -> SA = 0
-    end,
-    cc_losses(T, X+SA);
-cc_losses([#signed{data = Tx}|T], X) when element(1, Tx) == channel_slash -> cc_losses([channel_slash_tx:channel_block(Tx)|T], X);
-cc_losses([#signed{data = Tx}|T], X) when element(1,Tx) == channel_close -> 
-    ParentKey = block_tree:read(top),
-    Id = channel_close_tx:id(Tx),
-    %Id = Tx#channel_close.id,
-    ChannelPointer = block_tree:channel(Id, dict:new()),
-    SignedOriginTimeout = channel_block_tx:origin_tx(ChannelPointer#channel.timeout, ParentKey, Id),
-    OriginTimeout = SignedOriginTimeout#signed.data,
-    CB = channel_timeout_tx:channel_block(OriginTimeout),
-    cc_losses([CB|T], X);
-cc_losses([_|T], X) -> cc_losses(T, X).
-
-creator([], _) -> #signed{data = #tc{}};
-creator([Tx = #signed{revealed = Id}|_], Id) -> Tx;
-creator([Tx = #signed{data = X}|T], Id) when element(1, X) == timeout -> 
-    CB = channel_timeout_tx:channel_block(X),
-    I = CB#signed.data#channel_block.id,
-    if 
-	I == Id -> Tx;
-	true -> creator(T, Id)
-    end;
-creator([_|Txs], Id) -> creator(Txs, Id).
+	R == Id -> SignedTx;
+	Type == timeout ->
+	    SignedCB = channel_timeout_tx:channel_block(Tx),
+	    CB = sign:data(SignedCB),
+	    I = CB#channel_block.id,
+	    if 
+		I == Id -> SignedTx;
+		true -> creator(T, Id)
+	    end;
+	true ->
+	    creator(T, Id)
+    end.
 bet_amount(X) -> bet_amount(X, 0).
 bet_amount([], X) -> X;
 bet_amount([Tx|Txs], X) -> bet_amount(Txs, X+Tx#bet.amount).
 channel_block(Id, Amount, Nonce, Delay) ->
     ChannelPointer = block_tree:channel(Id),
     SignedToChannel = channel_block_tx:origin_tx(ChannelPointer#channel.tc, block_tree:read(top), Id),
-    TC = SignedToChannel#signed.data,
+    TC = sign:data(SignedToChannel),
     keys:sign(#channel_block{acc1 = TC#tc.acc1, acc2 = TC#tc.acc2, amount = Amount, nonce = Nonce, id = Id, fast = false, delay = Delay}).
-origin_tx(BlockNumber, ParentKey, ID) ->
+origin_tx(BlockNumber, ParentKey, ID) ->%this should also include a type tag, right???
+    %it should be 2 functions. one for timeout, and one for signed?
     OriginBlock = block_tree:read_int(BlockNumber, ParentKey),
     OriginTxs = block_tree:txs(OriginBlock),
     %OriginTxs = unwrap_sign(OriginSignedTxs),
@@ -81,7 +93,7 @@ channel(Tx, ParentKey, Channels, Accounts, NewHeight) ->
     Acc2 = block_tree:account(Tx#channel_block.acc2, ParentKey, Accounts),
     ChannelPointer = block_tree:channel(Tx#channel_block.id, ParentKey, Channels),
     SignedOriginTx = origin_tx(ChannelPointer#channel.tc, ParentKey, Tx#channel_block.id),
-    OriginTx = SignedOriginTx#signed.data,
+    OriginTx = sign:data(SignedOriginTx),
     AccN1 = Tx#channel_block.acc1,
     AccN1 = OriginTx#tc.acc1,
     AccN2 = Tx#channel_block.acc2,

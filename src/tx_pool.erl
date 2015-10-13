@@ -25,15 +25,17 @@ flip([], Out) -> Out;
 flip([H|T], Out) -> flip(T, [H|Out]).
 txs() -> flip(gen_server:call(?MODULE, txs)).
 -record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
--record(signed, {data="", sig="", sig2="", revealed=[]}).
-absorb(Tx) -> 
+absorb(SignedTx) -> 
+    Tx = sign:data(SignedTx),
     Accounts = accounts(),
     Channels = channels(),
-    if
-	is_record(Tx#signed.data, tc) and (Tx#signed.revealed == []) ->
+    R = sign:revealed(SignedTx),
+    NewTx = if
+	is_record(Tx, tc) and (R == []) ->
 	    Revealed = to_channel_tx:next_top(block_tree:read(top), Channels),
-	    NewTx = #signed{data = Tx#signed.data, sig = Tx#signed.sig, sig2 = Tx#signed.sig2, revealed = Revealed};
-	true -> NewTx = Tx
+	    
+	    sign:set_revealed(SignedTx, Revealed);
+	true -> SignedTx
     end,
     H = block_tree:height(),
     {NewChannels, NewAccounts} = txs:digest([NewTx], block_tree:read(top), Channels, Accounts, H+1),%Usually blocks are one after the other. Some txs may have to get removed if we change this number to a 2 before creating the block.
@@ -41,7 +43,6 @@ absorb(Tx) ->
 
 -record(spend, {from = 0, nonce = 0, to = 0, amount = 0}).
 -record(ca, {from = 0, nonce = 0, pub = <<"">>, amount = 0}).
-%-record(ca, {from = 0, nonce = 0, to = 0, pub = <<"">>, amount = 0}).
 test() ->
     {Pub, _Priv} = sign:new_key(),
     CreateAccount = keys:sign(#ca{from = 0, nonce = 1, pub=Pub, amount=12020}),

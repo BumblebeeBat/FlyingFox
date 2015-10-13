@@ -14,11 +14,10 @@ handle_cast(dump, _) -> {noreply, []};
 handle_cast({add_tx, Tx}, X) -> {noreply, [Tx|X]}.
 dump() -> gen_server:cast(?MODULE, dump).
 txs() -> gen_server:call(?MODULE, txs).
--record(signed, {data="", sig="", sig2="", revealed=[]}).
 digest([], _, Channels, Accounts, _) -> {Channels, Accounts};
 digest([SignedTx|Txs], ParentKey, Channels, Accounts, NewHeight) ->
     true = sign:verify(SignedTx, Accounts),
-    Tx = SignedTx#signed.data,
+    Tx = sign:data(SignedTx),
     {NewChannels, NewAccounts} = 
 	case element(1, Tx) of
             sign_tx -> sign_tx:doit(Tx, ParentKey, Channels, Accounts, NewHeight);

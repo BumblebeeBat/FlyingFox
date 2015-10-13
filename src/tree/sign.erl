@@ -1,9 +1,10 @@
 -module(sign).
--export([test/0,new_key/0,sign_tx/4,sign/2,verify_sig/3,shared_secret/2,verify/2,data/1,revealed/1,empty/1,empty/0]).
+-export([test/0,new_key/0,sign_tx/4,sign/2,verify_sig/3,shared_secret/2,verify/2,data/1,revealed/1,empty/1,empty/0,set_revealed/2]).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
 empty() -> #signed{}.
 empty(X) -> #signed{data=X}.
 data(X) -> X#signed.data.
+set_revealed(X, R) -> #signed{data = X#signed.data, sig = X#signed.sig, sig2 = X#signed.sig2, revealed = R}.
 revealed(X) -> X#signed.revealed.
 en(X) -> base64:encode(X).
 de(X) -> base64:decode(X).

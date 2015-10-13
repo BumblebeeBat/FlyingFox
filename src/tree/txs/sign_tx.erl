@@ -13,14 +13,11 @@ winners(MyPower, TotalPower, Entropy, Pubkey, J, Limit, Out) ->
         true -> NOut = Out
     end,
     winners(MyPower, TotalPower, Entropy, Pubkey, J+1, Limit, NOut).
-%-record(signed, {data="", sig="", sig2="", revealed=[]}).
 sign() ->
     Id = keys:id(),
     Acc = block_tree:account(Id),
     ParentKey = block_tree:read(top),
-    %ParentX = block_tree:read(ParentKey),
     PBlock = block_tree:block(ParentKey),
-    %PBlock = ParentX#x.block#signed.data,
     Entropy = block_tree:block_entropy(PBlock),
     FinalityAcc = accounts:read_account(Id),
     MyPower = min(accounts:delegated(Acc), accounts:delegated(FinalityAcc)),
@@ -74,10 +71,6 @@ winners([SignedTx|T], A) ->
 	    winners(T, B);
 	true -> winners(T, A)
     end.
-%winners([#signed{data = Tx}|T], A) when is_record(Tx, sign_tx)-> 
-%    B = A + length(Tx#sign_tx.winners),
-%    winners(T, B);
-%winners([_|T], A) -> winners(T, A).
 
 test() ->
     H = hash:doit(1),

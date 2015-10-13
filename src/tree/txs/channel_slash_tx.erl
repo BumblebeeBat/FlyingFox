@@ -1,7 +1,6 @@
 -module(channel_slash_tx).
 -export([doit/5, channel_slash/1, channel_block/1]).
 -record(channel_slash, {acc = 0, nonce = 0, channel_block = 0}).
--record(signed, {data="", sig="", sig2="", revealed=[]}).
 -record(channel, {tc = 0, creator = 0, timeout = 0}).
 %If you partner tries closing the channel at the wrong point in history, this is how you provide evidence of the true final state
 channel_block(Tx) ->
@@ -13,11 +12,11 @@ channel_slash(ChannelTx) ->
 doit(Tx, ParentKey, Channels, Accounts, NewHeight) ->
     SignedCB = Tx#channel_slash.channel_block,
     sign:verify(SignedCB, Accounts),
-    CB = SignedCB#signed.data,
+    CB = sign:data(SignedCB),
     Id = channel_block_tx:id(CB),
     ChannelPointer = block_tree:channel(Id, ParentKey, Channels),
     OriginTimeout = channel_block_tx:origin_tx(ChannelPointer#channel.timeout, ParentKey, Id),
-    SignedOriginTx = channel_timeout_tx:channel_block(OriginTimeout#signed.data),
-    OriginTx = SignedOriginTx#signed.data,
+    SignedOriginTx = channel_timeout_tx:channel_block(sign:data(OriginTimeout)),
+    OriginTx = sign:data(SignedOriginTx),
     true = channel_block_tx:nonce(CB) > channel_block_tx:nonce(OriginTx),
     channel_block_tx:channel(CB, ParentKey, Channels, Accounts, NewHeight).

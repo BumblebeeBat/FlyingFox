@@ -1,7 +1,6 @@
 -module(reveal).
 -export([doit/5]).
 -record(reveal_tx, {acc = 0, nonce = 0, secret = [], height = 0}).
--record(signed, {data="", sig="", sig2="", revealed=[]}).
 
 doit(Tx, ParentKey, Channels, Accounts, NewHeight) ->
     H = Tx#reveal_tx.height,
@@ -11,7 +10,7 @@ doit(Tx, ParentKey, Channels, Accounts, NewHeight) ->
     true = Hgap < constants:max_reveal(),
     OriginBlock = block_tree:read_int(H),
     OriginTxs = block_tree:txs(OriginBlock),
-    OriginTx = origin_tx(OriginTxs, Tx#reveal_tx.acc),
+    OriginTx = origin_tx(OriginTxs, Tx#reveal_tx.acc),%parent key should be an input!!!
     WL = sign_tx:winners_length(OriginTx),
     Reward = constants:portion_of_block_creation_fee_validators() div constants:maximum_validators_per_block(),
     DReward = fractions:multiply_int(constants:delegation_reward(), constants:initial_coins()),%should be multiplying against the amount of coins delegated.
@@ -23,7 +22,8 @@ doit(Tx, ParentKey, Channels, Accounts, NewHeight) ->
     NewAccounts = dict:store(Tx#reveal_tx.acc, N, Accounts),
     {Channels, NewAccounts}.
 
-origin_tx([#signed{data = Tx}|Txs], Acc) ->
+origin_tx([SignedTx|Txs], Acc) ->
+    Tx = sign:data(SignedTx),
     E = element(1, Tx),
     SA = sign_tx:acc(Tx),
     if
