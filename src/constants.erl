@@ -24,7 +24,7 @@ create_channel_fee() -> consensus_byte_price() * 9.
 create_account_fee() -> consensus_byte_price() * 75.
 delete_account_reward() -> create_account_fee() * 3 div 4. % 3/4th refund.
 security_ratio() -> 1.5.
--define(SecurityBondsPerWinner, initial_coins() div (100 * finality() * minimum_validators_per_block())). 
+-define(SecurityBondsPerWinner, initial_coins() div (1000 * finality() * minimum_validators_per_block())). 
 security_bonds_per_winner() -> ?SecurityBondsPerWinner.% so around 1% of money is locked up at a time, and it takes around 4000 blocks to move all the money. %this money goes from validators, to themselves. 
 -define(AccountFee, initial_coins() div (max_address() * finality() * 10)).%so if all accounts are full, it takes 10 finalities until most of them start losing so much money that their accounts open up. 
 account_fee() -> ?AccountFee. 

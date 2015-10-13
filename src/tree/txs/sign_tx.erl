@@ -1,5 +1,5 @@
 -module(sign_tx).
--export([test/0, doit/5, htoi/1, itoh/1, winner/5, sign/0, winners/1, acc/1]).
+-export([test/0, doit/6, htoi/1, itoh/1, winner/5, sign/0, winners/1, acc/1]).
 -record(sign_tx, {acc = 0, nonce = 0, secret_hash = [], winners = [], prev_hash = ""}).
 winners_length(Tx) -> length(Tx#sign_tx.winners).
 acc(Tx) -> Tx#sign_tx.acc.
@@ -44,7 +44,7 @@ all_winners(_,_,_,_, []) -> 1=1;
 all_winners(MyBonds, TotalBonds, Seed, Pub, [H|T]) ->
     true = winner(MyBonds, TotalBonds, Seed, Pub, H),
     all_winners(MyBonds, TotalBonds, Seed, Pub, T).
-doit(Tx, ParentKey, Channels, Accounts, NewHeight) ->%signers is the number of signers for this block.
+doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->%signers is the number of signers for this block.
     WL = length(Tx#sign_tx.winners),
     true = WL > 0,
     Acc = block_tree:account(Tx#sign_tx.acc, ParentKey, Accounts),
@@ -58,7 +58,7 @@ doit(Tx, ParentKey, Channels, Accounts, NewHeight) ->%signers is the number of s
     Nonce = accounts:nonce(N),
     Nonce = Tx#sign_tx.nonce,
     NewAccounts = dict:store(Tx#sign_tx.acc, N, Accounts),
-    {Channels, NewAccounts}.
+    {Channels, NewAccounts, TotalCoins - (WL * constants:security_bonds_per_winner())}.
 htoi(H) -> << I:256 >> = H, I.
 itoh(I) -> << I:256 >>.
 winners(L) -> winners(L, 0).

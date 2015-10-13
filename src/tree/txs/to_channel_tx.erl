@@ -1,5 +1,5 @@
 -module(to_channel_tx).%used to create a channel, or increase the amount of money in it.
--export([next_top/2,doit/5,tc_increases/1,to_channel/4,create_channel/5]).
+-export([next_top/2,doit/6,tc_increases/1,to_channel/4,create_channel/5]).
 -record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
 -record(channel, {tc = 0, creator = 0, timeout = 0}).
 
@@ -33,7 +33,7 @@ next_top_helper(Array, Top, DBroot, Channels) ->
 	    NewTop = channels:walk(Top, NewArray),
 	    next_top_helper(NewArray, NewTop, DBroot, Channels)
     end.
-doit(SignedTx, ParentKey, Channels, Accounts, NewHeight) ->
+doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
     Tx = sign:data(SignedTx),
     NewId = sign:revealed(SignedTx),
     From = Tx#tc.acc1,
@@ -101,7 +101,7 @@ doit(SignedTx, ParentKey, Channels, Accounts, NewHeight) ->
     NewAccounts1 = dict:store(Tx#tc.acc1, N1, Accounts),
     NewAccounts = dict:store(Tx#tc.acc2, N2, NewAccounts1),
     NewChannels = dict:store(NewId, Ch, Channels),
-    {NewChannels, NewAccounts}.
+    {NewChannels, NewAccounts, TotalCoins}.
 tc_increases(NewNumber) ->
     ParentKey = block_tree:read(top),
     CF = constants:finality(),

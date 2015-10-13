@@ -1,7 +1,8 @@
 -module(block_tree).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,read_int/2,read_int/1,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/1, block_power/1,block_entropy/1,empty_block/0]).
--record(block, {acc = 0, number = 0, hash = "", bond_size = 5000000, txs = [], power = 1, entropy = 0, total_coins = 0}).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,read_int/2,read_int/1,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/2, block_power/1,block_entropy/1,empty_block/0,total_coins/0, buy_block/0]).
+-record(block, {acc = 0, number = 0, hash = "", bond_size = 5000000, txs = [], power = 1, entropy = 0, total_coins = constants:initial_coins()}).
+%power is how many coin are in channels for at least finality.
 %We need each block to say how much money is left.
 block_power(B) -> B#block.power.
 block_entropy(B) -> B#block.entropy.
@@ -58,6 +59,9 @@ top() -> gen_server:call(?MODULE, top).
 is_key(X) -> gen_server:call(?MODULE, {key, X}).
 read(K) -> gen_server:call(?MODULE, {read, K}).
 block() -> block(read(top)).
+total_coins() -> total_coins(block(read(top))).
+total_coins(X) -> 
+    X#block.total_coins.
 block(X) -> 
     Y = read(X),
     sign:data(Y#x.block).
@@ -82,9 +86,9 @@ write(SignedBlock) ->
     BH = hash:doit(Block),
     false = is_key(BH),
     ParentKey = Block#block.hash,
-    Parent = read(ParentKey),
-    OldNumberB = sign:data(Parent#x.block),%we need to charge more if this skipped height. 
-    OldNumber = OldNumberB#block.number,
+    Parentx = read(ParentKey),
+    Parent = sign:data(Parentx#x.block),%we need to charge more if this skipped height. 
+    OldNumber = Parent#block.number,
     NewNumber = Block#block.number,
     BlockGap = NewNumber - OldNumber,
     true = BlockGap > 0,
@@ -97,13 +101,13 @@ write(SignedBlock) ->
     true = Block#block.bond_size > constants:consensus_byte_price() * Size,
     Entropy = entropy:doit(NewNumber),
     Entropy = Block#block.entropy, 
-    {ChannelsDict, AccountsDict} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new(), NewNumber),
+    {ChannelsDict, AccountsDict, NewTotalCoins} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new(), Parent#block.total_coins, NewNumber),
 %take fee from block creator in the digest.
     TcIncreases = to_channel_tx:tc_increases(NewNumber),
     CCLosses = channel_block_tx:cc_losses(Block#block.txs),
-    NewPower = power(Parent#x.block) + TcIncreases - CCLosses,%increases from to_channel tx fed into finality (when the channel is still open) - decreases from channel closures in this block (for channels that have been open since finality).
+    NewPower = power(Parentx#x.block) + TcIncreases - CCLosses,%increases from to_channel tx fed into finality (when the channel is still open) - decreases from channel closures in this block (for channels that have been open since finality).
     NewPower = power(SignedBlock),
-    V = #x{accounts = AccountsDict, channels = ChannelsDict, block = SignedBlock, parent = ParentKey, height = Parent#x.height + 1},
+    V = #x{accounts = AccountsDict, channels = ChannelsDict, block = SignedBlock, parent = ParentKey, height = Parentx#x.height + 1},
     %possibly change top block, and prune one or more blocks, and merge a block with the finality databases.
     Key = hash:doit(sign:data(SignedBlock)),
     gen_server:cast(?MODULE, {write, Key, V}),
@@ -144,9 +148,9 @@ channel_helper(N, H) ->
         error -> channel_helper(N, Parent);
         {ok, Val} -> Val
     end.
-buy_block() -> buy_block(tx_pool:txs()).
-buy_block(Txs) -> buy_block(Txs, 1).
-buy_block(Txs, BlockGap) ->
+buy_block() -> buy_block(tx_pool:txs(), tx_pool:total_coins()).
+buy_block(Txs, TotalCoins) -> buy_block(Txs, TotalCoins, 1).
+buy_block(Txs, TotalCoins, BlockGap) ->
     ParentKey = read(top),
     ParentX = read(ParentKey),
     Parent = sign:data(ParentX#x.block),
@@ -156,7 +160,7 @@ buy_block(Txs, BlockGap) ->
     CCLosses = channel_block_tx:cc_losses(Txs),
     P = Parent#block.power + TcIncreases - CCLosses,
     Entropy = entropy:doit(N),
-    Block = #block{txs = Txs, hash = PHash, number = N, power = P, entropy = Entropy},
+    Block = #block{txs = Txs, hash = PHash, number = N, power = P, entropy = Entropy, total_coins = TotalCoins},
     absorb([keys:sign(Block)]),
     tx_pool:dump().
 sign_tx(Tx, Pub, Priv) -> sign:sign_tx(Tx, Pub, Priv, tx_pool:accounts()).
