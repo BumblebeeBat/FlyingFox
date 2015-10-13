@@ -5,7 +5,7 @@
 doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
     F = block_tree:account(Tx#da.from, ParentKey, Accounts),
     To = block_tree:account(Tx#da.to, ParentKey, Accounts),
-    NT = accounts:update(To, NewHeight, accounts:balance(F) + constants:delete_account_reward(), 0, 0),
+    NT = accounts:update(To, NewHeight, accounts:balance(F) + constants:delete_account_reward(), 0, 0, TotalCoins),
     Nonce = accounts:nonce(F) + 1,
     Nonce = Tx#da.nonce,
     Accounts2 = dict:store(Tx#da.to, NT, Accounts),

@@ -10,5 +10,3 @@ add another type of transaction for closing channels. This one should allow you 
 reveal tx type
 
 slasher tx type
-
-Pay validators from the pool of deleted money, this ensures that we don't print money.

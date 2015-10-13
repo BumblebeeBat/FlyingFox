@@ -5,7 +5,7 @@
 %Top should point to the lowest known address that is deleted.
 -module(accounts).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_account/1,write/2,test/0,size/0,write_helper/3,top/0,delete/1,array/0,update/5,empty/0,empty/1,nonce/1,delegated/1,pub/1,balance/1]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_account/1,write/2,test/0,size/0,write_helper/3,top/0,delete/1,array/0,update/6,empty/0,empty/1,nonce/1,delegated/1,pub/1,balance/1]).
 -define(file, "accounts.db").
 -define(empty, "d_accounts.db").
 %Pub is 65 bytes. balance is 48 bits. Nonce is 32 bits. delegated is 48 bits. height is 32 bits, bringing the total to 85 bytes.
@@ -31,14 +31,14 @@ terminate(_, _) -> io:format("died!"), ok.
 handle_info(_, X) -> {noreply, X}.
 empty() -> #acc{}.
 empty(Pub) -> #acc{pub = Pub}.
-update(Acc, H, Dbal, Ddelegated, N) ->
+update(Acc, H, Dbal, Ddelegated, N, TotalCoins) ->
     true = ((N == 0) or (N == 1)),
     Nbal = Acc#acc.balance + Dbal, 
     true = Nbal > -1,
     Gap = H - Acc#acc.height,
     F = fractions:exponent(constants:delegation_fee(), Gap),
     true = H > (Acc#acc.height - 1),%for sanity. not necessary.
-    AFee = constants:account_fee() * Gap,
+    AFee = fractions:multiply_int(constants:account_fee(), TotalCoins) * Gap,
     #acc{balance = Nbal - round(fractions:multiply_int(F, Acc#acc.delegated)) - AFee,
 	 nonce = Acc#acc.nonce + N,
 	 pub = Acc#acc.pub,

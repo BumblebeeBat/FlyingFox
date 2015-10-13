@@ -54,11 +54,12 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->%signers is the
     all_winners(MyPower, block_tree:block_power(Block), block_tree:block_entropy(Block), accounts:pub(Acc), Tx#sign_tx.winners),
     ParentKey = Tx#sign_tx.prev_hash,
     %make sure each validator only signs the block once.
-    N = accounts:update(Acc, NewHeight, (-(constants:security_bonds_per_winner() * WL)), 0, 1),
+    Lose = fractions:multiply_int(constants:security_bonds_per_winner(), TotalCoins)* WL,
+    N = accounts:update(Acc, NewHeight, -Lose, 0, 1, TotalCoins),
     Nonce = accounts:nonce(N),
     Nonce = Tx#sign_tx.nonce,
     NewAccounts = dict:store(Tx#sign_tx.acc, N, Accounts),
-    {Channels, NewAccounts, TotalCoins - (WL * constants:security_bonds_per_winner())}.
+    {Channels, NewAccounts, TotalCoins - Lose}.
 htoi(H) -> << I:256 >> = H, I.
 itoh(I) -> << I:256 >>.
 winners(L) -> winners(L, 0).

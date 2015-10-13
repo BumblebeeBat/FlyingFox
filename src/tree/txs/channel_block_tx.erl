@@ -114,8 +114,8 @@ channel(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
             D2 = StartAmount
     end,
     %update height in each account, and have them pay fees for delegation.
-    N1 = accounts:update(Acc1, NewHeight, OriginTx#tc.bal1 + Tx#channel_block.amount, -D1, 0),
-    N2 = accounts:update(Acc2, NewHeight, OriginTx#tc.bal2 - Tx#channel_block.amount, -D2, 0),
+    N1 = accounts:update(Acc1, NewHeight, OriginTx#tc.bal1 + Tx#channel_block.amount, -D1, 0, TotalCoins),
+    N2 = accounts:update(Acc2, NewHeight, OriginTx#tc.bal2 - Tx#channel_block.amount, -D2, 0, TotalCoins),
     MyKey = keys:pubkey(),
     APub1 = accounts:pub(Acc1),
     APub2 = accounts:pub(Acc2),

@@ -87,8 +87,8 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
             D2 = Increment
     end,
     %update height in each account, and have them pay fees for delegation.
-    N1 = accounts:update(Acc1, NewHeight, Balance1, D1, 1),
-    N2 = accounts:update(Acc2, NewHeight, Balance2, D2, 0),
+    N1 = accounts:update(Acc1, NewHeight, Balance1, D1, 1, TotalCoins),
+    N2 = accounts:update(Acc2, NewHeight, Balance2, D2, 0, TotalCoins),
     true = NewId < constants:max_channel(),
     MyKey = keys:pubkey(),
     APub1 = accounts:pub(Acc1),

@@ -17,7 +17,7 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
     CB = sign:data(SignedCB),
     channel_block_tx:channel(CB, ParentKey, Channels, Accounts, TotalCoins, NewHeight),
     Acc = block_tree:account(Tx#timeout.acc, ParentKey, Accounts),
-    N = accounts:update(Acc, NewHeight, (- Tx#timeout.fee), 0, 1),
+    N = accounts:update(Acc, NewHeight, (- Tx#timeout.fee), 0, 1, TotalCoins),
     Nonce = accounts:nonce(N),
     Nonce = Tx#timeout.nonce,
     Id = channel_block_tx:id(CB),

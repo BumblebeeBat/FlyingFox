@@ -10,7 +10,7 @@ minimum_validators_per_block() -> 36.
 chances_per_address() -> 200. %Each address has this many chances to be a validator per block. this makes it possible to be validator more than once on the same block. 
 master_pub() -> <<"BOKw6lcRJzGkZ3G2k+T1kEeZFn8DC+awTIE3wnRAi8Jstp9PUvLyuCE6H+A79SD85cxFddVmWSiZIaPxxcbW2Zg=">>.
 max_size() -> 200000000000.%should be 200 gigabytes, does not include old blocks.
--define(ConsensusBytePrice, initial_coins() div max_size()).
+-define(ConsensusBytePrice, initial_coins() div max_size()).%instead we should have a maximum number of bytes per block, and garbage collect old blocks.
 consensus_byte_price() -> ?ConsensusBytePrice.
 -define(MinReveal, finality() + 1).
 min_reveal() -> ?MinReveal.
@@ -24,16 +24,17 @@ create_channel_fee() -> consensus_byte_price() * 9.
 create_account_fee() -> consensus_byte_price() * 75.
 delete_account_reward() -> create_account_fee() * 3 div 4. % 3/4th refund.
 security_ratio() -> 1.5.
--define(SecurityBondsPerWinner, initial_coins() div (1000 * finality() * minimum_validators_per_block())). 
+-define(SecurityBondsPerWinner, fractions:new(1, 1000 * finality() * minimum_validators_per_block())). 
 security_bonds_per_winner() -> ?SecurityBondsPerWinner.% so around 1% of money is locked up at a time, and it takes around 4000 blocks to move all the money. %this money goes from validators, to themselves. 
--define(AccountFee, initial_coins() div (max_address() * finality() * 10)).%so if all accounts are full, it takes 10 finalities until most of them start losing so much money that their accounts open up. 
+-define(AccountFee, fractions:new(1, max_address() * finality() * 10)).%so if all accounts are full, it takes 10 finalities until most of them start losing so much money that their accounts open up. 
 account_fee() -> ?AccountFee. 
 -define(DelegationFee, fractions:new(finality() * 1000 - 1, finality() * 1000)).%so it would take about 15,000 blocks to lose 1/2 your money. So you have about 350,000 chances to be validator till you lose 1/2 your money. So you need at least initial_coins()/350000 in delegation to be able to profitably validate. Which means it supports up to 350000 validators at a time max.
 delegation_fee() -> ?DelegationFee.
 delegation_reward() -> fractions:subtract(function:new(1, 1), ?DelegationFee).
 block_creation_fee() -> fractions:new(1, 20000).%Which implies finality only has to be 13 blocks long!!!
 %It is important that 1/3 of the block_creation_fee be less than 2/3 of the validator's bond.
--define(PBCFV, fractions:multiply_int(block_creation_fee(), initial_coins()) div 3).
+%-define(PBCFV, fractions:multiply_int(block_creation_fee(), initial_coins()) div 3).
+-define(PBCFV, fractions:multiply(block_creation_fee(), fractions:new(1, 3*validators_elected_per_block()))).
 portion_of_block_creation_fee_validators() -> ?PBCFV.
 test() ->
     A = portion_of_block_creation_fee_validators(), 
