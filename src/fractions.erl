@@ -1,7 +1,8 @@
 -module(fractions).
--export([new/2,negate/1,add/2,subtract/2,multiply/2,divide/2,to_int/1,test/0, multiply_int/2, exponent/2]).
+-export([new/2,negate/1,add/2,subtract/2,multiply/2,divide/2,to_int/1,test/0, multiply_int/2, exponent/2, less_than/2]).
 -record(f, {top = 0, bottom = 0}).
-%lcd(A, B) when B>A -> lcd(B, A).
+less_than(A, B) ->
+    A#f.top * B#f.bottom < B#f.top * A#f.bottom.
 new(T,B) -> #f{top = T, bottom = B}.
 negate(A) -> #f{top = -A#f.top, bottom = A#f.bottom}.
 subtract(A, B) -> add(A, negate(B)).
@@ -15,15 +16,19 @@ simplify_lcd(F) ->
     L = lcd(F#f.top, F#f.bottom),
     #f{top = F#f.top div L, bottom = F#f.bottom div L}.
 simplify_size(F) ->
-    X = F#f.bottom div 340282366920938463463374607431768211456,
-    Y = max(X, 1),
-    #f{top = F#f.top div Y, bottom = F#f.bottom div Y}.
-exponent(F, 0) -> #f{top = 1, bottom = 1};
+    IC = 281474976710656,%initial coins + 1 = 2 ^ 48
+    X = F#f.bottom div IC,
+    Y = F#f.top div IC,
+    Z = if 
+	((X > IC) and (Y > IC)) -> IC; 
+	true -> 1 
+    end,
+    #f{top = F#f.top div Z, bottom = F#f.bottom div Z}.
+exponent(_, 0) -> #f{top = 1, bottom = 1};
 exponent(F, 1) -> F;
 exponent(F, N) when N rem 2 == 0 ->
     exponent(multiply(F, F), N div 2);
 exponent(F, N) -> multiply(F, exponent(F, N - 1)).
-    
 lcd(A, 0) -> A;
 lcd(A, B) -> lcd(B, A rem B).
 test() ->

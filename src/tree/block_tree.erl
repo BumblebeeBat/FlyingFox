@@ -2,8 +2,7 @@
 -behaviour(gen_server).
 -export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,read_int/2,read_int/1,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/2, block_power/1,block_entropy/1,empty_block/0,total_coins/0, buy_block/0]).
 -record(block, {acc = 0, number = 0, hash = "", bond_size = 5000000, txs = [], power = 1, entropy = 0, total_coins = constants:initial_coins()}).
-%power is how many coin are in channels for at least finality.
-%We need each block to say how much money is left.
+%power is how many coin are in channels. it is for consensus.
 block_power(B) -> B#block.power.
 block_entropy(B) -> B#block.entropy.
 empty_block() -> #block{}.
@@ -33,9 +32,7 @@ handle_call({read_int, Height, ParentKey}, _From, D) ->
 handle_call(top, _From, D) -> 
     {reply, dict:fetch(dict:fetch(top, D), D), D};
 handle_call({key, X}, _From, D) -> {reply, dict:is_key(X, D), D};
-%handle_call({read, finality}, _From, D) -> {reply, block_finality:top(), D};%shouldn't just be top...
 handle_call({read, V}, _From, D) -> 
-    %read and read_int should be different calls. read_int needs to say which parent it came from.
     X = case dict:find(V, D) of
 	    {ok, Value} -> Value;
 	    error -> "none"
@@ -218,7 +215,6 @@ test() ->
     ChannelSlashTx = {channel_slash, 1, accounts:nonce(AccOne), SignedSlashBlock},
     SignedChannelSlashTx = sign:sign_tx(ChannelSlashTx, Pub, Priv, tx_pool:accounts()),
     tx_pool:absorb(SignedChannelSlashTx),
-    %channel_slash_tx:channel_slash(SignedSlashBlock),
     sign_tx:sign(),
     buy_block(),
     Top5 = read(read(top)),

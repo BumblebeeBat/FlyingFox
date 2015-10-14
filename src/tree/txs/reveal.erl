@@ -8,20 +8,17 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
     Hgap = NewHeight - H,
     true = Hgap > constants:min_reveal(),
     true = Hgap < constants:max_reveal(),
-    OriginBlock = block_tree:read_int(H),
+    OriginBlock = block_tree:read_int(H, ParentKey),
     OriginTxs = block_tree:txs(OriginBlock),
-    OriginTx = origin_tx(OriginTxs, Tx#reveal_tx.acc),%parent key should be an input!!!
+    OriginTx = origin_tx(OriginTxs, Tx#reveal_tx.acc),
     WL = sign_tx:winners_length(OriginTx),
     Reward = fractions:multiply_int(constants:portion_of_block_creation_fee_validators(), TotalCoins),
     Power = block_tree:power(block_tree:block(ParentKey)),
     DReward = fractions:multiply_int(constants:delegation_reward(), Power) div constants:maximum_validators_per_block(),
-    %all the delegation fees go to validators pot.
     %the other 2/3 of the block creator's fee, and account fees and money that get deleted in channels does not go to validators. Instead it is premanently deleted.
-    %and we need each block to say how much money is left.
-    %Fees need to decrease over time to relate to the new money supply.
     N = accounts:update(Tx#reveal_tx.acc, NewHeight, ((Reward + DReward + fractions:multiply_int(constants:security_bonds_per_winner(), TotalCoins)) * WL), 0, 1, TotalCoins),
     NewAccounts = dict:store(Tx#reveal_tx.acc, N, Accounts),
-    {Channels, NewAccounts, TotalCoins + ((DReward + Reward) * WL)}.%total_coins increase by dreward.
+    {Channels, NewAccounts, TotalCoins + ((DReward + Reward) * WL)}.
 
 origin_tx([SignedTx|Txs], Acc) ->
     Tx = sign:data(SignedTx),

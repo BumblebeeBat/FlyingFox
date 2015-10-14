@@ -1,11 +1,9 @@
 -module(to_channel_tx).%used to create a channel, or increase the amount of money in it.
 -export([next_top/2,doit/6,tc_increases/1,to_channel/4,create_channel/5]).
--record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
-%-record(channel, {acc1 = 0, acc2 = 0, bal1 = 0, bal2 = 0, called_timeout = 0, called_timeout_nonce = 0, timeout_height = 0, step = empty}).%step is either: delegated_1, delegated_2, non_delegated, or timeout
-%-record(channel, {acc1 = 0, acc2 = 0, bal1 = 0, bal2 = 0, creator = 0, timeout = 0, step = empty}).%step is either: empty, normal, non_delegated, or timeout
+-record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = delegated_1, fee = 0, id = -1, increment = 0}).
 
 create_channel(To, MyBalance, TheirBalance, ConsensusFlag, Fee) ->
-%When first creating a new channel, don't add the id. It will be selected for you by next available.    
+%When creating a new channel, you don't choose your own ID for the new channel. It will be selected for you by next available.    
     Id = keys:id(),
     Acc = block_tree:account(Id),
     ToAcc = block_tree:account(To),
@@ -22,13 +20,7 @@ to_channel(ChannelId, Inc1, Inc2, Fee) ->
     Channel = block_tree:channel(ChannelId),
     S = channels:type(Channel),
     true = ((S == delegated_1) or ((S == non_delegated) or (S == delegated_2))),
-    SignedTx = keys:sign(#tc{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), bal1 = channels:bal1(Channel) + Inc1, bal2 = channels:bal2(Channel) + Inc2, consensus_flag = true, id = ChannelId, fee = Fee, nonce = accounts:nonce(Acc) + 1, increment = Inc1 + Inc2}),
-    sign:set_revealed(SignedTx, ChannelId).
-
-
-%SignedToChannel = channel_block_tx:origin_tx(ChannelPointer#channel.tc, block_tree:read(top), ChannelId),
-%TC = sign:data(SignedToChannel),
-%SignedTx = keys:sign(#tc{acc1 = TC#tc.acc1, acc2 = TC#tc.acc2, bal1 = TC#tc.bal1 + Inc1, bal2 = TC#tc.bal2 + Inc2, consensus_flag = true, id = ChannelId, fee = Fee, nonce = accounts:nonce(Acc) + 1, increment = Inc1 + Inc2}),
+    SignedTx = keys:sign(#tc{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), bal1 = channels:bal1(Channel) + Inc1, bal2 = channels:bal2(Channel) + Inc2, consensus_flag = S, id = ChannelId, fee = Fee, nonce = accounts:nonce(Acc) + 1, increment = Inc1 + Inc2}).
 %sign:set_revealed(SignedTx, ChannelId).
 
 next_top(DBroot, Channels) -> next_top_helper(channels:array(), channels:top(), DBroot, Channels).
@@ -44,7 +36,10 @@ next_top_helper(Array, Top, DBroot, Channels) ->
     end.
 doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
     Tx = sign:data(SignedTx),
-    NewId = sign:revealed(SignedTx),
+    if
+	Tx#tc.id == -1 -> NewId = sign:revealed(SignedTx);
+	true -> NewId = Tx#tc.id
+    end,
     From = Tx#tc.acc1,
     false = From == Tx#tc.acc2,
     Channel = block_tree:channel(NewId, ParentKey, Channels),
@@ -58,7 +53,6 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
     CF = Tx#tc.consensus_flag,
     if
         Channel == EmptyChannel ->
-                                                %use channel.timeout to store the nonce of the account creator. That way the pointer uniquely points to 1 tx in the block that created it.
             NewId = next_top(ParentKey, Channels),
             Balance1 =  - Tx#tc.bal1 - Tx#tc.fee,
             Balance2 =  - Tx#tc.bal2 - Tx#tc.fee,
@@ -94,7 +88,6 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
             D1 = 0,
             D2 = Increment
     end,
-    %update height in each account, and have them pay fees for delegation.
     N1 = accounts:update(Acc1, NewHeight, Balance1, D1, 1, TotalCoins),
     N2 = accounts:update(Acc2, NewHeight, Balance2, D2, 0, TotalCoins),
     true = NewId < constants:max_channel(),
@@ -106,10 +99,6 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
 	true -> 1=1
     end,
     Ch = channels:new(Tx#tc.acc1, Tx#tc.acc2, Tx#tc.bal1, Tx#tc.bal2, Type),
-    %Ch = #channel{acc1 = Tx#tc.acc1, acc2 = Tx#tc.acc2, bal1 = Tx#tc.bal1, bal2 = Tx#tc.bal2, step = Type},
-    %Ch = #channel{acc1 = Channel#channel.acc1, acc2 = Channel#channel.acc2, bal1 = Tx#tc.bal1, bal2 = Tx#tc.bal2, step = Type},
-    %Ch = #channel{acc1 = Channel#channel.acc1, acc2 = Channel#channel.acc2, bal1 = Tx#tc.bal1, bal2 = Tx#tc.bal2, creator = Tx#tc.acc1, timeout = Tx#tc.nonce},
-    %Ch = #channel{tc = NewHeight, creator = Tx#tc.acc1, timeout = Tx#tc.nonce},
     NewAccounts1 = dict:store(Tx#tc.acc1, N1, Accounts),
     NewAccounts = dict:store(Tx#tc.acc2, N2, NewAccounts1),
     NewChannels = dict:store(NewId, Ch, Channels),
@@ -123,7 +112,6 @@ tc_increases(NewNumber) ->
             FBlock = block_tree:read_int(NewNumber - CF, ParentKey),
             tc_increases(block_tree:txs(FBlock), 0)
     end.
-%filter out tc type txs. add up the amount of money in each channel. Exclude channels that aren't still open.
 tc_increases([], X) -> X;
 tc_increases([SignedTx|T], X) ->
     Tx = sign:data(SignedTx),
@@ -136,15 +124,5 @@ tc_increases([SignedTx|T], X) ->
 		(Tx#tc.acc1 == Acc1) and (Tx#tc.acc2 == Acc2) -> tc_increases(T, X+Tx#tc.increment);
 		true -> tc_increases(T, X)
 	    end;
-%ChannelPointer = block_tree:channel(Id, dict:new()),
-%ParentKey = block_tree:read(top),
-%SignedOriginTx = channel_block_tx:origin_tx(ChannelPointer#channel.tc, ParentKey, channel_block:id(Tx)),
-%OriginTx = sign:data(SignedOriginTx),
-%if 
-%not is_record(OriginTx, tc) -> tc_increases(T, X);
-%(Tx#tc.acc1 == OriginTx#tc.acc1) and (Tx#tc.acc2 == OriginTx#tc.acc2) ->
-%tc_increases(T, X+A);
-%true -> tc_increases(T, X)
-%end;
 	true -> tc_increases(T, X)
     end.

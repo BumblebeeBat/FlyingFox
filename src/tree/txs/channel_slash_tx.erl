@@ -1,9 +1,6 @@
 -module(channel_slash_tx).
 -export([doit/6, channel_slash/1, channel_block/1]).
 -record(channel_slash, {acc = 0, nonce = 0, channel_block = 0}).
-%-record(channel, {tc = 0, creator = 0, timeout = 0}).
-%-record(channel, {acc1 = 0, acc2 = 0, bal1 = 0, bal2 = 0, called_timeout = 0, called_timeout_nonce = 0, timeout_height = 0, step = empty}).%step is either: delegated_1, delegated_2, non_delegated, or timeout
-%If you partner tries closing the channel at the wrong point in history, this is how you provide evidence of the true final state
 channel_block(Tx) ->
     Tx#channel_slash.channel_block.
 channel_slash(ChannelTx) ->

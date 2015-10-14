@@ -1,8 +1,6 @@
 -module(channel_timeout_tx).
 -export([doit/6, timeout_channel/1, channel_block/1]).
 -record(timeout, {acc = 0, nonce = 0, fee = 0, channel_block = 0}).
-%-record(channel, {acc1 = 0, acc2 = 0, bal1 = 0, bal2 = 0, called_timeout = 0, called_timeout_nonce = 0, timeout_height = 0, step = empty}).%step is either: delegated_1, delegated_2, non_delegated, or timeout
-%-record(channel, {tc = 0, creator = 0, timeout = 0}).
 %If your partner is not helping you, this is how you start the process of closing the channel. 
 %You should only use the final channel-state, or else your partner can punish you for cheating.
 channel_block(X) -> X#timeout.channel_block.
@@ -31,7 +29,5 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
 	Tx#timeout.acc == Acc2 -> A = 1
     end,
     Ch = channels:timeout(OldCh, Tx#timeout.nonce, NewHeight, A),
-    %Ch = #channel{acc1 = OldCh#channel.acc1, acc2 = OldCh#channel.acc2, bal1 = OldCh#channel.bal1, bal2 = OldCh#channel.bal2, called_timeout = A, called_timeout_nonce = Tx#timeout.nonce, timeout_height = NewHeight, step = timeout},
-    %Ch = #channel{timeout = NewHeight, creator = Tx#timeout.acc, tc = OldCh#channel.tc},
     NewChannels = dict:store(Id, Ch, Channels),
     {NewChannels, NewAccounts, TotalCoins}.

@@ -38,8 +38,8 @@ block_creation_fee() -> fractions:new(1, 20000).%Which implies finality only has
 portion_of_block_creation_fee_validators() -> ?PBCFV.
 test() ->
     A = portion_of_block_creation_fee_validators(), 
-    B = security_bonds_per_winner()*minimum_validators_per_block(),
-    true = A < B / 2,
+    B = fractions:multiply(security_bonds_per_winner(), fractions:new(minimum_validators_per_block(), 2)),
+    true = fractions:less_than(A, B),
     %If this isn't truth, then it the validators will sign up to validate even if they can't actually show up.
     success.
 
