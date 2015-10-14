@@ -34,7 +34,7 @@ empty(Pub) -> #acc{pub = Pub}.
 update(Acc, H, Dbal, Ddelegated, N, TotalCoins) ->
     true = ((N == 0) or (N == 1)),
     Nbal = Acc#acc.balance + Dbal, 
-    true = Nbal > -1,
+    true = Nbal > -1,%You don't have enough money to do that.
     Gap = H - Acc#acc.height,
     F = fractions:exponent(constants:delegation_fee(), Gap),
     true = H > (Acc#acc.height - 1),%for sanity. not necessary.

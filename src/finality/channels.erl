@@ -1,14 +1,26 @@
 -module(channels).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_channel/1,write/2,test/0,size/0,write_helper/3,top/0,array/0,delete/1,walk/2]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_channel/1,write/2,test/0,size/0,write_helper/3,top/0,array/0,delete/1,walk/2,new/5,timeout/4,acc1/1,acc2/1,bal1/1,bal2/1,type/1,timeout/1,called_timeout/1,timeout_height/1,empty/0]).
 -define(file, "channels.db").
 -define(empty, "d_channels.db").
--define(word, 9).%20+20+32 = 72 bits = 9 bytes
--record(channel, {tc = 0, creator = 0, timeout = 0}).
-%3 independent states.
-% 0 - everything is 0.
-% created - creator is the nonce that the creator had when he did tc. timeout is 0.
-% timeout - tc is the height of most recent to_channel. creator is 0. timout is the hight of the timeout.
+-define(word, 30).
+%instead of storing pointers to the blockchain, we should store all the info we need. (so we can garbage collect old blocks).
+
+%32+32+48+48+1+32+38+2+1 +6 = 240 = 30 bytes.
+-record(channel, {acc1 = 0, acc2 = 0, bal1 = 0, bal2 = 0, called_timeout = 0, called_timeout_nonce = 0, timeout_height = 0, type = delegated_1, timeout = false}).%type is either: delegated_1, delegated_2, non_delegated
+%timeout is either true or false
+new(Acc1, Acc2, Bal1, Bal2, Type) -> #channel{acc1 = Acc1, acc2 = Acc2, bal1 = Bal1, bal2 = Bal2, type = Type, timeout = false}.
+timeout(Ch, Nonce, Height, CalledTimeout) ->
+    #channel{acc1 = Ch#channel.acc1, acc2 = Ch#channel.acc2, bal1 = Ch#channel.bal1, bal2 = Ch#channel.bal2, called_timeout = CalledTimeout, called_timeout_nonce = Nonce, timeout_height = Height, timeout = true}.
+acc1(Ch) -> Ch#channel.acc1.
+acc2(Ch) -> Ch#channel.acc2.
+bal1(Ch) -> Ch#channel.bal1.
+bal2(Ch) -> Ch#channel.bal2.
+type(Ch) -> Ch#channel.type.
+timeout(Ch) -> Ch#channel.timeout.
+called_timeout(Ch) -> Ch#channel.called_timeout.
+timeout_height(Ch) -> Ch#channel.timeout_height.
+empty() -> #channel{}.
 write_helper(N, Val, File) ->
 %since we are reading it a bunch of changes at a time for each block, there should be a way to only open the file once, make all the changes, and then close it. 
     case file:open(File, [write, read, raw]) of
@@ -88,15 +100,45 @@ read_channel(N) -> %maybe this should be a call too, that way we can use the ram
 	N >= T -> #channel{};
 	true ->
 	    X = read_file(N),%if this is above the end of the file, then just return an account of all zeros.
-	    <<Tc:20, Timeout:20, Creator:32>> = X,
-	    #channel{tc = Tc, timeout = Timeout, creator = Creator}
-	    
+	    <<Acc1:32, Acc2:32, Bal1:48, Bal2:48, CalledTimeout:1, TimeoutNonce:32, TimeoutHeight:38, Type:2, Timeout:1, _:6>> = X,
+	    Ty = case Type of
+		      0 -> non_delegated;
+		      1 -> delegated_1;
+		      2 -> delegated_2
+		  end,
+	    Tim = case Timeout of
+		      0 -> false;
+		      1 -> true
+		  end,
+	    #channel{acc1 = Acc1, acc2 = Acc2, bal1 = Bal1, bal2 = Bal2, called_timeout = CalledTimeout, called_timeout_nonce = TimeoutNonce, timeout_height = TimeoutHeight, type = Ty, timeout = Tim}
+		%<<Tc:20, Timeout:20, Creator:32>> = X,
+		%#channel{tc = Tc, timeout = Timeout, creator = Creator}
     end.
 write(N, Ch) ->
-    Val = << (Ch#channel.tc):20,
-	     (Ch#channel.timeout):20,
-	     (Ch#channel.creator):32 >>,
+    Type = case Ch#channel.type of
+	       non_delegated -> 0;
+	       delegated_1 -> 1;
+	       delegated_2 -> 2
+	   end,
+    Timeout = case Ch#channel.timeout of
+		  true -> 1;
+		  false -> 0
+	      end,
+    Val = << (Ch#channel.acc1):32,
+	     (Ch#channel.acc2):32,
+	     (Ch#channel.bal1):48,
+	     (Ch#channel.bal2):48,
+	     (Ch#channel.called_timeout):1,
+	     (Ch#channel.called_timeout_nonce):38,
+	     (Ch#channel.timeout_height):38,
+	     (Type):2,
+	     (Timeout):1,
+	     0:6>>,
     gen_server:cast(?MODULE, {write, N, Val}).
+%Val = << (Ch#channel.tc):20,
+%(Ch#channel.timeout):20,
+%(Ch#channel.creator):32 >>,
+%gen_server:cast(?MODULE, {write, N, Val}).
 size() -> filelib:file_size(?file) div ?word.
 append(Ch) -> write(top(), Ch).
 test() -> 
@@ -112,10 +154,8 @@ test() ->
     5 = walk(2, << 31:5 >>),
     5 = walk(5, << 31:5 >>),
     %channels.db needs to be empty before starting node to run this test.
-    Tc = 2,
-    Creator = 0,
     Timeout = 555,
-    A = #channel{tc = Tc, creator = Creator, timeout = Timeout},
+    A = #channel{timeout_height = Timeout},
     0 = top(),
     append(A),
     1 = top(),
@@ -141,9 +181,5 @@ test() ->
     append(A),
     3 = top(),
     Ch = read_channel(0),
-    %Height = Ch#channel.height,
-    Creator = Ch#channel.creator,
-    %Nonce = Ch#channel.nonce,
-    Timeout = Ch#channel.timeout,
-    Tc = Ch#channel.tc,
+    Timeout = Ch#channel.timeout_height,
     success.

@@ -10,6 +10,8 @@ Flying Fox deviates from Sztorc's design choices in several ways:
 
 *Does not use bitcoin as the internal currency for betting, instead Flying Fox will be a seperate cryptocurrency.
 
+*Finite memory requirement.
+
 *An Erlang/OTP package, because it is a lot easier to verify that erlang code is secure in comparison to C++.
 
 *Uses lightning network channels for betting. 
