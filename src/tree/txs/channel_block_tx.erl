@@ -66,6 +66,7 @@ bet_amount(X) -> bet_amount(X, 0).
 bet_amount([], X) -> X;
 bet_amount([Tx|Txs], X) -> bet_amount(Txs, X+Tx#bet.amount).
 channel_block(Id, Amount, Nonce, Delay) ->
+    true = Delay < constants:max_reveal(),
     Channel = block_tree:channel(Id),
     keys:sign(#channel_block{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), amount = Amount, nonce = Nonce, id = Id, fast = false, delay = Delay}).
 origin_tx(BlockNumber, ParentKey, ID) ->%this should also include a type tag, right???

@@ -35,7 +35,8 @@ init(ok) ->
         {error, enoent} -> 
             Top = 0,
             DeletedArray = << 0 >>,
-            write_helper(0, DeletedArray, ?empty);
+            write_helper(0, DeletedArray, ?empty),
+            write_helper(0, <<>>, ?file);
         {ok, DeletedArray} ->
             Top = walk(0, DeletedArray)
     end,
@@ -88,16 +89,23 @@ read_empty(N) ->
 	{ok, X} -> file:close(File), X
     end.
 read_file(N) -> 
-    {ok, File} = file:open(?file, [read, binary, raw]),
-    case file:pread(File, N*?word, ?word) of
-	eof -> write_helper(N*?word, <<0:72>>, ?file),% 600=8*?word.
-	       read_file(N);
-	{ok, X} -> file:close(File), X
+    case file:open(?file, [read, binary, raw]) of
+	{ok, File} ->
+	    case file:pread(File, N*?word, ?word) of
+		eof -> write_helper(N*?word, <<0:240>>, ?file),% 600=8*?word.
+		       read_file(N);
+		{ok, X} -> file:close(File), X
+	    end;
+	{error, Reason} ->
+	    io:fwrite(Reason),
+	    read_file(N)
     end.
+
 read_channel(N) -> %maybe this should be a call too, that way we can use the ram to see if it is already deleted?
     T = top(),
     if
 	N >= T -> #channel{};
+	N < 0 -> #channel{};
 	true ->
 	    X = read_file(N),%if this is above the end of the file, then just return an account of all zeros.
 	    <<Acc1:32, Acc2:32, Bal1:48, Bal2:48, CalledTimeout:1, TimeoutNonce:32, TimeoutHeight:38, Type:2, Timeout:1, _:6>> = X,

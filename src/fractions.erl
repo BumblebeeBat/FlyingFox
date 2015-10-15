@@ -16,7 +16,7 @@ simplify_lcd(F) ->
     L = lcd(F#f.top, F#f.bottom),
     #f{top = F#f.top div L, bottom = F#f.bottom div L}.
 simplify_size(F) ->
-    IC = 281474976710656,%initial coins + 1 = 2 ^ 48
+    IC = 281474976710656,
     X = F#f.bottom div IC,
     Y = F#f.top div IC,
     Z = if 

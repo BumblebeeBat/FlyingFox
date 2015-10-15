@@ -74,8 +74,11 @@ height() -> height(read(top)).
 height(K) -> 
     X = read(K),
     X#x.height.
-read_int(Height) -> read_int(Height, read(top)).
+read_int(Height) -> 
+    true = Height > -1,
+    read_int(Height, read(top)).
 read_int(Height, BlockPointer) ->
+    true = Height > -1,
     gen_server:call(?MODULE, {read_int, Height, BlockPointer}).
     
 write(SignedBlock) ->
@@ -167,6 +170,7 @@ test() ->
     create_account_tx:create_account(Pub, 200000),
     spend_tx:spend(1, 10),
     sign_tx:sign(),
+    reveal:reveal(),
     buy_block(),
     Top = read(read(top)),
     1 = power(Top#x.block),
@@ -180,6 +184,7 @@ test() ->
     SignedCreateTx3 = sign_tx(CreateTx3, Pub, Priv),
     tx_pool:absorb(SignedCreateTx3),
     sign_tx:sign(),
+    reveal:reveal(),
     buy_block(),
     Top2 = read(read(top)),
     1 = power(Top2#x.block),
@@ -187,6 +192,7 @@ test() ->
     SignedToChannel = sign_tx(ToChannel, Pub, Priv),
     tx_pool:absorb(SignedToChannel),
     sign_tx:sign(),
+    reveal:reveal(),
     buy_block(),
     Top3 = read(read(top)),
     1 = power(Top3#x.block),
@@ -205,6 +211,7 @@ test() ->
     channel_timeout_tx:timeout_channel(SignedTimeoutTx),
     channel_timeout_tx:timeout_channel(SignedSlasherTx),
     sign_tx:sign(),
+    reveal:reveal(),
     buy_block(),
     Top4 = read(read(top)),
     1 = power(Top4#x.block),
@@ -216,7 +223,12 @@ test() ->
     SignedChannelSlashTx = sign:sign_tx(ChannelSlashTx, Pub, Priv, tx_pool:accounts()),
     tx_pool:absorb(SignedChannelSlashTx),
     sign_tx:sign(),
+    reveal:reveal(),
     buy_block(),
     Top5 = read(read(top)),
     1 = power(Top5#x.block),
+    F = fun() -> sign_tx:sign(), reveal:reveal(), buy_block() end,
+    G = fun() -> F(), F(), F(), F(), F(), F(), F(), F() end,
+    H = fun() -> G(), G(), G(), G(), G(), G(), G(), G() end,
+    H(),
     success.

@@ -18,7 +18,7 @@ min_reveal() -> ?MinReveal.
 max_reveal() -> ?MaxReveal.
 -define(MaxAddress, max_size() div 10 div 85).%use about 10% of space to store addresses. Each one is 75 bytes
 max_address() -> ?MaxAddress.
--define(MaxChannel, max_size() div 10 div 9).%use about 10% of space to store addresses. Each one is 9 bytes
+-define(MaxChannel, max_size() div 10 div 30).%use about 10% of space to store addresses. Each one is 9 bytes
 max_channel() -> ?MaxChannel.
 create_channel_fee() -> consensus_byte_price() * 9.
 create_account_fee() -> consensus_byte_price() * 75.

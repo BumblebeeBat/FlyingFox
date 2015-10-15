@@ -30,10 +30,14 @@ append(Block) -> gen_server:cast(?MODULE, {append, term_to_binary(Block)}).
 top() -> block_pointers:height().
 read(N) -> 
     C = top(),
-    true = N < C,
-    <<A:38, B:26>> = block_pointers:read(N, 1),
-    X = block_dump:read(A, B),
-    binary_to_term(X).
+    if
+	N < 0 -> none;
+	N > C-1 -> none;
+	true ->
+	    <<A:38, B:26>> = block_pointers:read(N, 1),
+	    X = block_dump:read(A, B),
+	    binary_to_term(X)
+    end.
 top_block() -> read(top()-1).
 test() ->
     X = [25],

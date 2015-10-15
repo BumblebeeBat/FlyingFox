@@ -1,6 +1,32 @@
 -module(reveal).
--export([doit/6]).
+-export([doit/6, reveal/0]).
 -record(reveal_tx, {acc = 0, nonce = 0, secret = [], height = 0}).
+
+reveal() ->
+    Id = keys:id(),
+    CurrentHeight = block_tree:height(),
+    reveal2(Id, CurrentHeight - constants:max_reveal(), CurrentHeight - constants:min_reveal()).
+reveal2(_, Start, End) when Start > End -> ok;
+reveal2(Id, Start, End) ->%This is an inefficient implementation. Checks all 9 * finality() spots every time.
+    if
+	Start < 1 -> ok;
+	true ->
+	    case block_tree:read_int(Start) of
+		none -> ok;
+		OriginBlock ->
+		    OriginTxs = block_tree:txs(OriginBlock),
+		    case origin_tx(OriginTxs, Id) of
+			none -> ok;
+			X ->
+			    SH = sign_tx:secret_hash(X),
+			    case secrets:read(SH) of
+				none -> ok;
+				Secret -> tx_pool:absorb(keys:sign(#reveal_tx{acc = Id, nonce = accounts:nonce(block_tree:account(Id)) + 1, secret = Secret, height = Start}))
+			    end
+		    end
+	    end
+    end,
+    reveal2(Id, Start + 1, End).
 
 doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
     H = Tx#reveal_tx.height,
@@ -20,6 +46,7 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
     NewAccounts = dict:store(Tx#reveal_tx.acc, N, Accounts),
     {Channels, NewAccounts, TotalCoins + ((DReward + Reward) * WL)}.
 
+origin_tx([], _) -> none;
 origin_tx([SignedTx|Txs], Acc) ->
     Tx = sign:data(SignedTx),
     E = element(1, Tx),

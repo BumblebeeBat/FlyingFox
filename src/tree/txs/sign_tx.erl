@@ -1,6 +1,7 @@
 -module(sign_tx).
--export([test/0, doit/6, htoi/1, itoh/1, winner/5, sign/0, winners/1, acc/1]).
+-export([test/0, doit/6, htoi/1, itoh/1, winner/5, sign/0, winners/1, acc/1, secret_hash/1]).
 -record(sign_tx, {acc = 0, nonce = 0, secret_hash = [], winners = [], prev_hash = ""}).
+secret_hash(T) -> T#sign_tx.secret_hash.
 winners_length(Tx) -> length(Tx#sign_tx.winners).
 acc(Tx) -> Tx#sign_tx.acc.
 winners(MyPower, TotalPower, Entropy, Pubkey) ->
