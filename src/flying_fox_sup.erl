@@ -20,6 +20,7 @@ init([]) ->
 	  ?CHILD(secrets, worker),
 	  ?CHILD(entropy, worker),
 	  ?CHILD(listener, worker),
+	  ?CHILD(all_secrets, worker),
 	  ?CHILD(my_channels, worker)
 	],
     {ok, { {one_for_one, 5, 10}, Children} }.

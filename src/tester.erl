@@ -16,6 +16,7 @@ tc(F) ->
 
 test1() ->
     S = success,
+    S = all_secrets:test(),
     S = hash:test(),
     S = block_dump:test(),
     S = block_pointers:test(),

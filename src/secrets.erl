@@ -1,5 +1,5 @@
 %When we sign a block, we record the hash of a secret. Later on, we need to reveal this secret.
-%This module holds a bunch of secrets, stored in a dict by hash.
+%This module holds a bunch of secrets make by this node, stored in a dict by hash.
 
 %needs garbage collection.
 -module(secrets).

@@ -66,9 +66,15 @@ txs() -> txs(read(read(top))).
 txs(X) -> 
     B = sign:data(X#x.block),
     B#block.txs.
-power() -> power(read(top)).
+power() -> power(read(read(top))).
 power(X) -> 
-    B = sign:data(X),
+    A = element(1, X),
+    case A of
+	x -> 
+	    B = sign:data(X#x.block);
+	signed -> B = sign:data(X);
+	block -> B = A
+    end,
     B#block.power.
 height() -> height(read(top)).
 height(K) -> 
@@ -231,4 +237,14 @@ test() ->
     G = fun() -> F(), F(), F(), F(), F(), F(), F(), F() end,
     H = fun() -> G(), G(), G(), G(), G(), G(), G(), G() end,
     H(),
+    D1a = accounts:delegated(account(0)),
+    D2a = accounts:delegated(account(1)),
+    %to_channel_tx:create_channel(1, 10000, 1000, non_delegated, 0),
+    %to_channel_tx:create_channel(1, 10000, 1000, delegated_2, 0),
+    H(),
+    D1b = accounts:delegated(account(0)),
+    D2b = accounts:delegated(account(1)),
+    D2a = D2b,
+    D1a = D1b,
+    0 = accounts:delegated(block_tree:account(1)),
     success.

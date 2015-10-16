@@ -12,15 +12,16 @@ reveal2(Id, Start, End) ->%This is an inefficient implementation. Checks all 9 *
 	Start < 1 -> ok;
 	true ->
 	    case block_tree:read_int(Start) of
-		none -> ok;
+		none -> 
+		    before_finality;
 		OriginBlock ->
 		    OriginTxs = block_tree:txs(OriginBlock),
 		    case origin_tx(OriginTxs, Id) of
-			none -> ok;
+			none -> did_not_sign;
 			X ->
 			    SH = sign_tx:secret_hash(X),
 			    case secrets:read(SH) of
-				none -> ok;
+				none -> lost_the_secret;
 				Secret -> tx_pool:absorb(keys:sign(#reveal_tx{acc = Id, nonce = accounts:nonce(block_tree:account(Id)) + 1, secret = Secret, height = Start}))
 			    end
 		    end
@@ -37,6 +38,8 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
     OriginBlock = block_tree:read_int(H, ParentKey),
     OriginTxs = block_tree:txs(OriginBlock),
     OriginTx = origin_tx(OriginTxs, Tx#reveal_tx.acc),
+    %make sure the revealed secret matches the secret hash from the originTx.
+    %we need a new database of secret_hashes. It is like accounts, channels, and totalcoins.!!!
     WL = sign_tx:winners_length(OriginTx),
     Reward = fractions:multiply_int(constants:portion_of_block_creation_fee_validators(), TotalCoins),
     Power = block_tree:power(block_tree:block(ParentKey)),

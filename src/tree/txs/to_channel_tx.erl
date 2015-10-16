@@ -50,7 +50,6 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
     true = Tx#tc.bal2 > -1,
     true = is_integer(Tx#tc.bal1),
     true = is_integer(Tx#tc.bal2),
-    CF = Tx#tc.consensus_flag,
     if
         Channel == EmptyChannel ->
             NewId = next_top(ParentKey, Channels),
@@ -80,13 +79,16 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
     end,
     Nonce = accounts:nonce(Acc1),
     Nonce = Tx#tc.nonce - 1,
-    if
-        CF ->
-            D1 = Increment,
-            D2 = 0;
-        true ->
-            D1 = 0,
-            D2 = Increment
+    case Tx#tc.consensus_flag of
+	delegated_1 -> 
+	    D1 = Increment,
+	    D2 = 0;
+	delegated_2 -> 
+	    D1 = 0,
+	    D2 = Increment;
+	non_delegated ->
+	    D1 = 0,
+	    D2 = 0
     end,
     N1 = accounts:update(Acc1, NewHeight, Balance1, D1, 1, TotalCoins),
     N2 = accounts:update(Acc2, NewHeight, Balance2, D2, 0, TotalCoins),
