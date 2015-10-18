@@ -1,5 +1,5 @@
 -module(channel_timeout_tx).
--export([doit/6, timeout_channel/1, channel_block/1]).
+-export([doit/7, timeout_channel/1, channel_block/1]).
 -record(timeout, {acc = 0, nonce = 0, fee = 0, channel_block = 0}).
 %If your partner is not helping you, this is how you start the process of closing the channel. 
 %You should only use the final channel-state, or else your partner can punish you for cheating.
@@ -10,11 +10,11 @@ timeout_channel(ChannelTx) ->
     Tx = #timeout{acc = Id, nonce = accounts:nonce(Acc) + 1, channel_block = keys:sign(ChannelTx)},
     tx_pool:absorb(keys:sign(Tx)).
 
-doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
+doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     SignedCB = Tx#timeout.channel_block, 
     sign:verify(SignedCB, Accounts),
     CB = sign:data(SignedCB),
-    channel_block_tx:channel(CB, ParentKey, Channels, Accounts, TotalCoins, NewHeight),
+    channel_block_tx:channel(CB, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight),
     Acc = block_tree:account(Tx#timeout.acc, ParentKey, Accounts),
     N = accounts:update(Acc, NewHeight, (- Tx#timeout.fee), 0, 1, TotalCoins),
     Nonce = accounts:nonce(N),
@@ -30,4 +30,4 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
     end,
     Ch = channels:timeout(OldCh, Tx#timeout.nonce, NewHeight, A),
     NewChannels = dict:store(Id, Ch, Channels),
-    {NewChannels, NewAccounts, TotalCoins}.
+    {NewChannels, NewAccounts, TotalCoins, S}.

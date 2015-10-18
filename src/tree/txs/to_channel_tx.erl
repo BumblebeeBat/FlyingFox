@@ -1,5 +1,5 @@
 -module(to_channel_tx).%used to create a channel, or increase the amount of money in it.
--export([next_top/2,doit/6,tc_increases/1,to_channel/4,create_channel/5]).
+-export([next_top/2,doit/7,tc_increases/2,to_channel/4,create_channel/5]).
 -record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = delegated_1, fee = 0, id = -1, increment = 0}).
 
 create_channel(To, MyBalance, TheirBalance, ConsensusFlag, Fee) ->
@@ -20,7 +20,7 @@ to_channel(ChannelId, Inc1, Inc2, Fee) ->
     Channel = block_tree:channel(ChannelId),
     S = channels:type(Channel),
     true = ((S == delegated_1) or ((S == non_delegated) or (S == delegated_2))),
-    SignedTx = keys:sign(#tc{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), bal1 = channels:bal1(Channel) + Inc1, bal2 = channels:bal2(Channel) + Inc2, consensus_flag = S, id = ChannelId, fee = Fee, nonce = accounts:nonce(Acc) + 1, increment = Inc1 + Inc2}).
+    keys:sign(#tc{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), bal1 = channels:bal1(Channel) + Inc1, bal2 = channels:bal2(Channel) + Inc2, consensus_flag = S, id = ChannelId, fee = Fee, nonce = accounts:nonce(Acc) + 1, increment = Inc1 + Inc2}).
 %sign:set_revealed(SignedTx, ChannelId).
 
 next_top(DBroot, Channels) -> next_top_helper(channels:array(), channels:top(), DBroot, Channels).
@@ -34,7 +34,7 @@ next_top_helper(Array, Top, DBroot, Channels) ->
 	    NewTop = channels:walk(Top, NewArray),
 	    next_top_helper(NewArray, NewTop, DBroot, Channels)
     end.
-doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
+doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     Tx = sign:data(SignedTx),
     if
 	Tx#tc.id == -1 -> NewId = sign:revealed(SignedTx);
@@ -104,27 +104,26 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
     NewAccounts1 = dict:store(Tx#tc.acc1, N1, Accounts),
     NewAccounts = dict:store(Tx#tc.acc2, N2, NewAccounts1),
     NewChannels = dict:store(NewId, Ch, Channels),
-    {NewChannels, NewAccounts, TotalCoins}.
-tc_increases(NewNumber) ->
-    ParentKey = block_tree:read(top),
+    {NewChannels, NewAccounts, TotalCoins, S}.
+tc_increases(NewNumber, ParentKey) ->
     CF = constants:finality(),
     if
-        NewNumber < CF -> 0;
+        NewNumber < CF + 1 -> 0;
         true -> 
             FBlock = block_tree:read_int(NewNumber - CF, ParentKey),
-            tc_increases(block_tree:txs(FBlock), 0)
+            tc_increases(block_tree:txs(FBlock), ParentKey, 0)
     end.
-tc_increases([], X) -> X;
-tc_increases([SignedTx|T], X) ->
+tc_increases([], _, X) -> X;
+tc_increases([SignedTx|T], ParentKey, X) ->
     Tx = sign:data(SignedTx),
     if
 	is_record(Tx, tc) ->
-	    Channel = block_tree:channel(Tx#tc.id, dict:new()),
+	    Channel = block_tree:channel(sign:revealed(SignedTx), ParentKey, dict:new()),
 	    Acc1 = channels:acc1(Channel),
 	    Acc2 = channels:acc2(Channel),
 	    if
-		(Tx#tc.acc1 == Acc1) and (Tx#tc.acc2 == Acc2) -> tc_increases(T, X+Tx#tc.increment);
-		true -> tc_increases(T, X)
+		(Tx#tc.acc1 == Acc1) and (Tx#tc.acc2 == Acc2) -> tc_increases(T, ParentKey, X+Tx#tc.increment);
+		true -> tc_increases(T, ParentKey, X)
 	    end;
-	true -> tc_increases(T, X)
+	true -> tc_increases(T, ParentKey, X)
     end.

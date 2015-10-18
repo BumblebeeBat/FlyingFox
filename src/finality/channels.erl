@@ -147,7 +147,7 @@ write(N, Ch) ->
 %(Ch#channel.timeout):20,
 %(Ch#channel.creator):32 >>,
 %gen_server:cast(?MODULE, {write, N, Val}).
-size() -> filelib:file_size(?file) div ?word.
+size() -> 1 + filelib:file_size(?file) div ?word.
 append(Ch) -> write(top(), Ch).
 test() -> 
     << 13:4 >> = << 1:1, 1:1, 0:1, 1:1 >>,%13=8+4+1

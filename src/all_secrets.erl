@@ -2,22 +2,23 @@
 -behaviour(gen_server).
 -export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,add/2,exists/2,remove/2]).
 -define(LOC, "all_secrets.db").
-%-record(x, {start = 0, blocks = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]}).
--record(x, {start = 0, blocks = [[],[],[],[],[],[],[]]}).
+-record(x, {start = 0, blocks = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]}).%length of the empty lists is constants:max_reveal - constants:min_reveal + 2.
+save(DB) -> db:save(?LOC, database2bytes(DB#x.start, DB#x.blocks)).
+read() -> db:read(?LOC).
 init(ok) -> 
     process_flag(trap_exit, true),
-    X = db:read(?LOC),
+    X = read(),
     if
         X == "" -> 
             K = #x{},
-            db:save(?LOC,K);
-        true -> K = X
+	    save(K);
+        true -> K = bytes2database(X)
     end,
     {ok, K}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 terminate(_, K) -> 
-    db:save(?LOC, K),
+    save(K),
     io:format("died!"), ok.
 handle_info(_, X) -> {noreply, X}.
 remove_sh(X, [X|T]) -> T;
@@ -29,9 +30,14 @@ handle_cast({remove, Height, SH}, X) ->
     NewX = #x{start = X#x.start, blocks = replace_height(H, X#x.blocks, remove_sh(SH, nth(H, X#x.blocks)))},
     {noreply, NewX};
 handle_cast({add, Height, SH}, X) -> 
-    H = Height-X#x.start,
-    NewX = #x{start = X#x.start, blocks = replace_height(H, X#x.blocks, [SH|nth(H, X#x.blocks)])},
+    Gap = constants:max_reveal() - constants:min_reveal(),
+    Start = X#x.start,
+    H = Height-Start,
+    NewStart = max(Height - Gap - X#x.start, Start),
+    NewX = #x{start = NewStart, blocks = remove_front(NewStart - Start, replace_height(H, X#x.blocks, [SH|nth(H, X#x.blocks)]))},
     {noreply, NewX}.
+remove_front(0, T) -> T;
+remove_front(X, [_|T]) -> remove_front(X-1, T).
 nth(0, [H|_]) -> H;
 nth(N, [_|T]) -> nth(N-1, T).
 in_list(_, []) -> false;

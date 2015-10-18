@@ -1,5 +1,5 @@
 -module(reveal).
--export([doit/6, reveal/0]).
+-export([doit/7, reveal/0]).
 -record(reveal_tx, {acc = 0, nonce = 0, secret = [], height = 0}).
 
 reveal() ->
@@ -29,7 +29,7 @@ reveal2(Id, Start, End) ->%This is an inefficient implementation. Checks all 9 *
     end,
     reveal2(Id, Start + 1, End).
 
-doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
+doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
     H = Tx#reveal_tx.height,
     true = H > 1,
     Hgap = NewHeight - H,
@@ -41,13 +41,15 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
     %make sure the revealed secret matches the secret hash from the originTx.
     %we need a new database of secret_hashes. It is like accounts, channels, and totalcoins.!!!
     WL = sign_tx:winners_length(OriginTx),
+    SH = sign_tx:secret_hash(OriginTx),
     Reward = fractions:multiply_int(constants:portion_of_block_creation_fee_validators(), TotalCoins),
     Power = block_tree:power(block_tree:block(ParentKey)),
     DReward = fractions:multiply_int(constants:delegation_reward(), Power) div constants:maximum_validators_per_block(),
     %the other 2/3 of the block creator's fee, and account fees and money that get deleted in channels does not go to validators. Instead it is premanently deleted.
     N = accounts:update(Tx#reveal_tx.acc, NewHeight, ((Reward + DReward + fractions:multiply_int(constants:security_bonds_per_winner(), TotalCoins)) * WL), 0, 1, TotalCoins),
     NewAccounts = dict:store(Tx#reveal_tx.acc, N, Accounts),
-    {Channels, NewAccounts, TotalCoins + ((DReward + Reward) * WL)}.
+    NewSecrets = dict:store({NewHeight, SH}, false, Secrets),
+    {Channels, NewAccounts, TotalCoins + ((DReward + Reward) * WL), NewSecrets}.
 
 origin_tx([], _) -> none;
 origin_tx([SignedTx|Txs], Acc) ->

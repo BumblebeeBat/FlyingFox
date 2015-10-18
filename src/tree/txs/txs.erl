@@ -2,7 +2,7 @@
 
 -module(txs).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, dump/0,txs/0,digest/6,test/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, dump/0,txs/0,digest/7,test/0]).
 init(ok) -> {ok, []}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
@@ -14,27 +14,27 @@ handle_cast(dump, _) -> {noreply, []};
 handle_cast({add_tx, Tx}, X) -> {noreply, [Tx|X]}.
 dump() -> gen_server:cast(?MODULE, dump).
 txs() -> gen_server:call(?MODULE, txs).
-digest([], _, Channels, Accounts, TotalCoins, _) -> {Channels, Accounts, TotalCoins};
-digest([SignedTx|Txs], ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
+digest([], _, Channels, Accounts, TotalCoins, SecretHashes, _) -> {Channels, Accounts, TotalCoins, SecretHashes};
+digest([SignedTx|Txs], ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight) ->
     true = sign:verify(SignedTx, Accounts),
     Tx = sign:data(SignedTx),
-    {NewChannels, NewAccounts, NewTotalCoins} = 
+    {NewChannels, NewAccounts, NewTotalCoins, NewSecretHashes} = 
 	case element(1, Tx) of
-            sign_tx -> sign_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight);
-            ca -> create_account_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight);
-            spend -> spend_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight);
-            da -> delete_account_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins);
-            slasher -> slasher_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins);
-            reveal -> reveal_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins);
-            tc -> to_channel_tx:doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, NewHeight);
-            channel_block -> channel_block_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight);
-            timeout -> channel_timeout_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight);
-            channel_slash -> channel_slash_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight);
-            channel_close -> channel_close_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight);
+            sign_tx -> sign_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
+            ca -> create_account_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
+            spend -> spend_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
+            da -> delete_account_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes);
+            slasher -> slasher_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes);
+            reveal -> reveal_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes);
+            tc -> to_channel_tx:doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
+            channel_block -> channel_block_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
+            timeout -> channel_timeout_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
+            channel_slash -> channel_slash_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
+            channel_close -> channel_close_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
             _ -> 
 		io:fwrite(packer:pack(Tx)),
 		1=2
         end,
-    digest(Txs, ParentKey, NewChannels, NewAccounts, NewTotalCoins, NewHeight).
+    digest(Txs, ParentKey, NewChannels, NewAccounts, NewTotalCoins, NewSecretHashes, NewHeight).
 
 test() -> 0.

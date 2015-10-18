@@ -1,5 +1,5 @@
 -module(channel_block_tx).
--export([doit/6, origin_tx/3, channel/6, channel_block/4, cc_losses/1, close_channel/3, id/1, delay/1, nonce/1]).
+-export([doit/7, origin_tx/3, channel/7, channel_block/4, cc_losses/1, close_channel/3, id/1, delay/1, nonce/1]).
 -record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0}).
 -record(bet, {amount = 0, merkle = <<"">>, default = 0}).%signatures
 -record(tc, {acc1 = 0, acc2 = 0, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
@@ -75,11 +75,11 @@ origin_tx(BlockNumber, ParentKey, ID) ->%this should also include a type tag, ri
     OriginTxs = block_tree:txs(OriginBlock),
     %OriginTxs = unwrap_sign(OriginSignedTxs),
     creator(OriginTxs, ID).
-doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
+doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     true = Tx#channel_block.fast,%If fast is false, then you have to use close_channel instead. 
-    channel(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight).
+    channel(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight).
 
-channel(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
+channel(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     Acc1 = block_tree:account(Tx#channel_block.acc1, ParentKey, Accounts),
     Acc2 = block_tree:account(Tx#channel_block.acc2, ParentKey, Accounts),
     Channel = block_tree:channel(Tx#channel_block.id, ParentKey, Channels),
@@ -127,5 +127,5 @@ channel(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
     NewChannels = dict:store(Tx#channel_block.id, channels:empty(),Channels),
     NewAccounts1 = dict:store(Tx#channel_block.acc1, N1, Accounts),
     NewAccounts2 = dict:store(Tx#channel_block.acc2, N2, NewAccounts1),
-    {NewChannels, NewAccounts2, TotalCoins}.%remove money from totalcoins that was deleted in bets.
+    {NewChannels, NewAccounts2, TotalCoins, S}.%remove money from totalcoins that was deleted in bets.
 

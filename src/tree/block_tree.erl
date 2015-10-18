@@ -1,12 +1,13 @@
 -module(block_tree).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,read_int/2,read_int/1,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/2, block_power/1,block_entropy/1,empty_block/0,total_coins/0, buy_block/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,read_int/2,read_int/1,secret/4,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/2, block_power/1,block_entropy/1,empty_block/0,total_coins/0, buy_block/0]).
 -record(block, {acc = 0, number = 0, hash = "", bond_size = 5000000, txs = [], power = 1, entropy = 0, total_coins = constants:initial_coins()}).
 %power is how many coin are in channels. it is for consensus.
 block_power(B) -> B#block.power.
 block_entropy(B) -> B#block.entropy.
 empty_block() -> #block{}.
--record(x, {block = 0, height = 0, parent = finality, accounts = dict:new(), channels = dict:new()}).
+-record(x, {block = 0, height = 0, parent = finality, accounts = dict:new(), channels = dict:new(), secrets = dict:new()}).%height always increases by 1. 
+
 init(ok) -> 
     SignedBlock = block_finality:top_block(),
     X = #x{block = SignedBlock},
@@ -39,19 +40,70 @@ handle_call({read, V}, _From, D) ->
 	end,
     {reply, X, D}.
 handle_cast({write, K, V}, D) -> 
-    Top = dict:fetch(dict:fetch(top, D), D),
+    T = dict:fetch(top, D),
+    Top = dict:fetch(T, D),
+    NewBlock = sign:data(V#x.block),
     TopHeightB = sign:data(Top#x.block),
     TopHeight = TopHeightB#block.number,
-    NewHeightB = sign:data(V#x.block),
-    NewHeight = NewHeightB#block.number,
+    NewHeight = NewBlock#block.number,
+    Finality = constants:finality(),
     ND = if
         NewHeight > TopHeight -> 
                  %possible pruning, and merge digests into finality.
+		 DD = if 
+			  NewHeight > Finality ->
+			      {Child, MK, M} = merger(T, D),
+			      A = M#x.accounts,
+			      C = M#x.channels,
+			      S = M#x.secrets,
+			      finality_absorb(S, A, C),
+			      P = dict:fetch(Child, D),
+			      NewP = #x{block = P#x.block, height = P#x.height, parent = finality, accounts = P#x.accounts, channels = P#x.channels, secrets = P#x.secrets},
+			      dict:store(Child, NewP, dict:erase(MK, D));
+		     true  -> D
+		 end,
                  txs:dump(),
-                 dict:store(top, hash:doit(sign:data(V#x.block)), D);
+                 dict:store(top, hash:doit(NewBlock), DD);
         true -> D
     end,
     {noreply, dict:store(K, V, ND)}.
+absorb_accounts([], _) -> ok;
+absorb_accounts([K|Keys], Accounts) -> 
+    accounts:write(K, dict:fetch(K, Accounts)),
+    absorb_accounts(Keys, Accounts).
+absorb_channels([], _) ->ok;
+absorb_channels([Ch|Chs], Channels) ->
+    channels:write(Ch, dict:fetch(Ch, Channels)),
+    absorb_channels(Chs, Channels).
+absorb_secrets([], _) -> ok;
+absorb_secrets([K|Keys], Secrets) -> 
+    B = dict:fetch(K, Secrets),
+    {Height, SH} = K,
+    if
+	B -> all_secrets:add(Height, SH);
+	true -> all_secrets:remove(Height, SH)
+    end,
+    absorb_secrets(Keys, Secrets).
+finality_absorb(Secrets, Accounts, Channels) ->
+    AK = dict:fetch_keys(Accounts),
+    absorb_accounts(AK, Accounts),
+    CK = dict:fetch_keys(Channels),
+    absorb_channels(CK, Channels),
+    SK = dict:fetch_keys(Secrets),
+    absorb_secrets(SK, Secrets).
+
+merger(Key, D) ->
+    X = dict:fetch(Key, D),
+    case X#x.parent of
+	finality -> {none, Key, X};
+	Y -> merger(Key, Y, D)
+    end.
+merger(Child, Key, D) ->
+    X = dict:fetch(Key, D),
+    case X#x.parent of
+	finality -> {Child, Key, X};
+	Y -> merger(Key, Y, D)
+    end.
 top() -> gen_server:call(?MODULE, top).
 is_key(X) -> gen_server:call(?MODULE, {key, X}).
 read(K) -> gen_server:call(?MODULE, {read, K}).
@@ -69,11 +121,10 @@ txs(X) ->
 power() -> power(read(read(top))).
 power(X) -> 
     A = element(1, X),
-    case A of
-	x -> 
-	    B = sign:data(X#x.block);
-	signed -> B = sign:data(X);
-	block -> B = A
+    B = case A of
+	x -> sign:data(X#x.block);
+	signed -> sign:data(X);
+	block -> A
     end,
     B#block.power.
 height() -> height(read(top)).
@@ -107,20 +158,39 @@ write(SignedBlock) ->
     true = Block#block.bond_size > constants:consensus_byte_price() * Size,
     Entropy = entropy:doit(NewNumber),
     Entropy = Block#block.entropy, 
-    {ChannelsDict, AccountsDict, NewTotalCoins} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new(), Parent#block.total_coins, NewNumber),
+    {ChannelsDict, AccountsDict, NewTotalCoins, Secrets} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new(), Parent#block.total_coins, dict:new(), NewNumber),
     NewTotalCoins = Block#block.total_coins,
 %take fee from block creator in the digest.
-    TcIncreases = to_channel_tx:tc_increases(NewNumber),
+    TcIncreases = to_channel_tx:tc_increases(NewNumber, ParentKey),
     CCLosses = channel_block_tx:cc_losses(Block#block.txs),
     NewPower = power(Parentx#x.block) + TcIncreases - CCLosses,%increases from to_channel tx fed into finality (when the channel is still open) - decreases from channel closures in this block (for channels that have been open since finality).
     NewPower = power(SignedBlock),
-    V = #x{accounts = AccountsDict, channels = ChannelsDict, block = SignedBlock, parent = ParentKey, height = Parentx#x.height + 1},
+    V = #x{accounts = AccountsDict, channels = ChannelsDict, block = SignedBlock, parent = ParentKey, height = Parentx#x.height + 1, secrets = Secrets},
     %possibly change top block, and prune one or more blocks, and merge a block with the finality databases.
     Key = hash:doit(sign:data(SignedBlock)),
     gen_server:cast(?MODULE, {write, Key, V}),
-    tx_pool:dump().
+    tx_pool:dump(Block#block.total_coins).
 absorb([]) -> ok;
 absorb([Block|T]) -> write(Block), absorb(T).
+%secret(N, SH) -> secret(N, SH, tx_pool:secrets()).
+%secret(N, SH, SecretsDict) -> secret(N, SH, read(top), SecretsDict).
+secret(N, SH, H, SecretsDict) ->
+    Key = {N, SH},
+    B = dict:is_key(Key, SecretsDict),
+    if
+        B -> dict:fetch(Key, SecretsDict);
+        true -> secret_helper(Key, H)
+    end.
+secret_helper({N, SH}, finality) -> all_secrets:exists(N, SH);
+secret_helper(Key, H) -> 
+    X = read(H),
+    Secrets = X#x.secrets,
+    Parent = X#x.parent,
+    case dict:find(Key, Secrets) of
+	error -> secret_helper(Key, Parent);
+	{ok, Val} -> Val
+    end.
+
 account(N) -> account(N, tx_pool:accounts()).
 account(N, AccountsDict) -> account(N, read(top), AccountsDict).
 account(N, H, AccountsDict) ->
@@ -149,6 +219,7 @@ channel(N, H, Channels) ->
 channel_helper(N, finality) -> channels:read_channel(N);
 channel_helper(N, H) ->
     X = read(H),
+    Y = packer:pack(X#x.block),
     Channels = X#x.channels,
     Parent = X#x.parent,
     case dict:find(N, Channels) of
@@ -163,13 +234,12 @@ buy_block(Txs, TotalCoins, BlockGap) ->
     Parent = sign:data(ParentX#x.block),
     PHash = hash:doit(Parent),
     N = Parent#block.number + BlockGap,
-    TcIncreases = to_channel_tx:tc_increases(N),
+    TcIncreases = to_channel_tx:tc_increases(N, ParentKey),
     CCLosses = channel_block_tx:cc_losses(Txs),
     P = Parent#block.power + TcIncreases - CCLosses,
     Entropy = entropy:doit(N),
     Block = #block{txs = Txs, hash = PHash, number = N, power = P, entropy = Entropy, total_coins = TotalCoins},
-    absorb([keys:sign(Block)]),
-    tx_pool:dump().
+    absorb([keys:sign(Block)]).
 sign_tx(Tx, Pub, Priv) -> sign:sign_tx(Tx, Pub, Priv, tx_pool:accounts()).
 test() -> 
     {Pub, Priv} = sign:new_key(),
@@ -224,7 +294,7 @@ test() ->
     channel_close_tx:slow_close(1),
     SlashBlock = channel_block_tx:channel_block(2, 0, 2, 5),
     SignedSlashBlock = sign_tx(SlashBlock, Pub, Priv),
-    AccOne = block_tree:account(1),
+    AccOne = account(1),
     ChannelSlashTx = {channel_slash, 1, accounts:nonce(AccOne), SignedSlashBlock},
     SignedChannelSlashTx = sign:sign_tx(ChannelSlashTx, Pub, Priv, tx_pool:accounts()),
     tx_pool:absorb(SignedChannelSlashTx),

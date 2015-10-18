@@ -1,5 +1,5 @@
 -module(sign_tx).
--export([test/0, doit/6, htoi/1, itoh/1, winner/5, sign/0, winners/1, acc/1, secret_hash/1]).
+-export([test/0, doit/7, htoi/1, itoh/1, winner/5, sign/0, winners/1, acc/1, secret_hash/1, winners_length/1]).
 -record(sign_tx, {acc = 0, nonce = 0, secret_hash = [], winners = [], prev_hash = ""}).
 secret_hash(T) -> T#sign_tx.secret_hash.
 winners_length(Tx) -> length(Tx#sign_tx.winners).
@@ -16,7 +16,7 @@ winners(MyPower, TotalPower, Entropy, Pubkey, J, Limit, Out) ->
     winners(MyPower, TotalPower, Entropy, Pubkey, J+1, Limit, NOut).
 sign() ->
     Id = keys:id(),
-    Acc = block_tree:account(Id),
+    Acc = block_tree:account(Id),%isn't allowed...
     ParentKey = block_tree:read(top),
     PBlock = block_tree:block(ParentKey),
     Entropy = block_tree:block_entropy(PBlock),
@@ -45,13 +45,13 @@ all_winners(_,_,_,_, []) -> 1=1;
 all_winners(MyBonds, TotalBonds, Seed, Pub, [H|T]) ->
     true = winner(MyBonds, TotalBonds, Seed, Pub, H),
     all_winners(MyBonds, TotalBonds, Seed, Pub, T).
-doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->%signers is the number of signers for this block.
+doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight) ->%signers is the number of signers for this block.
     WL = length(Tx#sign_tx.winners),
     true = WL > 0,
     Acc = block_tree:account(Tx#sign_tx.acc, ParentKey, Accounts),
     FinalityAcc = accounts:read_account(Tx#sign_tx.acc),
     MyPower = min(accounts:delegated(Acc), accounts:delegated(FinalityAcc)),
-    Block = block_tree:block(),
+    Block = block_tree:block(ParentKey),
     all_winners(MyPower, block_tree:block_power(Block), block_tree:block_entropy(Block), accounts:pub(Acc), Tx#sign_tx.winners),
     ParentKey = Tx#sign_tx.prev_hash,
     %make sure each validator only signs the block once.
@@ -60,7 +60,11 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->%signers is the
     Nonce = accounts:nonce(N),
     Nonce = Tx#sign_tx.nonce,
     NewAccounts = dict:store(Tx#sign_tx.acc, N, Accounts),
-    {Channels, NewAccounts, TotalCoins - Lose}.
+    SH = Tx#sign_tx.secret_hash,
+    %SHstate = block_tree:secret(NewHeight, SH, ParentKey, SecretHashes),
+    %SHstate = false,
+    NewSecretHash = dict:store({NewHeight, SH}, true, SecretHashes),
+    {Channels, NewAccounts, TotalCoins - Lose, NewSecretHash}.
 htoi(H) -> << I:256 >> = H, I.
 itoh(I) -> << I:256 >>.
 winners(L) -> winners(L, 0).

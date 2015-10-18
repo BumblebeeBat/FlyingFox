@@ -1,5 +1,5 @@
 -module(create_account_tx).
--export([doit/6, create_account/2]).
+-export([doit/7, create_account/2]).
 -record(ca, {from = 0, nonce = 0, pub = <<"">>, amount = 0}).
 
 create_account(Pub, Amount) ->
@@ -19,7 +19,7 @@ next_top_helper(Array, Top, DBroot, Accounts) ->
 	    next_top_helper(NewArray, NewTop, DBroot, Accounts)
     end.
     
-doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
+doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NS, NewHeight) ->
     F = block_tree:account(Tx#ca.from, ParentKey, Accounts),
     NewId = next_top(ParentKey, Accounts),
     true = NewId < constants:max_address(),
@@ -35,5 +35,5 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NewHeight) ->
 	((Tx#ca.pub == MyPub) and (MyId == -1)) -> keys:update_id(NewId);
 	true -> 1 = 1
     end,
-    {Channels, Accounts3, TotalCoins}.
+    {Channels, Accounts3, TotalCoins, NS}.
 

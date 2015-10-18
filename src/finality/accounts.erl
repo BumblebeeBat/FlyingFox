@@ -12,6 +12,7 @@
 -define(word, 85).
 -record(acc, {balance = 0, nonce = 0, pub = "", delegated = 0, height = 0}).%need to add entry for height. This is the height when delegation fees were last payed. 
 init(ok) -> 
+
     case file:read_file(?empty) of
         {error, enoent} -> 
             P = base64:decode(constants:master_pub()),
