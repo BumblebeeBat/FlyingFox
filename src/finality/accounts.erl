@@ -5,7 +5,7 @@
 %Top should point to the lowest known address that is deleted.
 -module(accounts).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_account/1,write/2,test/0,size/0,write_helper/3,top/0,delete/1,array/0,update/6,empty/0,empty/1,nonce/1,delegated/1,pub/1,balance/1]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_account/1,write/2,test/0,size/0,write_helper/3,top/0,delete/1,array/0,update/6,empty/0,empty/1,nonce/1,delegated/1,pub/1,balance/1,walk/2]).
 -define(file, "accounts.db").
 -define(empty, "d_accounts.db").
 %Pub is 65 bytes. balance is 48 bits. Nonce is 32 bits. delegated is 48 bits. height is 32 bits, bringing the total to 85 bytes.

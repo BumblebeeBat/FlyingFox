@@ -35,5 +35,5 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NS, NewHeight) ->
 	((Tx#ca.pub == MyPub) and (MyId == -1)) -> keys:update_id(NewId);
 	true -> 1 = 1
     end,
-    {Channels, Accounts3, TotalCoins, NS}.
+    {Channels, Accounts3, TotalCoins - constants:create_account_fee(), NS}.
 

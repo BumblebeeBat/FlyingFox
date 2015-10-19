@@ -26,9 +26,11 @@ sign() ->
     MyPower = min(accounts:delegated(Acc), accounts:delegated(FinalityAcc)),
     TotalPower = block_tree:block_power(PBlock),
     W = winners(MyPower, TotalPower, Entropy, accounts:pub(Acc)),
+    R = repeat(Id, tx_pool:txs()),
     if 
+	R -> 0;%io:fwrite("no double sign");
         length(W) > 0 ->
-            Tx = #sign_tx{acc = Id, nonce = accounts:nonce(Acc) + 1, secret_hash = secrets:new(), winners = W, prev_hash = ParentKey, number = block_tree:block_number(PBlock)},
+    Tx = #sign_tx{acc = Id, nonce = accounts:nonce(Acc) + 1, secret_hash = secrets:new(), winners = W, prev_hash = ParentKey, number = block_tree:block_number(PBlock)},
             tx_pool:absorb(keys:sign(Tx));
         true ->
             io:fwrite("cannot sign, did not win this round\n")

@@ -1,14 +1,20 @@
 -module(delete_account_tx).
--export([doit/7]).
--record(da, {from = 0, nonce = 0, to = <<"0">>}).
-%there needs to be a way to include a fee, or else they wont be able to get their tx included.
+-export([doit/7, delete_account/3]).
+-record(da, {from = 0, nonce = 0, to = 0, fee = 0}).
+%there needs to be a way to include a fee, or else they wont always be able to get their tx included. The fee will likely be negative much of the time.
+delete_account(Acc, To, Fee) ->
+    A = block_tree:account(Acc),
+    Nonce = accounts:nonce(A),
+    #da{from = Acc, nonce = Nonce + 1, to = To, fee = Fee}.
 doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     F = block_tree:account(Tx#da.from, ParentKey, Accounts),
     To = block_tree:account(Tx#da.to, ParentKey, Accounts),
-    NT = accounts:update(To, NewHeight, accounts:balance(F) + constants:delete_account_reward(), 0, 0, TotalCoins),
+    B = constants:delete_account_reward() + accounts:balance(F),
+    true = Tx#da.fee < B,
+    NT = accounts:update(To, NewHeight, B - Tx#da.fee, 0, 0, TotalCoins),
     Nonce = accounts:nonce(F) + 1,
     Nonce = Tx#da.nonce,
     Accounts2 = dict:store(Tx#da.to, NT, Accounts),
     Accounts3 = dict:store(Tx#da.from, accounts:empty(), Accounts2),
-    {Channels, Accounts3, TotalCoins + constants:delete_account_reward() - constants:create_account_fee(), S}.
+    {Channels, Accounts3, TotalCoins + constants:delete_account_reward(), S}.
 

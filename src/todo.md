@@ -5,7 +5,6 @@ Otherwise it would be possible to reduce the total number of validators without 
 
 add another type of transaction for closing channels. This one should allow you to instantly close the channel, and take all the money, but only if your partner is very low on funds, and will soon lose his account.
 
-slasher tx type
 
 
 every constants:max_reveal() we should make a backup of the consensus state that is under finality, and delete the old backup.
