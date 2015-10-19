@@ -1,7 +1,6 @@
 -module(to_channel_tx).%used to create a channel, or increase the amount of money in it.
 -export([next_top/2,doit/7,tc_increases/2,to_channel/4,create_channel/5]).
 -record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = delegated_1, fee = 0, id = -1, increment = 0}).
-
 create_channel(To, MyBalance, TheirBalance, ConsensusFlag, Fee) ->
 %When creating a new channel, you don't choose your own ID for the new channel. It will be selected for you by next available.    
     Id = keys:id(),

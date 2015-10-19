@@ -16,13 +16,14 @@ consensus_byte_price() -> ?ConsensusBytePrice.
 min_reveal() -> ?MinReveal.
 -define(MaxReveal, finality()*10).
 max_reveal() -> ?MaxReveal.
--define(MaxAddress, max_size() div 10 div 85).%use about 10% of space to store addresses. Each one is 75 bytes
+-define(MaxAddress, max_size() div 5 div 85).%use about 10% of space to store addresses. Each one is 75 bytes
 max_address() -> ?MaxAddress.
--define(MaxChannel, max_size() div 10 div 30).%use about 10% of space to store addresses. Each one is 9 bytes
+-define(MaxChannel, max_size() div 5 div 30).%use about 10% of space to store addresses. Each one is 9 bytes
 max_channel() -> ?MaxChannel.
-create_channel_fee() -> consensus_byte_price() * 9.
-create_account_fee() -> consensus_byte_price() * 75.
-delete_account_reward() -> create_account_fee() * 3 div 4. % 3/4th refund.
+create_channel_fee() -> consensus_byte_price() * 30.
+%decided to charge for accounts based on how long it is open, instead of flat fee.
+create_account_fee() -> 0.%consensus_byte_price() * 85.
+delete_account_reward() -> 0.%create_account_fee() * 19 div 20. % 95% refund.
 security_ratio() -> 1.5.
 -define(SecurityBondsPerWinner, fractions:new(1, 1000 * finality() * minimum_validators_per_block())). 
 security_bonds_per_winner() -> ?SecurityBondsPerWinner.% so around 1% of money is locked up at a time, and it takes around 4000 blocks to move all the money. %this money goes from validators, to themselves. 

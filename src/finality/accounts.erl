@@ -35,11 +35,13 @@ empty(Pub) -> #acc{pub = Pub}.
 update(Acc, H, Dbal, Ddelegated, N, TotalCoins) ->
     true = ((N == 0) or (N == 1)),
     Nbal = Acc#acc.balance + Dbal, 
-    true = Nbal > -1,%You don't have enough money to do that.
     Gap = H - Acc#acc.height,
     F = fractions:exponent(constants:delegation_fee(), Gap),
     true = H > (Acc#acc.height - 1),%for sanity. not necessary.
     AFee = fractions:multiply_int(constants:account_fee(), TotalCoins) * Gap,
+    MR = constants:max_reveal(),
+    MinBalance = fractions:multiply_int(fractions:exponent(constants:delegation_fee(), MR), Acc#acc.delegated) + MR*AFee,%You need enough money to stay open at least this long, so that your partner has time to close the channel before your account gets deleted.
+    true = Nbal > MinBalance,%You don't have enough money to do that.
     #acc{balance = Nbal - round(fractions:multiply_int(F, Acc#acc.delegated)) - AFee,
 	 nonce = Acc#acc.nonce + N,
 	 pub = Acc#acc.pub,

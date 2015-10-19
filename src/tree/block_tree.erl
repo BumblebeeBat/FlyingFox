@@ -219,7 +219,6 @@ channel(N, H, Channels) ->
 channel_helper(N, finality) -> channels:read_channel(N);
 channel_helper(N, H) ->
     X = read(H),
-    Y = packer:pack(X#x.block),
     Channels = X#x.channels,
     Parent = X#x.parent,
     case dict:find(N, Channels) of
@@ -243,7 +242,7 @@ buy_block(Txs, TotalCoins, BlockGap) ->
 sign_tx(Tx, Pub, Priv) -> sign:sign_tx(Tx, Pub, Priv, tx_pool:accounts()).
 test() -> 
     {Pub, Priv} = sign:new_key(),
-    create_account_tx:create_account(Pub, 200000),
+    create_account_tx:create_account(Pub, 1500000),
     spend_tx:spend(1, 10),
     sign_tx:sign(),
     reveal:reveal(),

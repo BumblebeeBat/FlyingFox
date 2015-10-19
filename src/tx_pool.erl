@@ -37,7 +37,6 @@ absorb(SignedTx) ->
 		(is_record(Tx, tc)) and (Tx#tc.id == -1) ->
 	    %select the location for the new channel in the database at the very last possible moment. 
 		    Revealed = to_channel_tx:next_top(block_tree:read(top), Channels),
-	    
 		    sign:set_revealed(SignedTx, Revealed);
 		true -> SignedTx
     end,
