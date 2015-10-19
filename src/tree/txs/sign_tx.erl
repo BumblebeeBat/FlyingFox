@@ -1,6 +1,8 @@
 -module(sign_tx).
--export([test/0, doit/7, htoi/1, itoh/1, winner/5, sign/0, winners/1, acc/1, secret_hash/1, winners_length/1]).
--record(sign_tx, {acc = 0, nonce = 0, secret_hash = [], winners = [], prev_hash = ""}).
+-export([test/0, doit/7, htoi/1, itoh/1, winner/5, sign/0, winners/1, acc/1, secret_hash/1, winners_length/1, number/1, prev_hash/1]).
+-record(sign_tx, {acc = 0, nonce = 0, secret_hash = [], winners = [], prev_hash = "", number = 0}).
+number(T) -> T#sign_tx.number.
+prev_hash(T) -> T#sign_tx.prev_hash.
 secret_hash(T) -> T#sign_tx.secret_hash.
 winners_length(Tx) -> length(Tx#sign_tx.winners).
 acc(Tx) -> Tx#sign_tx.acc.
@@ -26,7 +28,7 @@ sign() ->
     W = winners(MyPower, TotalPower, Entropy, accounts:pub(Acc)),
     if 
         length(W) > 0 ->
-            Tx = #sign_tx{acc = Id, nonce = accounts:nonce(Acc) + 1, secret_hash = secrets:new(), winners = W, prev_hash = ParentKey},
+            Tx = #sign_tx{acc = Id, nonce = accounts:nonce(Acc) + 1, secret_hash = secrets:new(), winners = W, prev_hash = ParentKey, number = block_tree:block_number(PBlock)},
             tx_pool:absorb(keys:sign(Tx));
         true ->
             io:fwrite("cannot sign, did not win this round\n")
@@ -52,6 +54,8 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight) ->%
     FinalityAcc = accounts:read_account(Tx#sign_tx.acc),
     MyPower = min(accounts:delegated(Acc), accounts:delegated(FinalityAcc)),
     Block = block_tree:block(ParentKey),
+    Pnum = block_tree:block_number(Block),
+    Pnum = Tx#sign_tx.number,
     all_winners(MyPower, block_tree:block_power(Block), block_tree:block_entropy(Block), accounts:pub(Acc), Tx#sign_tx.winners),
     ParentKey = Tx#sign_tx.prev_hash,
     %make sure each validator only signs the block once.
@@ -63,7 +67,7 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight) ->%
     SH = Tx#sign_tx.secret_hash,
     %SHstate = block_tree:secret(NewHeight, SH, ParentKey, SecretHashes),
     %SHstate = false,
-    NewSecretHash = dict:store({NewHeight, SH}, true, SecretHashes),
+    NewSecretHash = dict:store({Pnum, SH}, true, SecretHashes),%newheight should instead be the height of the previous block.
     {Channels, NewAccounts, TotalCoins - Lose, NewSecretHash}.
 htoi(H) -> << I:256 >> = H, I.
 itoh(I) -> << I:256 >>.

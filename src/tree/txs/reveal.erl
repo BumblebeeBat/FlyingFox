@@ -1,5 +1,5 @@
 -module(reveal).
--export([doit/7, reveal/0]).
+-export([doit/7, reveal/0, origin_tx/2]).
 -record(reveal_tx, {acc = 0, nonce = 0, secret = [], height = 0}).
 
 reveal() ->
@@ -38,18 +38,23 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
     OriginBlock = block_tree:read_int(H, ParentKey),
     OriginTxs = block_tree:txs(OriginBlock),
     OriginTx = origin_tx(OriginTxs, Tx#reveal_tx.acc),
-    %make sure the revealed secret matches the secret hash from the originTx.
-    %we need a new database of secret_hashes. It is like accounts, channels, and totalcoins.!!!
     WL = sign_tx:winners_length(OriginTx),
     SH = sign_tx:secret_hash(OriginTx),
+    SH = hash:doit(Tx#reveal_tx.secret),
+    Number = sign_tx:number(OriginTx),
+    Secret = block_tree:secret(Number, SH, ParentKey, Secrets),
+    Secret = true,
+    %PH = sign_tx:prev_hash(OriginTx),
     Reward = fractions:multiply_int(constants:portion_of_block_creation_fee_validators(), TotalCoins),
     Power = block_tree:power(block_tree:block(ParentKey)),
     DReward = fractions:multiply_int(constants:delegation_reward(), Power) div constants:maximum_validators_per_block(),
     %the other 2/3 of the block creator's fee, and account fees and money that get deleted in channels does not go to validators. Instead it is premanently deleted.
-    N = accounts:update(Tx#reveal_tx.acc, NewHeight, ((Reward + DReward + fractions:multiply_int(constants:security_bonds_per_winner(), TotalCoins)) * WL), 0, 1, TotalCoins),
+    TReward = (Reward + DReward + fractions:multiply_int(constants:security_bonds_per_winner(), TotalCoins)) * WL,
+    N = accounts:update(Tx#reveal_tx.acc, NewHeight, TReward, 0, 1, TotalCoins),
     NewAccounts = dict:store(Tx#reveal_tx.acc, N, Accounts),
-    NewSecrets = dict:store({NewHeight, SH}, false, Secrets),
-    {Channels, NewAccounts, TotalCoins + ((DReward + Reward) * WL), NewSecrets}.
+    NewSecrets = dict:store({Number, SH}, false, Secrets),
+    %newsecret shouldn't use newheight, it should point to the block that was signed on.
+    {Channels, NewAccounts, TotalCoins + TReward, NewSecrets}.
 
 origin_tx([], _) -> none;
 origin_tx([SignedTx|Txs], Acc) ->

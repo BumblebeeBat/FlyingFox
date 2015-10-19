@@ -37,6 +37,9 @@ block_creation_fee() -> fractions:new(1, 20000).%Which implies finality only has
 %-define(PBCFV, fractions:multiply_int(block_creation_fee(), initial_coins()) div 3).
 -define(PBCFV, fractions:multiply(block_creation_fee(), fractions:new(1, 3*validators_elected_per_block()))).
 portion_of_block_creation_fee_validators() -> ?PBCFV.
+-define(SReward, fractions:new(1, 10)).%The portion of the validator's money that goes to the slasher instead of being deleted.
+slasher_reward() -> ?SReward.
+
 test() ->
     A = portion_of_block_creation_fee_validators(), 
     B = fractions:multiply(security_bonds_per_winner(), fractions:new(minimum_validators_per_block(), 2)),
