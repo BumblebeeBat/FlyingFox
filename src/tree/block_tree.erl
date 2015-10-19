@@ -1,6 +1,6 @@
 -module(block_tree).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,read_int/2,read_int/1,secret/4,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/2, block_power/1,block_entropy/1,empty_block/0,total_coins/0, buy_block/0, block_number/1]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,read_int/2,read_int/1,secret/4,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/2, block_power/1,block_entropy/1,empty_block/0,total_coins/0, buy_block/0, block_number/1, block2txs/1]).
 -record(block, {acc = 0, number = 0, hash = "", bond_size = 5000000, txs = [], power = 1, entropy = 0, total_coins = constants:initial_coins()}).
 %power is how many coin are in channels. it is for consensus.
 block_number(B) -> B#block.number.
@@ -31,7 +31,7 @@ read_int_internal(Height, BlockPointer, D) ->
     end.
 handle_call({read_int, Height, ParentKey}, _From, D) -> 
     {reply, read_int_internal(Height, ParentKey, D), D};
-handle_call(top, _From, D) -> 
+handle_call(top, _From, D) -> %this is bad, just use read.
     {reply, dict:fetch(dict:fetch(top, D), D), D};
 handle_call({key, X}, _From, D) -> {reply, dict:is_key(X, D), D};
 handle_call({read, V}, _From, D) -> 
@@ -54,6 +54,9 @@ handle_cast({write, K, V}, D) ->
 		 DD = if 
 			  NewHeight > Finality ->
 			      {Child, MK, M} = merger(T, D),
+			      Block = sign:data(M#x.block),
+			      BN = block_tree:block_number(Block),
+			      if BN > 0 -> block_finality:append(M#x.block); true -> 0 end,
 			      A = M#x.accounts,
 			      C = M#x.channels,
 			      S = M#x.secrets,
@@ -115,6 +118,7 @@ total_coins(X) ->
 block(X) -> 
     Y = read(X),
     sign:data(Y#x.block).
+block2txs(X) -> X#block.txs.
 txs() -> txs(read(read(top))).
 txs(X) -> 
     B = sign:data(X#x.block),
@@ -125,7 +129,7 @@ power(X) ->
     B = case A of
 	x -> sign:data(X#x.block);
 	signed -> sign:data(X);
-	block -> A
+	block -> X
     end,
     B#block.power.
 height() -> height(read(top)).
@@ -134,6 +138,7 @@ height(K) ->
     X#x.height.
 read_int(Height) -> 
     true = Height > -1,
+    true = Height < height() + 1,
     read_int(Height, read(top)).
 read_int(Height, BlockPointer) ->
     true = Height > -1,
@@ -303,15 +308,22 @@ test() ->
     buy_block(),
     Top5 = read(read(top)),
     1 = power(Top5#x.block),
-    F = fun() -> sign_tx:sign(), reveal:reveal(), buy_block() end,
+    %F = fun() -> sign_tx:sign(), reveal:reveal(), buy_block() end,
+    F = fun() -> sign_tx:sign(), buy_block() end,
     G = fun() -> F(), F(), F(), F(), F(), F(), F(), F() end,
     H = fun() -> G(), G(), G(), G(), G(), G(), G(), G() end,
     H(),
+    SHtest = sign_tx:secret_hash(sign:data(hd(block_tree:block2txs(sign:data(block_finality:read(10)))))),
+    true = all_secrets:exists(9, SHtest),%because block 10 contains signatures over block 9.
     D1a = accounts:delegated(account(0)),
     D2a = accounts:delegated(account(1)),
     %to_channel_tx:create_channel(1, 10000, 1000, non_delegated, 0),
     %to_channel_tx:create_channel(1, 10000, 1000, delegated_2, 0),
-    H(),
+    F2 = fun() -> sign_tx:sign(), reveal:reveal(), buy_block() end,
+    G2 = fun() -> F2(), F2(), F2(), F2(), F2(), F2(), F2(), F2() end,
+    H2 = fun() -> G2(), G2(), G2(), G2(), G2(), G2(), G2(), G2() end,
+    H2(),
+    false = all_secrets:exists(10, SHtest),
     D1b = accounts:delegated(account(0)),
     D2b = accounts:delegated(account(1)),
     D2a = D2b,

@@ -31,6 +31,7 @@ digest([SignedTx|Txs], ParentKey, Channels, Accounts, TotalCoins, SecretHashes, 
             timeout -> channel_timeout_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
             channel_slash -> channel_slash_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
             channel_close -> channel_close_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
+	    reveal_tx -> reveal:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
             _ -> 
 		io:fwrite(packer:pack(Tx)),
 		1=2

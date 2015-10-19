@@ -2,8 +2,9 @@
 -behaviour(gen_server).
 -export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,add/2,exists/2,remove/2]).
 -define(LOC, "all_secrets.db").
--record(x, {start = 0, blocks = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]}).%length of the empty lists is constants:max_reveal - constants:min_reveal + 2.
-save(DB) -> db:save(?LOC, database2bytes(DB#x.start, DB#x.blocks)).
+-define(Start, 0).
+-record(x, {start = ?Start, blocks = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]}).%length of the empty lists is constants:max_reveal - constants:min_reveal + 2.
+save(DB) -> db:save(?LOC, database2bytes(DB)).
 read() -> db:read(?LOC).
 init(ok) -> 
     process_flag(trap_exit, true),
@@ -33,7 +34,7 @@ handle_cast({add, Height, SH}, X) ->
     Gap = constants:max_reveal() - constants:min_reveal(),
     Start = X#x.start,
     H = Height-Start,
-    NewStart = max(Height - Gap - X#x.start, Start),
+    NewStart = max(Height - Gap, Start),
     NewX = #x{start = NewStart, blocks = remove_front(NewStart - Start, replace_height(H, X#x.blocks, [SH|nth(H, X#x.blocks)]))},
     {noreply, NewX}.
 remove_front(0, T) -> T;
@@ -48,7 +49,12 @@ handle_call({exists, Height, SH}, _From, X) ->
     Block = nth(H, X#x.blocks),
     O = in_list(SH, Block),
     {reply, O, X}.
-exists(Height, SH) -> gen_server:call(?MODULE, {exists, Height, SH}).
+exists(Height, SH) -> 
+    if
+	Height < 1 -> false;
+	true ->
+	    gen_server:call(?MODULE, {exists, Height, SH})
+    end.
 add(Height, SH) -> 
     E = exists(Height, SH),
     if 
@@ -81,7 +87,9 @@ list2bytes([Secrets|T]) ->
     L = list2bytes(T),
     A = length(Secrets),
     <<A:8, S/binary, L/binary>>.
-database2bytes(Start, List) ->
+database2bytes(X) ->
+    Start = X#x.start,
+    List = X#x.blocks,
     %<<Height:38, Size1, 1a, 1b, ... 1z, Size2, 2a, 2b, ...>>
     L = list2bytes(List),
     <<Start:38, L/binary>>.
@@ -98,18 +106,24 @@ bytes2list2(L, X) ->
 bytes2database(B) ->
     <<Start:38, X/binary>> = B,
     L = bytes2list(X),
-    {Start, L}.
+    #x{start = Start, blocks = L}.
 
 test() ->
     DB = [[hash:doit(1), hash:doit(2)],[hash:doit(3), hash:doit(4)]],
     S = 4,
-    A = database2bytes(S, DB),
-    {S, DB} = bytes2database(A),
+    Database = #x{start = S, blocks = DB},
+    A = database2bytes(Database),
+    #x{start = S, blocks = DB} = bytes2database(A),
+    Database = bytes2database(A),
     add(4, hash:doit(5)),
     add(6, hash:doit(5)),
-    add(5, hash:doit(5)),
+    add(5, hash:doit(6)),
     add(6, hash:doit(6)),
+    false = exists(3, hash:doit(5)),
     true = exists(4, hash:doit(5)),
+    true = exists(5, hash:doit(6)),
+    true = exists(6, hash:doit(5)),
+    true = exists(6, hash:doit(6)),
     remove(6, hash:doit(5)),
     remove(6, hash:doit(5)),
     false = exists(6, hash:doit(5)),

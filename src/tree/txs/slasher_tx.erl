@@ -3,6 +3,7 @@
 -record(slasher_tx, {acc = 0, nonce = 0, sign_tx = 0}).
 
 doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
+    %check that the sign_tx was actually signed by the right person...
     %prove that a validator double-signed.
     %take some of their deposit, delete the rest of deposit.
     H = sign_tx:number(Tx#slasher_tx.sign_tx),
@@ -18,12 +19,15 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
     Number = sign_tx:number(OriginTx),
     Secret = block_tree:secret(Number, SH, ParentKey, Secrets),
     Secret = true,
+
+    Number = sign_tx:number(Tx#slasher_tx.sign_tx),
+    %SH = sign_tx:secret_hash(Tx#slasher_tx.sign_tx),
+    %WL = sign_tx:winners_length(Tx#slasher_tx.sign_tx),
     Reward = fractions:multiply_int(constants:portion_of_block_creation_fee_validators(), TotalCoins),
     Power = block_tree:power(block_tree:block(ParentKey)),
     DReward = fractions:multiply_int(constants:delegation_reward(), Power) div constants:maximum_validators_per_block(),
     TReward = fractions:multiply_int(constants:slasher_reward(), ((Reward + DReward + fractions:multiply_int(constants:security_bonds_per_winner(), TotalCoins)) * WL)),
     N = accounts:update(Tx#slasher_tx.acc, NewHeight, TReward, 0, 1, TotalCoins),
-    
     NewAccounts = dict:store(Tx#slasher_tx.acc, N, Accounts),
     NewSecrets = dict:store({Number, SH}, false, Secrets),
     {Channels, NewAccounts, TotalCoins + TReward, NewSecrets}.
