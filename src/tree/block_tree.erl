@@ -254,6 +254,7 @@ test() ->
     sign_tx:sign(),
     reveal:reveal(),
     buy_block(),
+    tx_pool:absorb(sign_tx(slasher_tx:slasher(1, keys:sign({sign_tx, 0, 0, 0, 0, 0, 0})), Pub, Priv)),
     Top = read(read(top)),
     1 = power(Top#x.block),
     CreateTx1 = to_channel_tx:create_channel(1, 10000, 1000, delegated_1, 0),
@@ -314,6 +315,8 @@ test() ->
     G = fun() -> F(), F(), F(), F(), F(), F(), F(), F() end,
     H = fun() -> G(), G(), G(), G(), G(), G(), G(), G() end,
     H(),
+    SHtestslashed = sign_tx:secret_hash(sign:data(hd(tl(tl(block_tree:block2txs(sign:data(block_finality:read(1)))))))),
+    false = block_tree:secret(0, SHtestslashed, block_tree:read(top), dict:new()),
     SHtest = sign_tx:secret_hash(sign:data(hd(block_tree:block2txs(sign:data(block_finality:read(10)))))),
     true = block_tree:secret(9, SHtest, block_tree:read(top), dict:new()),
     true = all_secrets:exists(9, SHtest),%because block 10 contains signatures over block 9.

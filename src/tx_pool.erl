@@ -32,7 +32,7 @@ txs() -> flip(gen_server:call(?MODULE, txs)).
 absorb(SignedTx) -> 
     Tx = sign:data(SignedTx),
     Channels = channels(),
-    R = sign:revealed(SignedTx),
+    %R = sign:revealed(SignedTx),
     NewTx = if
 		(is_record(Tx, tc)) and (Tx#tc.id == -1) ->
 	    %select the location for the new channel in the database at the very last possible moment. 
@@ -41,6 +41,11 @@ absorb(SignedTx) ->
 		true -> SignedTx
     end,
     H = block_tree:height(),
+    if
+	element(1, Tx) == sign_tx ->
+	    false = sign_tx:repeat(element(2, Tx), txs());
+	true -> 0
+    end,
     {NewChannels, NewAccounts, NewTotalCoins, NewSecrets} = txs:digest([NewTx], block_tree:read(top), Channels, accounts(), total_coins(), secrets(), H+1),%Usually blocks are one after the other. Some txs may have to get removed if we change this number to a 2 before creating the block.
     gen_server:cast(?MODULE, {absorb, NewTx, NewChannels, NewAccounts, NewTotalCoins, NewSecrets}).
 
