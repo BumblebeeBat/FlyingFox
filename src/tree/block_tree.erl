@@ -161,7 +161,8 @@ write(SignedBlock) ->
     true = Winners > (constants:minimum_validators_per_block() - 1),
 %check that the amount bonded is within a small margin of the average of the last several blocks. Check that the amount being spent is less than 1/2 the amount bonded.
     Size = size(zlib:compress(term_to_binary(Block))),
-    true = Block#block.bond_size > constants:consensus_byte_price() * Size,
+    %true = Block#block.bond_size > constants:consensus_byte_price() * Size,
+    true = Size < constants:max_block_size(),
     Entropy = entropy:doit(NewNumber),
     Entropy = Block#block.entropy, 
     {ChannelsDict, AccountsDict, NewTotalCoins, Secrets} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new(), Parent#block.total_coins, dict:new(), NewNumber),
@@ -314,6 +315,7 @@ test() ->
     H = fun() -> G(), G(), G(), G(), G(), G(), G(), G() end,
     H(),
     SHtest = sign_tx:secret_hash(sign:data(hd(block_tree:block2txs(sign:data(block_finality:read(10)))))),
+    true = block_tree:secret(9, SHtest, block_tree:read(top), dict:new()),
     true = all_secrets:exists(9, SHtest),%because block 10 contains signatures over block 9.
     D1a = accounts:delegated(account(0)),
     D2a = accounts:delegated(account(1)),
@@ -323,7 +325,7 @@ test() ->
     G2 = fun() -> F2(), F2(), F2(), F2(), F2(), F2(), F2(), F2() end,
     H2 = fun() -> G2(), G2(), G2(), G2(), G2(), G2(), G2(), G2() end,
     H2(),
-    false = all_secrets:exists(10, SHtest),
+    false = all_secrets:exists(9, SHtest),
     D1b = accounts:delegated(account(0)),
     D2b = accounts:delegated(account(1)),
     D2a = D2b,

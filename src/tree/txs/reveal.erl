@@ -25,7 +25,7 @@ reveal2(Id, Start, End) ->%This is an inefficient implementation. Checks all 9 *
 			    did_not_sign;
 			X ->
 			    SH = sign_tx:secret_hash(X),
-			    BTS = block_tree:secret(Start, SH, block_tree:read(top), tx_pool:secrets()),
+			    BTS = block_tree:secret(Start-1, SH, block_tree:read(top), tx_pool:secrets()),
 			    Secret = secrets:read(SH),
 			    if
 				Secret == none ->
@@ -34,7 +34,6 @@ reveal2(Id, Start, End) ->%This is an inefficient implementation. Checks all 9 *
 				not BTS ->
 				    already_did_it;
 				true ->
-				    io:fwrite("reveal sign\n"),
 				    tx_pool:absorb(keys:sign(#reveal_tx{acc = Id, nonce = accounts:nonce(block_tree:account(Id)) + 1, secret = Secret, height = Start}))
 			    end
 		    end
