@@ -1,6 +1,6 @@
 -module(reveal).
 -export([doit/7, reveal/0, origin_tx/2]).
--record(reveal_tx, {acc = 0, nonce = 0, secret = [], height = 0}).
+-record(reveal_tx, {acc = 0, nonce = 0, secret = []}).
 
 reveal() ->
     Id = keys:id(),
@@ -22,7 +22,7 @@ reveal2(Id, Start, End) ->%This is an inefficient implementation. Checks all 9 *
 			    SH = sign_tx:secret_hash(X),
 			    case secrets:read(SH) of
 				none -> lost_the_secret;
-				Secret -> tx_pool:absorb(keys:sign(#reveal_tx{acc = Id, nonce = accounts:nonce(block_tree:account(Id)) + 1, secret = Secret, height = Start}))
+				Secret -> tx_pool:absorb(keys:sign(#reveal_tx{acc = Id, nonce = accounts:nonce(block_tree:account(Id)) + 1, secret = Secret}))%, height = Start}))
 			    end
 		    end
 	    end
@@ -30,7 +30,8 @@ reveal2(Id, Start, End) ->%This is an inefficient implementation. Checks all 9 *
     reveal2(Id, Start + 1, End).
 
 doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
-    H = Tx#reveal_tx.height,
+    H = sign_tx:number(Tx#reveal_tx.secret),
+    %H = Tx#reveal_tx.height,
     true = H > 1,
     Hgap = NewHeight - H,
     true = Hgap > constants:min_reveal(),

@@ -1,11 +1,11 @@
 -module(slasher_tx).
 -export([doit/7]).
--record(slasher_tx, {acc = 0, nonce = 0, sign_tx = 0, height = 0}).
+-record(slasher_tx, {acc = 0, nonce = 0, sign_tx = 0}).
 
 doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
     %prove that a validator double-signed.
     %take some of their deposit, delete the rest of deposit.
-    H = Tx#slasher_tx.height,
+    H = sign_tx:number(Tx#slasher_tx.sign_tx),
     true = H > 1,
     Hgap = NewHeight - H,
     true = Hgap > constants:min_reveal(),
