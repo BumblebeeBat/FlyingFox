@@ -1,5 +1,5 @@
 -module(sign_tx).
--export([test/0, doit/7, htoi/1, itoh/1, winner/5, sign/0, winners/1, acc/1, secret_hash/1, winners_length/1, number/1, prev_hash/1]).
+-export([test/0, doit/8, htoi/1, itoh/1, winner/5, sign/0, winners/1, acc/1, secret_hash/1, winners_length/1, number/1, prev_hash/1]).
 -record(sign_tx, {acc = 0, nonce = 0, secret_hash = [], winners = [], prev_hash = "", number = 0}).
 number(T) -> T#sign_tx.number.
 prev_hash(T) -> T#sign_tx.prev_hash.
@@ -47,7 +47,7 @@ all_winners(_,_,_,_, []) -> 1=1;
 all_winners(MyBonds, TotalBonds, Seed, Pub, [H|T]) ->
     true = winner(MyBonds, TotalBonds, Seed, Pub, H),
     all_winners(MyBonds, TotalBonds, Seed, Pub, T).
-doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight) ->%signers is the number of signers for this block.
+doit(Tx, Txs, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight) ->%signers is the number of signers for this block.
     WL = length(Tx#sign_tx.winners),
     true = WL > 0,
     Acc = block_tree:account(Tx#sign_tx.acc, ParentKey, Accounts),
@@ -58,7 +58,7 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight) ->%
     Pnum = Tx#sign_tx.number,
     all_winners(MyPower, block_tree:block_power(Block), block_tree:block_entropy(Block), accounts:pub(Acc), Tx#sign_tx.winners),
     ParentKey = Tx#sign_tx.prev_hash,
-    %make sure each validator only signs the block once.
+    false = repeat(Tx#sign_tx.acc, Txs),%makes sure each validator only signs the block once.
     Lose = fractions:multiply_int(constants:security_bonds_per_winner(), TotalCoins)* WL,
     N = accounts:update(Acc, NewHeight, -Lose, 0, 1, TotalCoins),
     Nonce = accounts:nonce(N),
@@ -69,6 +69,14 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight) ->%
     %SHstate = false,
     NewSecretHash = dict:store({Pnum, SH}, true, SecretHashes),%newheight should instead be the height of the previous block.
     {Channels, NewAccounts, TotalCoins - Lose, NewSecretHash}.
+repeat(_, []) -> false;
+repeat(Accn, [SignedTx|Txs]) ->
+    Tx = sign:data(SignedTx),
+    if
+	is_record(Tx, sign_tx) and (Tx#sign_tx.acc == Accn) -> true;
+	true -> repeat(Accn, Txs)
+    end.
+	    
 htoi(H) -> << I:256 >> = H, I.
 itoh(I) -> << I:256 >>.
 winners(L) -> winners(L, 0).

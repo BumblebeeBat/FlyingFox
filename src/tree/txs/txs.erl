@@ -20,7 +20,7 @@ digest([SignedTx|Txs], ParentKey, Channels, Accounts, TotalCoins, SecretHashes, 
     Tx = sign:data(SignedTx),
     {NewChannels, NewAccounts, NewTotalCoins, NewSecretHashes} = 
 	case element(1, Tx) of
-            sign_tx -> sign_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
+            sign_tx -> sign_tx:doit(Tx, Txs, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
             ca -> create_account_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
             spend -> spend_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
             da -> delete_account_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes);
