@@ -5,7 +5,7 @@
 %Top should point to the lowest known address that is deleted.
 -module(accounts).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_account/1,write/2,test/0,size/0,write_helper/3,top/0,delete/1,array/0,update/6,empty/0,empty/1,nonce/1,delegated/1,pub/1,balance/1,walk/2]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_account/1,write/2,test/0,size/0,write_helper/3,top/0,delete/1,array/0,update/6,empty/0,empty/1,nonce/1,delegated/1,pub/1,balance/1,walk/2,unit_cost/2]).
 -define(file, "accounts.db").
 -define(empty, "d_accounts.db").
 %Pub is 65 bytes. balance is 48 bits. Nonce is 32 bits. delegated is 48 bits. height is 32 bits, bringing the total to 85 bytes.
@@ -32,21 +32,24 @@ terminate(_, _) -> io:format("died!"), ok.
 handle_info(_, X) -> {noreply, X}.
 empty() -> #acc{}.
 empty(Pub) -> #acc{pub = Pub}.
+unit_cost(Acc, TotalCoins) ->
+    DFee = fractions:multiply_int(constants:delegation_fee(), Acc#acc.delegated),
+    AFee = fractions:multiply_int(constants:account_fee(), TotalCoins),
+    DFee + AFee.
 update(Acc, H, Dbal, Ddelegated, N, TotalCoins) ->
     true = ((N == 0) or (N == 1)),
-    Nbal = Acc#acc.balance + Dbal, 
     Gap = H - Acc#acc.height,
-    F = fractions:exponent(constants:delegation_fee(), Gap),
-    true = H > (Acc#acc.height - 1),%for sanity. not necessary.
-    AFee = fractions:multiply_int(constants:account_fee(), TotalCoins) * Gap,
-    MR = constants:max_reveal(),
-    MinBalance = fractions:multiply_int(fractions:exponent(constants:delegation_fee(), MR), Acc#acc.delegated) + MR*AFee,%You need enough money to stay open at least this long, so that your partner has time to close the channel before your account gets deleted.
-    true = Nbal > MinBalance,%You don't have enough money to do that.
-    #acc{balance = Nbal - round(fractions:multiply_int(F, Acc#acc.delegated)) - AFee,
-	 nonce = Acc#acc.nonce + N,
-	 pub = Acc#acc.pub,
-	 delegated = Acc#acc.delegated + Ddelegated,
-	 height = H}.
+    UCost = unit_cost(Acc, TotalCoins),
+    Cost = UCost * Gap,
+    Balance = Acc#acc.balance + Dbal,
+    MaxC = UCost * constants:max_reveal(),
+    true = Balance - MaxC > 0,%You need enough money to stay open at least this long, so that your partner has time to close the channel before your account gets deleted.
+    #acc{
+       balance = Balance - Cost,
+       nonce = Acc#acc.nonce + N,
+       pub = Acc#acc.pub,
+       delegated = Acc#acc.delegated + Ddelegated,
+       height = H}.
 nonce(Acc) -> Acc#acc.nonce.
 delegated(Acc) -> Acc#acc.delegated.
 pub(Acc) -> Acc#acc.pub.

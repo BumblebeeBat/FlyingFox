@@ -31,7 +31,8 @@ security_ratio() -> 1.5.
 security_bonds_per_winner() -> ?SecurityBondsPerWinner.% so around 1% of money is locked up at a time, and it takes around 4000 blocks to move all the money. %this money goes from validators, to themselves. 
 -define(AccountFee, fractions:new(1, max_address() * finality() * 10)).%so if all accounts are full, it takes 10 finalities until most of them start losing so much money that their accounts open up. 
 account_fee() -> ?AccountFee. 
--define(DelegationFee, fractions:new(finality() * 1000 - 1, finality() * 1000)).%so it would take about 15,000 blocks to lose 1/2 your money. So you have about 350,000 chances to be validator till you lose 1/2 your money. So you need at least initial_coins()/350000 in delegation to be able to profitably validate. Which means it supports up to 350000 validators at a time max.
+%-define(DelegationFee, fractions:new(finality() * 1000 - 1, finality() * 1000)).%so it would take about 15,000 blocks to lose 1/2 your money. So you have about 350,000 chances to be validator till you lose 1/2 your money. So you need at least initial_coins()/350000 in delegation to be able to profitably validate. Which means it supports up to 350000 validators at a time max.
+-define(DelegationFee, fractions:new(1, 1000)).
 delegation_fee() -> ?DelegationFee.
 delegation_reward() -> fractions:subtract(fractions:new(1, 1), ?DelegationFee).
 block_creation_fee() -> fractions:new(1, 20000).%Which implies finality only has to be 13 blocks long!!!

@@ -1,7 +1,6 @@
 -module(delete_account_tx).
 -export([doit/7, delete_account/3]).
 -record(da, {from = 0, nonce = 0, to = 0, fee = 0}).
-%there needs to be a way to include a fee, or else they wont always be able to get their tx included. The fee will likely be negative much of the time.
 delete_account(Acc, To, Fee) ->
     A = block_tree:account(Acc),
     Nonce = accounts:nonce(A),
