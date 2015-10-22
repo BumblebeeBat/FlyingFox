@@ -3,8 +3,8 @@
 %If you can provide evidence that someone doesn't have enough money left to validate, you can take some of their money, which simultaniously deletes all their delegation, and changes the consensus_flag in the channels to off.
 %Otherwise it would be possible to reduce the total number of validators without paying a fee.
 -module(repo_tx).
--export([doit/7, repo/3]).
--record(repo, {acc = 0, nonce = 0, target = 0, fee = 0, channels = []}).
+-export([doit/7, repo/3, losses/1]).
+-record(repo, {acc = 0, nonce = 0, target = 0, fee = 0, delegated = 0, channels = []}).
 repo(Target, Fee, Channels) ->
     Acc = keys:id(),
     A = block_tree:account(Acc),
@@ -36,13 +36,24 @@ all_channels(Amount, Accn, Channels, ParentKey, [Chn|Chs]) ->
 	delegated_2 -> channels:acc2(Channel)
     end,
     all_channels(Amount - N, Accn, Channels, ParentKey, Chs).
+losses(Txs) -> losses(Txs, 0).
+losses([], X) -> X;
+losses([SignedTx|Txs], X) -> 
+    Tx = sign:data(SignedTx),
+    if
+	is_record(Tx, repo) ->
+	    losses(Txs, X + Tx#repo.delegated);
+	true -> losses(Txs, X)
+    end.
 doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     Acc = Tx#repo.acc,
     Target = Tx#repo.target,
     A = block_tree:account(Acc, ParentKey, Accounts),
     T = block_tree:account(Target, ParentKey, Accounts),
     true = low_balance(T, TotalCoins, NewHeight),
-    true = all_channels(accounts:delegated(T), Target, Channels, ParentKey, Tx#repo.channels),
+    D = accounts:delegated(T),
+    D = Tx#repo.delegated,
+    true = all_channels(D, Target, Channels, ParentKey, Tx#repo.channels),
     %the Tx also needs to list every channel that they are delegated for, so we can delete those too.
     KT = 3,%deletes (KT - 1) / (KT) of their balance, and gives rest as reward.
     Keep = accounts:balance(T) div KT,
@@ -52,3 +63,5 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     %we need to change the delegation flag of each channel to non_delegated.
     NewChannels = un_delegate(Tx#repo.channels, ParentKey, Channels),
     {NewChannels, Accounts3, TotalCoins + constants:delete_account_reward() - (Keep * (KT - 1)), S}.
+
+%problem, this changes the power of the block...

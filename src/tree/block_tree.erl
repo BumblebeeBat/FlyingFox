@@ -174,7 +174,8 @@ write(SignedBlock) ->
     %Instead, look at tc increases in the most recent block, and cc_losses in the most recent block. The estimate is less precise, but more accurate. The estimate has a bigger bell curve, but at least the bell curve's center can't be adjusted by an adversary. 
     TcIncreases = to_channel_tx:tc_increases(Block#block.txs),
     CCLosses = channel_block_tx:cc_losses(Block#block.txs),
-    NewPower = power(Parentx#x.block) + TcIncreases - CCLosses,%increases from to_channel tx fed into finality (when the channel is still open) - decreases from channel closures in this block (for channels that have been open since finality).
+    RepoLosses = repo_tx:losses(Block#block.txs),
+    NewPower = power(Parentx#x.block) + TcIncreases - CCLosses - RepoLosses,%increases from to_channel tx fed into finality (when the channel is still open) - decreases from channel closures in this block (for channels that have been open since finality).
     NewPower = power(SignedBlock),
     V = #x{accounts = AccountsDict, channels = ChannelsDict, block = SignedBlock, parent = ParentKey, height = Parentx#x.height + 1, secrets = Secrets},
     %possibly change top block, and prune one or more blocks, and merge a block with the finality databases.
@@ -246,7 +247,8 @@ buy_block(Txs, TotalCoins, BlockGap) ->
     N = Parent#block.number + BlockGap,
     TcIncreases = to_channel_tx:tc_increases(Txs),
     CCLosses = channel_block_tx:cc_losses(Txs),
-    P = Parent#block.power + TcIncreases - CCLosses,
+    RepoLosses = repo_tx:losses(Txs),
+    P = Parent#block.power + TcIncreases - CCLosses - RepoLosses,
     Entropy = entropy:doit(N),
     Block = #block{txs = Txs, hash = PHash, number = N, power = P, entropy = Entropy, total_coins = TotalCoins},
     absorb([keys:sign(Block)]).
