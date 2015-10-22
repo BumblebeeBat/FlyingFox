@@ -3,7 +3,7 @@
 %-export([export_all]).
 -define(InitialCoins, round(math:pow(2, 48)) - 1).
 initial_coins() -> ?InitialCoins.
-initial_delegation() -> 1.
+initial_portion_delegated() -> fractions:new(3, 4).
 finality() -> 26.%/docs/security.py explains why.
 validators_elected_per_block() -> 54.
 minimum_validators_per_block() -> 36.
@@ -26,13 +26,17 @@ create_channel_fee() -> consensus_byte_price() * 30.
 %decided to charge for accounts based on how long it is open, instead of flat fee.
 create_account_fee() -> 0.%consensus_byte_price() * 85.
 delete_account_reward() -> 0.%create_account_fee() * 19 div 20. % 95% refund.
-security_ratio() -> 1.5.
--define(SecurityBondsPerWinner, fractions:new(1, 1000 * finality() * minimum_validators_per_block())). 
+security_ratio() -> fractions:new(3, 2).
+-define(SecurityBondsPerWinner, fractions:new(1, 4000 * minimum_validators_per_block())). 
 security_bonds_per_winner() -> ?SecurityBondsPerWinner.% so around 1% of money is locked up at a time, and it takes around 4000 blocks to move all the money. %this money goes from validators, to themselves. 
+initial_channels() -> %Around 10000 channels.
+    MVB = minimum_validators_per_block(),
+    D = fractions:divide(security_ratio(), security_bonds_per_winner()),
+    fractions:multiply_int(D, 4) div MVB.
 -define(AccountFee, fractions:new(1, max_address() * finality() * 10)).%so if all accounts are full, it takes 10 finalities until most of them start losing so much money that their accounts open up. 
 account_fee() -> ?AccountFee. 
 %-define(DelegationFee, fractions:new(finality() * 1000 - 1, finality() * 1000)).%so it would take about 15,000 blocks to lose 1/2 your money. So you have about 350,000 chances to be validator till you lose 1/2 your money. So you need at least initial_coins()/350000 in delegation to be able to profitably validate. Which means it supports up to 350000 validators at a time max.
--define(DelegationFee, fractions:new(1, 1000)).
+-define(DelegationFee, fractions:new(1, 1000 * finality())).
 delegation_fee() -> ?DelegationFee.
 delegation_reward() -> fractions:subtract(fractions:new(1, 1), ?DelegationFee).
 block_creation_fee() -> fractions:new(1, 20000).%Which implies finality only has to be 13 blocks long!!!

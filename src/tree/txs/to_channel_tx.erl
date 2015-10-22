@@ -1,5 +1,5 @@
 -module(to_channel_tx).%used to create a channel, or increase the amount of money in it.
--export([next_top/2,doit/7,tc_increases/2,to_channel/4,create_channel/5]).
+-export([next_top/2,doit/7,tc_increases/1,to_channel/4,create_channel/5]).
 -record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = delegated_1, fee = 0, id = -1, increment = 0}).
 create_channel(To, MyBalance, TheirBalance, ConsensusFlag, Fee) ->
 %When creating a new channel, you don't choose your own ID for the new channel. It will be selected for you by next available.    
@@ -104,25 +104,35 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     NewAccounts = dict:store(Tx#tc.acc2, N2, NewAccounts1),
     NewChannels = dict:store(NewId, Ch, Channels),
     {NewChannels, NewAccounts, TotalCoins, S}.
-tc_increases(NewNumber, ParentKey) ->
-    CF = constants:finality(),
-    if
-        NewNumber < CF + 1 -> 0;
-        true -> 
-            FBlock = block_tree:read_int(NewNumber - CF, ParentKey),
-            tc_increases(block_tree:txs(FBlock), ParentKey, 0)
-    end.
-tc_increases([], _, X) -> X;
-tc_increases([SignedTx|T], ParentKey, X) ->
+tc_increases(Txs) -> tc_increases(Txs, 0).
+tc_increases([], X) -> X;
+tc_increases([SignedTx|T], X) -> 
     Tx = sign:data(SignedTx),
-    if
-	is_record(Tx, tc) ->
-	    Channel = block_tree:channel(sign:revealed(SignedTx), ParentKey, dict:new()),
-	    Acc1 = channels:acc1(Channel),
-	    Acc2 = channels:acc2(Channel),
-	    if
-		(Tx#tc.acc1 == Acc1) and (Tx#tc.acc2 == Acc2) -> tc_increases(T, ParentKey, X+Tx#tc.increment);
-		true -> tc_increases(T, ParentKey, X)
-	    end;
-	true -> tc_increases(T, ParentKey, X)
+    case element(1, Tx) of
+	tc -> tc_increases(T, X+Tx#tc.increment);
+	_ -> tc_increases(T, X)
     end.
+%tc_increases(NewNumber, ParentKey) ->
+%    CF = constants:finality(),
+%    if
+%        NewNumber < CF + 1 -> 0;
+%        true -> 
+%            FBlock = block_tree:read_int(NewNumber - CF, ParentKey),
+%            tc_increases(block_tree:txs(FBlock), ParentKey, 0)
+%    end.
+%tc_increases([], _, X) -> X;
+%tc_increases([SignedTx|T], ParentKey, X) ->
+    %there is a case where the block increases in power, but the account does not...
+    %if the same pair of accounts closes and opens the same channel, in a single block, it shouldn't break anything.
+%Tx = sign:data(SignedTx),
+%if
+%is_record(Tx, tc) ->
+%Channel = block_tree:channel(sign:revealed(SignedTx), ParentKey, dict:new()),
+%Acc1 = channels:acc1(Channel),
+%Acc2 = channels:acc2(Channel),
+%if
+%(Tx#tc.acc1 == Acc1) and (Tx#tc.acc2 == Acc2) -> tc_increases(T, ParentKey, X+Tx#tc.increment);%this check is not good enough. It is possible to attack my making the power tag on the block incorrect.
+%true -> tc_increases(T, ParentKey, X)
+%end;
+%true -> tc_increases(T, ParentKey, X)
+%end.

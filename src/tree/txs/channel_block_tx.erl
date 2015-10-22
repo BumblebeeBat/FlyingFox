@@ -12,37 +12,45 @@ delay(X) -> X#channel_block.delay.
 close_channel(Id, Amount, Nonce) ->
     Channel = block_tree:channel(Id),
     keys:sign(#channel_block{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), amount = Amount, nonce = Nonce, id = Id, fast = true}).
-cc_losses(Txs) -> cc_losses(Txs, 0).%filter out channel_block, channel_slash, and channel_close type txs. add up the amount of money in each such channel. Exclude channels that Haven't been open since finality.
+cc_losses(Txs) -> cc_losses(Txs, 0).%filter out channel_block, channel_slash, and channel_close type txs. add up the amount of money in each such channel. 
 cc_losses([], X) -> X;
 cc_losses([SignedTx|T], X) -> 
     Tx = sign:data(SignedTx),
     case element(1, Tx) of
 	channel_block ->
 	    Channel = block_tree:channel(Tx#channel_block.id, dict:new()),
-	    StartAmount = channels:bal1(Channel) + channels:bal2(Channel),
-	    FChannel = channels:read_channel(Tx#channel_block.id),
-	    S = channels:type(Channel),
-	    A1 = channels:acc1(Channel),
-	    A2 = channels:acc2(Channel),
-	    B1 = channels:acc1(FChannel),
-	    B2 = channels:acc2(FChannel),
-	    if
-		non_delegated == S -> SA = 0;
-		(A1 == B1) and (A2 == B2) ->
-		    SA = StartAmount;
-		true -> SA = 0
-	    end,
+	    SA = channels:bal1(Channel) + channels:bal2(Channel),
 	    cc_losses(T, X+SA);
+	%Channel = block_tree:channel(Tx#channel_block.id, dict:new()),
+	%StartAmount = channels:bal1(Channel) + channels:bal2(Channel),
+	%FChannel = channels:read_channel(Tx#channel_block.id),
+	%S = channels:type(Channel),
+	%A1 = channels:acc1(Channel),
+	%A2 = channels:acc2(Channel),
+	%B1 = channels:acc1(FChannel),
+	%B2 = channels:acc2(FChannel),
+	%if
+	%non_delegated == S -> SA = 0;
+	%(A1 == B1) and (A2 == B2) ->
+	%SA = StartAmount;
+	%true -> SA = 0
+	%end,
+	%cc_losses(T, X+SA);
 	channel_slash ->
 	    cc_losses([channel_slash_tx:channel_block(Tx)|T], X);
 	channel_close ->
-	    ParentKey = block_tree:read(top),
 	    Id = channel_close_tx:id(Tx),
-	    ChannelPointer = block_tree:channel(Id, dict:new()),
-	    SignedOriginTimeout = channel_block_tx:origin_tx(channels:timeout_height(ChannelPointer), ParentKey, Id),
-	    OriginTimeout = sign:data(SignedOriginTimeout),
-	    CB = channel_timeout_tx:channel_block(OriginTimeout),
-	    cc_losses([CB|T], X);
+	    Channel = block_tree:channel(Id, dict:new()),
+	    SA = channels:bal1(Channel) + channels:bal2(Channel),
+	    cc_losses(T, X+SA);
+	%channel_close ->
+	%ParentKey = block_tree:read(top),
+	%Id = channel_close_tx:id(Tx),
+	%ChannelPointer = block_tree:channel(Id, dict:new()),
+	%SignedOriginTimeout = channel_block_tx:origin_tx(channels:timeout_height(ChannelPointer), ParentKey, Id),
+	%OriginTimeout = sign:data(SignedOriginTimeout),
+	%CB = channel_timeout_tx:channel_block(OriginTimeout),
+	%cc_losses([CB|T], X);
 	_ -> cc_losses(T, X)
     end.
     

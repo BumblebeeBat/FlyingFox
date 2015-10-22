@@ -1,6 +1,6 @@
 -module(channels).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_channel/1,write/2,test/0,size/0,write_helper/3,top/0,array/0,delete/1,walk/2,new/5,timeout/4,acc1/1,acc2/1,bal1/1,bal2/1,type/1,timeout/1,called_timeout/1,timeout_height/1,empty/0,append/1]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_channel/1,write/2,test/0,size/0,write_helper/3,top/0,array/0,delete/1,walk/2,new/5,timeout/4,acc1/1,acc2/1,bal1/1,bal2/1,type/1,timeout/1,called_timeout/1,timeout_height/1,empty/0,append/1,all_ones/1]).
 -define(file, "channels.db").
 -define(empty, "d_channels.db").
 -define(word, 30).
@@ -30,13 +30,35 @@ write_helper(N, Val, File) ->
         {error, _Reason} ->
             write_helper(N, Val, File)
     end.
+-define(Hundred, <<(round(math:pow(2, 104)) - 1):104>>).
+all_ones(N) when N > 104 -> 
+    A = all_ones(N - 104),
+    <<?Hundred/binary, A/binary>>;
+all_ones(N) -> 
+    M = 8 - (N rem 8),
+    <<(round(math:pow(2, N)) - 1):N, 0:M>>.
+binary_repeat(Times, B) -> binary_repeat(Times, B, <<>>).
+binary_repeat(0, _, X) -> X;
+binary_repeat(Times, B, X) -> binary_repeat(Times - 1, B, <<B/binary, X/binary>>).
 init(ok) -> 
     case file:read_file(?empty) of
         {error, enoent} -> 
-            Top = 0,
-            DeletedArray = << 0 >>,
+	    %constants:initial_channels(),
+	    %create this many channels between account 0 and itself. Store the majority of 0's money in these channels. 
+	    %this is so 0 has the majority of delegations.
+	    IC = constants:initial_coins(),
+	    Delegated = fractions:multiply_int(constants:initial_portion_delegated(), IC),
+	    Top = constants:initial_channels(),
+	    MoneyPerChannel = Delegated div Top,
+	    DeletedArray = all_ones(Top),
+	    Channel = <<0:32,0:32,MoneyPerChannel:48,0:48,0:1,0:32,0:38,1:2,0:1,0:6>>,
+	    Channels = binary_repeat(Top, Channel),
             write_helper(0, DeletedArray, ?empty),
-            write_helper(0, <<>>, ?file);
+            write_helper(0, Channels, ?file);
+	%Top = 0,
+	%DeletedArray = << 0 >>,
+	%write_helper(0, DeletedArray, ?empty),
+	%write_helper(0, <<>>, ?file);
         {ok, DeletedArray} ->
             Top = walk(0, DeletedArray)
     end,
@@ -150,6 +172,7 @@ write(N, Ch) ->
 size() -> 1 + filelib:file_size(?file) div ?word.
 append(Ch) -> write(top(), Ch).
 test() -> 
+    all_ones(24000),
     << 13:4 >> = << 1:1, 1:1, 0:1, 1:1 >>,%13=8+4+1
     0 = walk(0, << >>),
     0 = walk(0, << 0:1 >>),
@@ -164,30 +187,31 @@ test() ->
     %channels.db needs to be empty before starting node to run this test.
     Timeout = 555,
     A = #channel{timeout_height = Timeout},
-    0 = top(),
+    Start = 24000,
+    0 = top() - Start,
     append(A),
-    1 = top(),
+    1 = top() - Start,
     append(A),
-    2 = top(),
+    2 = top() - Start,
     append(A),
-    3 = top(),
-    delete(0),
-    0 = top(),
+    3 = top() - Start,
+    delete(0 + Start),
+    0 = top() - Start,
     append(A),
-    3 = top(),
-    delete(1),
-    1 = top(),
+    3 = top() - Start,
+    delete(1 + Start),
+    1 = top() - Start,
     append(A),
-    3 = top(),
-    Ch = read_channel(2),
-    Ch = read_channel(1),
-    delete(1),
-    delete(0),
-    0 = top(),
+    3 = top() - Start,
+    Ch = read_channel(2 + Start),
+    Ch = read_channel(1 + Start),
+    delete(1 + Start),
+    delete(0 + Start),
+    0 = top() - Start,
     append(A),
-    1 = top(),
+    1 = top() - Start,
     append(A),
-    3 = top(),
-    Ch = read_channel(0),
+    3 = top() - Start,
+    Ch = read_channel(0 + Start),
     Timeout = Ch#channel.timeout_height,
     success.

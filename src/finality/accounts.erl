@@ -16,8 +16,9 @@ init(ok) ->
     case file:read_file(?empty) of
         {error, enoent} -> 
             P = base64:decode(constants:master_pub()),
-            Balance = constants:initial_coins(),
-            Delegated = constants:initial_delegation(),
+	    IC = constants:initial_coins(),
+	    Delegated = fractions:multiply_int(constants:initial_portion_delegated(), IC),
+	    Balance = IC - Delegated,
             write_helper(0, <<Balance:48, 0:32, Delegated:48, 0:32, P/binary>>, ?file),
             Top = 1,
             DeletedArray = << 1:1 , 0:7 >>,

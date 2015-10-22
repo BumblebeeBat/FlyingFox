@@ -1,7 +1,7 @@
 -module(block_tree).
 -behaviour(gen_server).
 -export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,read_int/2,read_int/1,secret/4,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/2, block_power/1,block_entropy/1,empty_block/0,total_coins/0, buy_block/0, block_number/1, block2txs/1]).
--record(block, {acc = 0, number = 0, hash = "", bond_size = 5000000, txs = [], power = 1, entropy = 0, total_coins = constants:initial_coins()}).
+-record(block, {acc = 0, number = 0, hash = "", bond_size = 5000000, txs = [], power = fractions:multiply_int(constants:initial_portion_delegated(), constants:initial_coins()), entropy = 0, total_coins = constants:initial_coins()}).
 %power is how many coin are in channels. it is for consensus.
 block_number(B) -> B#block.number.
 block_power(B) -> B#block.power.
@@ -111,13 +111,15 @@ merger(Child, Key, D) ->
 top() -> gen_server:call(?MODULE, top).
 is_key(X) -> gen_server:call(?MODULE, {key, X}).
 read(K) -> gen_server:call(?MODULE, {read, K}).
-block() -> block(read(top)).
 total_coins() -> total_coins(block(read(top))).
 total_coins(X) -> 
     X#block.total_coins.
+block() -> block(read(read(top))).
 block(X) -> 
-    Y = read(X),
-    sign:data(Y#x.block).
+    if
+	is_record(X, x) -> sign:data(X#x.block);
+	true -> block(read(X))
+    end.
 block2txs(X) -> X#block.txs.
 txs() -> txs(read(read(top))).
 txs(X) -> 
@@ -168,7 +170,9 @@ write(SignedBlock) ->
     {ChannelsDict, AccountsDict, NewTotalCoins, Secrets} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new(), Parent#block.total_coins, dict:new(), NewNumber),
     NewTotalCoins = Block#block.total_coins,
 %take fee from block creator in the digest.
-    TcIncreases = to_channel_tx:tc_increases(NewNumber, ParentKey),
+    %TCIncreases and CCLosses this way is no good.
+    %Instead, look at tc increases in the most recent block, and cc_losses in the most recent block. The estimate is less precise, but more accurate. The estimate has a bigger bell curve, but at least the bell curve's center can't be adjusted by an adversary. 
+    TcIncreases = to_channel_tx:tc_increases(Block#block.txs),
     CCLosses = channel_block_tx:cc_losses(Block#block.txs),
     NewPower = power(Parentx#x.block) + TcIncreases - CCLosses,%increases from to_channel tx fed into finality (when the channel is still open) - decreases from channel closures in this block (for channels that have been open since finality).
     NewPower = power(SignedBlock),
@@ -240,7 +244,7 @@ buy_block(Txs, TotalCoins, BlockGap) ->
     Parent = sign:data(ParentX#x.block),
     PHash = hash:doit(Parent),
     N = Parent#block.number + BlockGap,
-    TcIncreases = to_channel_tx:tc_increases(N, ParentKey),
+    TcIncreases = to_channel_tx:tc_increases(Txs),
     CCLosses = channel_block_tx:cc_losses(Txs),
     P = Parent#block.power + TcIncreases - CCLosses,
     Entropy = entropy:doit(N),
@@ -249,14 +253,14 @@ buy_block(Txs, TotalCoins, BlockGap) ->
 sign_tx(Tx, Pub, Priv) -> sign:sign_tx(Tx, Pub, Priv, tx_pool:accounts()).
 test() -> 
     {Pub, Priv} = sign:new_key(),
-    create_account_tx:create_account(Pub, 1500000),
+    create_account_tx:create_account(Pub, 620000),
     spend_tx:spend(1, 10),
     sign_tx:sign(),
     reveal:reveal(),
     buy_block(),
     tx_pool:absorb(sign_tx(slasher_tx:slasher(1, keys:sign({sign_tx, 0, 0, 0, 0, 0, 0})), Pub, Priv)),
     Top = read(read(top)),
-    1 = power(Top#x.block),
+    %1 = power(Top#x.block),
     CreateTx1 = to_channel_tx:create_channel(1, 10000, 1000, delegated_1, 0),
     SignedCreateTx1 = sign_tx(CreateTx1, Pub, Priv),
     tx_pool:absorb(SignedCreateTx1),
@@ -270,18 +274,16 @@ test() ->
     reveal:reveal(),
     buy_block(),
     Top2 = read(read(top)),
-    1 = power(Top2#x.block),
-    ToChannel = to_channel_tx:to_channel(0, 0, 10, 0),
+    ToChannel = to_channel_tx:to_channel(24000, 0, 10, 0),
     SignedToChannel = sign_tx(ToChannel, Pub, Priv),
     tx_pool:absorb(SignedToChannel),
     sign_tx:sign(),
     reveal:reveal(),
-    buy_block(),
+    buy_block(),%needs to start with some big channels with myself, so I have enough delegation.
     Top3 = read(read(top)),
-    1 = power(Top3#x.block),
-    ChannelTx = channel_block_tx:close_channel(0, -200, 1),
-    TimeoutTx = channel_block_tx:channel_block(1, -200, 1, 0),
-    SlasherTx = channel_block_tx:channel_block(2, -200, 1, 10),
+    ChannelTx = channel_block_tx:close_channel(24000, -200, 1),
+    TimeoutTx = channel_block_tx:channel_block(24001, -200, 1, 0),
+    SlasherTx = channel_block_tx:channel_block(24002, -200, 1, 10),
     SignedChannelTx = sign_tx(ChannelTx, Pub, Priv),
     SignedTimeoutTx = sign_tx(TimeoutTx, Pub, Priv),
     SignedSlasherTx = sign_tx(SlasherTx, Pub, Priv),
@@ -297,9 +299,9 @@ test() ->
     reveal:reveal(),
     buy_block(),
     Top4 = read(read(top)),
-    1 = power(Top4#x.block),
-    channel_close_tx:slow_close(1),
-    SlashBlock = channel_block_tx:channel_block(2, 0, 2, 5),
+    %1 = power(Top4#x.block),
+    channel_close_tx:slow_close(24001),
+    SlashBlock = channel_block_tx:channel_block(24002, 0, 2, 5),
     SignedSlashBlock = sign_tx(SlashBlock, Pub, Priv),
     AccOne = account(1),
     ChannelSlashTx = {channel_slash, 1, accounts:nonce(AccOne), SignedSlashBlock},
@@ -308,18 +310,21 @@ test() ->
     sign_tx:sign(),
     reveal:reveal(),
     buy_block(),
+    CreateTxz = to_channel_tx:create_channel(1, 10000000, 1, delegated_1, 0),%to make sure account 0 is the only account that ever needs to sign.
+    SignedCreateTxz = sign_tx(CreateTxz, Pub, Priv),
+    tx_pool:absorb(SignedCreateTxz),%this line makes it crash??
     sign_tx:sign(),
     reveal:reveal(),
     Top5 = read(read(top)),
-    1 = power(Top5#x.block),
+    %1 = power(Top5#x.block),
     {Pub2, Priv2} = sign:new_key(),
-    create_account_tx:create_account(Pub2, 4000000),
+    create_account_tx:create_account(Pub2, 650000),
     buy_block(),
     sign_tx:sign(),
     reveal:reveal(),
     tx_pool:absorb(sign_tx(delete_account_tx:delete_account(2, 0, 0), Pub2, Priv2)),
     {Pub3, Priv3} = sign:new_key(),
-    create_account_tx:create_account(Pub2, 4500000),
+    create_account_tx:create_account(Pub2, 650000),
     buy_block(),
     reveal:reveal(),
     sign_tx:sign(),
