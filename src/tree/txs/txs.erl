@@ -20,6 +20,7 @@ digest([SignedTx|Txs], ParentKey, Channels, Accounts, TotalCoins, SecretHashes, 
     Tx = sign:data(SignedTx),
     {NewChannels, NewAccounts, NewTotalCoins, NewSecretHashes} = 
 	case element(1, Tx) of
+	    channel_funds_limit -> channel_funds_limit_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
 	    repo -> repo_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
             sign_tx -> sign_tx:doit(Tx, Txs, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
             ca -> create_account_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);

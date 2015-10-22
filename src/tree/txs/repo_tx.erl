@@ -11,7 +11,7 @@ repo(Target, Fee, Channels) ->
     T = block_tree:account(Target),
     true = low_balance(T, block_tree:total_coins(), block_tree:height()),
     Nonce = accounts:nonce(A),
-    tx_pool:absorb(keys:sign(#repo{acc = Acc, nonce = Nonce + 1, target = Target, fee = Fee, channels = Channels})).
+    tx_pool:absorb(keys:sign(#repo{acc = Acc, nonce = Nonce + 1, target = Target, fee = Fee, channels = Channels, delegated = accounts:delegated(T)})).
 low_balance(Acc, TotalCoins, NewHeight) -> 
     UCost = accounts:unit_cost(Acc, TotalCoins),
     MinBalance = UCost * constants:max_reveal(),
@@ -57,7 +57,7 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     %the Tx also needs to list every channel that they are delegated for, so we can delete those too.
     KT = 3,%deletes (KT - 1) / (KT) of their balance, and gives rest as reward.
     Keep = accounts:balance(T) div KT,
-    NA = accounts:update(A, NewHeight, constants:delete_account_reward() + Keep, 0, 1, TotalCoins),
+    NA = accounts:update(A, NewHeight, constants:delete_account_reward() + Keep - Tx#repo.fee, 0, 1, TotalCoins),
     Accounts2 = dict:store(Acc, NA, Accounts),
     Accounts3 = dict:store(Target, accounts:empty(), Accounts2),
     %we need to change the delegation flag of each channel to non_delegated.
