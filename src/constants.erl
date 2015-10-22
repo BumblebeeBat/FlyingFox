@@ -28,7 +28,7 @@ create_account_fee() -> 0.%consensus_byte_price() * 85.
 delete_account_reward() -> 0.%create_account_fee() * 19 div 20. % 95% refund.
 security_ratio() -> fractions:new(3, 2).
 -define(SecurityBondsPerWinner, fractions:new(1, 4000 * minimum_validators_per_block())). 
-security_bonds_per_winner() -> ?SecurityBondsPerWinner.% so around 1% of money is locked up at a time, and it takes around 4000 blocks to move all the money. %this money goes from validators, to themselves. 
+security_bonds_per_winner() -> ?SecurityBondsPerWinner.% so around 0.5% of money is locked up at a time, and it takes around 4000 blocks to move all the money. %this money goes from validators, to themselves. 
 initial_channels() -> %Around 10000 channels.
     MVB = minimum_validators_per_block(),
     D = fractions:divide(security_ratio(), security_bonds_per_winner()),

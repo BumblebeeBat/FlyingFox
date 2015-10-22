@@ -1,7 +1,8 @@
 -module(talker).
 -export([message/0]).
 simple_rpc(X) ->
-    case gen_tcp:connect("localhost", 3010, 
+    %case gen_tcp:connect("localhost", 3010, 
+    case gen_tcp:connect("localhost", port:check(), 
 			 [binary, {packet, 4}]) of
 	{ok, Socket} ->
 	    %gen_tcp:send(Socket, [term_to_binary(X)]),

@@ -15,12 +15,13 @@ init([]) ->
 	  ?CHILD(block_dump, worker),
 	  ?CHILD(block_pointers, worker),
 	  ?CHILD(block_finality, worker),
-	  ?CHILD(block_tree, worker),
-	  ?CHILD(tx_pool, worker),
 	  ?CHILD(secrets, worker),
 	  ?CHILD(entropy, worker),
 	  ?CHILD(listener, worker),
 	  ?CHILD(all_secrets, worker),
+	  ?CHILD(port, worker),
+	  ?CHILD(block_tree, worker),
+	  ?CHILD(tx_pool, worker),
 	  ?CHILD(my_channels, worker)
 	],
     {ok, { {one_for_one, 5, 10}, Children} }.
