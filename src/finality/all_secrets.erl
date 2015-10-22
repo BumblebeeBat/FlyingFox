@@ -31,12 +31,22 @@ handle_cast({remove, Height, SH}, X) ->
     NewX = #x{start = X#x.start, blocks = replace_height(H, X#x.blocks, remove_sh(SH, nth(H, X#x.blocks)))},
     {noreply, NewX};
 handle_cast({add, Height, SH}, X) -> 
-    Gap = constants:max_reveal() - constants:min_reveal(),
-    Start = X#x.start,
-    H = Height-Start,
-    NewStart = max(Height - Gap, Start),
-    NewX = #x{start = NewStart, blocks = remove_front(NewStart - Start, replace_height(H, X#x.blocks, [SH|nth(H, X#x.blocks)]))},
-    {noreply, NewX}.
+    if
+	Height < X#x.start  -> {noreply, X};
+	true ->
+	    Gap = constants:max_reveal() - constants:min_reveal(),
+	    Start = X#x.start,
+	    NewStart = max(Height - Gap + 1, Start),
+	    H = Height-NewStart,
+	    Keep = buffer(Gap+5, remove_front(NewStart - Start, X#x.blocks)),
+	    NewX = #x{start = NewStart, blocks = replace_height(H, Keep, [SH|nth(H, Keep)])},
+	    {noreply, NewX}
+    end.
+buffer(Width, L) ->
+    if
+	length(L) >= Width -> L;
+	true -> buffer(Width, L ++ [[]])
+    end.
 remove_front(0, T) -> T;
 remove_front(X, [_|T]) -> remove_front(X-1, T).
 nth(0, [H|_]) -> H;
@@ -46,8 +56,14 @@ in_list(X, [X|_]) -> true;
 in_list(X, [_|T]) -> in_list(X, T).
 handle_call({exists, Height, SH}, _From, X) -> 
     H = Height - X#x.start,
-    Block = nth(H, X#x.blocks),
-    O = in_list(SH, Block),
+    Gap = constants:max_reveal() - constants:min_reveal(),
+    O = if
+	    H > Gap -> false;
+	    H < X#x.start -> false;
+	    true -> 
+		Block = nth(H, X#x.blocks),
+		in_list(SH, Block)
+	end,
     {reply, O, X}.
 exists(Height, SH) -> 
     if
@@ -129,4 +145,5 @@ test() ->
     remove(6, hash:doit(5)),
     false = exists(6, hash:doit(5)),
     true = exists(4, hash:doit(5)),
+    add(250, hash:doit(1)),
     success.

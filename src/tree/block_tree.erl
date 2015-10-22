@@ -357,7 +357,12 @@ test() ->
     D2a = D2b,
     D1a = D1b,
     0 = accounts:delegated(block_tree:account(1)),
-    %H2(),
+    H2(),
+    H2(),
+    H2(),
+    H2(),
+    H2(),
+    H2(),
     %H2(),
     %H2(),
     %This next test only works if account 2 is low enough on money. If some constants were changed, then we may need to run H2() more times before the next step.
