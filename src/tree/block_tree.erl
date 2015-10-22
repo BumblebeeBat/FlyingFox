@@ -1,7 +1,7 @@
 -module(block_tree).
 -behaviour(gen_server).
 -export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,write/1,top/0,read/1,read_int/2,read_int/1,secret/4,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/2, block_power/1,block_entropy/1,empty_block/0,total_coins/0, buy_block/0, block_number/1, block2txs/1]).
--record(block, {acc = 0, number = 0, hash = "", bond_size = 5000000, txs = [], power = fractions:multiply_int(constants:initial_portion_delegated(), constants:initial_coins()), entropy = 0, total_coins = constants:initial_coins()}).
+-record(block, {acc = 0, number = 0, hash = "", txs = [], power = fractions:multiply_int(constants:initial_portion_delegated(), constants:initial_coins()), entropy = 0, total_coins = constants:initial_coins(), db_root = <<>>}).
 %power is how many coin are in channels. it is for consensus.
 block_number(B) -> B#block.number.
 block_power(B) -> B#block.power.
@@ -56,10 +56,17 @@ handle_cast({write, K, V}, D) ->
 			      {Child, MK, M} = merger(T, D),
 			      Block = sign:data(M#x.block),
 			      BN = block_tree:block_number(Block),
-			      if BN > 0 -> block_finality:append(M#x.block); true -> 0 end,
 			      A = M#x.accounts,
 			      C = M#x.channels,
 			      S = M#x.secrets,
+			      if
+				  (NewHeight rem Finality) == 0 ->
+				      H = backup:hash(),
+				      H = NewBlock#block.db_root,
+				      0;
+				  true -> 0
+			      end,
+			      if BN > 0 -> block_finality:append(M#x.block); true -> 0 end,
 			      finality_absorb(S, A, C),
 			      P = dict:fetch(Child, D),
 			      NewP = #x{block = P#x.block, height = P#x.height, parent = finality, accounts = P#x.accounts, channels = P#x.channels, secrets = P#x.secrets},
@@ -163,7 +170,6 @@ write(SignedBlock) ->
     true = Winners > (constants:minimum_validators_per_block() - 1),
 %check that the amount bonded is within a small margin of the average of the last several blocks. Check that the amount being spent is less than 1/2 the amount bonded.
     Size = size(zlib:compress(term_to_binary(Block))),
-    %true = Block#block.bond_size > constants:consensus_byte_price() * Size,
     true = Size < constants:max_block_size(),
     Entropy = entropy:doit(NewNumber),
     Entropy = Block#block.entropy, 
@@ -252,7 +258,12 @@ buy_block(Txs, TotalCoins, BlockGap) ->
     CFLLosses = channel_funds_limit_tx:losses(Txs, tx_pool:channels(), read(top)),
     P = Parent#block.power + TcIncreases - CCLosses - RepoLosses - CFLLosses,
     Entropy = entropy:doit(N),
-    Block = #block{txs = Txs, hash = PHash, number = N, power = P, entropy = Entropy, total_coins = TotalCoins},
+    Z = N rem constants:finality(),
+    DBR = if
+	Z == 0 -> backup:hash();
+	true -> <<>>
+    end,
+    Block = #block{txs = Txs, hash = PHash, number = N, power = P, entropy = Entropy, total_coins = TotalCoins, db_root = DBR},
     absorb([keys:sign(Block)]).
 sign_tx(Tx, Pub, Priv) -> sign:sign_tx(Tx, Pub, Priv, tx_pool:accounts()).
 test() -> 
