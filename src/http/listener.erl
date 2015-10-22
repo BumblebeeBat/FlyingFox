@@ -31,4 +31,4 @@ input_handler(Socket) ->
 send_term(Socket, Term) ->
     %gen_tcp:send(Socket, [term_to_binary(Term)]).
     gen_tcp:send(Socket, [packer:pack(Term)]).
-the_func(X)  ->  X.
+the_func(X)  ->  handler:doit(X).
