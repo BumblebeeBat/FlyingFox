@@ -10,6 +10,8 @@
 -record(channel, {acc1 = 0, acc2 = 0, bal1 = 0, bal2 = 0, called_timeout = 0, called_timeout_nonce = 0, timeout_height = 0, type = delegated_1, timeout = false}).%type is either: delegated_1, delegated_2, non_delegated
 %timeout is either true or false
 new(Acc1, Acc2, Bal1, Bal2, Type) -> #channel{acc1 = Acc1, acc2 = Acc2, bal1 = Bal1, bal2 = Bal2, type = Type, timeout = false}.
+un_delegate(Ch) ->
+    #channel{acc1 = Ch#channel.acc1, acc2 = Ch#channel.acc2, bal1 = Ch#channel.bal1, bal2 = Ch#channel.bal2, called_timeout = Ch#channel.called_timeout, timeout_height = Ch#channel.timeout_height, type = non_delegated, timeout = Ch#channel.timeout}.
 timeout(Ch, Nonce, Height, CalledTimeout) ->
     #channel{acc1 = Ch#channel.acc1, acc2 = Ch#channel.acc2, bal1 = Ch#channel.bal1, bal2 = Ch#channel.bal2, called_timeout = CalledTimeout, called_timeout_nonce = Nonce, timeout_height = Height, timeout = true}.
 acc1(Ch) -> Ch#channel.acc1.

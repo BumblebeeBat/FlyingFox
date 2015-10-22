@@ -19,9 +19,14 @@ low_balance(Acc, TotalCoins, NewHeight) ->
     Cost = UCost * Gap,
     NewBalance = accounts:balance(Acc) - Cost,
     MinBalance div 2 > NewBalance.
-   
+un_delegate([], _, Channels) -> Channels;
+un_delegate([ID|T], ParentKey, Channels) -> 
+    Ch = block_tree:channel(ID, ParentKey, Channels),
+    NewChannels = dict:store(ID, channels:un_delegate(Ch), Channels),
+    un_delegate(T, ParentKey, NewChannels).
 all_channels(Amount, _, _, _, _) when Amount < 0 -> 0 = 1;
-all_channels(0, _, _, _, _) -> true;
+all_channels(0, _, _, _, []) -> true;
+all_channels(0, _, _, _, _) -> false;
 all_channels(_, _, _, _, []) -> false;
 all_channels(Amount, Accn, Channels, ParentKey, [Chn|Chs]) -> 
     Channel = block_tree:channel(Chn, ParentKey, Channels),
@@ -44,4 +49,6 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     NA = accounts:update(A, NewHeight, constants:delete_account_reward() + Keep, 0, 1, TotalCoins),
     Accounts2 = dict:store(Acc, NA, Accounts),
     Accounts3 = dict:store(Target, accounts:empty(), Accounts2),
-    {Channels, Accounts3, TotalCoins + constants:delete_account_reward() - (Keep * (KT - 1)), S}.
+    %we need to change the delegation flag of each channel to non_delegated.
+    NewChannels = un_delegate(Tx#repo.channels, ParentKey, Channels),
+    {NewChannels, Accounts3, TotalCoins + constants:delete_account_reward() - (Keep * (KT - 1)), S}.
