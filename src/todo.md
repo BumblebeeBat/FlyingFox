@@ -9,3 +9,5 @@ messanger system that lets you pay to send messages to peers with commands.
 hashlock payments using the messanger system.
 
 garbage collect blocks. The whole file needs to be left shifted to delete the first part. block_pointers needs to be updated too. 
+
+Add bets to channels, including the third signature.

@@ -1,9 +1,9 @@
--module(flying_fox_handler).
+-module(handler).
 
 -export([init/3, handle/2, terminate/3]).
 %example of talking to this handler:
 %httpc:request(post, {"http://127.0.0.1:3010/", [], "application/octet-stream", "echo"}, [], []).
-%curl -i -d echo=echomeplz http://localhost:3010
+%curl -i -d echotxt http://localhost:3010
 handle(Req, State) ->
     {ok, Data, _} = cowboy_req:body(Req),
     {ok, Req2} = cowboy_req:reply(200, [{<<"content-type">>, <<"application/octet-stream">>}], Data, Req),
