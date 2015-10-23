@@ -6,6 +6,7 @@
   {applications, [
                   kernel,
                   stdlib,
+		  cowboy,
                   jiffy
                  ]},
   {mod, { flying_fox_app, []}},

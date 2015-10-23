@@ -10,10 +10,17 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
-                                                            
-    %ssl:start(),
-    %application:start(inets),
-    %application:ensure_all_started(flying_fox).
+    application:start(inets),
+    D = [
+	 {'_', [
+		{"/", flying_fox_handler, []}
+	       ]}
+	],
+    Dispatch = cowboy_router:compile(D),
+    K = [
+	 {env, [{dispatch, Dispatch}]}
+	],
+    {ok, _} = cowboy:start_http(http, 100, [{port, 3010}], K),
 
     flying_fox_sup:start_link().
 
