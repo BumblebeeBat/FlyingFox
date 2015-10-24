@@ -14,7 +14,6 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     A = Tx#spend.amount,
     NT = accounts:update(To, NewHeight, A, 0, 0, TotalCoins),
     NF = accounts:update(F, NewHeight, -A - Tx#spend.fee, 0, 1, TotalCoins),
-    %should subtract a fee too. The fee goes to the block creator.
     Nonce = accounts:nonce(NF),
     Nonce = Tx#spend.nonce,
     Accounts2 = dict:store(Tx#spend.to, NT, Accounts),

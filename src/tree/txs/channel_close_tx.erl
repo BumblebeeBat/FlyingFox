@@ -16,7 +16,7 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     T = block_tree:read(top),
     Top = block_tree:height(T),
     true = channels:timeout_height(Channel) < Top - channel_block_tx:delay(OriginTx) + 1,
-    channel_block_tx:channel(OriginTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight).
+    channel_block_tx:channel(SignedOriginTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight).
 slow_close(Id) ->
     MyId = keys:id(),
     Acc = block_tree:account(MyId),

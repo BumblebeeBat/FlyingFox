@@ -23,4 +23,4 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
     SignedOriginTx = channel_timeout_tx:channel_block(sign:data(OriginTimeout)),
     OriginTx = sign:data(SignedOriginTx),
     true = channel_block_tx:nonce(CB) > channel_block_tx:nonce(OriginTx),
-    channel_block_tx:channel(CB, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight).
+    channel_block_tx:channel(SignedCB, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight).

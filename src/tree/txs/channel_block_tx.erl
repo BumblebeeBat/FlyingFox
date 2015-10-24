@@ -6,13 +6,19 @@
 %#signed{data = #signed_channel_block{channel_block = SignedCB, fee = 100}, sig1 = signature}.
 
 -module(channel_block_tx).
--export([doit/7, origin_tx/3, channel/7, channel_block/5, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1]).
+-export([doit/7, origin_tx/3, channel/7, channel_block/5, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1, publish_channel_block/3, make_signed_cb/4]).
 -record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0, fee = 0}).
+-record(signed_cb, {acc = 0, nonce = 0, channel_block = #channel_block{}, fee = 0}).
 -record(bet, {amount = 0, merkle = <<"">>, default = 0}).%signatures
 -record(tc, {acc1 = 0, acc2 = 0, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
 %`merkle` is the merkle root of a datastructure explaining the bet.
 %`default` is the part of money that goes to participant 2 if the bet is still locked when the channel closes. Extra money goes to participant 1.
-%There are at least 4 types of bets: hashlock, oracle, burn, and signature. 
+%There are at least 4 types of bets: hashlock, oracle, burn, and signature;. 
+make_signed_cb(Acc, CB, Fee, Evidence) ->
+    A = block_tree:account(Acc),
+    Nonce = accounts:nonce(A),
+    Tx = #signed_cb{acc = Acc, nonce = Nonce + 1, channel_block = CB, fee = Fee},
+    sign:set_revealed(keys:sign(Tx), Evidence).
 nonce(X) -> X#channel_block.nonce.
 id(X) -> X#channel_block.id.
 delay(X) -> X#channel_block.delay.
@@ -24,25 +30,13 @@ cc_losses([], X) -> X;
 cc_losses([SignedTx|T], X) -> 
     Tx = sign:data(SignedTx),
     case element(1, Tx) of
-	channel_block ->
-	    Channel = block_tree:channel(Tx#channel_block.id, dict:new()),
+	signed_cb ->
+	    SCBTx = sign:data(SignedTx),
+	    STx = SCBTx#signed_cb.channel_block,
+	    Tt = sign:data(STx),
+	    Channel = block_tree:channel(Tt#channel_block.id, dict:new()),
 	    SA = channels:bal1(Channel) + channels:bal2(Channel),
 	    cc_losses(T, X+SA);
-	%Channel = block_tree:channel(Tx#channel_block.id, dict:new()),
-	%StartAmount = channels:bal1(Channel) + channels:bal2(Channel),
-	%FChannel = channels:read_channel(Tx#channel_block.id),
-	%S = channels:type(Channel),
-	%A1 = channels:acc1(Channel),
-	%A2 = channels:acc2(Channel),
-	%B1 = channels:acc1(FChannel),
-	%B2 = channels:acc2(FChannel),
-	%if
-	%non_delegated == S -> SA = 0;
-	%(A1 == B1) and (A2 == B2) ->
-	%SA = StartAmount;
-	%true -> SA = 0
-	%end,
-	%cc_losses(T, X+SA);
 	channel_slash ->
 	    cc_losses([channel_slash_tx:channel_block(Tx)|T], X);
 	channel_close ->
@@ -50,14 +44,6 @@ cc_losses([SignedTx|T], X) ->
 	    Channel = block_tree:channel(Id, dict:new()),
 	    SA = channels:bal1(Channel) + channels:bal2(Channel),
 	    cc_losses(T, X+SA);
-	%channel_close ->
-	%ParentKey = block_tree:read(top),
-	%Id = channel_close_tx:id(Tx),
-	%ChannelPointer = block_tree:channel(Id, dict:new()),
-	%SignedOriginTimeout = channel_block_tx:origin_tx(channels:timeout_height(ChannelPointer), ParentKey, Id),
-	%OriginTimeout = sign:data(SignedOriginTimeout),
-	%CB = channel_timeout_tx:channel_block(OriginTimeout),
-	%cc_losses([CB|T], X);
 	_ -> cc_losses(T, X)
     end.
     
@@ -67,8 +53,10 @@ creator([SignedTx|T], Id) ->
     Type = element(1, Tx),
     if
 	Type == timeout ->
-	    SignedCB = channel_timeout_tx:channel_block(Tx),
-	    CB = sign:data(SignedCB),
+	    SSignedCB = channel_timeout_tx:channel_block(Tx),
+	    CB = sign:data(SSignedCB),
+	    %SCB = SignedCB#signed_cb.channel_block,
+	    %CB = sign:data(SCB),
 	    I = CB#channel_block.id,
 	    if 
 		I == Id -> SignedTx;
@@ -84,17 +72,30 @@ channel_block(Id, Amount, Nonce, Delay, Fee) ->
     true = Delay < constants:max_reveal(),
     Channel = block_tree:channel(Id),
     keys:sign(#channel_block{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), amount = Amount, nonce = Nonce, id = Id, fast = false, delay = Delay, fee = Fee}).
-origin_tx(BlockNumber, ParentKey, ID) ->%this should also include a type tag, right???
-    %it should be 2 functions. one for timeout, and one for signed?
+publish_channel_block(CB, Fee, Evidence) ->
+    ID = keys:id(),
+    tx_pool:absorb(keys:sign(make_signed_cb(ID, CB, Fee, Evidence))).
+origin_tx(BlockNumber, ParentKey, ID) ->
     OriginBlock = block_tree:read_int(BlockNumber, ParentKey),
     OriginTxs = block_tree:txs(OriginBlock),
-    %OriginTxs = unwrap_sign(OriginSignedTxs),
     creator(OriginTxs, ID).
 doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
-    true = Tx#channel_block.fast,%If fast is false, then you have to use close_channel instead. 
-    channel(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight).
+    CB = sign:data(Tx#signed_cb.channel_block),
+    true = CB#channel_block.fast,%If fast is false, then you have to use close_channel instead. 
+    A = Tx#signed_cb.acc,
+    Acc = block_tree:account(A, ParentKey, Accounts),
+    NAcc = accounts:update(Acc, NewHeight, -Tx#signed_cb.fee, 0, 1, TotalCoins),
+    NewAccounts = dict:store(A, NAcc, Accounts),
+    Nonce = accounts:nonce(NAcc),
+    Nonce = Tx#signed_cb.nonce,
+    channel(Tx#signed_cb.channel_block, ParentKey, Channels, NewAccounts, TotalCoins, S, NewHeight).
 
-channel(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
+channel(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
+    Tx = sign:data(SignedTx),
+    %io:fwrite(packer:pack(SignedCB)),
+    %io:fwrite("\n"),
+    %SCB = sign:data(SignedCB),
+    %Tx = sign:data(SignedCB#signed_cb.channel_block),
     Acc1 = block_tree:account(Tx#channel_block.acc1, ParentKey, Accounts),
     Acc2 = block_tree:account(Tx#channel_block.acc2, ParentKey, Accounts),
     Channel = block_tree:channel(Tx#channel_block.id, ParentKey, Channels),
