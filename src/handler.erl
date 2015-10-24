@@ -13,22 +13,30 @@ handle(Req, State) ->
 
 init(_Type, Req, _Opts) -> {ok, Req, no_state}.
 terminate(_Reason, _Req, _State) -> ok.
-doit({create_account, Pub, Amount, Fee}) -> 
-    create_account_tx:create_account(Pub, Amount, Fee);
-doit({spend, To, Amount, Fee}) ->
-    spend_tx:spend(To, Amount, Fee);
-doit({buy_block}) -> block_tree:buy_block();
-doit({tx_absorb, Tx}) -> tx_pool:absorb(Tx);
-doit({sign, Tx}) -> keys:sign(Tx);
-doit({create_channel, Partner, Bal1, Bal2, Type, Fee}) ->
-    to_channel_tx:create_channel(Partner, Bal1, Bal2, Type, Fee);
-doit({to_channel, ChId, Inc1, Inc2, Fee}) ->
-    to_channel_tx:to_channel(ChId, Inc1, Inc2, Fee);
-doit({close_channel, ChId, Amount, Nonce, Fee}) ->
-    channel_block_tx:close_channel(ChId, Amount, Nonce, Fee);
-doit({test}) -> {test_response};
+-define(WORD, 10000000).%10 megabytes.
+doit({pubkey}) -> {ok, keys:pubkey()};
+doit({height}) -> {ok, block_tree:height()};
+doit({block, N}) -> {ok, block_tree:read_int(N)};
+doit({tophash}) -> {ok, hash:doit(block_tree:top())};
+doit({recent_hash, H}) -> {ok, block_tree:is_key(H)};
+doit({accounts_size}) ->
+    
+    {ok, filelib:file_size("backup/accounts.db") div ?WORD};
+doit({accounts, N}) ->
+    {ok, File} = file:open("backup/accounts.db", [read, binary, raw]),
+    O = case file:pread(File, ?WORD * N, ?WORD) of
+	    eof -> "eof";
+	    {ok, Out} -> Out;
+	    {error, Reason} -> 
+		io:fwrite("file read error\n"),
+		Reason
+	end,
+    file:close(File),
+    {ok, O};
+%need a way to share recent txs.			   
+%I want to share the backup version of all the files.
 doit(X) ->
-    io:fwrite("don't know how to handle it \n"),
+    io:fwrite("I can't handle this \n"),
     io:fwrite(X),
     io:fwrite("\n"),
     {error}.
