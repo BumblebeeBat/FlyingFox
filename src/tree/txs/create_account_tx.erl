@@ -1,11 +1,11 @@
 -module(create_account_tx).
--export([doit/7, create_account/2]).
--record(ca, {from = 0, nonce = 0, pub = <<"">>, amount = 0}).
+-export([doit/7, create_account/3]).
+-record(ca, {from = 0, nonce = 0, pub = <<"">>, amount = 0, fee = 0}).
 
-create_account(Pub, Amount) ->
+create_account(Pub, Amount, Fee) ->
     Id = keys:id(),
     Acc = block_tree:account(Id),
-    Tx = #ca{from = Id, nonce = accounts:nonce(Acc) + 1, pub = Pub, amount = Amount},
+    Tx = #ca{from = Id, nonce = accounts:nonce(Acc) + 1, pub = Pub, amount = Amount, fee = Fee},
     tx_pool:absorb(keys:sign(Tx)).
 next_top(DBroot, Accounts) -> next_top_helper(accounts:array(), accounts:top(), DBroot, Accounts).
 next_top_helper(Array, Top, DBroot, Accounts) ->
@@ -24,7 +24,7 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NS, NewHeight) ->
     NewId = next_top(ParentKey, Accounts),
     true = NewId < constants:max_address(),
     NT = accounts:update(accounts:empty(Tx#ca.pub), NewHeight, Tx#ca.amount, 0, 0, TotalCoins),
-    NF = accounts:update(F, NewHeight, (-Tx#ca.amount - constants:create_account_fee()), 0, 1, TotalCoins),
+    NF = accounts:update(F, NewHeight, (-Tx#ca.amount - constants:create_account_fee() - Tx#ca.fee), 0, 1, TotalCoins),
     Nonce = accounts:nonce(F) + 1,
     Nonce = Tx#ca.nonce,
     Accounts2 = dict:store(NewId, NT, Accounts),

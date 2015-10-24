@@ -1,6 +1,13 @@
+%Channel blocks need to be rethought a little.
+%We need to add a third signature, to lock in the secret_hashes. 
+%The fee and oracle judgement should be signed by the third signature, but not the first 2.
+%Channel_slasher needs to be upgraded so that you can slash someone, not just for publishing a low-nonced channel block, but also for failing to provide some evidence.
+%SignedCB = #signed{data = channel_block, sig1 = signature, sig2 = signature, revealed = [evidence]}
+%#signed{data = #signed_channel_block{channel_block = SignedCB, fee = 100}, sig1 = signature}.
+
 -module(channel_block_tx).
--export([doit/7, origin_tx/3, channel/7, channel_block/4, cc_losses/1, close_channel/3, id/1, delay/1, nonce/1]).
--record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0}).
+-export([doit/7, origin_tx/3, channel/7, channel_block/5, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1]).
+-record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0, fee = 0}).
 -record(bet, {amount = 0, merkle = <<"">>, default = 0}).%signatures
 -record(tc, {acc1 = 0, acc2 = 0, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
 %`merkle` is the merkle root of a datastructure explaining the bet.
@@ -9,9 +16,9 @@
 nonce(X) -> X#channel_block.nonce.
 id(X) -> X#channel_block.id.
 delay(X) -> X#channel_block.delay.
-close_channel(Id, Amount, Nonce) ->
+close_channel(Id, Amount, Nonce, Fee) ->
     Channel = block_tree:channel(Id),
-    keys:sign(#channel_block{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), amount = Amount, nonce = Nonce, id = Id, fast = true}).
+    keys:sign(#channel_block{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), amount = Amount, nonce = Nonce, id = Id, fast = true, fee = Fee}).
 cc_losses(Txs) -> cc_losses(Txs, 0).%filter out channel_block, channel_slash, and channel_close type txs. add up the amount of money in each such channel. 
 cc_losses([], X) -> X;
 cc_losses([SignedTx|T], X) -> 
@@ -73,10 +80,10 @@ creator([SignedTx|T], Id) ->
 bet_amount(X) -> bet_amount(X, 0).
 bet_amount([], X) -> X;
 bet_amount([Tx|Txs], X) -> bet_amount(Txs, X+Tx#bet.amount).
-channel_block(Id, Amount, Nonce, Delay) ->
+channel_block(Id, Amount, Nonce, Delay, Fee) ->
     true = Delay < constants:max_reveal(),
     Channel = block_tree:channel(Id),
-    keys:sign(#channel_block{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), amount = Amount, nonce = Nonce, id = Id, fast = false, delay = Delay}).
+    keys:sign(#channel_block{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), amount = Amount, nonce = Nonce, id = Id, fast = false, delay = Delay, fee = Fee}).
 origin_tx(BlockNumber, ParentKey, ID) ->%this should also include a type tag, right???
     %it should be 2 functions. one for timeout, and one for signed?
     OriginBlock = block_tree:read_int(BlockNumber, ParentKey),

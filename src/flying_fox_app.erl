@@ -13,7 +13,7 @@ start(_StartType, _StartArgs) ->
     application:start(inets),
     D_internal = [
 	 {'_', [
-		{"/priv/", internal_handler, []}
+		{"/", internal_handler, []}
 	       ]}
 	],
     D = [
