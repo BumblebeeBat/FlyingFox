@@ -10,6 +10,7 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
+    ssl:start(),
     application:start(inets),
     D_internal = [
 	 {'_', [

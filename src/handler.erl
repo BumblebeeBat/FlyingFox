@@ -8,7 +8,7 @@
 handle(Req, State) ->
     {ok, Data, _} = cowboy_req:body(Req),
     D = packer:pack(doit(packer:unpack(Data))),
-    {ok, Req2} = cowboy_req:reply(200, [{<<"content-type">>, <<"application/octet-stream">>}], D, Req),
+    {ok, Req2} = cowboy_req:reply(200, [{<<"content-type">>, <<"application/octet-stream">>},{<<"Access-Control-Allow-Origin">>,<<"*">>}], D, Req),
     {ok, Req2, State}.
 
 init(_Type, Req, _Opts) -> {ok, Req, no_state}.
