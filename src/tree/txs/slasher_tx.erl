@@ -30,13 +30,13 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
     %WL = sign_tx:winners_length(Tx#slasher_tx.sign_tx),
     Reward = fractions:multiply_int(constants:portion_of_block_creation_fee_validators(), TotalCoins),
     Power = block_tree:power(block_tree:block(ParentKey)),
-    DReward = fractions:multiply_int(constants:delegation_reward(), Power) div constants:validators_elected_per_block(),
-    TReward = fractions:multiply_int(constants:slasher_reward(), ((Reward + DReward + fractions:multiply_int(constants:security_bonds_per_winner(), TotalCoins)) * WL)),
+    DReward = fractions:multiply_int(constants:delegation_fee(), Power) div constants:validators_elected_per_block(),%half gets deleted, half is a reward.
+    TReward = fractions:multiply_int(constants:slasher_reward(), ((Reward + DReward + fractions:multiply_int(constants:security_bonds_per_winner(), TotalCoins)) * WL)) div 2,%???
     Acc = block_tree:account(Tx#slasher_tx.acc, ParentKey, Accounts),
     NN = accounts:update(Acc, NewHeight, TReward, 0, 1, TotalCoins),
     Nonce = accounts:nonce(NN),
     Nonce = Tx#slasher_tx.nonce,
     NewAccounts = dict:store(Tx#slasher_tx.acc, NN, Accounts),
     NewSecrets = dict:store({N, SH}, false, Secrets),
-    {Channels, NewAccounts, TotalCoins + TReward, NewSecrets}.
+    {Channels, NewAccounts, TotalCoins - TReward, NewSecrets}.
 

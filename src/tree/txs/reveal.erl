@@ -59,7 +59,7 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
     %PH = sign_tx:prev_hash(OriginTx),
     Reward = fractions:multiply_int(constants:portion_of_block_creation_fee_validators(), TotalCoins),
     Power = block_tree:power(block_tree:block(ParentKey)),
-    DReward = fractions:multiply_int(constants:delegation_reward(), Power) div constants:validators_elected_per_block(),
+    DReward = fractions:multiply_int(constants:delegation_fee(), Power) div constants:validators_elected_per_block(),
     %the other 2/3 of the block creator's fee, and account fees and money that get deleted in channels does not go to validators. Instead it is premanently deleted.
     TReward = (Reward + DReward + fractions:multiply_int(constants:security_bonds_per_winner(), TotalCoins)) * WL,
     Acc = block_tree:account(Tx#reveal_tx.acc, ParentKey, Accounts),

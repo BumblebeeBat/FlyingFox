@@ -55,7 +55,8 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
             Balance1 =  - Tx#tc.bal1 - Tx#tc.fee,
             Balance2 =  - Tx#tc.bal2 - Tx#tc.fee,
             Increment = Tx#tc.bal1 + Tx#tc.bal2,
-            Increment = Tx#tc.increment,%err
+            Increment = Tx#tc.increment,
+            true = Increment > (TotalCoins div constants:max_channel()),
 	    Type = Tx#tc.consensus_flag,
 	    true = ((Type == delegated_1) or (Type == delegated_2)),
 	    %check if one of the pubkeys is keys:pubkey().
