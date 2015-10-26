@@ -3,14 +3,16 @@
 -export([init/3, handle/2, terminate/3]).
 %example of talking to this handler:
 %httpc:request(post, {"http://127.0.0.1:3010/", [], "application/octet-stream", "echo"}, [], []).
+%curl -i -d '[-6,"test"]' http://localhost:3011
 %curl -i -d echotxt http://localhost:3010
 
 handle(Req, State) ->
     {ok, Data, _} = cowboy_req:body(Req),
     D = packer:pack(doit(packer:unpack(Data))),
-    {ok, Req2} = cowboy_req:reply(200, [{<<"content-type">>, <<"application/octet-stream">>},{<<"Access-Control-Allow-Origin">>,<<"*">>}], D, Req),
+    Headers = [{<<"content-type">>, <<"application/octet-stream">>},
+    {<<"Access-Control-Allow-Origin">>, <<"*">>}],
+    {ok, Req2} = cowboy_req:reply(200, Headers, D, Req),
     {ok, Req2, State}.
-
 init(_Type, Req, _Opts) -> {ok, Req, no_state}.
 terminate(_Reason, _Req, _State) -> ok.
 -define(WORD, 10000000).%10 megabytes.
@@ -37,7 +39,7 @@ doit({accounts, N}) ->
 %I want to share the backup version of all the files.
 doit(X) ->
     io:fwrite("I can't handle this \n"),
-    io:fwrite(X),
-    io:fwrite("\n"),
+    %io:fwrite(X),
+    %io:fwrite("\n"),
     {error}.
     

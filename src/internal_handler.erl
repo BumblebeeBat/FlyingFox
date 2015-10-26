@@ -12,8 +12,6 @@ handle(Req, State) ->
     {<<"Access-Control-Allow-Origin">>, <<"*">>}],
     {ok, Req2} = cowboy_req:reply(200, Headers, D, Req),
     {ok, Req2, State}.
-
-
 init(_Type, Req, _Opts) -> {ok, Req, no_state}.
 terminate(_Reason, _Req, _State) -> ok.
 doit({create_account, Pub, Amount, Fee}) -> 
