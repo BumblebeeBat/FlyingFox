@@ -96,4 +96,5 @@ test() ->
     S = read(0, Y),
     S = read(Y, Y),
     S = read(2*Y, Y),
+    file:delete(?file),
     success.

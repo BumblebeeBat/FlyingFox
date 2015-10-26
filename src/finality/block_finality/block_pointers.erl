@@ -95,5 +95,6 @@ test() ->
     %timer:sleep(200),
     X = << X0/binary, X1/binary, X2/binary>>,
     X = read(0, 3),
+    file:delete(?file),
     success.
 

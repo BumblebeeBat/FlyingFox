@@ -11,8 +11,8 @@ chances_per_address() -> 200. %Each address has this many chances to be a valida
 master_pub() -> <<"BOKw6lcRJzGkZ3G2k+T1kEeZFn8DC+awTIE3wnRAi8Jstp9PUvLyuCE6H+A79SD85cxFddVmWSiZIaPxxcbW2Zg=">>.
 max_size() -> 200000000000.%should be 2 gigabytes, does not include old blocks.
 backup() -> fractions:new(19, 20).
--define(MBS, max_size() div max_reveal() div 10).%use about 10% of size for blocks.
-max_block_size() -> ?MBS.
+%-define(MBS, max_size() div max_reveal() div 10).%use about 10% of size for blocks.
+max_block_size() -> 2000000.%2*26 = 52 megabytes of ram to hold blocks.
 -define(ConsensusBytePrice, initial_coins() div max_size()).%instead we should have a maximum number of bytes per block, and garbage collect old blocks.
 consensus_byte_price() -> ?ConsensusBytePrice.
 -define(MinReveal, finality() + 1).
@@ -23,7 +23,7 @@ max_reveal() -> ?MaxReveal.
 max_address() -> ?MaxAddress.
 -define(MaxChannel, max_size() div 5 div 30).%use about 20% of space to store addresses. Each one is 30 bytes
 max_channel() -> ?MaxChannel.
-create_channel_fee() -> consensus_byte_price() * 30.
+create_channel_fee() -> 0.%consensus_byte_price() * 30.
 %decided to charge for accounts based on how long it is open, instead of flat fee.
 create_account_fee() -> 0.%consensus_byte_price() * 85.
 delete_account_reward() -> 0.%create_account_fee() * 19 div 20. % 95% refund.
