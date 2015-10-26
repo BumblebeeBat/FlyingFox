@@ -35,3 +35,4 @@ Start your node with this script:
 
 sh start.sh
 
+Then open the file `main.html` with a web browser. 
