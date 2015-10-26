@@ -37,7 +37,7 @@ doit({accounts, N}) ->
     {ok, O};
 %need a way to share recent txs.			   
 %I want to share the backup version of all the files.
-doit(X) ->
+doit(_) ->
     io:fwrite("I can't handle this \n"),
     %io:fwrite(X),
     %io:fwrite("\n"),

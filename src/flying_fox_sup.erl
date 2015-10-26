@@ -7,7 +7,6 @@ stop() ->
     %exit(keys, kill).
     supervisor:terminate_child(flying_fox_sup, keys).
 init([]) ->
-    %ssl:start(),
     Children = 
 	[ 
 	  ?CHILD(keys, worker),
