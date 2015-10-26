@@ -92,3 +92,42 @@ If you did not get slashed, and you waited delay since channel_timeout, then thi
 If you want to get an address to hold money, or you want to change the bounds for how much money you can have, then you have to publish a tx. This will take some time to be verified, and you may have to wait multiple confirmations. Doing this costs a fee, this fee pays the validators. The next block has a minimum cost, and can't be made until all these fees add up to enough money to afford the next block.
 
 If you want to gamble or spend money within your bounds, you never have to publish a tx to the blockchain. Your participation will be instant. You still have to pay a fee, but it is far far lower. This fee does not go to the validators, it goes to the networking nodes that passed your message back and forth to your partner who you are gambling with.
+
+
+Thoughts on bets:
+Add bets to channels:
+There should be a bet that takes a list of weighted pubkeys and a list of signatures over the outcome, and performs Sztorc consensus on them.
+There should be a language for combining the outcomes of bets, so that you can make custom bets.
+There should be a bet where you use a merkle proof to prove a fact from the merkle root of the bet without revealing every fact about channel state. 
+There should be bets that check for the existence of a signature from a particular pubkey over some data.
+There needs to be a bet so that if you are in a team for an SMPC, and you commit to storing a secret, the bet goes to 0 if your commitment does not match what you reveal, or if what you reveal doesn't match the rest of the team's secrets. The bet is 1 otherwise.
+There needs to be a bet so that if you are in a team for SMPC, and you fail to participate, it deletes a little of everyone else's money, and a lot of yours.
+There should be bets that output a value between 0 and 1 which is based on what the SMPC reveals. This is rather large: We need all the commitments. unlocking requires a lot of the secrets from the SMPC team.
+We need a second version of the Sztorc consensus bet where the list of outcomes are secrets in the SMPC. So winning this bet requires having merkle proofs and signatures the from the SMPC to show the outcome of the bet. Each SMPC-participant signs once over the merkle root of their SMPC data, and then we use the root to prove the facts of what was in the SMPC.
+
+A betting language would need to:
+1) opcode: to do Sztorc consensus.
+2) opcode: to do sha256 on arbitrary sized data, to allow merkle proofs
+3) opcode: check signatures
+4) opcodes: * / + -
+5) rule: final output is a rational: 2 bounded positive integers, first is strictly smallers, they share no common divisor.
+6) opcodes: rot swap drop dup 2dup -rot tuck-n, pick-n
+7) opcodes: aware of blockchain facts: totalcoins, height.
+8) opcode: to delete the money in the bet so neither party gets it.
+9) opcodes: if else then
+10) opcodes: and or xor nand not
+11) opcodes: > < ==
+12) opcode: stackdepth
+
+I could have the datastructure be a list of Things,
+examples of Things:
+* <<>>
+* <<123, 44, 0, 1>>
+* {f, 23, 100} % fraction.
+* {f, 0, 1}
+* {f, 230000000, 1}
+
+The code could be a list of Things and Opcodes. Things get pushed to the stack.
+
+The bet is a list of bytes in the language. The key to unlock the bet and find it's outcome is another list of bytes.
+Checking find the outcome of the bet is as easy as appending the bet to the key, and run the bytes through the VM.
