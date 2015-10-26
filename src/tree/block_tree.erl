@@ -29,6 +29,7 @@ read_int_internal(Height, BlockPointer, D) ->
         BlockX#x.height == Height -> BlockX;
         true -> read_int_internal(Height, BlockX#x.parent, D)
     end.
+handle_cast(_, X) -> {noreply, X}.
 handle_call({read_int, Height, ParentKey}, _From, D) -> 
     {reply, read_int_internal(Height, ParentKey, D), D};
 handle_call(top, _From, D) -> %this is bad, just use read.
@@ -39,8 +40,8 @@ handle_call({read, V}, _From, D) ->
 	    {ok, Value} -> Value;
 	    error -> "none"
 	end,
-    {reply, X, D}.
-handle_cast({write, K, V}, D) -> 
+    {reply, X, D};
+handle_call({write, K, V}, _From, D) -> 
     T = dict:fetch(top, D),
     Top = dict:fetch(T, D),
     NewBlock = sign:data(V#x.block),
@@ -59,14 +60,16 @@ handle_cast({write, K, V}, D) ->
 			      A = M#x.accounts,
 			      C = M#x.channels,
 			      S = M#x.secrets,
+			      Z = backup(NewHeight),
+
 			      if
-				  (NewHeight rem Finality) == 0 ->
+				  Z ->
 				      H = backup:hash(),
 				      H = NewBlock#block.db_root,
 				      0;
 				  true -> 0
 			      end,
-			      if BN > 0 -> block_finality:append(M#x.block); true -> 0 end,
+			      if BN > 0 -> block_finality:append(M#x.block, M#x.height); true -> 0 end,
 			      finality_absorb(S, A, C),
 			      P = dict:fetch(Child, D),
 			      NewP = #x{block = P#x.block, height = P#x.height, parent = finality, accounts = P#x.accounts, channels = P#x.channels, secrets = P#x.secrets},
@@ -77,7 +80,7 @@ handle_cast({write, K, V}, D) ->
                  dict:store(top, hash:doit(NewBlock), DD);
         true -> D
     end,
-    {noreply, dict:store(K, V, ND)}.
+    {reply, 0, dict:store(K, V, ND)}.
 absorb_accounts([], _) -> ok;
 absorb_accounts([K|Keys], Accounts) -> 
     accounts:write(K, dict:fetch(K, Accounts)),
@@ -187,7 +190,7 @@ write(SignedBlock) ->
     V = #x{accounts = AccountsDict, channels = ChannelsDict, block = SignedBlock, parent = ParentKey, height = Parentx#x.height + 1, secrets = Secrets},
     %possibly change top block, and prune one or more blocks, and merge a block with the finality databases.
     Key = hash:doit(sign:data(SignedBlock)),
-    gen_server:cast(?MODULE, {write, Key, V}),
+    gen_server:call(?MODULE, {write, Key, V}),
     tx_pool:dump(Block#block.total_coins).
 absorb([]) -> ok;
 absorb([Block|T]) -> write(Block), absorb(T).
@@ -246,6 +249,9 @@ channel_helper(N, H) ->
     end.
 buy_block() -> buy_block(tx_pool:txs(), tx_pool:total_coins()).
 buy_block(Txs, TotalCoins) -> buy_block(Txs, TotalCoins, 1).
+backup(N) ->
+   (N rem (fractions:multiply_int(constants:backup(), constants:max_reveal()))) == 0.
+
 buy_block(Txs, TotalCoins, BlockGap) ->
     ParentKey = read(top),
     ParentX = read(ParentKey),
@@ -258,9 +264,10 @@ buy_block(Txs, TotalCoins, BlockGap) ->
     CFLLosses = channel_funds_limit_tx:losses(Txs, tx_pool:channels(), read(top)),
     P = Parent#block.power + TcIncreases - CCLosses - RepoLosses - CFLLosses,
     Entropy = entropy:doit(N),
-    Z = N rem constants:finality(),
+    Z = backup(N),
+    %Z = N rem constants:finality(),
     DBR = if
-	Z == 0 -> backup:hash();
+	Z  -> backup:hash();
 	true -> <<>>
     end,
     Block = #block{txs = Txs, hash = PHash, number = N, power = P, entropy = Entropy, total_coins = TotalCoins, db_root = DBR},
@@ -437,7 +444,7 @@ long_test() ->
     D2a = accounts:delegated(account(1)),
     %to_channel_tx:create_channel(1, 10000, 1000, non_delegated, 0),
     %to_channel_tx:create_channel(1, 10000, 1000, delegated_2, 0),
-    F2 = fun() -> sign_tx:sign(), reveal:reveal(), buy_block() end,
+    F2 = fun() -> sign_tx:sign(), reveal:reveal(), buy_block() , timer:sleep(200) end,
     G2 = fun() -> F2(), F2(), F2(), F2(), F2(), F2(), F2(), F2() end,
     H2 = fun() -> G2(), G2(), G2(), G2(), G2(), G2(), G2(), G2() end,
     H2(),
@@ -447,6 +454,8 @@ long_test() ->
     D2a = D2b,
     D1a = D1b,
     0 = accounts:delegated(block_tree:account(1)),
+    H2(),
+    H2(),
     H2(),
     H2(),
     H2(),

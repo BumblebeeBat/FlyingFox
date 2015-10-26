@@ -10,6 +10,7 @@ minimum_validators_per_block() -> 36.
 chances_per_address() -> 200. %Each address has this many chances to be a validator per block. this makes it possible to be validator more than once on the same block. 
 master_pub() -> <<"BOKw6lcRJzGkZ3G2k+T1kEeZFn8DC+awTIE3wnRAi8Jstp9PUvLyuCE6H+A79SD85cxFddVmWSiZIaPxxcbW2Zg=">>.
 max_size() -> 200000000000.%should be 2 gigabytes, does not include old blocks.
+backup() -> fractions:new(19, 20).
 -define(MBS, max_size() div max_reveal() div 10).%use about 10% of size for blocks.
 max_block_size() -> ?MBS.
 -define(ConsensusBytePrice, initial_coins() div max_size()).%instead we should have a maximum number of bytes per block, and garbage collect old blocks.
