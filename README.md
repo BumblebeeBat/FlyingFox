@@ -35,4 +35,4 @@ Start your node with this script:
 
 sh start.sh
 
-Then open the file `main.html` with a web browser. 
+Then open this URL in your browser: http://localhost:3011/main/
