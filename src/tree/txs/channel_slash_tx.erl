@@ -1,6 +1,6 @@
 -module(channel_slash_tx).
--export([doit/7, channel_slash/1, channel_block/1]).
--record(channel_slash, {acc = 0, nonce = 0, channel_block = 0}).
+-export([doit/7, channel_slash/1, channel_block/1, make_tx/3]).
+-record(channel_slash, {acc = 0, nonce = 0, channel_block = 0, fee=0}).
 channel_block(Tx) ->
     Tx#channel_slash.channel_block.
 channel_slash(ChannelTx) ->
@@ -9,6 +9,11 @@ channel_slash(ChannelTx) ->
 channel_slash(ChannelTx, MyId) ->
     Acc = block_tree:account(MyId),
     tx_pool:absorb(keys:sign(#channel_slash{acc = MyId, nonce = accounts:nonce(Acc), channel_block = ChannelTx})).
+make_tx(Id, CB, Fee) ->
+    %Id = keys:id(),
+    Acc = block_tree:account(Id),
+    Nonce = accounts:nonce(Acc),
+    #channel_slash{acc = Id, nonce = Nonce + 1, channel_block = CB, fee = Fee}.
 doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
     SignedCB = Tx#channel_slash.channel_block,
     sign:verify(SignedCB, Accounts),
@@ -23,4 +28,11 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
     SignedOriginTx = channel_timeout_tx:channel_block(sign:data(OriginTimeout)),
     OriginTx = sign:data(SignedOriginTx),
     true = channel_block_tx:nonce(CB) > channel_block_tx:nonce(OriginTx),
-    channel_block_tx:channel(SignedCB, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight).
+    Acc = block_tree:account(A, ParentKey, Accounts),
+    NAcc = accounts:update(Acc, NewHeight, -Tx#channel_slash.fee, 0, 1, TotalCoins),
+    NewAccounts = dict:store(A, NAcc, Accounts),
+
+    Nonce = accounts:nonce(NAcc),
+    Nonce = Tx#channel_slash.nonce,
+
+    channel_block_tx:channel(SignedCB, ParentKey, Channels, NewAccounts, TotalCoins, Secrets, NewHeight).

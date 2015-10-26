@@ -34,6 +34,8 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
     TReward = fractions:multiply_int(constants:slasher_reward(), ((Reward + DReward + fractions:multiply_int(constants:security_bonds_per_winner(), TotalCoins)) * WL)),
     Acc = block_tree:account(Tx#slasher_tx.acc, ParentKey, Accounts),
     NN = accounts:update(Acc, NewHeight, TReward, 0, 1, TotalCoins),
+    Nonce = accounts:nonce(NN),
+    Nonce = Tx#slasher_tx.nonce,
     NewAccounts = dict:store(Tx#slasher_tx.acc, NN, Accounts),
     NewSecrets = dict:store({N, SH}, false, Secrets),
     {Channels, NewAccounts, TotalCoins + TReward, NewSecrets}.

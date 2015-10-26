@@ -2,7 +2,7 @@
 
 -module(channel_close_tx).
 -export([doit/7, slow_close/1, id/1]).
--record(channel_close, {acc = 0, nonce = 0, id = 0}).
+-record(channel_close, {acc = 0, nonce = 0, id = 0, fee = 0}).
 id(X) -> X#channel_close.id.
 
 doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
@@ -15,7 +15,12 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     T = block_tree:read(top),
     Top = block_tree:height(T),
     true = channels:timeout_height(Channel) < Top - channel_block_tx:delay(OriginTx) + 1,
-    channel_block_tx:channel(SignedOriginTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight).
+    Acc = block_tree:account(Tx#channel_close.acc, ParentKey, Accounts),
+    NAcc = accounts:update(Acc, NewHeight, -Tx#channel_close.fee, 0, 1, TotalCoins),
+    NewAccounts = dict:store(Tx#channel_close.acc, NAcc, Accounts),
+    Nonce = accounts:nonce(NAcc),
+    Nonce = Tx#channel_close.nonce,
+    channel_block_tx:channel(SignedOriginTx, ParentKey, Channels, NewAccounts, TotalCoins, S, NewHeight).
 slow_close(Id) ->
     MyId = keys:id(),
     Acc = block_tree:account(MyId),

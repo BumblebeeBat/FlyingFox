@@ -71,5 +71,7 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     N2 = accounts:update(Partner, NewHeight, 0, -D2, 0, TotalCoins, nocheck),
     Accounts1 = dict:store(Part, N2, Accounts),
     NewAccounts = dict:store(A, N, Accounts1),
+    Nonce = accounts:nonce(N),
+    Nonce = Tx#channel_funds_limit.nonce,
     NewChannels = dict:store(ID, channels:empty(), Channels),
     {NewChannels, NewAccounts, TotalCoins, S}.

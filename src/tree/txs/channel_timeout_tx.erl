@@ -26,8 +26,8 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     Acc1 = channels:acc1(OldCh),
     Acc2 = channels:acc2(OldCh),
     if
-	Tx#timeout.acc == Acc1 -> A = 0;
-	Tx#timeout.acc == Acc2 -> A = 1
+        Tx#timeout.acc == Acc1 -> A = 0;
+        Tx#timeout.acc == Acc2 -> A = 1
     end,
     Ch = channels:timeout(OldCh, Tx#timeout.nonce, NewHeight, A),
     NewChannels = dict:store(Id, Ch, Channels),

@@ -64,6 +64,8 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
     TReward = (Reward + DReward + fractions:multiply_int(constants:security_bonds_per_winner(), TotalCoins)) * WL,
     Acc = block_tree:account(Tx#reveal_tx.acc, ParentKey, Accounts),
     N = accounts:update(Acc, NewHeight, TReward, 0, 1, TotalCoins),
+    Nonce = accounts:nonce(N),
+    Nonce = Tx#reveal_tx.nonce,
     NewAccounts = dict:store(Tx#reveal_tx.acc, N, Accounts),
     NewSecrets = dict:store({Number, SH}, false, Secrets),
     %newsecret shouldn't use newheight, it should point to the block that was signed on.

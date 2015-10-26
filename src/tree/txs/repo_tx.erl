@@ -58,6 +58,8 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     KT = 3,%deletes (KT - 1) / (KT) of their balance, and gives rest as reward.
     Keep = accounts:balance(T) div KT,
     NA = accounts:update(A, NewHeight, constants:delete_account_reward() + Keep - Tx#repo.fee, 0, 1, TotalCoins),
+    Nonce = accounts:nonce(NA),
+    Nonce = Tx#repo.nonce,
     Accounts2 = dict:store(Acc, NA, Accounts),
     Accounts3 = dict:store(Target, accounts:empty(), Accounts2),
     %we need to change the delegation flag of each channel to non_delegated.

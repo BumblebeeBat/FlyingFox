@@ -25,7 +25,7 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NS, NewHeight) ->
     true = NewId < constants:max_address(),
     NT = accounts:update(accounts:empty(Tx#ca.pub), NewHeight, Tx#ca.amount, 0, 0, TotalCoins),
     NF = accounts:update(F, NewHeight, (-Tx#ca.amount - constants:create_account_fee() - Tx#ca.fee), 0, 1, TotalCoins),
-    Nonce = accounts:nonce(F) + 1,
+    Nonce = accounts:nonce(NF),
     Nonce = Tx#ca.nonce,
     Accounts2 = dict:store(NewId, NT, Accounts),
     Accounts3 = dict:store(Tx#ca.from, NF, Accounts2),
