@@ -67,6 +67,9 @@ test() ->
     none = read(0),
     none = read(100),
     X = read(S-100),
+    file:delete("block_pointers.db"),
+    file:delete("blocks.db"),
+    file:delete("pointers_start"),
     success.
 
 
