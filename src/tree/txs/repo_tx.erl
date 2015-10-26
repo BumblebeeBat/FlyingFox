@@ -19,11 +19,11 @@ low_balance(Acc, TotalCoins, NewHeight) ->
     Cost = UCost * Gap,
     NewBalance = accounts:balance(Acc) - Cost,
     MinBalance div 2 > NewBalance.
-un_delegate([], _, Channels) -> Channels;
-un_delegate([ID|T], ParentKey, Channels) -> 
-    Ch = block_tree:channel(ID, ParentKey, Channels),
-    NewChannels = dict:store(ID, channels:un_delegate(Ch), Channels),
-    un_delegate(T, ParentKey, NewChannels).
+un_delegate([], Channels) -> Channels;
+un_delegate([ID|T], Channels) -> 
+    %Ch = block_tree:channel(ID, ParentKey, Channels),
+    NewChannels = dict:store(ID, channels:empty(), Channels),
+    un_delegate(T, NewChannels).
 all_channels(Amount, _, _, _, _) when Amount < 0 -> 0 = 1;
 all_channels(0, _, _, _, []) -> true;
 all_channels(0, _, _, _, _) -> false;
@@ -61,7 +61,7 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     Accounts2 = dict:store(Acc, NA, Accounts),
     Accounts3 = dict:store(Target, accounts:empty(), Accounts2),
     %we need to change the delegation flag of each channel to non_delegated.
-    NewChannels = un_delegate(Tx#repo.channels, ParentKey, Channels),
+    NewChannels = un_delegate(Tx#repo.channels, Channels),
     {NewChannels, Accounts3, TotalCoins + constants:delete_account_reward() - (Keep * (KT - 1)), S}.
 
 %problem, this changes the power of the block...

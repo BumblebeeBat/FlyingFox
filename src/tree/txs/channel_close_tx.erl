@@ -2,7 +2,6 @@
 
 -module(channel_close_tx).
 -export([doit/7, slow_close/1, id/1]).
-%-record(channel, {acc1 = 0, acc2 = 0, bal1 = 0, bal2 = 0, called_timeout = 0, called_timeout_nonce = 0, timeout_height = 0, step = empty}).%step is either: delegated_1, delegated_2, non_delegated, or timeout
 -record(channel_close, {acc = 0, nonce = 0, id = 0}).
 id(X) -> X#channel_close.id.
 

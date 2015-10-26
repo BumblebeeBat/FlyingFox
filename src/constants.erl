@@ -23,7 +23,7 @@ min_reveal() -> ?MinReveal.
 max_reveal() -> ?MaxReveal.
 -define(MaxAddress, max_size() div 5 div 85).%use about 20% of space to store addresses. Each one is 85 bytes
 max_address() -> ?MaxAddress.
--define(MaxChannel, max_size() div 5 div 30).%use about 20% of space to store addresses. Each one is 30 bytes
+-define(MaxChannel, max_size() * 3 div 10 div 30).%use about 30% of space to store channels. Each one is 30 bytes
 max_channel() -> ?MaxChannel.
 create_channel_fee() -> 0.%consensus_byte_price() * 30.
 %decided to charge for accounts based on how long it is open, instead of flat fee.

@@ -126,10 +126,10 @@ channel(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
 	    D2 = 0;
 	Type == delegated_2 ->
 	    D2 = StartAmount,
-	    D1 = 0;
-	Type == non_delegated ->
-	    D2 = 0,
 	    D1 = 0
+        %Type == non_delegated ->
+        %D2 = 0,
+        %D1 = 0
     end,
     N1 = accounts:update(Acc1, NewHeight, channels:bal1(Channel) + Tx#channel_block.amount, -D1, 0, TotalCoins),
     N2 = accounts:update(Acc2, NewHeight, channels:bal2(Channel) - Tx#channel_block.amount, -D2, 0, TotalCoins),

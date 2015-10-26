@@ -9,7 +9,7 @@ create_channel(To, MyBalance, TheirBalance, ConsensusFlag, Fee) ->
     true = accounts:balance(Acc) > MyBalance,
     true = accounts:balance(ToAcc) > TheirBalance,
     S = ConsensusFlag,
-    true = ((S == delegated_1) or ((S == non_delegated) or (S == delegated_2))),
+    true = ((S == delegated_1) or (S == delegated_2)),
     Tx = #tc{acc1 = Id, acc2 = To, nonce = accounts:nonce(Acc) + 1, bal1 = MyBalance, bal2 = TheirBalance, consensus_flag = ConsensusFlag, fee = Fee, increment = MyBalance + TheirBalance},
     keys:sign(Tx).
     
@@ -18,7 +18,7 @@ to_channel(ChannelId, Inc1, Inc2, Fee) ->
     Acc = block_tree:account(Id),
     Channel = block_tree:channel(ChannelId),
     S = channels:type(Channel),
-    true = ((S == delegated_1) or ((S == non_delegated) or (S == delegated_2))),
+    true = ((S == delegated_1) or (S == delegated_2)),
     keys:sign(#tc{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), bal1 = channels:bal1(Channel) + Inc1, bal2 = channels:bal2(Channel) + Inc2, consensus_flag = S, id = ChannelId, fee = Fee, nonce = accounts:nonce(Acc) + 1, increment = Inc1 + Inc2}).
 %sign:set_revealed(SignedTx, ChannelId).
 
@@ -57,7 +57,7 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
             Increment = Tx#tc.bal1 + Tx#tc.bal2,
             Increment = Tx#tc.increment,%err
 	    Type = Tx#tc.consensus_flag,
-	    true = ((Type == delegated_1) or (Type == delegated_2) or (Type == non_delegated)),
+	    true = ((Type == delegated_1) or (Type == delegated_2)),
 	    %check if one of the pubkeys is keys:pubkey().
             %If so, then add it to the mychannels module.
 	    1=1;
@@ -84,10 +84,7 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
 	    D2 = 0;
 	delegated_2 -> 
 	    D1 = 0,
-	    D2 = Increment;
-	non_delegated ->
-	    D1 = 0,
-	    D2 = 0
+	    D2 = Increment
     end,
     N1 = accounts:update(Acc1, NewHeight, Balance1, D1, 1, TotalCoins),
     N2 = accounts:update(Acc2, NewHeight, Balance2, D2, 0, TotalCoins),
