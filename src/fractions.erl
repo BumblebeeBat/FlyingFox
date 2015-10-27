@@ -1,6 +1,8 @@
 -module(fractions).
--export([new/2,negate/1,add/2,subtract/2,multiply/2,divide/2,to_int/1,test/0, multiply_int/2, exponent/2, less_than/2]).
+-export([new/2,negate/1,add/2,subtract/2,multiply/2,divide/2,to_int/1,test/0, multiply_int/2, exponent/2, less_than/2, equal/2]).
 -record(f, {top = 0, bottom = 0}).
+equal(A, B) ->
+    A#f.top * B#f.bottom == B#f.top * A#f.bottom.
 less_than(A, B) ->
     A#f.top * B#f.bottom < B#f.top * A#f.bottom.
 new(T,B) -> #f{top = T, bottom = B}.

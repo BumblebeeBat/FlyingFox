@@ -106,20 +106,27 @@ There should be bets that output a value between 0 and 1 which is based on what 
 We need a second version of the Sztorc consensus bet where the list of outcomes are secrets in the SMPC. So winning this bet requires having merkle proofs and signatures the from the SMPC to show the outcome of the bet. Each SMPC-participant signs once over the merkle root of their SMPC data, and then we use the root to prove the facts of what was in the SMPC.
 
 A betting language would need to:
-1) opcode: to do Sztorc consensus.
+#1) opcode: to do Sztorc consensus. #we never have to do this on-chain.
 2) opcode: to do sha256 on arbitrary sized data, to allow merkle proofs
-3) opcode: check signatures
-4) opcodes: * / + -
-5) rule: final output is a rational: 2 bounded positive integers, first is strictly smallers, they share no common divisor.
+3) opcode: check signature
+4) opcodes: * / + - #convert integers to fraction when necessary.
 6) opcodes: rot swap drop dup 2dup -rot tuck-n, pick-n
-7) opcodes: aware of blockchain facts: totalcoins, height.
-8) opcode: to delete the money in the bet so neither party gets it.
+#8) opcode: to delete the money in the bet so neither party gets it. #unsolveable scriptPubs gives this functionality.
 9) opcodes: if else then
 10) opcodes: and or xor nand not
-11) opcodes: > < ==
+11) opcodes: > < == #convert integers to fraction when necessary.
 12) opcode: stackdepth
 13) opcodes: append_binaries, remove N bytes from right of binary, remove N bytes from left of binary.
 14) opcode: flip stack
+15) opcode: fail 
+16) opcode: fraction2int #rounds down to the nearest integer.
+16) opcode: int2fraction #takes 2 integers.
+7) opcodes: aware of blockchain facts: totalcoins, height.
+
+Code would mostly be integer codes like:
+0, 1, 5, 30
+But it would have Things mixed in:
+<<>>, {f, 3, 2}, {integer, 33}
 
 I could have the datastructure be a list of Things,
 examples of Things:
@@ -128,10 +135,13 @@ examples of Things:
 * {f, 23, 100} % fraction.
 * {f, 0, 1}
 * {f, 230000000, 1}
+* 27
+* 0
+* true/false
 
 The code could be a list of Things and Opcodes. Things get pushed to the stack.
 
 The bet is a list of bytes in the language. The key to unlock the bet and find it's outcome is another list of bytes.
 Checking find the outcome of the bet is as easy as appending the bet to the key, and run the bytes through the VM.
-When the script finishes, the Thing at the top of the stack is a fraction between 0 and 1 inclusive. That fraction is the output, and is used to dermine how much of the money goes to each participant. 
+When the script finishes, the Thing at the top of the stack is a fraction between 0 and 1 inclusive, and the second to top thing is a nonce. That fraction is the output, and is used to dermine how much of the money goes to each participant. The nonce is used for telling which way of solving the puzzle is correct. You can only solve the puzzle in the highest nonced way that you are able to, otherwise your partner could slash you.
 If there is a stack underflow, or any other error processing opcodes, then it is an invalid tx.
