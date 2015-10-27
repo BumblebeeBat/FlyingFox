@@ -40,10 +40,10 @@ initial_channels() -> %Around 10000 channels.
     fractions:multiply_int(D, 4) div MVB.
 -define(AccountFee, fractions:new(1, max_address() * finality() * 10)).%so if all accounts are full, it takes 10 finalities until most of them start losing so much money that their accounts open up. 
 account_fee() -> ?AccountFee. 
-%-define(DelegationFee, fractions:new(finality() * 1000 - 1, finality() * 1000)).%so it would take about 15,000 blocks to lose 1/2 your money. So you have about 350,000 chances to be validator till you lose 1/2 your money. So you need at least initial_coins()/350000 in delegation to be able to profitably validate. Which means it supports up to 350000 validators at a time max.
+%-define(DelegationFee, fractions:new(finality() * 1000 - 1, finality() * 1000)).%so it would take about 15,000 blocks to lose 1/2 your money. So you have about 350,000 chances to be validator till you lose 1 your money. So you need at least initial_coins()/350000 in delegation to be able to profitably validate. Which means it supports up to 350000 validators at a time max.
 -define(DelegationFee, fractions:new(1, 1000 * finality())).
 delegation_fee() -> ?DelegationFee.
-delegation_reward() -> fractions:subtract(fractions:new(1, 1), ?DelegationFee).
+%delegation_reward() -> fractions:subtract(fractions:new(1, 1), ?DelegationFee).
 block_creation_fee() -> fractions:new(1, 20000).%Which implies finality only has to be 13 blocks long!!!
 %It is important that 1/3 of the block_creation_fee be less than 2/3 of the validator's bond.
 %-define(PBCFV, fractions:multiply_int(block_creation_fee(), initial_coins()) div 3).

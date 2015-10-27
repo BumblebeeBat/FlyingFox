@@ -4,18 +4,17 @@
 %example of talking to this handler:
 %httpc:request(post, {"http://127.0.0.1:3011/", [], "application/octet-stream", "echo"}, [], []).
 %curl -i -d '[-6,"test"]' http://localhost:3011
--define(file, "src/main.js").
-handle(Req, State) ->
+handle(Req, File) ->
     {ok, _Data, _} = cowboy_req:body(Req),
     Headers = [{<<"content-type">>, <<"text/html">>},
     {<<"Access-Control-Allow-Origin">>, <<"*">>}],
-    Text = read_file(),
+    Text = read_file(File),
     {ok, Req2} = cowboy_req:reply(200, Headers, Text, Req),
-    {ok, Req2, State}.
-read_file() ->
-    {ok, File } = file:open(?file, [read, binary, raw]),
-    {ok, O} =file:pread(File, 0, filelib:file_size(?file)),
+    {ok, Req2, File}.
+read_file(F) ->
+    {ok, File } = file:open(F, [read, binary, raw]),
+    {ok, O} =file:pread(File, 0, filelib:file_size(F)),
     file:close(File),
     O.
-init(_Type, Req, _Opts) -> {ok, Req, no_state}.
+init(_Type, Req, [File]) -> {ok, Req, File}.
 terminate(_Reason, _Req, _State) -> ok.

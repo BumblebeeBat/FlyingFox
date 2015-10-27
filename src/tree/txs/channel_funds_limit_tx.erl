@@ -6,13 +6,13 @@ make_tx(ChannelId, Fee) ->
     Id = keys:id(),
     Acc = block_tree:account(Id),
     Nonce = accounts:nonce(Acc),
-    Channel = block_tree:channel(ChannelId),
-    CAC1 = channels:acc1(Channel),
-    CAC2 = channels:acc2(Channel),
-    if
-	(CAC1 == Id) -> Part = CAC2;
-	(CAC2 == Id) -> Part = CAC1
-    end,
+    %Channel = block_tree:channel(ChannelId),
+    %CAC1 = channels:acc1(Channel),
+    %CAC2 = channels:acc2(Channel),
+    %if
+    %(CAC1 == Id) -> Part = CAC2;
+    %(CAC2 == Id) -> Part = CAC1
+    %end,
     %Partner = block_tree:account(Part),
     %true = low_balance(Partner, block_tree:total_coins(), block_tree:height()),
     tx_pool:absorb(keys:sign(#channel_funds_limit{acc = Id, nonce = Nonce + 1, id = ChannelId, fee = Fee})).

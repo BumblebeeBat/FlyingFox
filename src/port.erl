@@ -28,7 +28,8 @@ start_server() ->
     
     D_internal = [
 	 {'_', [
-		{"/main/", main_handler, []},
+		{"/main.html", main_handler, ["src/web/main.html"]},
+		{"/rpc.js", main_handler, ["src/web/rpc.js"]},
 		{"/", internal_handler, []}
 	       ]}
 	],

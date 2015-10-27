@@ -1,10 +1,3 @@
-    <html>
-    <head>
-    </head>
-    <body>
-    <div id="main">hello world</div>
-    </body>
-    <script>
 function getter(t, u, callback){
     t = JSON.stringify(t);
     console.log("getter ".concat(t));
@@ -39,7 +32,3 @@ refresh_helper(x, function(){
     console.log("test response ".concat(JSON.stringify(my_status)));
                             });
 
-
-
-
-    </script>

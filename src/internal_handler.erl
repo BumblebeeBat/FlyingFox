@@ -27,7 +27,11 @@ doit({to_channel, ChId, Inc1, Inc2, Fee}) ->
     to_channel_tx:to_channel(ChId, Inc1, Inc2, Fee);
 doit({close_channel, ChId, Amount, Nonce, Fee}) ->
     channel_block_tx:close_channel(ChId, Amount, Nonce, Fee);
-doit({test}) -> {test_response};
+doit({sync, IP, Port}) ->
+    download_blocks:sync(IP, Port);
+doit({test}) -> 
+    io:fwrite("test handler"),
+    {test_response};
 doit(X) ->
     io:fwrite("don't know how to handle it \n"),
     io:fwrite(X),
