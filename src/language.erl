@@ -1,6 +1,5 @@
 -module(language).
 -export([run/1, test/0, remove_till/2, assemble/1]).
-
 int_arith(2, X, Y) -> X + Y;
 int_arith(3, X, Y) -> X - Y;
 int_arith(4, X, Y) -> X * Y;
@@ -17,7 +16,10 @@ frac_arith(7, X, Y) -> fractions:less_than(X, Y);
 frac_arith(8, X, Y) -> fractions:equal(X, Y).
 remove_till(X, T) -> remove_till(X, [], T).
 remove_till(X, H, [X|T]) -> {flip([X|H]), T};
-remove_till(X, H, [A|T]) -> remove_till(X, [A|H], T).
+remove_till(X, H, [A|T]) -> remove_till(X, [A|H], T);
+remove_till(X, H, []) -> 
+    io:fwrite("error, you forgot to include and else or then somewhere."),
+    1=0.
 flip(X) -> flip(X, []).
 flip([], O) -> O;
 flip([H|T], O) -> flip(T, [H|O]).
@@ -38,11 +40,11 @@ run([34|Code], UsedCode, [Start|[Finish|Stack]]) -> %this opcode looks at a sect
     O = hash:doit(flip(H)),
     run(Code, [34|UsedCode], [O|Stack]);
 run([Word|Code], UsedCode, Stack) ->
-     run(Code, [Word|UsedCode], run_helper(Word, Stack)).
+    run(Code, [Word|UsedCode], run_helper(Word, Stack)).
 run_helper(0, [H|Stack]) -> [hash:doit(H)|Stack];%hash
 run_helper(1, [Sig|[Pub|[Data|Stack]]]) ->%verify_sig
     [sign:verify_sig(Data, Sig, Pub)|Stack];
-run_helper(Word, [X|[Y|Stack]]) when (is_integer(Word) and ((Word > 1) and (Word < 9))) ->
+run_helper(Word, [Y|[X|Stack]]) when (is_integer(Word) and ((Word > 1) and (Word < 9))) ->
     Z = if
 	(is_integer(X) and is_integer(Y)) ->
 	    int_arith(Word, X, Y);
@@ -85,7 +87,7 @@ run_helper(26, [X|[Binary|Stack]]) -> %strip left
 run_helper(27, Stack) -> flip(Stack);
 run_helper(28, _) -> 1=2;%crash
 run_helper(29, [F|Stack]) -> [fractions:to_int(F)|Stack]; %fraction2int
-run_helper(30, [I|Stack]) -> [fractions:new(I, 1)|Stack];%int2fraction
+run_helper(30, [A|[B|Stack]]) -> [fractions:new(B, A)|Stack];%int2fraction
 run_helper(31, Stack) -> [block_tree:total_coins()|Stack];%total_caoins
 run_helper(32, Stack) -> [block_tree:height()|Stack];%height
 run_helper(33, Stack) -> [length(Stack)|Stack];%stack size
@@ -94,7 +96,6 @@ run_helper(B, Stack) when is_binary(B)-> [B|Stack];%load binary into stack.
 run_helper({integer, I}, Stack) -> [I|Stack];%load integer into stack
 run_helper(true, Stack) -> [true|Stack];%load binary into stack
 run_helper(false, Stack) -> [false|Stack].%load binary into stack
-
 assemble(Code) -> assemble(Code, []).
 assemble([], Out) -> flip(Out);
 assemble([Word|C], Out) ->
@@ -141,12 +142,16 @@ atom2op(height) -> 32;
 atom2op(stack_size) -> 33;
 atom2op(true) -> true;
 atom2op(false) -> false.
-
 test() ->    
     true = run(assemble([10, 2, plus])) == [12],
     true = run(assemble([{f, 10, 11}, 5, plus])) == [{f, 65, 11}],
     true = run(assemble([false, switch, 100, else, 27, then])) == [27],
     true = run(assemble([true, switch, 100, else, 27, then])) == [100],
+    {Pub, Priv} = sign:new_key(),
+    Data = <<"example">>,
+    Sig = sign:sign(Data, Priv),
+    true = sign:verify_sig(Data, Sig, Pub),
+    true = run(assemble([Data, Pub, Sig, verify_sig])) == [true],
     success.
 
     

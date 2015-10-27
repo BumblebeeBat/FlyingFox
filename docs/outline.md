@@ -115,13 +115,13 @@ A betting language would need to:
 9) opcodes: if else then
 10) opcodes: and or xor nand not
 11) opcodes: > < == #convert integers to fraction when necessary.
-12) opcode: stackdepth
 13) opcodes: append_binaries, remove N bytes from right of binary, remove N bytes from left of binary.
 14) opcode: flip stack
 15) opcode: fail 
 16) opcode: fraction2int #rounds down to the nearest integer.
 16) opcode: int2fraction #takes 2 integers.
 7) opcodes: aware of blockchain facts: totalcoins, height.
+12) opcode: stackdepth
 
 Code would mostly be integer codes like:
 0, 1, 5, 30
