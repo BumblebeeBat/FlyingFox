@@ -118,6 +118,8 @@ A betting language would need to:
 10) opcodes: and or xor nand not
 11) opcodes: > < ==
 12) opcode: stackdepth
+13) opcodes: append_binaries, remove N bytes from right of binary, remove N bytes from left of binary.
+14) opcode: flip stack
 
 I could have the datastructure be a list of Things,
 examples of Things:
@@ -131,3 +133,5 @@ The code could be a list of Things and Opcodes. Things get pushed to the stack.
 
 The bet is a list of bytes in the language. The key to unlock the bet and find it's outcome is another list of bytes.
 Checking find the outcome of the bet is as easy as appending the bet to the key, and run the bytes through the VM.
+When the script finishes, the Thing at the top of the stack is a fraction between 0 and 1 inclusive. That fraction is the output, and is used to dermine how much of the money goes to each participant. 
+If there is a stack underflow, or any other error processing opcodes, then it is an invalid tx.

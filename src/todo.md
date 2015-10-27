@@ -1,4 +1,4 @@
-Add nonce checks in every tx type!!
+module for keeping track of your peers.
 
 blockchain api for nodes to share blocks and tx and messages.
 
