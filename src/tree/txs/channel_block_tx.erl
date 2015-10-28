@@ -6,12 +6,14 @@
 %#signed{data = #signed_channel_block{channel_block = SignedCB, fee = 100}, sig1 = signature}.
 
 -module(channel_block_tx).
--export([doit/7, origin_tx/3, channel/7, channel_block/5, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1, publish_channel_block/3, make_signed_cb/4, reveal_union/4, slash_bet/1]).
+-export([doit/7, origin_tx/3, channel/7, channel_block/5, channel_block/6, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1, publish_channel_block/3, make_signed_cb/4, reveal_union/4, slash_bet/1, make_bet/2]).
 -record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0, fee = 0}).
 -record(signed_cb, {acc = 0, nonce = 0, channel_block = #channel_block{}, fee = 0}).
 -record(bet, {amount = 0, code = [28]}).%signatures
 -record(tc, {acc1 = 0, acc2 = 0, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
 %code is like scriptpubkey from bitcoin.
+make_bet(Amount, Code) ->
+    #bet{amount = Amount, code = Code}.
 make_signed_cb(Acc, CB, Fee, Evidence) ->
     A = block_tree:account(Acc),
     Nonce = accounts:nonce(A),
@@ -67,9 +69,11 @@ bet_amount(X) -> bet_amount(X, 0).
 bet_amount([], X) -> X;
 bet_amount([Tx|Txs], X) -> bet_amount(Txs, X+Tx#bet.amount).
 channel_block(Id, Amount, Nonce, Delay, Fee) ->
+channel_block(Id, Amount, Nonce, Delay, Fee, []).
+channel_block(Id, Amount, Nonce, Delay, Fee, Bets) ->
     true = Delay < constants:max_reveal(),
     Channel = block_tree:channel(Id),
-    keys:sign(#channel_block{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), amount = Amount, nonce = Nonce, id = Id, fast = false, delay = Delay, fee = Fee}).
+    keys:sign(#channel_block{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), amount = Amount, nonce = Nonce, id = Id, fast = false, delay = Delay, fee = Fee, bets=Bets}).
 publish_channel_block(CB, Fee, Evidence) ->
     ID = keys:id(),
     tx_pool:absorb(keys:sign(make_signed_cb(ID, CB, Fee, Evidence))).

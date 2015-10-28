@@ -35,16 +35,20 @@ run([17|Code], UsedCode, [Bool|Stack]) -> %if (case)
 run([18|Code], UsedCode, Stack) -> %else
     {H, T} = remove_till(19, Code),
     run(T, [18|(H++UsedCode)], Stack);
-run([34|Code], UsedCode, [Start|[Finish|Stack]]) -> %this opcode looks at a section of code that was already processed, and computes the hash of those words. paytoscripthash
-    H = list:sublist(UsedCode, Start, Finish),
+run([34|Code], UsedCode, [Start|[Size|Stack]]) -> %this opcode looks at a section of code that was already processed, and computes the hash of those words. paytoscripthash
+    %This measures backwards.
+    %example A, B, C, 3, 0, script_hash takes the hash of [A, B, C]
+    H = lists:sublist(UsedCode, Start+3, Size),
+    %io:fwrite(flip(H)),%[2,{integer,3},{integer,1}],[])
     O = hash:doit(flip(H)),
     run(Code, [34|UsedCode], [O|Stack]);
 run([28|_], _, _) -> %die. Neither person gets money.
     [delete];
 run([Word|Code], UsedCode, Stack) ->
     run(Code, [Word|UsedCode], run_helper(Word, Stack)).
-run_helper(0, [H|Stack]) -> [hash:doit(H)|Stack];%hash
-run_helper(1, [Sig|[Pub|[Data|Stack]]]) ->%verify_sig
+run_helper(0, [H|Stack]) -> 
+    [hash:doit(H)|Stack];%hash
+run_helper(1, [Pub|[Data|[Sig|Stack]]]) ->%verify_sig
     [sign:verify_sig(Data, Sig, Pub)|Stack];
 run_helper(Word, [Y|[X|Stack]]) when (is_integer(Word) and ((Word > 1) and (Word < 9))) ->
     Z = if
@@ -93,6 +97,7 @@ run_helper(31, Stack) -> [block_tree:total_coins()|Stack];%total_caoins
 run_helper(32, Stack) -> [block_tree:height()|Stack];%height
 run_helper(33, Stack) -> [length(Stack)|Stack];%stack size
 run_helper(34, Stack) -> [false|Stack];%this returns true if called from a channel_slash tx.
+run_helper(35, [X |[Y |Stack]]) -> [(X == Y)|Stack];%check if 2 non-numerical values are equal. like binary.
 run_helper({f, T, B}, Stack) -> [{f, T, B}|Stack];%load fraction into stack.
 run_helper(B, Stack) when is_binary(B)-> [B|Stack];%load binary into stack.
 run_helper({integer, I}, Stack) -> [I|Stack];%load integer into stack
@@ -115,7 +120,7 @@ atom2op(multiply) -> 4;
 atom2op(divide) -> 5;
 atom2op(gt) -> 6;
 atom2op(lt) -> 7;
-atom2op(eq) -> 8;
+atom2op(eq_num) -> 8;
 atom2op(switch) -> 17;
 atom2op(else) -> 18;
 atom2op(script_hash) -> 34;
@@ -143,18 +148,24 @@ atom2op(total_coins) -> 31;
 atom2op(height) -> 32;
 atom2op(stack_size) -> 33;
 atom2op(slash) -> 34;
+atom2op(eq) -> 35;
 atom2op(true) -> true;
 atom2op(false) -> false.
+
+    
 test() ->    
     true = run(assemble([10, 2, plus])) == [12],
     true = run(assemble([{f, 10, 11}, 5, plus])) == [{f, 65, 11}],
-    true = run(assemble([false, switch, 100, else, 27, then])) == [27],
-    true = run(assemble([true, switch, 100, else, 27, then])) == [100],
+    true = run(assemble([false, switch, 100, else, 27, then, 3])) == [3, 27],%if
+    true = run(assemble([true, switch, 100, else, 27, then, 2])) == [2, 100],%if
     {Pub, Priv} = sign:new_key(),
     Data = <<"example">>,
     Sig = sign:sign(Data, Priv),
     true = sign:verify_sig(Data, Sig, Pub),
-    true = run(assemble([Data, Pub, Sig, verify_sig])) == [true],
+    true = run(assemble([Sig, Data, Pub, verify_sig])) == [true],%3rd party signature
+    B = <<169,243,219,139,234,91,46,239,146,55,229,72,9,221,164,63,12,33,143,128,208,211,40,163,63,91,76,255,255,51,72,230>>,
+    true = run(assemble([B, 1, hash, eq])) == [true],%normal hashlock
+    Code = [2, 2, plus],
+    ScriptHash = hash:doit(assemble(Code)),
+    true = (run(assemble([27] ++ Code ++ [length(Code),0,script_hash])) == [ScriptHash, 4, 27]),%pay2scripthash
     success.
-
-    
