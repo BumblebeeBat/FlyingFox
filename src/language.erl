@@ -17,7 +17,7 @@ frac_arith(8, X, Y) -> fractions:equal(X, Y).
 remove_till(X, T) -> remove_till(X, [], T).
 remove_till(X, H, [X|T]) -> {flip([X|H]), T};
 remove_till(X, H, [A|T]) -> remove_till(X, [A|H], T);
-remove_till(X, H, []) -> 
+remove_till(_, _, []) -> 
     io:fwrite("error, you forgot to include and else or then somewhere."),
     1=0.
 flip(X) -> flip(X, []).
@@ -87,12 +87,12 @@ run_helper(26, [X|[Binary|Stack]]) -> %strip left
     <<_:Y, A/binary>> = Binary,
     [A|Stack];
 run_helper(27, Stack) -> flip(Stack);
-run_helper(28, _) -> 1=2;%crash
 run_helper(29, [F|Stack]) -> [fractions:to_int(F)|Stack]; %fraction2int
 run_helper(30, [A|[B|Stack]]) -> [fractions:new(B, A)|Stack];%int2fraction
 run_helper(31, Stack) -> [block_tree:total_coins()|Stack];%total_caoins
 run_helper(32, Stack) -> [block_tree:height()|Stack];%height
 run_helper(33, Stack) -> [length(Stack)|Stack];%stack size
+run_helper(34, Stack) -> [false|Stack];%this returns true if called from a channel_slash tx.
 run_helper({f, T, B}, Stack) -> [{f, T, B}|Stack];%load fraction into stack.
 run_helper(B, Stack) when is_binary(B)-> [B|Stack];%load binary into stack.
 run_helper({integer, I}, Stack) -> [I|Stack];%load integer into stack
@@ -142,6 +142,7 @@ atom2op(i2f) -> 30;
 atom2op(total_coins) -> 31;
 atom2op(height) -> 32;
 atom2op(stack_size) -> 33;
+atom2op(slash) -> 34;
 atom2op(true) -> true;
 atom2op(false) -> false.
 test() ->    

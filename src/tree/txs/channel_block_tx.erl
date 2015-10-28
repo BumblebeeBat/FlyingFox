@@ -6,7 +6,7 @@
 %#signed{data = #signed_channel_block{channel_block = SignedCB, fee = 100}, sig1 = signature}.
 
 -module(channel_block_tx).
--export([doit/7, origin_tx/3, channel/7, channel_block/5, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1, publish_channel_block/3, make_signed_cb/4, reveal_union/4]).
+-export([doit/7, origin_tx/3, channel/7, channel_block/5, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1, publish_channel_block/3, make_signed_cb/4, reveal_union/4, slash_bet/1]).
 -record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0, fee = 0}).
 -record(signed_cb, {acc = 0, nonce = 0, channel_block = #channel_block{}, fee = 0}).
 -record(bet, {amount = 0, code = [28]}).%signatures
@@ -185,5 +185,24 @@ bet_nonces([B|Bets], [R|Reveal], Out) when not is_list(R) ->
 bet_nonces([B|Bets], [R|Reveal], Out) ->
     X = hd(language:run(R++B)),
     bet_nonces(Bets, Reveal, [X|Out]).
-
+%slash(CB) -> slash(CB#channel_block.bets, []).
+%slash([], Out) -> lists:reverse(Out);
+%slash([C|CB], Out) -> slash(CB, [slash_bet(C)|Out]).
+slash_bet(B) -> %replace every 34 in the code with true. 
+    Bets = B#channel_block.bets,
+    NewBets = slash_codes(Bets),
+    #channel_block{acc1 = B#channel_block.acc1, acc2 = B#channel_block.acc2, amount = B#channel_block.amount, nonce = B#channel_block.nonce, bets = NewBets, id = B#channel_block.id, fast = B#channel_block.fast, delay = B#channel_block.delay, expiration = B#channel_block.expiration, nlock = B#channel_block.nlock, fee = B#channel_block.fee}.
+slash_codes(X) -> slash_codes(X, []).
+slash_codes([], Out) -> lists:reverse(Out);
+slash_codes(X, Out) -> slash_codes([slash_code(X)|Out]).
+slash_code(X) -> slash_code(X, []).
+slash_code([], Out) -> lists:reverse(Out);
+slash_code([Word|X], Out) -> slash_code(X, [slash_word(Word)|Out]).
+slash_word(34) -> true;
+slash_word(X) -> X.
+    
+    
+    
+     
+    
     
