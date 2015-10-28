@@ -44,19 +44,31 @@ account_fee() -> ?AccountFee.
 -define(DelegationFee, fractions:new(1, 1000 * finality())).
 delegation_fee() -> ?DelegationFee.
 %delegation_reward() -> fractions:subtract(fractions:new(1, 1), ?DelegationFee).
-block_creation_fee() -> fractions:new(1, 20000).%Which implies finality only has to be 13 blocks long!!!
+block_creation_fee() -> fractions:multiply(
+			  burn_ratio(),
+			  fractions:multiply(
+			    security_bonds_per_winner(), 
+			    fractions:new(minimum_validators_per_block(), 1))).
+%1/4000000
+%block_creation_fee() -> fractions:new(1, 20000).%Which implies finality only has to be 13 blocks long!!!
 %It is important that 1/3 of the block_creation_fee be less than 2/3 of the validator's bond.
 %-define(PBCFV, fractions:multiply_int(block_creation_fee(), initial_coins()) div 3).
 -define(PBCFV, fractions:multiply(block_creation_fee(), fractions:new(1, 3*validators_elected_per_block()))).
 portion_of_block_creation_fee_validators() -> ?PBCFV.
 -define(SReward, fractions:new(1, 10)).%The portion of the validator's money that goes to the slasher instead of being deleted.
 slasher_reward() -> ?SReward.
-
+-define(BR, fractions:new(1, 1000)).%spending 1000 coins necessarily burns 1.
+burn_ratio() -> ?BR.
 test() ->
     A = portion_of_block_creation_fee_validators(), 
     B = fractions:multiply(security_bonds_per_winner(), fractions:new(minimum_validators_per_block(), 2)),
     true = fractions:less_than(A, B),
     %If this isn't truth, then it the validators will sign up to validate even if they can't actually show up.
+
+    true = fractions:less_than(
+	     fractions:new(1,round(math:pow(2, 26))),
+	     block_creation_fee()),
+    %we need to burn at least 1/(2^26) of the money every block for consensus to be valid.
     success.
 
 %(All the money in channels, times this fee) is the amount of money that transfers from delegates who were not elected to delegates who are elected in each block, and gets locked up for finality() blocks. If this number is too high, then poor people can't afford to be validators. If this number is too low, then rich people can't move their money quickly enough.
