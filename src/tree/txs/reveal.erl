@@ -12,15 +12,15 @@ reveal2(Id, Start, End) ->%This is an inefficient implementation. Checks all 9 *
 	Start < 1 -> ok;
 	true ->
 	    case block_tree:read_int(Start) of
-		none -> 
+		<<"none">> -> 
 		    io:fwrite("no such block\n "),
-		    io:fwrite(integer_to_list(Start)),
+		    %io:fwrite(integer_to_list(Start)),
 		    before_finality;
 		OriginBlock ->
 		    Block = sign:data(OriginBlock),
 		    OriginTxs = block_tree:block2txs(Block),
 		    case origin_tx(OriginTxs, Id) of
-			none -> 
+			<<"none">> -> 
 			    io:fwrite("did not sign\n"),
 			    did_not_sign;
 			X ->
@@ -28,7 +28,7 @@ reveal2(Id, Start, End) ->%This is an inefficient implementation. Checks all 9 *
 			    BTS = block_tree:secret(Start-1, SH, block_tree:read(top), tx_pool:secrets()),
 			    Secret = secrets:read(SH),
 			    if
-				Secret == none ->
+				Secret == <<"none">> ->
 				    io:fwrite("lost the sign\n"),
 				    lost_the_secret;
 				not BTS ->
@@ -58,7 +58,7 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
     Secret = true,
     %PH = sign_tx:prev_hash(OriginTx),
     Reward = fractions:multiply_int(constants:portion_of_block_creation_fee_validators(), TotalCoins),
-    Power = block_tree:power(block_tree:block(ParentKey)),
+    Power = block_tree:power(sign:data(block_tree:block(ParentKey))),
     DReward = fractions:multiply_int(constants:delegation_fee(), Power) div constants:validators_elected_per_block(),
     %the other 2/3 of the block creator's fee, and account fees and money that get deleted in channels does not go to validators. Instead it is premanently deleted.
     TReward = (Reward + DReward + fractions:multiply_int(constants:security_bonds_per_winner(), TotalCoins)) * WL,
@@ -71,7 +71,7 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
     %newsecret shouldn't use newheight, it should point to the block that was signed on.
     {Channels, NewAccounts, TotalCoins + TReward, NewSecrets}.
 
-origin_tx([], _) -> none;
+origin_tx([], _) -> <<"none">>;
 origin_tx([SignedTx|Txs], Acc) ->
     Tx = sign:data(SignedTx),
     E = element(1, Tx),

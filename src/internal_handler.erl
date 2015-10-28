@@ -30,10 +30,8 @@ doit({close_channel, ChId, Amount, Nonce, Fee}) ->
 doit({sync, IP, Port}) ->
     download_blocks:sync(IP, Port);
 doit({test}) -> 
-    io:fwrite("test handler"),
     {test_response};
 doit(X) ->
     io:fwrite("don't know how to handle it \n"),
-    io:fwrite(X),
     io:fwrite("\n"),
     {error}.

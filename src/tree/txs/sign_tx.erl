@@ -20,24 +20,15 @@ sign() ->
     Id = keys:id(),
     Acc = block_tree:account(Id),%isn't allowed...
     ParentKey = block_tree:read(top),
-    PBlock = block_tree:block(ParentKey),
+    PBlock = sign:data(block_tree:block(ParentKey)),
     Entropy = block_tree:block_entropy(PBlock),
     FinalityAcc = accounts:read_account(Id),
     MyPower = min(accounts:delegated(Acc), accounts:delegated(FinalityAcc)),
     TotalPower = block_tree:block_power(PBlock),
-    %io:fwrite("\n height "),
-    %io:fwrite(integer_to_list(block_tree:height(ParentKey))),
-    %io:fwrite("\n total power "),
-    %io:fwrite(integer_to_list(TotalPower)),
-    %io:fwrite("\n my power "),
-    %io:fwrite(integer_to_list(MyPower)),
-    %io:fwrite("\n my balance "),
-    %io:fwrite(integer_to_list(accounts:balance(Acc))),
-    %io:fwrite("\n"),
     W = winners(MyPower, TotalPower, Entropy, accounts:pub(Acc)),
     R = repeat(Id, tx_pool:txs()),
     if 
-	R -> 0;%io:fwrite("no double sign");
+	R -> 0;
         length(W) > 0 ->
 	    Tx = #sign_tx{acc = Id, nonce = accounts:nonce(Acc) + 1, secret_hash = secrets:new(), winners = W, prev_hash = ParentKey, number = block_tree:block_number(PBlock)},
             tx_pool:absorb(keys:sign(Tx));
@@ -64,7 +55,7 @@ doit(Tx, Txs, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight
     Acc = block_tree:account(Tx#sign_tx.acc, ParentKey, Accounts),
     FinalityAcc = accounts:read_account(Tx#sign_tx.acc),
     MyPower = min(accounts:delegated(Acc), accounts:delegated(FinalityAcc)),
-    Block = block_tree:block(ParentKey),
+    Block = sign:data(block_tree:block(ParentKey)),
     Pnum = block_tree:block_number(Block),
     Pnum = Tx#sign_tx.number,
     all_winners(MyPower, block_tree:block_power(Block), block_tree:block_entropy(Block), accounts:pub(Acc), Tx#sign_tx.winners),

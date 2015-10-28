@@ -1,7 +1,9 @@
 -module(backup).
--export([hash/0, backup/0]).
+-export([hash/0, backup/0, backup_files/0]).
 
-files() -> ["accounts.db", "all_secrets.db", "d_accounts.db", "blocks.db", "block_pointers.db", "channels.db", "d_channels.db", "entropy.db"].
+files() -> ["blocks.db", "block_pointers.db", "accounts.db", "all_secrets.db", "d_accounts.db", "channels.db", "d_channels.db", "entropy.db"].
+
+backup_files() -> tl(tl(files())).
 
 hash() -> hash(files(), []).
 hash([], X) -> hash:doit(X);

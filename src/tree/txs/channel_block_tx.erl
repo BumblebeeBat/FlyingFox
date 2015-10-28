@@ -92,10 +92,6 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
 
 channel(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     Tx = sign:data(SignedTx),
-    %io:fwrite(packer:pack(SignedCB)),
-    %io:fwrite("\n"),
-    %SCB = sign:data(SignedCB),
-    %Tx = sign:data(SignedCB#signed_cb.channel_block),
     Acc1 = block_tree:account(Tx#channel_block.acc1, ParentKey, Accounts),
     Acc2 = block_tree:account(Tx#channel_block.acc2, ParentKey, Accounts),
     Channel = block_tree:channel(Tx#channel_block.id, ParentKey, Channels),
@@ -120,11 +116,11 @@ channel(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
 	(B2 == A2)) ->
 	    D2 = 0,
 	    D1 = 0;
-	delegated_1 == Type ->
+	<<"delegated_1">> == Type ->
 	    io:fwrite("bad \n"),
 	    D1 = StartAmount,
 	    D2 = 0;
-	Type == delegated_2 ->
+	Type == <<"delegated_2">> ->
 	    D2 = StartAmount,
 	    D1 = 0
         %Type == non_delegated ->

@@ -40,7 +40,7 @@ reveal(Height, Pubkey, Secret) ->
     gen_server:cast(?MODULE, {reveal, Height, Order, Secret}).
 read(Height) ->
     case gen_server:call(?MODULE, {read, Height}) of
-	none -> none;
+	<<"none">> -> <<"none">>;
 	B -> unpack(B)
     end.
 unpack(B) -> unpack(B, <<>>).
@@ -66,7 +66,7 @@ flip([], Out) -> Out;
 flip([H|T], Out) -> flip(T, [H|Out]).
 nth([H|_], 0) -> H;
 nth([_|T], N) -> nth(T, N-1);
-nth([], _) -> none.
+nth([], _) -> <<"none">>.
 doit(Number) -> 
     %Height = block_tree:height(block_tree:read(top)),
     M = constants:max_reveal() + 2,

@@ -1,8 +1,9 @@
 -module(block_tree).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, long_test/0,test/0,write/1,top/0,read/1,read_int/2,read_int/1,secret/4,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/2, block_power/1,block_entropy/1,empty_block/0,total_coins/0, buy_block/0, block_number/1, block2txs/1]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, long_test/0,test/0,write/1,top/0,read/1,read_int/2,read_int/1,secret/4,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/2, block_power/1,block_entropy/1,empty_block/0,total_coins/0, buy_block/0, block_number/1, block2txs/1, block_root/1]).
 -record(block, {acc = 0, number = 0, hash = "", txs = [], power = fractions:multiply_int(constants:initial_portion_delegated(), constants:initial_coins()), entropy = 0, total_coins = constants:initial_coins(), db_root = <<>>}).
 %power is how many coin are in channels. it is for consensus.
+block_root(B) -> B#block.db_root.
 block_number(B) -> B#block.number.
 block_power(B) -> B#block.power.
 block_entropy(B) -> B#block.entropy.
@@ -38,7 +39,7 @@ handle_call({key, X}, _From, D) -> {reply, dict:is_key(X, D), D};
 handle_call({read, V}, _From, D) -> 
     X = case dict:find(V, D) of
 	    {ok, Value} -> Value;
-	    error -> "none"
+	    error -> <<"none">>
 	end,
     {reply, X, D};
 handle_call({write, K, V}, _From, D) -> 
@@ -109,7 +110,7 @@ finality_absorb(Secrets, Accounts, Channels) ->
 merger(Key, D) ->
     X = dict:fetch(Key, D),
     case X#x.parent of
-	finality -> {none, Key, X};
+	finality -> {<<"none">>, Key, X};
 	Y -> merger(Key, Y, D)
     end.
 merger(Child, Key, D) ->
@@ -121,13 +122,14 @@ merger(Child, Key, D) ->
 top() -> gen_server:call(?MODULE, top).
 is_key(X) -> gen_server:call(?MODULE, {key, X}).
 read(K) -> gen_server:call(?MODULE, {read, K}).
-total_coins() -> total_coins(block(read(top))).
+total_coins() -> total_coins(sign:data(block(read(top)))).
 total_coins(X) -> 
     X#block.total_coins.
 block() -> block(read(read(top))).
 block(X) -> 
     if
-	is_record(X, x) -> sign:data(X#x.block);
+	%is_record(X, x) -> sign:data(X#x.block);
+	is_record(X, x) -> X#x.block;
 	true -> block(read(X))
     end.
 block2txs(X) -> X#block.txs.
@@ -157,6 +159,8 @@ read_int(Height, BlockPointer) ->
     gen_server:call(?MODULE, {read_int, Height, BlockPointer}).
     
 write(SignedBlock) ->
+    PSB = packer:pack(SignedBlock),
+    SignedBlock = packer:unpack(PSB),
     Block = sign:data(SignedBlock),
     BH = hash:doit(Block),
     false = is_key(BH),
@@ -281,13 +285,13 @@ test() ->
     reveal:reveal(),
     buy_block(),
     tx_pool:absorb(sign_tx(slasher_tx:slasher(1, keys:sign({sign_tx, 0, 0, 0, 0, 0, 0})), Pub, Priv)),
-    CreateTx1 = to_channel_tx:create_channel(1, 110000, 1000, delegated_1, 0),
+    CreateTx1 = to_channel_tx:create_channel(1, 110000, 1000, <<"delegated_1">>, 0),
     SignedCreateTx1 = sign_tx(CreateTx1, Pub, Priv),
     tx_pool:absorb(SignedCreateTx1),
-    CreateTx2 = to_channel_tx:create_channel(1, 110000, 1000, delegated_1, 0),
+    CreateTx2 = to_channel_tx:create_channel(1, 110000, 1000, <<"delegated_1">>, 0),
     SignedCreateTx2 = sign_tx(CreateTx2, Pub, Priv),
     tx_pool:absorb(SignedCreateTx2),
-    CreateTx3 = to_channel_tx:create_channel(1, 110000, 1000, delegated_1, 0),
+    CreateTx3 = to_channel_tx:create_channel(1, 110000, 1000, <<"delegated_1">>, 0),
     SignedCreateTx3 = sign_tx(CreateTx3, Pub, Priv),
     tx_pool:absorb(SignedCreateTx3),
     sign_tx:sign(),
@@ -338,7 +342,7 @@ test() ->
     tx_pool:absorb(sign_tx(delete_account_tx:delete_account(2, 0, 0), Pub2, Priv2)),
     create_account_tx:create_account(Pub2, 680000, 0),
     buy_block(),
-    CreateTxq = to_channel_tx:create_channel(2, 110002, 0, delegated_2, 0),
+    CreateTxq = to_channel_tx:create_channel(2, 110002, 0, <<"delegated_2">>, 0),
     SignedCreateTxq = sign_tx(CreateTxq, Pub2, Priv2),
     EmptyChannel = channels:empty(),
     true = EmptyChannel == channel(24000),
@@ -356,15 +360,15 @@ long_test() ->
     buy_block(),
     tx_pool:absorb(sign_tx(slasher_tx:slasher(1, keys:sign({sign_tx, 0, 0, 0, 0, 0, 0})), Pub, Priv)),
     Top = read(read(top)),
-    CreateTx1 = to_channel_tx:create_channel(1, 110000, 1000, delegated_1, 0),
+    CreateTx1 = to_channel_tx:create_channel(1, 110000, 1000, <<"delegated_1">>, 0),
     SignedCreateTx1 = sign_tx(CreateTx1, Pub, Priv),
     %channel_block_tx:publish_channel_block(SignedCreateTx1, 0, []),
     tx_pool:absorb(SignedCreateTx1),
-    CreateTx2 = to_channel_tx:create_channel(1, 110000, 1000, delegated_1, 0),
+    CreateTx2 = to_channel_tx:create_channel(1, 110000, 1000, <<"delegated_1">>, 0),
     SignedCreateTx2 = sign_tx(CreateTx2, Pub, Priv),
     %channel_block_tx:publish_channel_block(SignedCreateTx2, 0, []),
     tx_pool:absorb(SignedCreateTx2),
-    CreateTx3 = to_channel_tx:create_channel(1, 110000, 1000, delegated_1, 0),
+    CreateTx3 = to_channel_tx:create_channel(1, 110000, 1000, <<"delegated_1">>, 0),
     SignedCreateTx3 = sign_tx(CreateTx3, Pub, Priv),
     %channel_block_tx:publish_channel_block(SignedCreateTx3, 0, []),
     tx_pool:absorb(SignedCreateTx3),
@@ -422,7 +426,7 @@ long_test() ->
     {Pub3, Priv3} = sign:new_key(),
     create_account_tx:create_account(Pub2, 680000, 0),
     buy_block(),
-    CreateTxq = to_channel_tx:create_channel(2, 110000, 0, delegated_2, 0),
+    CreateTxq = to_channel_tx:create_channel(2, 110000, 0, <<"delegated_2">>, 0),
     SignedCreateTxq = sign_tx(CreateTxq, Pub2, Priv2),
     EmptyChannel = channels:empty(),
     true = EmptyChannel == channel(24000),

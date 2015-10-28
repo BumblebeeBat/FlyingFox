@@ -1,6 +1,7 @@
 -module(to_channel_tx).%used to create a channel, or increase the amount of money in it.
 -export([next_top/2,doit/7,tc_increases/1,to_channel/4,create_channel/5]).
--record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = delegated_1, fee = 0, id = -1, increment = 0}).
+-record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = <<"delegated_1">>, fee = 0, id = -1, increment = 0}).
+good_key(S) -> ((S == <<"delegated_1">>) or (S == <<"delegated_2">>)).
 create_channel(To, MyBalance, TheirBalance, ConsensusFlag, Fee) ->
 %When creating a new channel, you don't choose your own ID for the new channel. It will be selected for you by next available.    
     Id = keys:id(),
@@ -9,7 +10,7 @@ create_channel(To, MyBalance, TheirBalance, ConsensusFlag, Fee) ->
     true = accounts:balance(Acc) > MyBalance,
     true = accounts:balance(ToAcc) > TheirBalance,
     S = ConsensusFlag,
-    true = ((S == delegated_1) or (S == delegated_2)),
+    true = good_key(S),
     Tx = #tc{acc1 = Id, acc2 = To, nonce = accounts:nonce(Acc) + 1, bal1 = MyBalance, bal2 = TheirBalance, consensus_flag = ConsensusFlag, fee = Fee, increment = MyBalance + TheirBalance},
     keys:sign(Tx).
     
@@ -18,7 +19,7 @@ to_channel(ChannelId, Inc1, Inc2, Fee) ->
     Acc = block_tree:account(Id),
     Channel = block_tree:channel(ChannelId),
     S = channels:type(Channel),
-    true = ((S == delegated_1) or (S == delegated_2)),
+    true = good_key(S),
     keys:sign(#tc{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), bal1 = channels:bal1(Channel) + Inc1, bal2 = channels:bal2(Channel) + Inc2, consensus_flag = S, id = ChannelId, fee = Fee, nonce = accounts:nonce(Acc) + 1, increment = Inc1 + Inc2}).
 %sign:set_revealed(SignedTx, ChannelId).
 
@@ -58,7 +59,7 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
             Increment = Tx#tc.increment,
             true = Increment > (TotalCoins div constants:max_channel()),
 	    Type = Tx#tc.consensus_flag,
-	    true = ((Type == delegated_1) or (Type == delegated_2)),
+	    true = good_key(Type),
 	    %check if one of the pubkeys is keys:pubkey().
             %If so, then add it to the mychannels module.
 	    1=1;
@@ -80,10 +81,10 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     Nonce = accounts:nonce(Acc1),
     Nonce = Tx#tc.nonce - 1,
     case Tx#tc.consensus_flag of
-	delegated_1 -> 
+	<<"delegated_1">> -> 
 	    D1 = Increment,
 	    D2 = 0;
-	delegated_2 -> 
+	<<"delegated_2">> -> 
 	    D1 = 0,
 	    D2 = Increment
     end,

@@ -18,7 +18,7 @@ handle_cast({add, IP, Port, Data}, X) ->
 handle_call({read, IP, Port}, _From, X) -> 
     K = key(IP, Port),
     O = case dict:find(K, X) of
-        error -> none;
+        error -> <<"none">>;
         {ok, Val} -> Val
     end,
     {reply, O, X}.

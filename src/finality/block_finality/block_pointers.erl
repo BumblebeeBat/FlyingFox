@@ -49,11 +49,6 @@ shift_subtract(Shift, Subtract) ->
     
 shift_subtract_helper(Shift, _, _, _, I, FS) when (I + Shift) > (FS - 1) -> 0;
 shift_subtract_helper(Shift, Subtract, RFile, WFile, I, FS) ->
-    %io:fwrite(integer_to_list(I + Shift)),
-    %io:fwrite(" "),
-    %io:fwrite(integer_to_list(FS)),
-    %io:fwrite("\n"),
-
     {ok, <<A:38, B:26>>} = file:pread(RFile, (I+Shift)*?word, ?word),
     file:pwrite(WFile, (I)*?word, <<(A-Subtract):38, B:26>>),
     shift_subtract_helper(Shift, Subtract, RFile, WFile, I+1, FS).

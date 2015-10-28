@@ -1,5 +1,5 @@
 -module(talker).
--export([talk/1]).
+-export([talk/1, talk/3]).
 
 peer(IP, Port) ->
     "http://" ++ inet_parse:ntoa(IP) ++ ":" ++ integer_to_list(Port) ++ "/".

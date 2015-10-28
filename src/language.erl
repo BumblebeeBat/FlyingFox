@@ -25,7 +25,7 @@ flip([], O) -> O;
 flip([H|T], O) -> flip(T, [H|O]).
 run(Code) -> run(Code, [], []).
 run([], _, Stack) -> Stack;
-run([17|Code], UsedCode, [Bool|Stack]) -> %if
+run([17|Code], UsedCode, [Bool|Stack]) -> %if (case)
     if
 	Bool -> run(Code, [17|UsedCode], Stack);
 	true -> 
@@ -39,6 +39,8 @@ run([34|Code], UsedCode, [Start|[Finish|Stack]]) -> %this opcode looks at a sect
     H = list:sublist(UsedCode, Start, Finish),
     O = hash:doit(flip(H)),
     run(Code, [34|UsedCode], [O|Stack]);
+run([28|_], _, _) -> %die. Neither person gets money.
+    [delete];
 run([Word|Code], UsedCode, Stack) ->
     run(Code, [Word|UsedCode], run_helper(Word, Stack)).
 run_helper(0, [H|Stack]) -> [hash:doit(H)|Stack];%hash

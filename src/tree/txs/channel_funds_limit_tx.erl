@@ -52,16 +52,16 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     Partner = block_tree:account(Part, ParentKey, Accounts),
     true = low_balance(Partner, TotalCoins, NewHeight),
     if
-	(Type == delegated_1) and (CAC1 == A) ->
+	(Type == <<"delegated_1">>) and (CAC1 == A) ->
 	    D2 = 0,
 	    D = B;
-	(Type == delegated_1) and (CAC2 == A) ->
+	(Type == <<"delegated_1">>) and (CAC2 == A) ->
 	    D2 = B,
 	    D = 0;
-	(Type == delegated_2) and (CAC1 == A) ->
+	(Type == <<"delegated_2">>) and (CAC1 == A) ->
 	    D2 = B,
 	    D = 0;
-	(Type == delegated_2) and (CAC2 == A) ->
+	(Type == <<"delegated_2">>) and (CAC2 == A) ->
 	    D2 = 0,
 	    D = B;
 	true -> 

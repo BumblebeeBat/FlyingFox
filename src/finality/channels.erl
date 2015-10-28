@@ -7,11 +7,10 @@
 %instead of storing pointers to the blockchain, we should store all the info we need. (so we can garbage collect old blocks).
 
 %32+32+48+48+1+32+38+2+1 +6 = 240 = 30 bytes.
--record(channel, {acc1 = 0, acc2 = 0, bal1 = 0, bal2 = 0, called_timeout = 0, called_timeout_nonce = 0, timeout_height = 0, type = delegated_1, timeout = false}).%type is either: delegated_1, delegated_2, non_delegated
+-record(channel, {acc1 = 0, acc2 = 0, bal1 = 0, bal2 = 0, called_timeout = 0, called_timeout_nonce = 0, timeout_height = 0, type = <<"delegated_1">>, timeout = false}).%type is either: delegated_1, delegated_2, non_delegated
 %timeout is either true or false
 new(Acc1, Acc2, Bal1, Bal2, Type) -> #channel{acc1 = Acc1, acc2 = Acc2, bal1 = Bal1, bal2 = Bal2, type = Type, timeout = false}.
-un_delegate(Ch) ->
-    #channel{acc1 = Ch#channel.acc1, acc2 = Ch#channel.acc2, bal1 = Ch#channel.bal1, bal2 = Ch#channel.bal2, called_timeout = Ch#channel.called_timeout, timeout_height = Ch#channel.timeout_height, type = non_delegated, timeout = Ch#channel.timeout}.
+%un_delegate(Ch) ->    #channel{acc1 = Ch#channel.acc1, acc2 = Ch#channel.acc2, bal1 = Ch#channel.bal1, bal2 = Ch#channel.bal2, called_timeout = Ch#channel.called_timeout, timeout_height = Ch#channel.timeout_height, type = non_delegated, timeout = Ch#channel.timeout}.
 timeout(Ch, Nonce, Height, CalledTimeout) ->
     #channel{acc1 = Ch#channel.acc1, acc2 = Ch#channel.acc2, bal1 = Ch#channel.bal1, bal2 = Ch#channel.bal2, called_timeout = CalledTimeout, called_timeout_nonce = Nonce, timeout_height = Height, timeout = true}.
 acc1(Ch) -> Ch#channel.acc1.
@@ -134,9 +133,9 @@ read_channel(N) -> %maybe this should be a call too, that way we can use the ram
 	    X = read_file(N),%if this is above the end of the file, then just return an account of all zeros.
 	    <<Acc1:32, Acc2:32, Bal1:48, Bal2:48, CalledTimeout:1, TimeoutNonce:32, TimeoutHeight:38, Type:2, Timeout:1, _:6>> = X,
 	    Ty = case Type of
-		      0 -> non_delegated;
-		      1 -> delegated_1;
-		      2 -> delegated_2
+		     %0 -> non_delegated;
+		     1 -> <<"delegated_1">>;
+		     2 -> <<"delegated_2">>
 		  end,
 	    Tim = case Timeout of
 		      0 -> false;
@@ -148,9 +147,9 @@ read_channel(N) -> %maybe this should be a call too, that way we can use the ram
     end.
 write(N, Ch) ->
     Type = case Ch#channel.type of
-	       non_delegated -> 0;
-	       delegated_1 -> 1;
-	       delegated_2 -> 2
+	       %non_delegated -> 0;
+	       <<"delegated_1">> -> 1;
+	       <<"delegated_2">> -> 2
 	   end,
     Timeout = case Ch#channel.timeout of
 		  true -> 1;

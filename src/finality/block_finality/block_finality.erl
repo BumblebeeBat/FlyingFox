@@ -31,8 +31,6 @@ append_helper(X, NewHeight) ->
     if
 	G ->
 	    Remove = block_pointers:garbage(NewStart),
-	    io:fwrite(integer_to_list(Remove)),
-	    io:fwrite("\n"),
 	    block_dump:garbage(Remove);
 	true -> 0
     end.
@@ -43,12 +41,12 @@ read(N) ->
     %true = N > S - 1,
     C = top(),
     if
-	N < S - 1 -> none;
-	N < 0 -> none;
-	N > C-1 -> none;
+	N < S - 1 -> <<"none">>;
+	N < 0 -> <<"none">>;
+	N > C-1 -> <<"none">>;
 	true ->
 	    case block_pointers:read(N, 1) of
-		none -> none;
+		<<"none">> -> <<"none">>;
 		<<A:38, B:26>>  ->
 		    X = block_dump:read(A, B),
 		    binary_to_term(X)
@@ -64,8 +62,8 @@ test() ->
     X = {abc, 2, 3},
     S = 1000,
     fo4(X, 0, S),
-    none = read(0),
-    none = read(100),
+    <<"none">> = read(0),
+    <<"none">> = read(100),
     X = read(S-100),
     file:delete("block_pointers.db"),
     file:delete("blocks.db"),

@@ -72,13 +72,11 @@ exists(Height, SH) ->
 	    gen_server:call(?MODULE, {exists, Height, SH})
     end.
 add(Height, SH) -> 
-    %io:fwrite("add \n"),    io:fwrite(integer_to_list(Height)),    io:fwrite("\n"),    io:fwrite(packer:pack(SH)),    io:fwrite("\n"),
     E = exists(Height, SH),
     if 
 	E -> ok;
 	true -> gen_server:cast(?MODULE, {add, Height, SH})
     end.
-	    
 remove(Height, SH) ->
     E = exists(Height, SH),
     if

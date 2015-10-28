@@ -25,7 +25,7 @@ handle_cast({add, Secret, SH}, X) -> {noreply, dict:store(SH, Secret, X)};
 handle_cast({delete, SH}, X) -> {noreply, dict:erase(SH, X)}.
 handle_call({read, SH}, _From, X) -> 
     Z = case dict:find(SH, X) of
-	error -> none;
+	error -> <<"none">>;
 	{ok, Y} -> Y
 	end,
     {reply, Z, X}.

@@ -18,7 +18,6 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
     OriginBlock = block_tree:read_int(H, ParentKey),
     OriginTxs = block_tree:txs(OriginBlock),
     OriginTx = reveal:origin_tx(OriginTxs, A),
-    %io:fwrite(packer:pack(OriginBlock)),
     WL = sign_tx:winners_length(OriginTx),
     SH = sign_tx:secret_hash(OriginTx),
     Number = sign_tx:number(OriginTx),
@@ -26,10 +25,8 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
     Secret = true,
 
     N = sign_tx:number(ST),
-    %SH = sign_tx:secret_hash(Tx#slasher_tx.sign_tx),
-    %WL = sign_tx:winners_length(Tx#slasher_tx.sign_tx),
     Reward = fractions:multiply_int(constants:portion_of_block_creation_fee_validators(), TotalCoins),
-    Power = block_tree:power(block_tree:block(ParentKey)),
+    Power = block_tree:power(sign:data(block_tree:block(ParentKey))),
     DReward = fractions:multiply_int(constants:delegation_fee(), Power) div constants:validators_elected_per_block(),%half gets deleted, half is a reward.
     TReward = fractions:multiply_int(constants:slasher_reward(), ((Reward + DReward + fractions:multiply_int(constants:security_bonds_per_winner(), TotalCoins)) * WL)) div 2,%???
     Acc = block_tree:account(Tx#slasher_tx.acc, ParentKey, Accounts),

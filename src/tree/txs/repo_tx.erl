@@ -32,8 +32,8 @@ all_channels(Amount, Accn, Channels, ParentKey, [Chn|Chs]) ->
     Channel = block_tree:channel(Chn, ParentKey, Channels),
     N = channels:bal1(Channel) + channels:bal2(Channel),
     Accn = case channels:type(Channel) of
-	delegated_1 -> channels:acc1(Channel);
-	delegated_2 -> channels:acc2(Channel)
+	<<"delegated_1">> -> channels:acc1(Channel);
+	<<"delegated_2">> -> channels:acc2(Channel)
     end,
     all_channels(Amount - N, Accn, Channels, ParentKey, Chs).
 losses(Txs) -> losses(Txs, 0).
