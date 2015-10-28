@@ -55,6 +55,13 @@ get_blocks(Start, Finish, IP, Port) ->
     block_tree:absorb([SignedBlock]),
     get_blocks(Start + 1, Finish, IP, Port),
     ok.
-
+absorb_txs([]) -> ok;
+absorb_txs([Tx|T]) -> 
+    spawn(tx_pool, absorb, [Tx]),
+    timer:sleep(100),
+    absorb_txs(T).
 get_txs(IP, Port) ->
+    {ok, Txs} = talker:talk({txs}, IP, Port),
+    io:fwrite(packer:pack(Txs)),
+    absorb_txs(Txs ++ Txs),
     ok.

@@ -35,6 +35,7 @@ doit({accounts, N}) ->
 	end,
     file:close(File),
     {ok, O};
+doit({txs}) -> {ok, tx_pool:txs()};
 %need a way to share recent txs.			   
 %I want to share the backup version of all the files.
 doit(_) ->

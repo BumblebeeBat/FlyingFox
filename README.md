@@ -1,3 +1,8 @@
+Flying Fox
+==========
+
+[![Join the chat at https://gitter.im/BumblebeeBat/FlyingFox](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/BumblebeeBat/FlyingFox?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Bitcoin Donations: 1GbpRPE83Vjg73KFvTVZ4EnS2qNkiLY5TT
 
 Flying Fox is my attempt to achieve the goals of the truthcoin project: http://www.truthcoin.info/ I respect Paul Sztorc, especially in his ability to communicate truthcoin, which he invented. Him and I are using very different strategies to try and build the same thing.
