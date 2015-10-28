@@ -6,7 +6,7 @@
 %#signed{data = #signed_channel_block{channel_block = SignedCB, fee = 100}, sig1 = signature}.
 
 -module(channel_block_tx).
--export([doit/7, origin_tx/3, channel/7, channel_block/5, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1, publish_channel_block/3, make_signed_cb/4]).
+-export([doit/7, origin_tx/3, channel/7, channel_block/5, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1, publish_channel_block/3, make_signed_cb/4, reveal_union/4]).
 -record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0, fee = 0}).
 -record(signed_cb, {acc = 0, nonce = 0, channel_block = #channel_block{}, fee = 0}).
 -record(bet, {amount = 0, code = [28]}).%signatures
@@ -149,7 +149,7 @@ bet_results([B|Bets], [Y|Revealed], BetAmount, {Win1, Win2, Loss}) when not is_l
     X = {Win1, Win2, Loss+B#bet.amount},
     bet_results(Bets, Revealed, BetAmount, X);
 bet_results([B|Bets], [R|Revealed], BA, {Win1, Win2, Loss}) ->
-    X = hd(language:run(R++B#bet.code)),
+    X = hd(tl(language:run(R++B#bet.code))),
     TooSmall = fractions:less_than(X, fractions:new(0, 1)),
     TooBig = fractions:less_than(fractions:new(1, 1), X),
     Out = if
@@ -164,4 +164,26 @@ bet_results([B|Bets], [R|Revealed], BA, {Win1, Win2, Loss}) ->
 		  {Win1 + More1, Win2 + More2, Loss}
 	  end,
     bet_results(Bets, Revealed, BA, Out).
+code(X) -> code(X#channel_block.bets, []).
+code([], Out) -> lists:reverse(Out);
+code([B|Bets], Out) -> code(Bets, [B#bet.code|Out]).
+reveal_union(CB1, Revealed1, CB2, Revealed2) ->
+    BN1 = bet_nonces(code(CB1), Revealed1),
+    BN2 = bet_nonces(code(CB2), Revealed2),
+    union_helper(BN1, BN2, Revealed1, Revealed2).
+union_helper([],[],[],[]) -> [];
+union_helper([B1|BN1], [B2|BN2], [R1|RN1], [_|RN2]) when B1>B2->
+    [R1|union_helper(BN1, BN2, RN1, RN2)];
+union_helper([_|BN1], [_|BN2], [_|RN1], [R2|RN2]) ->
+    [R2|union_helper(BN1, BN2, RN1, RN2)].
 
+bet_nonces(Bets, Revealed) -> bet_nonces(Bets, Revealed, []).
+bet_nonces([], [], Out) -> Out;
+bet_nonces([_|Bets], [], Out) -> bet_nonces(Bets, [], [0|Out]);
+bet_nonces([B|Bets], [R|Reveal], Out) when not is_list(R) ->
+    bet_nonces(Bets, Reveal, [0|Out]);
+bet_nonces([B|Bets], [R|Reveal], Out) ->
+    X = hd(language:run(R++B)),
+    bet_nonces(Bets, Reveal, [X|Out]).
+
+    

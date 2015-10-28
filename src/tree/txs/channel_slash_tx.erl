@@ -27,7 +27,12 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
     OriginTimeout = channel_block_tx:origin_tx(channels:timeout_height(Channel), ParentKey, Id),
     SignedOriginTx = channel_timeout_tx:channel_block(sign:data(OriginTimeout)),
     OriginTx = sign:data(SignedOriginTx),
-    true = channel_block_tx:nonce(CB) > channel_block_tx:nonce(OriginTx),
+    SlasherType1 = (channel_block_tx:nonce(CB) > channel_block_tx:nonce(OriginTx)),
+    OldReveal = sign:revealed(SignedCB),
+    NewReveal = channel_block_tx:reveal_union(CB, sign:revealed(SignedCB), OriginTx, sign:revealed(SignedOriginTx)),
+    SlasherType2 = not(OldReveal == NewReveal),
+    NewSignedCB = sign:set_revealed(SignedCB, NewReveal),
+    true = SlasherType1 or SlasherType2,
     Acc = block_tree:account(A, ParentKey, Accounts),
     NAcc = accounts:update(Acc, NewHeight, -Tx#channel_slash.fee, 0, 1, TotalCoins),
     NewAccounts = dict:store(A, NAcc, Accounts),
@@ -35,4 +40,4 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
     Nonce = accounts:nonce(NAcc),
     Nonce = Tx#channel_slash.nonce,
 
-    channel_block_tx:channel(SignedCB, ParentKey, Channels, NewAccounts, TotalCoins, Secrets, NewHeight).
+    channel_block_tx:channel(NewSignedCB, ParentKey, Channels, NewAccounts, TotalCoins, Secrets, NewHeight).
