@@ -1,4 +1,3 @@
-module for keeping track of your peers.
 
 blockchain api for nodes to share blocks and tx and messages.
 

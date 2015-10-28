@@ -9,11 +9,9 @@
 -export([doit/7, origin_tx/3, channel/7, channel_block/5, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1, publish_channel_block/3, make_signed_cb/4]).
 -record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0, fee = 0}).
 -record(signed_cb, {acc = 0, nonce = 0, channel_block = #channel_block{}, fee = 0}).
--record(bet, {amount = 0, merkle = <<"">>, default = 0}).%signatures
+-record(bet, {amount = 0, code = [28]}).%signatures
 -record(tc, {acc1 = 0, acc2 = 0, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
-%`merkle` is the merkle root of a datastructure explaining the bet.
-%`default` is the part of money that goes to participant 2 if the bet is still locked when the channel closes. Extra money goes to participant 1.
-%There are at least 4 types of bets: hashlock, oracle, burn, and signature;. 
+%code is like scriptpubkey from bitcoin.
 make_signed_cb(Acc, CB, Fee, Evidence) ->
     A = block_tree:account(Acc),
     Nonce = accounts:nonce(A),
@@ -127,8 +125,9 @@ channel(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
         %D2 = 0,
         %D1 = 0
     end,
-    N1 = accounts:update(Acc1, NewHeight, channels:bal1(Channel) + Tx#channel_block.amount, -D1, 0, TotalCoins),
-    N2 = accounts:update(Acc2, NewHeight, channels:bal2(Channel) - Tx#channel_block.amount, -D2, 0, TotalCoins),
+    {Win1, Win2, Loss} = bet_results(Tx#channel_block.bets, sign:revealed(SignedTx), BetAmount),
+    N1 = accounts:update(Acc1, NewHeight, channels:bal1(Channel) + Tx#channel_block.amount + Win1, -D1, 0, TotalCoins),
+    N2 = accounts:update(Acc2, NewHeight, channels:bal2(Channel) - Tx#channel_block.amount + Win2, -D2, 0, TotalCoins),
     MyKey = keys:pubkey(),
     APub1 = accounts:pub(Acc1),
     APub2 = accounts:pub(Acc2),
@@ -139,5 +138,30 @@ channel(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     NewChannels = dict:store(Tx#channel_block.id, channels:empty(),Channels),
     NewAccounts1 = dict:store(Tx#channel_block.acc1, N1, Accounts),
     NewAccounts2 = dict:store(Tx#channel_block.acc2, N2, NewAccounts1),
-    {NewChannels, NewAccounts2, TotalCoins, S}.%remove money from totalcoins that was deleted in bets.
+    {NewChannels, NewAccounts2, TotalCoins - Loss, S}.%remove money from totalcoins that was deleted in bets.
+
+bet_results(Bets, Revealed, BetAmount) -> 
+    bet_results(Bets, Revealed, BetAmount, {0,0,0}).
+bet_results([], [], _, X) -> X;
+bet_results(_, [], BetAmount, {Win1, Win2, Loss}) -> 
+    {Win1, Win2, Loss+BetAmount - Win1 - Win2};
+bet_results([B|Bets], [Y|Revealed], BetAmount, {Win1, Win2, Loss}) when not is_list(Y)-> 
+    X = {Win1, Win2, Loss+B#bet.amount},
+    bet_results(Bets, Revealed, BetAmount, X);
+bet_results([B|Bets], [R|Revealed], BA, {Win1, Win2, Loss}) ->
+    X = hd(language:run(R++B#bet.code)),
+    TooSmall = fractions:less_than(X, fractions:new(0, 1)),
+    TooBig = fractions:less_than(fractions:new(1, 1), X),
+    Out = if
+	      (((X == delete) or TooSmall) or TooBig) -> 
+		  MoreLoss = B#bet.amount,
+		  {Win1, Win2, Loss + MoreLoss};
+
+	      true ->
+		  Y = fractions:subtract(fractions:new(1, 1), X),
+		  More1 = fractions:multiply_int(X, B#bet.amount),
+		  More2 = fractions:multiply_int(Y, B#bet.amount),
+		  {Win1 + More1, Win2 + More2, Loss}
+	  end,
+    bet_results(Bets, Revealed, BA, Out).
 

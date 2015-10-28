@@ -57,7 +57,7 @@ block_creation_fee() -> fractions:multiply(
 portion_of_block_creation_fee_validators() -> ?PBCFV.
 -define(SReward, fractions:new(1, 10)).%The portion of the validator's money that goes to the slasher instead of being deleted.
 slasher_reward() -> ?SReward.
--define(BR, fractions:new(1, 1000)).%spending 1000 coins necessarily burns 1.
+-define(BR, fractions:new(1, 1000)).%spending 1000 coins necessarily burns ~1.
 burn_ratio() -> ?BR.
 test() ->
     A = portion_of_block_creation_fee_validators(), 
