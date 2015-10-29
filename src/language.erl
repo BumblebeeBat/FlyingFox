@@ -35,13 +35,13 @@ run([17|Code], UsedCode, [Bool|Stack]) -> %if (case)
 run([18|Code], UsedCode, Stack) -> %else
     {H, T} = remove_till(19, Code),
     run(T, [18|(H++UsedCode)], Stack);
-run([34|Code], UsedCode, [Start|[Size|Stack]]) -> %this opcode looks at a section of code that was already processed, and computes the hash of those words. paytoscripthash
+run([36|Code], UsedCode, [Start|[Size|Stack]]) -> %this opcode looks at a section of code that was already processed, and computes the hash of those words. paytoscripthash
     %This measures backwards.
     %example A, B, C, 3, 0, script_hash takes the hash of [A, B, C]
-    H = lists:sublist(UsedCode, Start+3, Size),
+    H = lists:sublist(UsedCode, Start, Size),
     %io:fwrite(flip(H)),%[2,{integer,3},{integer,1}],[])
     O = hash:doit(flip(H)),
-    run(Code, [34|UsedCode], [O|Stack]);
+    run(Code, [36|UsedCode], [O|Stack]);
 run([28|_], _, _) -> %die. Neither person gets money.
     [delete];
 run([Word|Code], UsedCode, Stack) ->
@@ -112,43 +112,48 @@ assemble([Word|C], Out) ->
 	    true -> Word
 	end,
     assemble(C, [X|Out]).
-atom2op(hash) -> 0;
-atom2op(verify_sig) -> 1;
-atom2op(plus) -> 2;
-atom2op(minus) -> 3;
-atom2op(multiply) -> 4;
-atom2op(divide) -> 5;
-atom2op(gt) -> 6;
-atom2op(lt) -> 7;
-atom2op(eq_num) -> 8;
-atom2op(switch) -> 17;
-atom2op(else) -> 18;
-atom2op(script_hash) -> 34;
-atom2op(swap) -> 9;
-atom2op(drop) -> 10;
-atom2op(dup) -> 11;
-atom2op(rot) -> 12;
-atom2op(tor) -> 13;
-atom2op(ddup) -> 14;
-atom2op(tuckn) -> 15;
-atom2op(pickn) -> 16;
-atom2op(then) -> 19;
-atom2op(both) -> 20;
-atom2op(either) -> 21;
-atom2op(only_one) -> 22;
-atom2op(invert) -> 23;
-atom2op(append) -> 24;
-atom2op(stripr) -> 25;
-atom2op(stripl) -> 26;
-atom2op(flip) -> 27;
-atom2op(crash) -> 28;
-atom2op(f2i) -> 29;
-atom2op(i2f) -> 30;
-atom2op(total_coins) -> 31;
-atom2op(height) -> 32;
-atom2op(stack_size) -> 33;
-atom2op(slash) -> 34;
-atom2op(eq) -> 35;
+atom2op(hash) -> 0;%( X -- <<Bytes:256>> )
+atom2op(verify_sig) -> 1;%( Sig Data Pub -- true/false )
+atom2op(plus) -> 2;%( X Y -- Z )
+atom2op(minus) -> 3;%( X Y -- Z )
+atom2op(multiply) -> 4;%( X Y -- Z )
+atom2op(divide) -> 5;%( X Y -- Z )
+atom2op(gt) -> 6;%( X Y -- true/false )
+atom2op(lt) -> 7;%( X Y -- true/false )
+atom2op(eq_num) -> 8;%( X Y -- true/false )
+atom2op(switch) -> 17;% conditional statement
+% true switch <<"executed">> else <<"ignored">> then 
+% false switch <<"ignored">> else <<"executed">> then 
+atom2op(else) -> 18;% part of an switch conditional statement
+atom2op(swap) -> 9; %( A B -- B A )
+atom2op(drop) -> 10;%( X -- )
+atom2op(dup) -> 11;%( X -- X X )
+atom2op(rot) -> 12;%( a b c -- c a b ) 
+atom2op(tor) -> 13;%( a b c -- b c a )
+atom2op(ddup) -> 14;%( a b -- a b a b )
+atom2op(tuckn) -> 15;%( X N -- ) inserts X N-deeper into stack.
+atom2op(pickn) -> 16;%( Stack N -- Stack Nth-item )
+atom2op(then) -> 19;%part of switch conditional statement.
+atom2op(both) -> 20;%( true/false true/false -- true/false )
+atom2op(either) -> 21;%( true/false true/false -- true/false )
+atom2op(only_one) -> 22;%( true/false true/false -- true/false )
+atom2op(invert) -> 23;%( true/false -- false/true )
+atom2op(append) -> 24;%( <<Binary1/binary>> <<Binary2/binary>> -- <<Binary1/binary, Binary2/binary>> )
+atom2op(stripr) -> 25;%( <<Binary/binary>> -- <<ShorterBinary/binary>> )
+atom2op(stripl) -> 26;%( <<Binary/binary>> -- <<ShorterBinary/binary>> )
+atom2op(flip) -> 27;%entire stack is flipped.
+atom2op(crash) -> 28;%code stops execution here. Neither person gets the money.
+
+atom2op(f2i) -> 29; %( F -- I )
+atom2op(i2f) -> 30; %( I -- F )
+atom2op(total_coins) -> 31; %( -- TotalCoins )
+atom2op(height) -> 32; %( -- Height )
+atom2op(stack_size) -> 33; %( -- Size )
+atom2op(slash) -> 34; %( -- true/false)
+atom2op(eq) -> 35; %( X Y -- true/false )
+atom2op(scripthash) -> 36; %( size start -- <<Bytes:256>> )
+%this opcode looks at a section of code that was already processed, and computes the hash of those words. paytoscripthash
+
 atom2op(true) -> true;
 atom2op(false) -> false.
 
@@ -162,10 +167,10 @@ test() ->
     Data = <<"example">>,
     Sig = sign:sign(Data, Priv),
     true = sign:verify_sig(Data, Sig, Pub),
-    true = run(assemble([Sig, Data, Pub, verify_sig])) == [true],%3rd party signature
+    true = run(assemble([Sig] ++ [Data, Pub, verify_sig])) == [true],%3rd party signature
     B = <<169,243,219,139,234,91,46,239,146,55,229,72,9,221,164,63,12,33,143,128,208,211,40,163,63,91,76,255,255,51,72,230>>,
-    true = run(assemble([B, 1, hash, eq])) == [true],%normal hashlock
+    true = run(assemble([1] ++ [hash, B, eq])) == [true],%normal hashlock
     Code = [2, 2, plus],
     ScriptHash = hash:doit(assemble(Code)),
-    true = (run(assemble([27] ++ Code ++ [length(Code),0,script_hash])) == [ScriptHash, 4, 27]),%pay2scripthash
+    true = (run(assemble([27] ++ Code ++ [length(Code),3,scripthash])) == [ScriptHash, 4, 27]),%pay2scripthash
     success.

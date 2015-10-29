@@ -6,19 +6,40 @@
 %#signed{data = #signed_channel_block{channel_block = SignedCB, fee = 100}, sig1 = signature}.
 
 -module(channel_block_tx).
--export([doit/7, origin_tx/3, channel/7, channel_block/5, channel_block/6, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1, publish_channel_block/3, make_signed_cb/4, reveal_union/4, slash_bet/1, make_bet/2]).
+-export([doit/7, origin_tx/3, channel/7, channel_block/5, channel_block/6, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1, publish_channel_block/3, make_signed_cb/4, reveal_union/4, slash_bet/1, make_bet/2, channel_bets/1]).
 -record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0, fee = 0}).
+channel_block_amount(CB) -> CB#channel_block.amount.
 -record(signed_cb, {acc = 0, nonce = 0, channel_block = #channel_block{}, fee = 0}).
--record(bet, {amount = 0, code = [28]}).%signatures
+-record(bet, {amount = 0, code = language:assemble([crash])}).%code is like scriptpubkey from bitcoin.
 -record(tc, {acc1 = 0, acc2 = 0, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
-%code is like scriptpubkey from bitcoin.
+update(CB, Amount, Nonce) ->
+    A = CB#channel_block.amount + Amount,
+    BetAmount = bet_amount(CB#channel_block.bets),
+    Channel = block_tree:channel(CB#channel_block.id),
+    CB1C = channels:bal1(Channel),
+    CB2C = channels:bal2(Channel),
+    TCBA = CB#channel_block.amount,
+    StartAmount = CB1C + CB2C,
+
+    true = CB1C + TCBA - BetAmount > -1,
+    true = CB2C - TCBA - BetAmount > -1,
+    
+    Height = block_tree:height(),
+    true = (CB#channel_block.expiration == 0) or (CB#channel_block.expiration > Height),    
+    true = (CB#channel_block.nlock < Height),
+
+
+    update(CB, A, Nonce, CB#channel_block.bets, CB#channel_block.fast, CB#channel_block.delay, CB#channel_block.expiration, CB#channel_block.nlock, CB#channel_block.fee).
+update(CB, Amount, Nonce, NewBets, Fast, Delay, Expiration, Nlock, Fee) -> 
+    #channel_block{acc1 = CB#channel_block.acc1, acc2 = CB#channel_block.acc2, amount = CB#channel_block.amount + Amount, nonce = CB#channel_block.nonce + Nonce, bets = NewBets, id = CB#channel_block.id, fast = Fast, delay = Delay, expiration = Expiration, nlock = Nlock, fee = Fee}.
+channel_bets(Ch) -> Ch#channel_block.bets.
 make_bet(Amount, Code) ->
     #bet{amount = Amount, code = Code}.
 make_signed_cb(Acc, CB, Fee, Evidence) ->
     A = block_tree:account(Acc),
     Nonce = accounts:nonce(A),
-    Tx = #signed_cb{acc = Acc, nonce = Nonce + 1, channel_block = CB, fee = Fee},
-    sign:set_revealed(keys:sign(Tx), Evidence).
+    NewCB = #signed_cb{acc = Acc, nonce = Nonce + 1, channel_block = CB, fee = Fee},
+    sign:set_revealed(keys:sign(NewCB), Evidence).
 nonce(X) -> X#channel_block.nonce.
 id(X) -> X#channel_block.id.
 delay(X) -> X#channel_block.delay.
@@ -92,24 +113,28 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     Nonce = Tx#signed_cb.nonce,
     channel(Tx#signed_cb.channel_block, ParentKey, Channels, NewAccounts, TotalCoins, S, NewHeight).
 
-channel(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
-    Tx = sign:data(SignedTx),
-    Acc1 = block_tree:account(Tx#channel_block.acc1, ParentKey, Accounts),
-    Acc2 = block_tree:account(Tx#channel_block.acc2, ParentKey, Accounts),
-    Channel = block_tree:channel(Tx#channel_block.id, ParentKey, Channels),
-    FChannel = channels:read_channel(Tx#channel_block.id),
-    AccN1 = Tx#channel_block.acc1,
+channel(SignedCB, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
+    CB = sign:data(SignedCB),
+    Acc1 = block_tree:account(CB#channel_block.acc1, ParentKey, Accounts),
+    Acc2 = block_tree:account(CB#channel_block.acc2, ParentKey, Accounts),
+    Channel = block_tree:channel(CB#channel_block.id, ParentKey, Channels),
+    FChannel = channels:read_channel(CB#channel_block.id),
+    AccN1 = CB#channel_block.acc1,
     AccN1 = channels:acc1(Channel),
-    AccN2 = Tx#channel_block.acc2,
+    AccN2 = CB#channel_block.acc2,
     AccN2 = channels:acc2(Channel),
-    StartAmount = channels:bal1(Channel) + channels:bal2(Channel),
-    BetAmount = bet_amount(Tx#channel_block.bets),
-    true = Tx#channel_block.amount + BetAmount < StartAmount + 1,
-    true = BetAmount - Tx#channel_block.amount < StartAmount + 1,
-    true = (Tx#channel_block.expiration == 0) or (Tx#channel_block.expiration > NewHeight),    
-    true = (Tx#channel_block.nlock < NewHeight),
-    A1 = Tx#channel_block.acc1,
-    A2 = Tx#channel_block.acc2,
+    CB1C = channels:bal1(Channel),
+    CB2C = channels:bal2(Channel),
+    StartAmount = CB1C + CB2C,
+    BetAmount = bet_amount(CB#channel_block.bets),
+    TCBA = CB#channel_block.amount,
+    true = CB1C + TCBA - BetAmount > -1,
+    true = CB2C - TCBA - BetAmount > -1,
+
+    true = (CB#channel_block.expiration == 0) or (CB#channel_block.expiration > NewHeight),    
+    true = (CB#channel_block.nlock < NewHeight),
+    A1 = CB#channel_block.acc1,
+    A2 = CB#channel_block.acc2,
     B1 = channels:acc1(FChannel),
     B2 = channels:acc2(FChannel),
     Type = channels:type(Channel),
@@ -129,19 +154,19 @@ channel(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
         %D2 = 0,
         %D1 = 0
     end,
-    {Win1, Win2, Loss} = bet_results(Tx#channel_block.bets, sign:revealed(SignedTx), BetAmount),
-    N1 = accounts:update(Acc1, NewHeight, channels:bal1(Channel) + Tx#channel_block.amount + Win1, -D1, 0, TotalCoins),
-    N2 = accounts:update(Acc2, NewHeight, channels:bal2(Channel) - Tx#channel_block.amount + Win2, -D2, 0, TotalCoins),
+    {Win1, Win2, Loss} = bet_results(CB#channel_block.bets, sign:revealed(SignedCB), BetAmount),
+    N1 = accounts:update(Acc1, NewHeight, channels:bal1(Channel) + CB#channel_block.amount + Win1, -D1, 0, TotalCoins),
+    N2 = accounts:update(Acc2, NewHeight, channels:bal2(Channel) - CB#channel_block.amount + Win2, -D2, 0, TotalCoins),
     MyKey = keys:pubkey(),
     APub1 = accounts:pub(Acc1),
     APub2 = accounts:pub(Acc2),
     if
-	(APub1 == MyKey) or (APub2 == MyKey) -> my_channels:remove(Tx#channel_block.id);
+	(APub1 == MyKey) or (APub2 == MyKey) -> my_channels:remove(CB#channel_block.id);
 	true -> 1=1
     end,
-    NewChannels = dict:store(Tx#channel_block.id, channels:empty(),Channels),
-    NewAccounts1 = dict:store(Tx#channel_block.acc1, N1, Accounts),
-    NewAccounts2 = dict:store(Tx#channel_block.acc2, N2, NewAccounts1),
+    NewChannels = dict:store(CB#channel_block.id, channels:empty(),Channels),
+    NewAccounts1 = dict:store(CB#channel_block.acc1, N1, Accounts),
+    NewAccounts2 = dict:store(CB#channel_block.acc2, N2, NewAccounts1),
     {NewChannels, NewAccounts2, TotalCoins - Loss, S}.%remove money from totalcoins that was deleted in bets.
 
 bet_results(Bets, Revealed, BetAmount) -> 
