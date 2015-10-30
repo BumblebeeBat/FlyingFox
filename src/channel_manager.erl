@@ -19,7 +19,8 @@ repeat(Times, X) -> repeat(Times, X, []).
 repeat(0, _, Out) -> Out;
 repeat(Times, X, Out) -> repeat(Times-1, X, [X|Out]).
     
-store(ChId, F) -> gen_server:cast(?MODULE, {store, ChId, F}).
+store(ChId, F) -> 
+    gen_server:cast(?MODULE, {store, ChId, F}).
 
 new_channel(ChId) -> 
     F = #f{},
@@ -28,7 +29,6 @@ new_channel(ChId) ->
 first_cb(ChId, CB) ->
     Old = read(ChId),
     true = is_record(f, Old),
-    channel_block_tx:is_cb(CB),
     F = #f{channel = CB, unlock = repeat(length(channel_block_tx:bets(CB)), 28)},
     store(ChId, F).
     
@@ -76,6 +76,7 @@ hashlock(ChId, Amount, SecretHash) ->
     NewF = #f{channel = Ch3, unlock = [[1]|F#f.unlock]},
     store(ChId, NewF).
 recieve_locked_payment(ChId, NewCh) ->
+    channel_block_tx:is_cb(NewCh),
     F = read(ChId),
     Ch = F#f.channel,
     NewAmount = channel_block_tx:amount(NewCh),
@@ -99,6 +100,7 @@ recieve_locked_payment(ChId, NewCh) ->
     store(ChId, NewCh).
     
 recieve(ChId, MinAmount, NewCh) ->
+    channel_block_tx:is_cb(NewCh),
     F = read(ChId),
     Ch = F#f.channel,
     NewAmount = channel_block_tx:amount(NewCh),

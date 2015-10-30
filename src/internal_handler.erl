@@ -29,6 +29,12 @@ doit({close_channel, ChId, Amount, Nonce, Fee}) ->
     channel_block_tx:close_channel(ChId, Amount, Nonce, Fee);
 doit({sync, IP, Port}) ->
     download_blocks:sync(IP, Port);
+doit({pubkey}) -> keys:pubkey();
+doit({new_pubkey, Password}) -> keys:new(Password);
+doit({channel_spend, ChId, Amount}) ->
+    channel_manager:spend(ChId, Amount);
+doit({channel_recieve, ChId, MinAmount, Ch}) ->
+    channel_manager:spend(ChId, MinAmount, Ch);
 doit({test}) -> 
     {test_response};
 doit(X) ->
