@@ -1,5 +1,5 @@
 -module(language).
--export([run/1, test/0, remove_till/2, assemble/1]).
+-export([run/1, test/0, remove_till/2, assemble/1, hashlock/2, extract_sh/1]).
 int_arith(2, X, Y) -> X + Y;
 int_arith(3, X, Y) -> X - Y;
 int_arith(4, X, Y) -> X * Y;
@@ -157,6 +157,11 @@ atom2op(scripthash) -> 36; %( size start -- <<Bytes:256>> )
 atom2op(true) -> true;
 atom2op(false) -> false.
 
+hashlock(ToAmount, SecretHash) -> %( X -- )
+    true = ((ToAmount == 0) or (ToAmount == 1)),
+    assemble([hash, SecretHash, eq, switch, {f, ToAmount, 1}, 2, else, {f, 1, 2}, 1, then]).
+
+extract_sh(Code) -> hd(tl(Code)).
     
 test() ->    
     true = run(assemble([10, 2, plus])) == [12],

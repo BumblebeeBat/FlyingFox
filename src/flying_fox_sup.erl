@@ -21,7 +21,7 @@ init([]) ->
 	  ?CHILD(port, worker),
 	  ?CHILD(block_tree, worker),
 	  ?CHILD(tx_pool, worker),
-	  ?CHILD(my_channels, worker)
+	  ?CHILD(channel_manager, worker)
 	],
     {ok, { {one_for_one, 5, 10}, Children} }.
 

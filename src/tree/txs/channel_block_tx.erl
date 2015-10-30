@@ -6,8 +6,9 @@
 %#signed{data = #signed_channel_block{channel_block = SignedCB, fee = 100}, sig1 = signature}.
 
 -module(channel_block_tx).
--export([doit/7, origin_tx/3, channel/7, channel_block/5, channel_block/6, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1, publish_channel_block/3, make_signed_cb/4, reveal_union/4, slash_bet/1, make_bet/2, bets/1, acc1/1, acc2/1, amount/1, bets/1, id/1, fast/1, expiration/1, nlock/1, fee/1]).
+-export([doit/7, origin_tx/3, channel/7, channel_block/5, channel_block/6, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1, publish_channel_block/3, make_signed_cb/4, reveal_union/4, slash_bet/1, make_bet/2, acc1/1, acc2/1, amount/1, bets/1, fast/1, expiration/1, nlock/1, fee/1, add_bet/3, bet_code/1, update/3, is_cb/1]).
 -record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0, fee = 0}).
+is_cb(CB) -> true = is_record(channel_block, CB).
 acc1(CB) -> CB#channel_block.acc1.
 acc2(CB) -> CB#channel_block.acc2.
 amount(CB) -> CB#channel_block.amount.
@@ -21,7 +22,13 @@ nonce(X) -> X#channel_block.nonce.
 delay(X) -> X#channel_block.delay.
 -record(signed_cb, {acc = 0, nonce = 0, channel_block = #channel_block{}, fee = 0}).
 -record(bet, {amount = 0, code = language:assemble([crash])}).%code is like scriptpubkey from bitcoin.
+bet_code(Bet) -> Bet#bet.code.
 -record(tc, {acc1 = 0, acc2 = 0, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
+add_bet(CB, Amount, Code) ->
+    Bets = CB#channel_block.bets,
+    NewBets = [#bet{amount = Amount, code = Code}|Bets],
+    update(CB, 0, 0, NewBets, CB#channel_block.fast, CB#channel_block.delay, CB#channel_block.expiration, CB#channel_block.nlock, CB#channel_block.fee).
+    
 update(CB, Amount, Nonce) ->
     A = CB#channel_block.amount + Amount,
     update(CB, A, Nonce, CB#channel_block.bets, CB#channel_block.fast, CB#channel_block.delay, CB#channel_block.expiration, CB#channel_block.nlock, CB#channel_block.fee).
@@ -31,7 +38,7 @@ update(CB, Amount, Nonce, NewBets, Fast, Delay, Expiration, Nlock, Fee) ->
     CB1C = channels:bal1(Channel),
     CB2C = channels:bal2(Channel),
     TCBA = CB#channel_block.amount,
-    StartAmount = CB1C + CB2C,
+    %StartAmount = CB1C + CB2C,
 
     true = CB1C + TCBA - BetAmount > -1,
     true = CB2C - TCBA - BetAmount > -1,
@@ -161,13 +168,16 @@ channel(SignedCB, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     {Win1, Win2, Loss} = bet_results(CB#channel_block.bets, sign:revealed(SignedCB), BetAmount),
     N1 = accounts:update(Acc1, NewHeight, channels:bal1(Channel) + CB#channel_block.amount + Win1, -D1, 0, TotalCoins),
     N2 = accounts:update(Acc2, NewHeight, channels:bal2(Channel) - CB#channel_block.amount + Win2, -D2, 0, TotalCoins),
-    MyKey = keys:pubkey(),
-    APub1 = accounts:pub(Acc1),
-    APub2 = accounts:pub(Acc2),
-    if
-	(APub1 == MyKey) or (APub2 == MyKey) -> my_channels:remove(CB#channel_block.id);
-	true -> 1=1
-    end,
+    %MyKey = keys:pubkey(),
+    %APub1 = accounts:pub(Acc1),
+    %APub2 = accounts:pub(Acc2),
+    %if
+    %(APub1 == MyKey) or (APub2 == MyKey) -> 
+    %1=2,%
+    %channel_manager:delete(CB#channel_block.id);
+	%my_channels:remove(CB#channel_block.id);
+    %true -> 1=1
+						%end,
     NewChannels = dict:store(CB#channel_block.id, channels:empty(),Channels),
     NewAccounts1 = dict:store(CB#channel_block.acc1, N1, Accounts),
     NewAccounts2 = dict:store(CB#channel_block.acc2, N2, NewAccounts1),
@@ -213,7 +223,7 @@ union_helper([_|BN1], [_|BN2], [_|RN1], [R2|RN2]) ->
 bet_nonces(Bets, Revealed) -> bet_nonces(Bets, Revealed, []).
 bet_nonces([], [], Out) -> Out;
 bet_nonces([_|Bets], [], Out) -> bet_nonces(Bets, [], [0|Out]);
-bet_nonces([B|Bets], [R|Reveal], Out) when not is_list(R) ->
+bet_nonces([_|Bets], [R|Reveal], Out) when not is_list(R) ->
     bet_nonces(Bets, Reveal, [0|Out]);
 bet_nonces([B|Bets], [R|Reveal], Out) ->
     X = hd(language:run(R++B)),

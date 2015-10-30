@@ -25,6 +25,7 @@ get_starter_block(IP, Port, Height) ->
     end.
 	     
 absorb_stuff(Files, IP, _Port) ->
+    %should download files.
     io:fwrite("absorb stuff").
 
 fresh_sync(IP, Port, PeerData) ->

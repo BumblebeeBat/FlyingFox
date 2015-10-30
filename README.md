@@ -7,7 +7,7 @@ Bitcoin Donations: 1GbpRPE83Vjg73KFvTVZ4EnS2qNkiLY5TT
 
 Flying Fox is my attempt to achieve the goals of the truthcoin project: http://www.truthcoin.info/ I respect Paul Sztorc, especially in his ability to communicate truthcoin, which he invented. Him and I are using very different strategies to try and build the same thing.
 
-Sztorc maintains a forum where the different teams trying to build truthcoin can share ideas: http://forum.truthcoin.info/
+!!!Warning, forum is malfunctioning lately!!!Sztorc maintains a forum where the different teams trying to build truthcoin can share ideas: http://forum.hive-mind.info/
 
 Flying Fox deviates from Sztorc's design choices in several ways:
 
