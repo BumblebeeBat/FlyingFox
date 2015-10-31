@@ -30,6 +30,7 @@ start_server() ->
 	 {'_', [
 		{"/main.html", main_handler, ["src/web/main.html"]},
 		{"/rpc.js", main_handler, ["src/web/rpc.js"]},
+		{"/tester.js", main_handler, ["src/web/tester.js"]},
 		{"/", internal_handler, []}
 	       ]}
 	],

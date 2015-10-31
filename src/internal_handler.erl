@@ -28,6 +28,7 @@ doit({to_channel, ChId, Inc1, Inc2, Fee}) ->
 doit({close_channel, ChId, Amount, Nonce, Fee}) ->
     channel_block_tx:close_channel(ChId, Amount, Nonce, Fee);
 doit({sync, IP, Port}) ->
+    io:fwrite("internal handler sync\n"),
     download_blocks:sync(IP, Port);
 doit({pubkey}) -> keys:pubkey();
 doit({new_pubkey, Password}) -> keys:new(Password);

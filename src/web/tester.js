@@ -3,6 +3,5 @@ function local_get2(t, callback) {
     return getter(t, u, callback);
 }
 
-local_get([-6, "test"], function () {
-    local_get2([-6, "sync", {127,0,0,1}, 3000]);
-});
+var x = local_get([-6, "sync", [-6,127,0,0,1], 3020]);
+console.log("tester");

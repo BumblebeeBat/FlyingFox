@@ -25,9 +25,11 @@ function refresh_helper(x, callback) {
 };
 
 my_status = "nil";
+//var x = local_get([-6, "sync", [-6,127,0,0,1], 3020]);
 var x = local_get([-6, "test"]);
+
 refresh_helper(x, function(){ 
     my_status = JSON.parse(xml_out(x)); 
     console.log("test response ".concat(JSON.stringify(my_status)));
-                            });
+});
 

@@ -11,7 +11,13 @@ untup(X) -> X.
 unpack(JSON) -> unpack_helper(jiffy:decode(JSON)).
 unpack_helper(J) when is_binary(J) -> base64:decode(J);
 unpack_helper(J) when not is_list(J) -> J;
-unpack_helper(J) when hd(J) == ?KEY -> list_to_tuple([binary_to_atom(hd(tl(J)), latin1)|unpack_helper(tl(tl(J)))]);
+unpack_helper(J) when hd(J) == ?KEY -> 
+    K = hd(tl(J)),
+    Out = if
+	      is_binary(K) -> binary_to_atom(K, latin1);
+	      is_integer(K) -> K	    
+	  end,
+    list_to_tuple([Out|unpack_helper(tl(tl(J)))]);
 unpack_helper(J) -> lists:map(fun(X) -> unpack_helper(X) end, J).
 pack(X) when is_binary(X) -> base64:encode(X);
 pack(X) when is_tuple(X) or is_list(X) -> jiffy:encode(untup(X));
