@@ -2,7 +2,7 @@
 
 -module(channel_manager).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, unlock_hash/2,hashlock/3,spend/2,recieve/3,read/1,new_channel/1,first_cb/2,recieve_locked_payment/2,delete/1]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, unlock_hash/2,hashlock/3,spend/2,recieve/3,read/1,new_channel/1,first_cb/2,recieve_locked_payment/2,delete/1,id/1]).
 -record(f, {channel = [], unlock = []}).
 init(ok) -> {ok, dict:new()}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
@@ -14,11 +14,26 @@ handle_cast({store, N, Ch}, X) ->
 handle_cast({delete, N}, X) -> 
     {noreply, dict:erase(N, X)}.
 handle_call({read, N}, _From, X) -> 
-    {reply, dict:fetch(N, X), X}.
+    {reply, dict:fetch(N, X), X};
+handle_call(keys, _From, X) -> 
+    {reply, dict:keys(X), X}.
 repeat(Times, X) -> repeat(Times, X, []).
 repeat(0, _, Out) -> Out;
 repeat(Times, X, Out) -> repeat(Times-1, X, [X|Out]).
-    
+keys() -> gen_server:call(?MODULE, keys).
+id(Partner) -> id_helper(Partner, keys(), []).
+id_helper(_, [], Out) -> Out;
+id_helper(Partner, [Key|T], Out) ->
+    F = read(Key),
+    Ch = F#f.channel,
+    Acc1 = channel_block_tx:acc1(Ch),
+    Acc2 = channel_block_tx:acc2(Ch),
+    NewOut = if
+	((Partner == Acc1) or (Partner == Acc2)) -> [Key|Out];
+	true -> Out
+	     end,
+    id_helper(Partner, T, NewOut).
+
 store(ChId, F) -> 
     gen_server:cast(?MODULE, {store, ChId, F}).
 

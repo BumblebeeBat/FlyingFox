@@ -1,3 +1,5 @@
+update packer to put -6 on lists instead of tuples, since we mostly use tuples.
+
 messanger system that lets you pay to send messages to peers with commands.
 
 hashlock lightning payments

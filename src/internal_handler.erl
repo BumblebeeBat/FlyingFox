@@ -32,6 +32,7 @@ doit({sync, IP, Port}) ->
     download_blocks:sync(IP, Port);
 doit({pubkey}) -> {ok, keys:pubkey()};
 doit({id}) -> {ok,  keys:id()};
+doit({channel_id, Partner}) -> {ok, channel_manager:id(Partner)};
 doit({new_pubkey, Password}) -> 
     io:fwrite("internal handler new pubkey\n"),
     keys:new(Password);

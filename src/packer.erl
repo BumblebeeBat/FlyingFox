@@ -2,35 +2,30 @@
 -module(packer).
 -export([pack/1,unpack/1,test/0, untup/1, unpack_helper/1]).
 -define(KEY, -6).
-untup(X) when is_tuple(X) -> [?KEY|untup(tuple_to_list(X))];
-untup([]) -> [];
-untup([H|T]) -> [untup(H)|untup(T)];
-untup(X) when is_list(X) -> lists:map(fun(Z)->untup(Z) end, X);
+untup(X) when is_tuple(X) -> lists:map(fun(Z) ->untup(Z) end, tuple_to_list(X));
+untup(X) when is_list(X) -> [?KEY|lists:map(fun(Z)->untup(Z) end,X)];
 untup(X) when is_binary(X) -> base64:encode(X);
 untup(X) -> X.
+unpack(I) when is_integer(I) -> I;
 unpack(JSON) -> unpack_helper(jiffy:decode(JSON)).
 unpack_helper(J) when is_binary(J) -> base64:decode(J);
 unpack_helper(J) when not is_list(J) -> J;
 unpack_helper(J) when hd(J) == ?KEY -> 
-    K = hd(tl(J)),
+    lists:map(fun(X) -> unpack_helper(X) end, tl(J));
+unpack_helper(J) -> 
+    K = hd(J),
     Out = if
 	      is_binary(K) -> binary_to_atom(K, latin1);
 	      is_integer(K) -> K	    
 	  end,
-    list_to_tuple([Out|unpack_helper(tl(tl(J)))]);
-unpack_helper(J) -> lists:map(fun(X) -> unpack_helper(X) end, J).
-pack(X) when is_binary(X) -> base64:encode(X);
-pack(X) when is_tuple(X) or is_list(X) -> jiffy:encode(untup(X));
-pack(X) -> jiffy:encode(X).
-
+    list_to_tuple([Out|lists:map(fun(X) -> unpack_helper(X) end, tl(J))]).
+pack(X) -> jiffy:encode(untup(X)).
 -record(d, {a = "", b = "" }).
 test() -> 
-    Record = #d{a=[1, 2, <<"abc">>, []], b = <<1,2,3,200>> },
+    Record = #d{a=[1, 2, <<"abc">>, [], #d{}], b = <<1,2,3,200>> },
     List = [[],3,[4]],
     Int = 123,
-    Bin = <<"abc">>,
     Int = unpack(pack(Int)),
-    Bin = unpack_helper(pack(Bin)),
     List = unpack(pack(List)),
     true = is_record(unpack(pack(Record)), d),
     Record = unpack(pack(Record)),
