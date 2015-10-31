@@ -1,6 +1,6 @@
 function getter(t, u, callback){
     t = JSON.stringify(t);
-    console.log("getter ".concat(t));
+    //console.log("getter ".concat(t));
     var xmlhttp=new XMLHttpRequest();
     xmlhttp.onreadystatechange = callback;
     xmlhttp.open("POST",u,true);

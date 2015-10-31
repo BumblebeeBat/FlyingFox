@@ -18,19 +18,15 @@ change(X) ->
         not is_integer(X) -> change(list_to_integer(X));
         true ->
             true = X > 0,
-            %tcp_server:stop(check()),
             gen_server:cast(?MODULE, {change, X}),
             X = check()
-            %listener:die()
     end.
 start_server() ->
     io:fwrite("start server!!!\n"),
     
     D_internal = [
 	 {'_', [
-		{"/main.html", main_handler, ["src/web/main.html"]},
-		{"/rpc.js", main_handler, ["src/web/rpc.js"]},
-		{"/tester.js", main_handler, ["src/web/tester.js"]},
+		{"/:file", main_handler, []},
 		{"/", internal_handler, []}
 	       ]}
 	],

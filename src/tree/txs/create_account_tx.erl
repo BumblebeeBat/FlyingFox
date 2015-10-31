@@ -7,7 +7,9 @@ create_account(Pub, Amount, Fee) ->
     Acc = block_tree:account(Id),
     Tx = #ca{from = Id, nonce = accounts:nonce(Acc) + 1, pub = Pub, amount = Amount, fee = Fee},
     tx_pool:absorb(keys:sign(Tx)).
-next_top(DBroot, Accounts) -> next_top_helper(accounts:array(), accounts:top(), DBroot, Accounts).
+next_top(DBroot, Accounts) -> 
+    Array = accounts:array(),
+    next_top_helper(<< Array/binary, <<0>>/binary >>, accounts:top(), DBroot, Accounts).
 next_top_helper(Array, Top, DBroot, Accounts) ->
     EmptyAcc = accounts:empty(),
     case block_tree:account(Top, DBroot, Accounts) of

@@ -11,10 +11,11 @@ sync(IP, Port) ->
         TheirHeight > MH ->
             fresh_sync(IP, Port, PeerData);
         TheirHeight > MyHeight ->
-            get_blocks(MyHeight + 1, TheirHeight, IP, Port),
-	    get_txs(IP, Port);
+            get_blocks(MyHeight + 1, TheirHeight, IP, Port);
         true -> 0
-    end.
+    end,
+    get_txs(IP, Port).
+    
 
 get_starter_block(IP, Port, Height) ->
     %keep walking backward till we get to a block that has a backup hash...

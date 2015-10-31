@@ -30,15 +30,18 @@ doit({close_channel, ChId, Amount, Nonce, Fee}) ->
 doit({sync, IP, Port}) ->
     io:fwrite("internal handler sync\n"),
     download_blocks:sync(IP, Port);
-doit({pubkey}) -> keys:pubkey();
-doit({new_pubkey, Password}) -> keys:new(Password);
+doit({pubkey}) -> {ok, keys:pubkey()};
+doit({id}) -> {ok,  keys:id()};
+doit({new_pubkey, Password}) -> 
+    io:fwrite("internal handler new pubkey\n"),
+    keys:new(Password);
 doit({channel_spend, ChId, Amount}) ->
     channel_manager:spend(ChId, Amount);
 doit({channel_recieve, ChId, MinAmount, Ch}) ->
     channel_manager:spend(ChId, MinAmount, Ch);
 doit({test}) -> 
     {test_response};
-doit(X) ->
+doit(_) ->
     io:fwrite("don't know how to handle it \n"),
     io:fwrite("\n"),
     {error}.
