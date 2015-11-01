@@ -2,7 +2,7 @@
 
 -module(channel_manager).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, unlock_hash/2,hashlock/3,spend/2,recieve/3,read/1,new_channel/1,first_cb/2,recieve_locked_payment/2,delete/1,id/1]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, unlock_hash/2,hashlock/3,spend/2,recieve/3,read/1,new_channel/2,first_cb/2,recieve_locked_payment/2,delete/1,id/1,keys/0]).
 -record(f, {channel = [], unlock = []}).
 init(ok) -> {ok, dict:new()}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
@@ -16,7 +16,7 @@ handle_cast({delete, N}, X) ->
 handle_call({read, N}, _From, X) -> 
     {reply, dict:fetch(N, X), X};
 handle_call(keys, _From, X) -> 
-    {reply, dict:keys(X), X}.
+    {reply, dict:fetch_keys(X), X}.
 repeat(Times, X) -> repeat(Times, X, []).
 repeat(0, _, Out) -> Out;
 repeat(Times, X, Out) -> repeat(Times-1, X, [X|Out]).
@@ -25,7 +25,7 @@ id(Partner) -> id_helper(Partner, keys(), []).
 id_helper(_, [], Out) -> Out;
 id_helper(Partner, [Key|T], Out) ->
     F = read(Key),
-    Ch = F#f.channel,
+    Ch = sign:data(F#f.channel),
     Acc1 = channel_block_tx:acc1(Ch),
     Acc2 = channel_block_tx:acc2(Ch),
     NewOut = if
@@ -37,8 +37,9 @@ id_helper(Partner, [Key|T], Out) ->
 store(ChId, F) -> 
     gen_server:cast(?MODULE, {store, ChId, F}).
 
-new_channel(ChId) -> 
-    F = #f{},
+new_channel(ChId, Channel) -> 
+    Ch = channel_block_tx:channel_block_from_channel(ChId, Channel, 0, 1, constants:max_reveal()-1, 0, []),
+    F = #f{channel = Ch, unlock = []},
     store(ChId, F).
 
 first_cb(ChId, CB) ->
@@ -52,10 +53,8 @@ read(ChId) -> gen_server:call(?MODULE, {read, ChId}).
 delete(ChId) -> gen_server:call(?MODULE, {delete, ChId}).
 spend(ChId, Amount) ->
     F = read(ChId),
-    Ch = F#f.channel,
-    NewCh = channel_block_tx:update(Ch, Amount, 1),
-    NewF = #f{channel = NewCh, unlock = F#f.unlock},
-    store(ChId, NewF).
+    Ch = sign:data(F#f.channel),
+    keys:sign_tx(channel_block_tx:update(Ch, Amount, 1)).
 match_n(X, Bets) -> match_n(X, Bets, 0).
 match_n(X, [Bet|Bets], N) ->
     Y = language:extract_sh(channel_block_tx:bet_code(Bet)),

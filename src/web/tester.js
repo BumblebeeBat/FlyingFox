@@ -51,13 +51,26 @@ function new_channel(id) {
 		    get(["tx_absorb", ch3]);
 		    get2(["tx_absorb", ch3]);
 		    wait_for_channel_id();
-		})
-	    })
-	})
+		});
+	    });
+	});
     }
 }
 
 function wait_for_channel_id() {
     local_get(["sync", [127,0,0,1], 3020]);
     console.log("wait for channel id");
+    variable_get(["channel_id", 0], function(chid) {
+	if (chid == [-6]) {wait_for_channel_id();}
+	else { 
+	    channel_spend(chid[1]);
+	}
+    });
+}
+
+function channel_spend(channel_id) {
+    console.log("channel id ".concat(channel_id));
+    variable_get(["channel_spend", channel_id, -10000], function(ch) {
+	console.log("channel spend ".concat(ch));
+    });
 }

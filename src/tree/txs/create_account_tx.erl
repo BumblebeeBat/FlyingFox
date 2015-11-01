@@ -9,7 +9,8 @@ create_account(Pub, Amount, Fee) ->
     tx_pool:absorb(keys:sign(Tx)).
 next_top(DBroot, Accounts) -> 
     Array = accounts:array(),
-    next_top_helper(<< Array/binary, <<0>>/binary >>, accounts:top(), DBroot, Accounts).
+    next_top_helper(Array, accounts:top(), DBroot, Accounts).
+next_top_helper(Array, Top, DBroot, Accounts) when Top > size(Array) -> next_top_helper( <<Array/bitstring, <<0>>/binary>>, Top, DBroot, Accounts);
 next_top_helper(Array, Top, DBroot, Accounts) ->
     EmptyAcc = accounts:empty(),
     case block_tree:account(Top, DBroot, Accounts) of

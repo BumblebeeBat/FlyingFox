@@ -39,7 +39,7 @@ doit({new_pubkey, Password}) ->
 doit({channel_spend, ChId, Amount}) ->
     channel_manager:spend(ChId, Amount);
 doit({channel_recieve, ChId, MinAmount, Ch}) ->
-    channel_manager:spend(ChId, MinAmount, Ch);
+    channel_manager:recieve(ChId, MinAmount, Ch);
 doit({test}) -> 
     {test_response};
 doit(_) ->

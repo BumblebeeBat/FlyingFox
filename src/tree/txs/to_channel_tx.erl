@@ -94,11 +94,11 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     MyKey = keys:pubkey(),
     APub1 = accounts:pub(Acc1),
     APub2 = accounts:pub(Acc2),
+    Ch = channels:new(Tx#tc.acc1, Tx#tc.acc2, Tx#tc.bal1, Tx#tc.bal2, Type),
     if
-	((Channel == EmptyChannel) and ((APub1 == MyKey) or (APub2 == MyKey))) -> channel_manager:new_channel(NewId);
+	((Channel == EmptyChannel) and ((APub1 == MyKey) or (APub2 == MyKey))) -> channel_manager:new_channel(NewId, Ch);
 	true -> 1=1
     end,
-    Ch = channels:new(Tx#tc.acc1, Tx#tc.acc2, Tx#tc.bal1, Tx#tc.bal2, Type),
     NewAccounts1 = dict:store(Tx#tc.acc1, N1, Accounts),
     NewAccounts = dict:store(Tx#tc.acc2, N2, NewAccounts1),
     NewChannels = dict:store(NewId, Ch, Channels),
