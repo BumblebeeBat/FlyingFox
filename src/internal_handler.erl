@@ -39,9 +39,7 @@ doit({new_pubkey, Password}) ->
     io:fwrite("internal handler new pubkey\n"),
     keys:new(Password);
 doit({channel_spend, ChId, Amount}) ->
-    channel_manager:spend(ChId, Amount);
-doit({channel_recieve, ChId, MinAmount, Ch}) ->
-    channel_manager:recieve(ChId, MinAmount, Ch);
+    {ok, channel_manager:spend(ChId, Amount)};
 doit({test}) -> 
     {test_response};
 doit(_) ->

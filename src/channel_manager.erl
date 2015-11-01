@@ -54,7 +54,7 @@ delete(ChId) -> gen_server:call(?MODULE, {delete, ChId}).
 spend(ChId, Amount) ->
     F = read(ChId),
     Ch = sign:data(F#f.channel),
-    keys:sign_tx(channel_block_tx:update(Ch, Amount, 1)).
+    keys:sign(channel_block_tx:update(Ch, Amount, 1)).
 match_n(X, Bets) -> match_n(X, Bets, 0).
 match_n(X, [Bet|Bets], N) ->
     Y = language:extract_sh(channel_block_tx:bet_code(Bet)),
@@ -90,7 +90,7 @@ hashlock(ChId, Amount, SecretHash) ->
     NewF = #f{channel = Ch3, unlock = [[1]|F#f.unlock]},
     store(ChId, NewF).
 recieve_locked_payment(ChId, NewCh) ->
-    channel_block_tx:is_cb(NewCh),
+    true = channel_block_tx:is_cb(NewCh),
     F = read(ChId),
     Ch = F#f.channel,
     NewAmount = channel_block_tx:amount(NewCh),
@@ -113,27 +113,44 @@ recieve_locked_payment(ChId, NewCh) ->
     NewCh = channel_block_tx:add_bet(Ch2, A, Script),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce and bet.
     store(ChId, NewCh).
     
-recieve(ChId, MinAmount, NewCh) ->
-    channel_block_tx:is_cb(NewCh),
+recieve(ChId, MinAmount, SignedPayment) ->
+    io:fwrite("newch "),
+    io:fwrite(packer:pack(SignedPayment)),
+    io:fwrite("\n"),
+    %we need to verify that the other party signed it.
+    ID = keys:id(),
+    Payment = sign:data(SignedPayment),
+    A1 = channel_block_tx:acc1(Payment),
+    A2 = channel_block_tx:acc2(Payment),
+    Acc1 = block_tree:account(A1),
+    Acc2 = block_tree:account(A2),
+    Pub1 = accounts:pub(Acc1),
+    Pub2 = accounts:pub(Acc2),
+    true = case ID of
+	A1 -> sign:verify_2(SignedPayment, Pub2);
+	A2 -> sign:verify_1(SignedPayment, Pub1)
+    end,
+    true = channel_block_tx:is_cb(Payment),
     F = read(ChId),
-    Ch = F#f.channel,
-    NewAmount = channel_block_tx:amount(NewCh),
+    Ch = sign:data(F#f.channel),
+    NewAmount = channel_block_tx:amount(Payment),
     OldAmount = channel_block_tx:amount(Ch),
-    NewN = channel_block_tx:nonce(NewCh),
+    NewN = channel_block_tx:nonce(Payment),
     OldN = channel_block_tx:nonce(Ch),
     Channel = block_tree:channel(ChId),
     A = NewAmount - OldAmount,
     N = NewN - OldN,
     true = N > 0,
-    NewCh = channel_block_tx:update(Ch, A, N),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce.
-    BTA1C = block_tree:acc1(Channel),
-    BTA2C = block_tree:acc2(Channel),
-    B = case keys:id() of
+    Payment = channel_block_tx:update(Ch, A, N),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce.
+    BTA1C = channels:acc1(Channel),
+    BTA2C = channels:acc2(Channel),
+    B = case ID of
         BTA1C -> A;
         BTA2C -> -A
     end,
     true = B > MinAmount - 1,
-    store(ChId, NewCh).
+    store(ChId, SignedPayment),
+    keys:sign(Payment).
     
     
     

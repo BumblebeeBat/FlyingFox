@@ -15,6 +15,14 @@ function variable_get2(cmd, callback) {
     var x = local_get2(cmd);
     var_get(x, callback);
 }
+function variable_public_get(cmd, callback) {
+    var x = get(cmd);
+    var_get(x, callback);
+}
+function variable_public_get2(cmd, callback) {
+    var x = get2(cmd);
+    var_get(x, callback);
+}
 function var_get(x, callback) {
     refresh_helper(x, function(){
 	p = JSON.parse(xml_out(x));
@@ -64,11 +72,7 @@ function wait_for_channel_id() {
     variable_get(["channel_id", 0], function(chid) {
 	console.log("channel id ".concat(chid));
 	if (chid == [-6]) {wait_for_channel_id();}
-	if (chid == -6) {
-	    console.log("bad");
-	    wait_for_channel_id();}
-	//else if (typeof chid === 'undefined') {wait_for_channel_id();}
-	else {channel_spend(chid);}
+	else {channel_spend(chid[1]);}
     });
 }
 
@@ -76,5 +80,10 @@ function channel_spend(chid) {
     console.log("channel spend id ".concat(chid));
     variable_get(["channel_spend", chid, -10000], function(ch) {
 	console.log("channel spend ".concat(ch));
-    });
+	variable_public_get2(["channel_recieve", chid, -10001, ch], 
+			     function(return_ch) {
+	console.log("return_ch ".concat(return_ch));
+	get(["channel_recieve", chid, 9999, return_ch]);
+				 })
+	});
 }

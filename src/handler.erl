@@ -40,6 +40,8 @@ doit({accounts, N}) ->
 	end,
     file:close(File),
     {ok, O};
+doit({channel_recieve, ChId, MinAmount, Ch}) ->
+    {ok, channel_manager:recieve(ChId, MinAmount, Ch)};
 doit({txs}) -> {ok, tx_pool:txs()};
 %need a way to share recent txs.			   
 %I want to share the backup version of all the files.
