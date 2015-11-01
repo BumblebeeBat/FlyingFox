@@ -18,8 +18,9 @@ function variable_get2(cmd, callback) {
 function var_get(x, callback) {
     refresh_helper(x, function(){
 	p = JSON.parse(xml_out(x));
-	//console.log(p);
+	console.log(p);
 	out = p[1];
+	console.log(out);
 	callback(out);
     });
 }
@@ -61,16 +62,19 @@ function wait_for_channel_id() {
     local_get(["sync", [127,0,0,1], 3020]);
     console.log("wait for channel id");
     variable_get(["channel_id", 0], function(chid) {
+	console.log("channel id ".concat(chid));
 	if (chid == [-6]) {wait_for_channel_id();}
-	else { 
-	    channel_spend(chid[1]);
-	}
+	if (chid == -6) {
+	    console.log("bad");
+	    wait_for_channel_id();}
+	//else if (typeof chid === 'undefined') {wait_for_channel_id();}
+	else {channel_spend(chid);}
     });
 }
 
-function channel_spend(channel_id) {
-    console.log("channel id ".concat(channel_id));
-    variable_get(["channel_spend", channel_id, -10000], function(ch) {
+function channel_spend(chid) {
+    console.log("channel spend id ".concat(chid));
+    variable_get(["channel_spend", chid, -10000], function(ch) {
 	console.log("channel spend ".concat(ch));
     });
 }

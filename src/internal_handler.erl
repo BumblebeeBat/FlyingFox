@@ -2,12 +2,14 @@
 
 -export([init/3, handle/2, terminate/3]).
 %example of talking to this handler:
-%httpc:request(post, {"http://127.0.0.1:3011/", [], "application/octet-stream", "echo"}, [], []).
+%httpc:request(post, {"http://127.0.0.1:3011/", [], "application/octet-stream", packer:pack({pubkey})}, [], []).
 %curl -i -d '[-6,"test"]' http://localhost:3011
 
 handle(Req, State) ->
     {ok, Data, _} = cowboy_req:body(Req),
-    D = packer:pack(doit(packer:unpack(Data))),
+    A = packer:unpack(Data),
+    B = doit(A),
+    D = packer:pack(B),
     Headers = [{<<"content-type">>, <<"application/octet-stream">>},
     {<<"Access-Control-Allow-Origin">>, <<"*">>}],
     {ok, Req2} = cowboy_req:reply(200, Headers, D, Req),
