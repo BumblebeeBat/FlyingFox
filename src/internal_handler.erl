@@ -19,8 +19,8 @@ doit({create_account, Pub, Amount, Fee}) ->
 doit({spend, To, Amount, Fee}) ->
     spend_tx:spend(To, Amount, Fee);
 doit({buy_block}) -> block_tree:buy_block();
-doit({tx_absorb, Tx}) -> tx_pool:absorb(Tx);
-doit({sign, Tx}) -> keys:sign(Tx);
+doit({sign_block}) -> sign_tx:sign();
+doit({sign, Tx}) -> {ok, keys:sign(Tx)};
 doit({create_channel, Partner, Bal1, Bal2, Type, Fee}) ->
     to_channel_tx:create_channel(Partner, Bal1, Bal2, Type, Fee);
 doit({to_channel, ChId, Inc1, Inc2, Fee}) ->

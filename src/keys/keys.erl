@@ -70,7 +70,7 @@ handle_cast({change_password, Current, New}, R) ->
 handle_cast(_, X) -> {noreply, X}.
 handle_info(_, X) -> {noreply, X}.
 pubkey() -> gen_server:call(?MODULE, pubkey).
-sign(M) -> gen_server:call(?MODULE, {sign, M, dict:new()}).
+sign(M) -> gen_server:call(?MODULE, {sign, M, tx_pool:accounts()}).
 sign(M, Accounts) -> gen_server:call(?MODULE, {sign, M, Accounts}).
 raw_sign(M) -> gen_server:call(?MODULE, {raw_sign, M}).
 load(Pub, Priv, Brainwallet) -> gen_server:cast(?MODULE, {load, Pub, Priv, Brainwallet}).

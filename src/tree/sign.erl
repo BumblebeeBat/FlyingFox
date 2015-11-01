@@ -63,6 +63,9 @@ sign_tx(Tx, Pub, Priv, Accounts) ->
 	true ->
 	    N2 = element(3, Tx),
 	    Acc2 = block_tree:account(N2, Accounts),
+	    io:fwrite("acc2 "),
+	    io:fwrite(packer:pack(Acc2)),
+	    io:fwrite("\n"),
 	    Pub = accounts:pub(Acc2),
 	    #signed{data=Tx, sig2=Sig}
     end.
