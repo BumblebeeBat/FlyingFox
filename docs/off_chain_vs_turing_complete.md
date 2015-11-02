@@ -1,0 +1,7 @@
+Ethereum is a blockchain that allows for turing complete computation on chain. It allows you to save arbitrary data on chain, and manipulate it in arbitrary ways. There is complicated assembly-like language where every opcode has a gas fee, and the cost to run a contract is the cumulative gas consumption. Ethereum code is written in custom high-level languages that get compiled down to the opcodes. You have to pay tax to hold state on the chain.
+
+Flying Fox allows all the same features as Ethereum, but it does this without using a turing complete language, or gas fees, or compiled languages, or arbitrary on-chain state.
+
+In Flying Fox, data structures are saved off-chain in merkle trees. The root of the merkle tree is inserted into the channels of everyone who is participating. They all sign over the root to agree with the rules in the merkle tree.
+Alice and Bob both have channels with Charlie, and are participating in Charlie's channel state. If Alice can prove that Bob broke a rule, then Alice can demand money from Charlie. Charlie uses that evidence to then demand money from Bob. So Charlie never has any risk. He is collecting arbitrage.
+The entire channel state never has to get published to the blockchain. Punishing Alice only requires publishing the part of the channel state that says the rule that Alice broke.
