@@ -76,7 +76,7 @@ unlock_hash(ChId, Secret) ->
     store(ChId, NewF).
 hashlock(ChId, Amount, SecretHash) ->
     F = read(ChId),
-    Ch = F#f.channel,
+    Ch = sign:data(F#f.channel),
     Ch2 = channel_block_tx:update(Ch, Amount div 2, 1),
     Channel = block_tree:channel(ChId),
     Acc1 = channels:acc1(Channel),
@@ -86,13 +86,13 @@ hashlock(ChId, Amount, SecretHash) ->
             Acc2 -> 1
         end,
     Script = language:hashlock(ToAmount, SecretHash),
-    Ch3 = channel_block_tx:add_bet(Ch2, Amount div 2, Script),
-    NewF = #f{channel = Ch3, unlock = [[1]|F#f.unlock]},
-    store(ChId, NewF).
+    keys:sign(channel_block_tx:add_bet(Ch2, Amount div 2, Script)).
+%NewF = #f{channel = Ch3, unlock = [[1]|F#f.unlock]},
+%store(ChId, NewF).
 recieve_locked_payment(ChId, NewCh) ->
     true = channel_block_tx:is_cb(NewCh),
     F = read(ChId),
-    Ch = F#f.channel,
+    Ch = sign:data(F#f.channel),
     NewAmount = channel_block_tx:amount(NewCh),
     OldAmount = channel_block_tx:amount(Ch),
     NewN = channel_block_tx:nonce(NewCh),
@@ -111,8 +111,9 @@ recieve_locked_payment(ChId, NewCh) ->
     SecretHash = language:extract_sh(hd(channel_block_tx:bets(NewCh))),
     Script = language:hashlock(ToAmount, SecretHash),
     NewCh = channel_block_tx:add_bet(Ch2, A, Script),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce and bet.
-    store(ChId, NewCh).
-    
+    store(ChId, NewCh),
+    keys:sign(Ch).
+
 recieve(ChId, MinAmount, SignedPayment) ->
     io:fwrite("newch "),
     io:fwrite(packer:pack(SignedPayment)),

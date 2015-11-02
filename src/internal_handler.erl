@@ -40,6 +40,8 @@ doit({new_pubkey, Password}) ->
     keys:new(Password);
 doit({channel_spend, ChId, Amount}) ->
     {ok, channel_manager:spend(ChId, Amount)};
+doit({hashlock, ChId, Amount, SecretHash}) ->
+    {ok, channel_manager:hashlock(ChId, Amount, SecretHash)};
 doit({test}) -> 
     {test_response};
 doit(_) ->

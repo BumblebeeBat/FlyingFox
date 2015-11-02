@@ -26,10 +26,7 @@ function variable_public_get2(cmd, callback) {
 function var_get(x, callback) {
     refresh_helper(x, function(){
 	p = JSON.parse(xml_out(x));
-	console.log(p);
-	out = p[1];
-	console.log(out);
-	callback(out);
+	callback(p[1]);
     });
 }
 
@@ -84,6 +81,15 @@ function channel_spend(chid) {
 			     function(return_ch) {
 	console.log("return_ch ".concat(return_ch));
 	get(["channel_recieve", chid, 9999, return_ch]);
+	hashlock(chid);
 				 })
 	});
+}
+
+function hashlock(chid) {
+    //hash(1) == "qfPbi+pbLu+SN+VICd2kPwwhj4DQ0yijP1tM//8zSOY="
+    console.log("hashlock");
+    variable_get(["hashlock", chid, 1000, "qfPbi+pbLu+SN+VICd2kPwwhj4DQ0yijP1tM//8zSOY="], function(ch) {
+	console.log("hashlock 2 ".concat(ch));
+    }
 }
