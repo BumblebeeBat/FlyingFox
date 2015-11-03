@@ -82,8 +82,6 @@ unlock_hash(ChId, Secret) ->
     store(ChId, NewF).
 hashlock(ChId, Amount, SecretHash) ->
     F = read(ChId),
-    io:fwrite("channel manager "),
-    io:fwrite(packer:pack(F)),
     Ch = sign:data(F#f.channel),
     Ch2 = channel_block_tx:update(Ch, Amount div 2, 1),
     Channel = block_tree:channel(ChId),
@@ -94,22 +92,6 @@ hashlock(ChId, Amount, SecretHash) ->
             Acc2 -> 0
         end,
     Script = language:hashlock(MyAccount, SecretHash),
-
-    io:fwrite("\n"),
-    io:fwrite("old ch "),
-    io:fwrite(packer:pack(Ch)),
-    io:fwrite("\n"),
-    io:fwrite("new ch"),
-    io:fwrite(packer:pack(Ch2)),
-    io:fwrite("\n"),
-    io:fwrite("a "),
-    io:fwrite(integer_to_list(Amount div 2)),
-    io:fwrite("\n"),
-    io:fwrite("script "),
-    io:fwrite(packer:pack(Script)),
-    io:fwrite("\n"),
-
-
     keys:sign(channel_block_tx:add_bet(Ch2, Amount div 2, Script)).
 %NewF = #f{channel = Ch3, unlock = [[1]|F#f.unlock]},
 %store(ChId, NewF).
@@ -122,12 +104,6 @@ general_locked_payment(ChId, SignedChannel, Spend) ->
     true = channel_block_tx:is_cb(NewCh),
     F = read(ChId),
     Ch = sign:data(F#f.channel),
-    io:fwrite("\nABC"),
-    io:fwrite("old ch "),
-    io:fwrite(packer:pack(Ch)),
-    io:fwrite("\n"),
-    io:fwrite("new ch from partner"),
-    io:fwrite(packer:pack(NewCh)),
     NewAmount = channel_block_tx:amount(NewCh),
     OldAmount = channel_block_tx:amount(Ch),
     NewN = channel_block_tx:nonce(NewCh),
@@ -139,9 +115,6 @@ general_locked_payment(ChId, SignedChannel, Spend) ->
     Ch2 = channel_block_tx:update(Ch, A, N),
     Acc1 = channels:acc1(Channel),
     Acc2 = channels:acc2(Channel),
-    io:fwrite("\nchannel manager a "),
-    io:fwrite(integer_to_list(A)),
-    io:fwrite("\n"),
     ID = keys:id(),
     ToAmount = if
 	Spend -> 
@@ -154,31 +127,13 @@ general_locked_payment(ChId, SignedChannel, Spend) ->
     end,
     SecretHash = language:extract_sh(channel_block_tx:bet_code(hd(channel_block_tx:bets(NewCh)))),
     Script = language:hashlock(ToAmount, SecretHash),
-
-    io:fwrite("\n"),
-    io:fwrite("new ch "),
-    io:fwrite(packer:pack(Ch2)),
-    io:fwrite("\n"),
-    io:fwrite("a "),
-    io:fwrite(integer_to_list(A)),
-    io:fwrite("\n"),
-    io:fwrite("script "),
-    io:fwrite(packer:pack(Script)),
-    io:fwrite("\n"),
-
     NewCha = channel_block_tx:add_bet(Ch2, A, Script),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce and bet.
-    io:fwrite("doesn't match new ch"),
-    io:fwrite(packer:pack(NewCha)),
-    io:fwrite("\n"),
     NewCh = NewCha,
     NewF = #f{channel = SignedChannel, unlock = F#f.unlock},
     store(ChId, NewF),
     keys:sign(NewCh).
 
 recieve(ChId, MinAmount, SignedPayment) ->
-    io:fwrite("newch "),
-    io:fwrite(packer:pack(SignedPayment)),
-    io:fwrite("\n"),
     %we need to verify that the other party signed it.
     ID = keys:id(),
     Payment = sign:data(SignedPayment),
