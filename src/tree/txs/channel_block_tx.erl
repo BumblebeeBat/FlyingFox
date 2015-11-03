@@ -30,8 +30,10 @@ add_bet(CB, Amount, Code) ->
     update(CB, 0, 0, NewBets, CB#channel_block.fast, CB#channel_block.delay, CB#channel_block.expiration, CB#channel_block.nlock, CB#channel_block.fee).
     
 update(CB, Amount, Nonce) ->
-    A = CB#channel_block.amount + Amount,
-    update(CB, A, Nonce, CB#channel_block.bets, CB#channel_block.fast, CB#channel_block.delay, CB#channel_block.expiration, CB#channel_block.nlock, CB#channel_block.fee).
+    io:fwrite("update channel block amount "),
+    io:fwrite(integer_to_list(Amount)),
+    io:fwrite("\n"),
+    update(CB, Amount, Nonce, CB#channel_block.bets, CB#channel_block.fast, CB#channel_block.delay, CB#channel_block.expiration, CB#channel_block.nlock, CB#channel_block.fee).
 update(CB, Amount, Nonce, NewBets, Fast, Delay, Expiration, Nlock, Fee) -> 
     BetAmount = bet_amount(CB#channel_block.bets),
     Channel = block_tree:channel(CB#channel_block.id),
@@ -45,8 +47,9 @@ update(CB, Amount, Nonce, NewBets, Fast, Delay, Expiration, Nlock, Fee) ->
     
     Height = block_tree:height(),
     true = (CB#channel_block.expiration == 0) or (CB#channel_block.expiration > Height),    
+    A = CB#channel_block.amount + Amount,
 
-    #channel_block{acc1 = CB#channel_block.acc1, acc2 = CB#channel_block.acc2, amount = CB#channel_block.amount + Amount, nonce = CB#channel_block.nonce + Nonce, bets = NewBets, id = CB#channel_block.id, fast = Fast, delay = Delay, expiration = Expiration, nlock = Nlock, fee = Fee}.
+    #channel_block{acc1 = CB#channel_block.acc1, acc2 = CB#channel_block.acc2, amount = A, nonce = CB#channel_block.nonce + Nonce, bets = NewBets, id = CB#channel_block.id, fast = Fast, delay = Delay, expiration = Expiration, nlock = Nlock, fee = Fee}.
 make_bet(Amount, Code) ->
     #bet{amount = Amount, code = Code}.
 make_signed_cb(Acc, CB, Fee, Evidence) ->
@@ -248,7 +251,9 @@ slash_code([Word|X], Out) -> slash_code(X, [slash_word(Word)|Out]).
 slash_word(34) -> true;
 slash_word(X) -> X.
     
-    
+test() ->    
+    CB = #channel_block{},
+    update(CB, 100, 0).
     
      
     

@@ -32,4 +32,18 @@ refresh_helper(x, function(){
     my_status = JSON.parse(xml_out(x)); 
     console.log("test response ".concat(JSON.stringify(my_status)));
 });
+function variable_get(cmd, callback) {
+    var x = local_get(cmd);
+    var_get(x, callback);
+}
+function variable_public_get(cmd, callback) {
+    var x = get(cmd);
+    var_get(x, callback);
+}
+function var_get(x, callback) {
+    refresh_helper(x, function(){
+	p = JSON.parse(xml_out(x));
+	callback(p[1]);
+    });
+}
 

@@ -42,6 +42,9 @@ doit({channel_spend, ChId, Amount}) ->
     {ok, channel_manager:spend(ChId, Amount)};
 doit({hashlock, ChId, Amount, SecretHash}) ->
     {ok, channel_manager:hashlock(ChId, Amount, SecretHash)};
+doit({spend_locked_payment, ChId, SignedChannel}) ->
+    %to spend, first use hashlock and send to peer. Your peer's responce is SignedChannel.
+    {ok, channel_manager:spend_locked_payment(ChId, SignedChannel)};
 doit({test}) -> 
     {test_response};
 doit(_) ->

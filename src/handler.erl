@@ -43,7 +43,7 @@ doit({accounts, N}) ->
 doit({channel_recieve, ChId, MinAmount, Ch}) ->
     {ok, channel_manager:recieve(ChId, MinAmount, Ch)};
 doit({channel_locked_payment, ChId, Ch}) ->
-    {ok, channel_manager:recieve(ChId, Ch)};
+    {ok, channel_manager:recieve_locked_payment(ChId, Ch)};
 doit({txs}) -> {ok, tx_pool:txs()};
 %need a way to share recent txs.			   
 %I want to share the backup version of all the files.

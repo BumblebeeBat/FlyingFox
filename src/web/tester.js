@@ -7,27 +7,13 @@ function local_get2(t, callback) {
     return getter(t, u, callback);
 }
 
-function variable_get(cmd, callback) {
-    var x = local_get(cmd);
-    var_get(x, callback);
-}
 function variable_get2(cmd, callback) {
     var x = local_get2(cmd);
-    var_get(x, callback);
-}
-function variable_public_get(cmd, callback) {
-    var x = get(cmd);
     var_get(x, callback);
 }
 function variable_public_get2(cmd, callback) {
     var x = get2(cmd);
     var_get(x, callback);
-}
-function var_get(x, callback) {
-    refresh_helper(x, function(){
-	p = JSON.parse(xml_out(x));
-	callback(p[1]);
-    });
 }
 
 local_get(["new_pubkey", btoa("abc")]);
@@ -89,7 +75,15 @@ function channel_spend(chid) {
 function hashlock(chid) {
     //hash(1) == "qfPbi+pbLu+SN+VICd2kPwwhj4DQ0yijP1tM//8zSOY="
     console.log("hashlock");
-    variable_get(["hashlock", chid, 1000, "qfPbi+pbLu+SN+VICd2kPwwhj4DQ0yijP1tM//8zSOY="], function(ch) {
-	console.log("hashlock 2 ".concat(ch));
-    }
+    variable_get(
+	["hashlock", chid, 1000, "qfPbi+pbLu+SN+VICd2kPwwhj4DQ0yijP1tM//8zSOY="], 
+	function(ch) {
+	    console.log("hashlock 2 ".concat(ch));
+	    variable_public_get2(
+		["channel_locked_payment", chid, ch], 
+		function(return_ch) {
+		    console.log("return_ch ".concat(return_ch));
+		    local_get(["spend_locked_payment", chid, return_ch]);
+		})
+	});
 }
