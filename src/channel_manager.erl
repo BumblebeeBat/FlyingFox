@@ -73,7 +73,7 @@ replace_n(0, New, [_|L], Out) -> lists:reverse(Out) ++ [New] ++ L.
 unlock_hash(ChId, Secret) ->
     SecretHash = hash:doit(Secret),
     F = read(ChId),
-    Ch = F#f.channel,
+    Ch = sign:data(F#f.channel),
     N = match_n(SecretHash, channel_block_tx:bets(Ch)),
     Unlock = F#f.unlock,
     NewUnlock = replace_n(N, [Secret], Unlock),

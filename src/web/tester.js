@@ -1,3 +1,6 @@
+//It is messy because each server has 2 ports. One for internal commands, and one for external. 
+//The test is only between 2 nodes for now.
+
 function get2(t, callback) {
     u = url(PORT + 10, "localhost");
     return getter(t, u, callback);
@@ -84,6 +87,19 @@ function hashlock(chid) {
 		function(return_ch) {
 		    console.log("return_ch ".concat(return_ch));
 		    local_get(["spend_locked_payment", chid, return_ch]);
+		    unlock(chid);
 		})
 	});
+}
+function unlock(chid) {
+    console.log("unlock");
+    variable_get2(
+	["unlock", chid, 1],
+	function(ch) {
+	    variable_public_get(
+		["unlock2", chid, 1, ch],
+		function(ch2) {
+		    local_get(["unlock3", chid, ch2]);
+		});
+	    });
 }
