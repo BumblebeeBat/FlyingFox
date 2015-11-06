@@ -87,19 +87,23 @@ function hashlock(chid) {
 		function(return_ch) {
 		    console.log("return_ch ".concat(return_ch));
 		    local_get(["spend_locked_payment", chid, return_ch]);
-		    unlock(chid);
+		    //unlock(chid);
 		})
 	});
 }
 function unlock(chid) {
-    console.log("unlock");
+    console.log("unlock1");
     variable_get2(
 	["unlock", chid, 1],
 	function(ch) {
+	    console.log("unlock2");
+	    console.log(ch);
 	    variable_public_get(
 		["unlock2", chid, 1, ch],
 		function(ch2) {
-		    local_get(["unlock3", chid, ch2]);
+		    console.log("unlock3");
+		    console.log(ch2);
+		    get(["unlock2", chid, 1, ch2]);
 		});
 	    });
 }

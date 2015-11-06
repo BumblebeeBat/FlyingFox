@@ -2,7 +2,7 @@
 
 -module(channel_manager).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, unlock_hash/2,hashlock/3,spend/2,recieve/3,read/1,new_channel/2,first_cb/2,recieve_locked_payment/2,spend_locked_payment/2,delete/1,id/1,keys/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, unlock_hash/3,hashlock/3,spend/2,recieve/3,read/1,new_channel/2,first_cb/2,recieve_locked_payment/2,spend_locked_payment/2,delete/1,id/1,keys/0,create_unlock_hash/2]).
 -record(f, {channel = [], unlock = []}).
 init(ok) -> {ok, dict:new()}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
@@ -69,17 +69,42 @@ match_n(X, [Bet|Bets], N) ->
         true -> match_n(X, Bets, N+1)
     end.
 replace_n(N, New, L) -> replace_n(N, New, L, []).
-replace_n(0, New, [_|L], Out) -> lists:reverse(Out) ++ [New] ++ L.
-unlock_hash(ChId, Secret) ->
+replace_n(0, New, [_|L], Out) -> 
+    lists:reverse(Out) ++ [New] ++ L;
+replace_n(N, New, [H|L], Out) -> 
+    replace_n(N-1, New, L, [H|Out]).
+remove_nth(N, Bets) -> remove_nth(N, Bets, []).
+remove_nth(0, [_|Bets], Out) -> lists:reverse(Out) ++ Bets;
+remove_nth(N, [B|Bets], Out) -> remove_nth(N, Bets, [B|Out]).
+create_unlock_hash(ChId, Secret) ->
+    {SignedCh, _} = common(ChId, Secret),
+    SignedCh.
+nth(0, [X|_]) -> X;
+nth(N, [_|T]) -> nth(N-1, T).
+common(ChId, Secret) ->
     SecretHash = hash:doit(Secret),
     F = read(ChId),
-    Ch = sign:data(F#f.channel),
-    N = match_n(SecretHash, channel_block_tx:bets(Ch)),
-    Unlock = F#f.unlock,
-    NewUnlock = replace_n(N, [Secret], Unlock),
+    OldCh = sign:data(F#f.channel),
+    Bets = channel_block_tx:bets(OldCh),
+    io:fwrite("before match n "),
+    io:fwrite(packer:pack(Bets)),
+    io:fwrite("\n"),
+    N = match_n(SecretHash, Bets),%if the bets were numbered in order, N is the bet we are unlocking.
+    Bet = nth(N, Bets),
+    true = language:valid_secret(Secret, channel_block_tx:bet_code(Bet)),
+    NewBets = remove_nth(N, Bets),
+    NewCh = channel_block_tx:replace_bet(OldCh, NewBets),
+    {keys:sign(NewCh), N}.
+unlock_hash(ChId, Secret, SignedCh) ->
+    {SignedCh2, N} = common(ChId, Secret),
+    NewCh = sign:data(SignedCh2),
+    NewCh = sign:data(SignedCh),
+    F = read(ChId),
+    NewUnlock = replace_n(N, Secret, F#f.unlock),
     %channel_block_tx:add,
-    NewF = #f{channel = Ch, unlock = NewUnlock},
-    store(ChId, NewF).
+    NewF = #f{channel = SignedCh, unlock = NewUnlock},
+    store(ChId, NewF),
+    keys:sign(NewCh).
 hashlock(ChId, Amount, SecretHash) ->
     F = read(ChId),
     Ch = sign:data(F#f.channel),
@@ -129,7 +154,7 @@ general_locked_payment(ChId, SignedChannel, Spend) ->
     Script = language:hashlock(ToAmount, SecretHash),
     NewCha = channel_block_tx:add_bet(Ch2, A, Script),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce and bet.
     NewCh = NewCha,
-    NewF = #f{channel = SignedChannel, unlock = F#f.unlock},
+    NewF = #f{channel = SignedChannel, unlock = [[28]|F#f.unlock]},
     store(ChId, NewF),
     keys:sign(NewCh).
 

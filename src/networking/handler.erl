@@ -8,7 +8,12 @@
 
 handle(Req, State) ->
     {ok, Data, _} = cowboy_req:body(Req),
-    D = packer:pack(doit(packer:unpack(Data))),
+    io:fwrite("handle data "),
+    io:fwrite(Data),
+    io:fwrite("\n"),
+    A = packer:unpack(Data),
+    B = doit(A),
+    D = packer:pack(B),
     Headers = [{<<"content-type">>, <<"application/octet-stream">>},
     {<<"Access-Control-Allow-Origin">>, <<"*">>}],
     {ok, Req2} = cowboy_req:reply(200, Headers, D, Req),
@@ -45,9 +50,12 @@ doit({channel_recieve, ChId, MinAmount, Ch}) ->
 doit({channel_locked_payment, ChId, Ch}) ->
     {ok, channel_manager:recieve_locked_payment(ChId, Ch)};
 doit({txs}) -> {ok, tx_pool:txs()};
+doit({unlock2, ChId, Secret, SignedCh}) ->
+    {ok, channel_manager:unlock_hash(ChId, Secret, SignedCh)};
 %need a way to share recent txs.			   
 %I want to share the backup version of all the files.
-doit(_) ->
+doit(X) ->
     io:fwrite("I can't handle this \n"),
+    io:fwrite(packer:pack(X)), %unlock2
     {error}.
     

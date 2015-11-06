@@ -45,9 +45,12 @@ doit({hashlock, ChId, Amount, SecretHash}) ->
 doit({spend_locked_payment, ChId, SignedChannel}) ->
     %to spend, first use hashlock and send to peer. Your peer's responce is SignedChannel.
     {ok, channel_manager:spend_locked_payment(ChId, SignedChannel)};
+doit({unlock, ChId, Secret}) ->
+    {ok, channel_manager:create_unlock_hash(ChId, Secret)};
 doit({test}) -> 
     {test_response};
-doit(_) ->
+doit(X) ->
     io:fwrite("don't know how to handle it \n"),
+    io:fwrite(packer:pack(X)),
     io:fwrite("\n"),
     {error}.
