@@ -50,6 +50,10 @@ doit({channel_recieve, ChId, MinAmount, Ch}) ->
 doit({channel_locked_payment, ChId, Ch}) ->
     {ok, channel_manager:recieve_locked_payment(ChId, Ch)};
 doit({txs}) -> {ok, tx_pool:txs()};
+doit({unlock, ChId, Secret}) ->
+    UH = channel_manager:create_unlock_hash(ChId, Secret),
+    %io:fwrite(packer:pack(UH)),
+    {ok, UH};
 doit({unlock2, ChId, Secret, SignedCh}) ->
     {ok, channel_manager:unlock_hash(ChId, Secret, SignedCh)};
 %need a way to share recent txs.			   

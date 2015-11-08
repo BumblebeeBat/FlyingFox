@@ -86,18 +86,24 @@ common(ChId, Secret) ->
     F = read(ChId),
     OldCh = sign:data(F#f.channel),
     Bets = channel_block_tx:bets(OldCh),
-    io:fwrite("before match n "),
-    io:fwrite(packer:pack(Bets)),
-    io:fwrite("\n"),
     N = match_n(SecretHash, Bets),%if the bets were numbered in order, N is the bet we are unlocking.
     Bet = nth(N, Bets),
-    true = language:valid_secret(Secret, channel_block_tx:bet_code(Bet)),
+    BetCode = channel_block_tx:bet_code(Bet),
+    io:fwrite("bet "),
+    io:fwrite(packer:pack(BetCode)),
+    io:fwrite("\n"),
+    Amount = language:valid_secret(Secret, BetCode),
     NewBets = remove_nth(N, Bets),
     NewCh = channel_block_tx:replace_bet(OldCh, NewBets),
-    {keys:sign(NewCh), N}.
+    NewNewCh = channel_block_tx:update(NewCh, Amount, 1),
+    %we need to change amount.
+    {keys:sign(NewNewCh), N}.
 unlock_hash(ChId, Secret, SignedCh) ->
     {SignedCh2, N} = common(ChId, Secret),
     NewCh = sign:data(SignedCh2),
+    io:fwrite("signch "),
+    io:fwrite(packer:pack(SignedCh)),
+    io:fwrite("\n"),
     NewCh = sign:data(SignedCh),
     F = read(ChId),
     NewUnlock = replace_n(N, Secret, F#f.unlock),

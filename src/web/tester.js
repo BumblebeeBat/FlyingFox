@@ -79,7 +79,8 @@ function hashlock(chid) {
     //hash(1) == "qfPbi+pbLu+SN+VICd2kPwwhj4DQ0yijP1tM//8zSOY="
     console.log("hashlock");
     variable_get(
-	["hashlock", chid, 1000, "qfPbi+pbLu+SN+VICd2kPwwhj4DQ0yijP1tM//8zSOY="], 
+	["hashlock", chid, 1000, "+5mXXEquHXT+Xs6TOGU8lH/GbQbiH2+4IdQq0pe5EtA="],
+	//"qfPbi+pbLu+SN+VICd2kPwwhj4DQ0yijP1tM//8zSOY="], 
 	function(ch) {
 	    console.log("hashlock 2 ".concat(ch));
 	    variable_public_get2(
@@ -87,23 +88,24 @@ function hashlock(chid) {
 		function(return_ch) {
 		    console.log("return_ch ".concat(return_ch));
 		    local_get(["spend_locked_payment", chid, return_ch]);
-		    //unlock(chid);
+		    unlock(chid);
 		})
 	});
 }
 function unlock(chid) {
     console.log("unlock1");
-    variable_get2(
-	["unlock", chid, 1],
+    secret = "AQIDBA==",
+    variable_public_get2(
+	["unlock", chid, secret],
 	function(ch) {
 	    console.log("unlock2");
 	    console.log(ch);
 	    variable_public_get(
-		["unlock2", chid, 1, ch],
+		["unlock2", chid, secret, ch],
 		function(ch2) {
 		    console.log("unlock3");
 		    console.log(ch2);
-		    get(["unlock2", chid, 1, ch2]);
+		    get2(["unlock2", chid, secret, ch2]);
 		});
 	    });
 }

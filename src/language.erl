@@ -160,7 +160,14 @@ atom2op(false) -> false.
 hashlock(ToAmount, SecretHash) ->
     true = ((ToAmount == 0) or (ToAmount == 1)),
     assemble([hash, SecretHash, eq, switch, {f, ToAmount, 1}, 2, else, {f, 1, 2}, 1, then]).
-valid_secret(Secret, Script) -> (hash:doit(Secret) == hd(tl(Script))).
+valid_secret(Secret, Script) -> 
+    %Bool = (hash:doit(Secret) == hd(tl(Script))),
+    io:fwrite("script "),
+    io:fwrite(packer:pack(Script)),
+    io:fwrite("\n"),
+    Amount = hd(tl(run([Secret] ++ Script))),
+    fractions:to_int(Amount).
+
 extract_sh(Code) -> hd(tl(Code)).
     
 test() ->    
