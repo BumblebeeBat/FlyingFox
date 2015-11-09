@@ -33,5 +33,6 @@ test1() ->
     S = secrets:test(),
     S = constants:test(),
     S = fractions:test(),
+    S = inbox:test(),
     S.
     
