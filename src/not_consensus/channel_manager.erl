@@ -2,7 +2,7 @@
 
 -module(channel_manager).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, unlock_hash/3,hashlock/3,spend/2,recieve/3,read/1,new_channel/2,first_cb/2,recieve_locked_payment/2,spend_locked_payment/2,delete/1,id/1,keys/0,create_unlock_hash/2]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, unlock_hash/3,hashlock/3,spend/2,recieve/3,read/1,new_channel/2,first_cb/2,recieve_locked_payment/2,spend_locked_payment/2,delete/1,id/1,keys/0,create_unlock_hash/2,spend_account/2,recieve_account/3]).
 -record(f, {channel = [], unlock = []}).
 init(ok) -> {ok, dict:new()}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
@@ -29,8 +29,8 @@ id_helper(Partner, [Key|T], Out) ->
     Acc1 = channel_block_tx:acc1(Ch),
     Acc2 = channel_block_tx:acc2(Ch),
     NewOut = if
-	((Partner == Acc1) or (Partner == Acc2)) -> [Key|Out];
-	true -> Out
+                 ((Partner == Acc1) or (Partner == Acc2)) -> [Key|Out];
+                 true -> Out
 	     end,
     id_helper(Partner, T, NewOut).
 
@@ -57,6 +57,8 @@ read(ChId) ->
     true = is_in(ChId, K),
     gen_server:call(?MODULE, {read, ChId}).
 delete(ChId) -> gen_server:call(?MODULE, {delete, ChId}).
+spend_account(Acc, Amount) ->
+    spend(hd(id(Acc)), Amount).
 spend(ChId, Amount) ->
     F = read(ChId),
     Ch = sign:data(F#f.channel),
@@ -164,6 +166,8 @@ general_locked_payment(ChId, SignedChannel, Spend) ->
     store(ChId, NewF),
     keys:sign(NewCh).
 
+recieve_account(Acc, MinAmount, SignedPayment) ->
+    recieve(hd(id(Acc)), MinAmount, SignedPayment).
 recieve(ChId, MinAmount, SignedPayment) ->
     %we need to verify that the other party signed it.
     ID = keys:id(),
@@ -175,8 +179,8 @@ recieve(ChId, MinAmount, SignedPayment) ->
     Pub1 = accounts:pub(Acc1),
     Pub2 = accounts:pub(Acc2),
     true = case ID of
-	A1 -> sign:verify_2(SignedPayment, Pub2);
-	A2 -> sign:verify_1(SignedPayment, Pub1)
+               A1 -> sign:verify_2(SignedPayment, Pub2);
+               A2 -> sign:verify_1(SignedPayment, Pub1)
     end,
     true = channel_block_tx:is_cb(Payment),
     F = read(ChId),

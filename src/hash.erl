@@ -1,5 +1,5 @@
 -module(hash).
--export([doit/1,test/0,file/1]).
+-export([doit/1,test/0,file/1,hash/1]).
 
 hash(S) -> 
     crypto:hmac(sha256, S, "").
