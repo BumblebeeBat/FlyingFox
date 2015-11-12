@@ -185,11 +185,17 @@ test() ->
     Sig = sign:sign(Data, Priv),
     true = sign:verify_sig(Data, Sig, Pub),
     true = run(assemble([Sig] ++ [Data, Pub, verify_sig])) == [true],%3rd party signature
-    B = <<169,243,219,139,234,91,46,239,146,55,229,72,9,221,164,63,12,33,143,128,208,211,40,163,63,91,76,255,255,51,72,230>>,
+    B = <<169,243,219,139,234,91,46,239,146,55,229,72,9,221,164,63,12,33,143,128,208,211,40,163,63,91,76,255,255,51,72,230>>,%hash of 1.
     true = run(assemble([1] ++ [hash, B, eq])) == [true],%normal hashlock
     Code = [2, 2, plus],
     ScriptHash = hash:doit(assemble(Code)),
     true = (run(assemble([27] ++ Code ++ [length(Code),3,scripthash])) == [ScriptHash, 4, 27]),%pay2scripthash
-
-    %[switch, else, _,_,scripthash, CodeHash, eq, then]
+    %(i) merkle tree transform to cut the size of the state, and (ii) lightning networks at the same time
+    C = [true, 2, drop],
+    CodeHash = hash:doit(assemble(C)),
+    ScriptPubkey = [switch, length(C), 4, scripthash, CodeHash, eq, swap, hash, B, eq, both, else, then],
+    ScriptKey1 = [false],
+    ScriptKey2 = [1, true, 2, drop],
+    true = run(assemble(ScriptKey1 ++ ScriptPubkey)) == [],
+    true = run(assemble(ScriptKey2 ++ ScriptPubkey)) == [true],
     success.
