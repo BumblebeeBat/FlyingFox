@@ -14,10 +14,13 @@ frac_arith(5, X, Y) -> fractions:divide(X, Y);
 frac_arith(6, X, Y) -> fractions:less_than(Y, X);
 frac_arith(7, X, Y) -> fractions:less_than(X, Y);
 frac_arith(8, X, Y) -> fractions:equal(X, Y).
-remove_till(X, T) -> remove_till(X, [], T).
-remove_till(X, H, [X|T]) -> {flip([X|H]), T};
-remove_till(X, H, [A|T]) -> remove_till(X, [A|H], T);
-remove_till(_, _, []) -> 
+remove_till(X, T) -> remove_till(X, [], T, 0).
+remove_till(X, H, [X|T], 0) -> {flip([X|H]), T};
+remove_till(_, _, _, N) when N < 0 -> 1 = 0;%N is how many if-statements deep we are.
+remove_till(X, H, [17|T], N) -> remove_till(X, [17|H], T, N+1);
+remove_till(X, H, [19|T], N) -> remove_till(X, [19|H], T, N-1);
+remove_till(X, H, [A|T], N) -> remove_till(X, [A|H], T, N);
+remove_till(_, _, [], _) -> 
     io:fwrite("error, you forgot to include and else or then somewhere."),
     1=0.
 flip(X) -> flip(X, []).
@@ -175,6 +178,8 @@ test() ->
     true = run(assemble([{f, 10, 11}, 5, plus])) == [{f, 65, 11}],
     true = run(assemble([false, switch, 100, else, 27, then, 3])) == [3, 27],%if
     true = run(assemble([true, switch, 100, else, 27, then, 2])) == [2, 100],%if
+    true = run(assemble([true, switch, 100, false, switch, else, then, else, 27, then, 2])) == [2, 100],%if %err
+    true = run(assemble([true, switch, 100, else, 27, true, switch, else, then, then, 2])) == [2, 100],%if
     {Pub, Priv} = sign:new_key(),
     Data = <<"example">>,
     Sig = sign:sign(Data, Priv),
@@ -185,4 +190,6 @@ test() ->
     Code = [2, 2, plus],
     ScriptHash = hash:doit(assemble(Code)),
     true = (run(assemble([27] ++ Code ++ [length(Code),3,scripthash])) == [ScriptHash, 4, 27]),%pay2scripthash
+
+    %[switch, else, _,_,scripthash, CodeHash, eq, then]
     success.
