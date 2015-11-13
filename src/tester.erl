@@ -16,6 +16,8 @@ tc(F) ->
 
 test1() ->
     S = success,
+    S = block_tree:test(),
+    S = channels:test(),
     S = language:test(),
     S = all_secrets:test(),
     S = hash:test(),
@@ -23,16 +25,15 @@ test1() ->
     S = block_pointers:test(),
     S = block_finality:test(),
     S = packer:test(),
-    S = channels:test(),
     S = accounts:test(),
     S = encryption:test(),
     S = db:test(),
     S = sign:test(),
     S = accounts:test(),
-    S = my_channels:test(),
     S = secrets:test(),
     S = constants:test(),
     S = fractions:test(),
     S = inbox:test(),
+    S = mail:test(),
     S.
     

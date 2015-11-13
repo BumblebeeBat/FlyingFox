@@ -52,7 +52,7 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     true = is_integer(Tx#tc.bal2),
     if
         Channel == EmptyChannel ->
-            NewId = next_top(ParentKey, Channels),
+            NewId2 = next_top(ParentKey, Channels),
             Balance1 =  - Tx#tc.bal1 - Tx#tc.fee,
             Balance2 =  - Tx#tc.bal2 - Tx#tc.fee,
             Increment = Tx#tc.bal1 + Tx#tc.bal2,
@@ -65,7 +65,7 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
 	    1=1;
 	true ->
 	    Type = channels:type(Channel),
-	    NewId = Tx#tc.id,
+	    NewId2 = Tx#tc.id,
 	    AccN1 = channels:acc1(Channel),
 	    AccN1 = Tx#tc.acc1,
 	    AccN2 = channels:acc2(Channel),
@@ -90,18 +90,18 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     end,
     N1 = accounts:update(Acc1, NewHeight, Balance1, D1, 1, TotalCoins),
     N2 = accounts:update(Acc2, NewHeight, Balance2, D2, 0, TotalCoins),
-    true = NewId < constants:max_channel(),
+    true = NewId2 < constants:max_channel(),
     MyKey = keys:pubkey(),
     APub1 = accounts:pub(Acc1),
     APub2 = accounts:pub(Acc2),
     Ch = channels:new(Tx#tc.acc1, Tx#tc.acc2, Tx#tc.bal1, Tx#tc.bal2, Type),
     if
-	((Channel == EmptyChannel) and ((APub1 == MyKey) or (APub2 == MyKey))) -> channel_manager:new_channel(NewId, Ch);
+	((Channel == EmptyChannel) and ((APub1 == MyKey) or (APub2 == MyKey))) -> channel_manager:new_channel(NewId2, Ch);
 	true -> 1=1
     end,
     NewAccounts1 = dict:store(Tx#tc.acc1, N1, Accounts),
     NewAccounts = dict:store(Tx#tc.acc2, N2, NewAccounts1),
-    NewChannels = dict:store(NewId, Ch, Channels),
+    NewChannels = dict:store(NewId2, Ch, Channels),
     {NewChannels, NewAccounts, TotalCoins, S}.
 tc_increases(Txs) -> tc_increases(Txs, 0).
 tc_increases([], X) -> X;

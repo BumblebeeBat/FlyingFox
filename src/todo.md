@@ -1,4 +1,6 @@
 messanger system that lets you pay to send messages to peers with commands.
+*mail needs tests.
+*handler needs to support messange system.
 
 To make hashlocked tx with scripts more affordable, we should let bet reveals reference blocks that were revealed since max_reveal. That way you don't have to reveal the same data onto the chain twice for a 2 step hashlocked lightning.
 

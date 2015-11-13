@@ -22,6 +22,7 @@ init([]) ->
 	  ?CHILD(block_tree, worker),
 	  ?CHILD(tx_pool, worker),
 	  ?CHILD(inbox, worker),
+	  ?CHILD(mail, worker),
 	  ?CHILD(channel_manager, worker)
 	],
     {ok, { {one_for_one, 5, 10}, Children} }.

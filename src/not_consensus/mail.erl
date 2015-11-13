@@ -1,6 +1,6 @@
 -module(mail).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, pop/3,cost/2,register/2,send/4,pop/0,status/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, pop/3,cost/2,register/2,send/4,pop/0,status/0,test/0]).
 -record(msg, {time, msg, size = 0, price = 0, to}).
 -record(d, {db = dict:new(), accs = 0, msgs = 0}).
 init(ok) -> {ok, #d{}}.
@@ -27,12 +27,6 @@ handle_cast({send, To, Message}, X) ->
     NewD = dict:store(To, [Msg|A], DB),
     NewX = #d{db = NewD, accs = Accs, msgs = X#d.msgs + 1},
     {noreply, NewX}.
-handle_call({del_acc, Acc}, _From, X) -> 
-    {Out, B} = case dict:find(Acc, X#d.db) of
-            error -> {error, X};
-            {ok, Val} -> {ok, dict:erase(Val, X)}
-        end,
-    {noreply, Out, B};
 handle_call({pop, Acc}, _From, X) -> 
     {Out, NewX} = 
         case dict:find(Acc, X#d.db) of
@@ -79,7 +73,7 @@ send(Payment, To, Msg, Seconds) ->
                   true -> hd(Accs)
               end,
     channel_manager:recieve_account(Partner, cost(Msg, Seconds * 1000000), Payment),
-    gen_server:call(?MODULE, {send, To, Msg}).
+    gen_server:cast(?MODULE, {send, To, Msg}).
 %delete_account(Acc, Sig) ->
 %    Time = abs(timer:now_diff(now(), M#msg.time) div 1000000),
 %    true = Time < 10,%time must be within 10 seconds of now
@@ -88,6 +82,23 @@ send(Payment, To, Msg, Seconds) ->
 %    channel_manager:spend_acc(Acc, ?REGISTER div 10 * 9).
 
             
-   
-            
-            
+test() ->            
+    {Pub, Priv} = sign:new_key(),
+    create_account_tx:create_account(Pub, 620000, 0),
+    spend_tx:spend(1, 10, 0),
+    sign_tx:sign(),
+    reveal:reveal(),
+    block_tree:buy_block(),
+    CreateTx1 = to_channel_tx:create_channel(3, 110000, 1000, <<"delegated_1">>, 0),
+    SignedCreateTx1 = sign:sign_tx(CreateTx1, Pub, Priv, tx_pool:accounts()),
+    tx_pool:absorb(SignedCreateTx1),
+    sign_tx:sign(),
+    reveal:reveal(),
+    block_tree:buy_block(),
+    gen_server:cast(?MODULE, {new, 3}),
+    Msg = <<"test">>,
+    gen_server:cast(?MODULE, {send, 3, Msg}),
+    gen_server:cast(?MODULE, {send, 3, Msg}),
+    Out = gen_server:call(?MODULE, {pop, 3}),
+    Msg = Out#msg.msg,
+    success.
