@@ -23,6 +23,8 @@ init([]) ->
 	  ?CHILD(tx_pool, worker),
 	  ?CHILD(inbox, worker),
 	  ?CHILD(mail, worker),
+	  ?CHILD(arbitrage, worker),
+	  ?CHILD(nonce, worker),
 	  ?CHILD(channel_manager, worker)
 	],
     {ok, { {one_for_one, 5, 10}, Children} }.

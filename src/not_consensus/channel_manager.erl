@@ -1,8 +1,11 @@
 %this module needs to keep track of the highest-nonced transaction recieved in each channel.
 
+%We need the ability to spend and receive money, and to spend and receive hashlocked money.
+
 -module(channel_manager).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, unlock_hash/3,hashlock/3,spend/2,recieve/3,read/1,new_channel/2,first_cb/2,recieve_locked_payment/2,spend_locked_payment/2,delete/1,id/1,keys/0,create_unlock_hash/2,spend_account/2,recieve_account/3]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, 
+unlock_hash/3,hashlock/3,spend/2,recieve/3,read/1,new_channel/2,recieve_locked_payment/2,spend_locked_payment/2,delete/1,id/1,keys/0,create_unlock_hash/2,spend_account/2,recieve_account/3,test/0]).
 -record(f, {channel = [], unlock = []}).
 init(ok) -> {ok, dict:new()}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
@@ -17,9 +20,9 @@ handle_call({read, N}, _From, X) ->
     {reply, dict:fetch(N, X), X};
 handle_call(keys, _From, X) -> 
     {reply, dict:fetch_keys(X), X}.
-repeat(Times, X) -> repeat(Times, X, []).
-repeat(0, _, Out) -> Out;
-repeat(Times, X, Out) -> repeat(Times-1, X, [X|Out]).
+%repeat(Times, X) -> repeat(Times, X, []).
+%repeat(0, _, Out) -> Out;
+%repeat(Times, X, Out) -> repeat(Times-1, X, [X|Out]).
 keys() -> gen_server:call(?MODULE, keys).
 id(Partner) -> id_helper(Partner, keys(), []).
 id_helper(_, [], Out) -> Out;
@@ -42,12 +45,6 @@ new_channel(ChId, Channel) ->
     F = #f{channel = Ch, unlock = []},
     store(ChId, F).
 
-first_cb(ChId, CB) ->
-    Old = read(ChId),
-    true = is_record(f, Old),
-    F = #f{channel = CB, unlock = repeat(length(channel_block_tx:bets(CB)), 28)},
-    store(ChId, F).
-    
 is_in(_, []) -> false;
 is_in(X, [X|_]) -> true;
 is_in(X, [_|T]) -> is_in(X, T).
@@ -79,7 +76,7 @@ remove_nth(N, Bets) -> remove_nth(N, Bets, []).
 remove_nth(0, [_|Bets], Out) -> lists:reverse(Out) ++ Bets;
 remove_nth(N, [B|Bets], Out) -> remove_nth(N, Bets, [B|Out]).
 create_unlock_hash(ChId, Secret) ->
-    {SignedCh, _} = common(ChId, Secret),
+    {SignedCh, _, _} = common(ChId, Secret),
     SignedCh.
 nth(0, [X|_]) -> X;
 nth(N, [_|T]) -> nth(N-1, T).
@@ -90,28 +87,24 @@ common(ChId, Secret) ->
     Bets = channel_block_tx:bets(OldCh),
     N = match_n(SecretHash, Bets),%if the bets were numbered in order, N is the bet we are unlocking.
     Bet = nth(N, Bets),
+    A = channel_block_tx:bet_amount(Bet),
     BetCode = channel_block_tx:bet_code(Bet),
-    io:fwrite("bet "),
-    io:fwrite(packer:pack(BetCode)),
-    io:fwrite("\n"),
     Amount = language:valid_secret(Secret, BetCode),
     NewBets = remove_nth(N, Bets),
     NewCh = channel_block_tx:replace_bet(OldCh, NewBets),
-    NewNewCh = channel_block_tx:update(NewCh, Amount, 1),
+    NewNewCh = channel_block_tx:update(NewCh, Amount * A, 1),%
     %we need to change amount.
-    {keys:sign(NewNewCh), N}.
+    {keys:sign(NewNewCh), N, BetCode}.
 unlock_hash(ChId, Secret, SignedCh) ->
-    {SignedCh2, N} = common(ChId, Secret),
+    {SignedCh2, N, BetCode} = common(ChId, Secret),
     NewCh = sign:data(SignedCh2),
-    io:fwrite("signch "),
-    io:fwrite(packer:pack(SignedCh)),
-    io:fwrite("\n"),
     NewCh = sign:data(SignedCh),
     F = read(ChId),
     NewUnlock = replace_n(N, Secret, F#f.unlock),
     %channel_block_tx:add,
     NewF = #f{channel = SignedCh, unlock = NewUnlock},
     store(ChId, NewF),
+    arbitrage:del(BetCode, ChId),
     keys:sign(NewCh).
 hashlock(ChId, Amount, SecretHash) ->
     F = read(ChId),
@@ -131,7 +124,8 @@ hashlock(ChId, Amount, SecretHash) ->
 recieve_locked_payment(ChId, SignedChannel) ->
     general_locked_payment(ChId, SignedChannel, false).
 spend_locked_payment(ChId, SignedChannel) ->
-    general_locked_payment(ChId, SignedChannel, true).
+    general_locked_payment(ChId, SignedChannel, true),
+    ok.
 general_locked_payment(ChId, SignedChannel, Spend) ->
     NewCh = sign:data(SignedChannel),
     true = channel_block_tx:is_cb(NewCh),
@@ -205,5 +199,57 @@ recieve(ChId, MinAmount, SignedPayment) ->
     store(ChId, NewF),
     keys:sign(Payment).
     
+test() ->    
+    {Pub, Priv} = sign:new_key(),
+    create_account_tx:create_account(Pub, 620000, 0),
+    Partner = 4,
+    spend_tx:spend(Partner, 10, 0),
+    sign_tx:sign(),
+    reveal:reveal(),
+    block_tree:buy_block(),
+    CreateTx1 = to_channel_tx:create_channel(Partner, 110000, 1000, <<"delegated_1">>, 0),
+    SignedCreateTx1 = sign:sign_tx(CreateTx1, Pub, Priv, tx_pool:accounts()),
+    tx_pool:absorb(SignedCreateTx1),
+    sign_tx:sign(),
+    reveal:reveal(),
+    block_tree:buy_block(),
+
+    %T = keys(),
+    S = 24005,
+    %T = [S],
+    C = read(S),
+    D = element(2, element(2, C)),
+    D = {channel_block,0,Partner,0,1,[],S,false,259,0,0,0},
+
+    %Example of spending money through a channel.
+    A = 1000,
+    Tx = spend(S, A - 1),%send Tx to partner
+    Tx2 = sign:sign_tx(Tx, Pub, Priv, tx_pool:accounts()),%partner runs recieve/3 with 2nd option set to 0, returns Tx2.
+    recieve(S, -A, Tx2),
+
+    %Example of spending to ID rather than ChId.
+    B = 2000,
+    Tx3 = spend_account(Partner, B - 1),
+    Tx4 = sign:sign_tx(Tx3, Pub, Priv, tx_pool:accounts()),
+    recieve_account(Partner, -B, Tx4),
+
+    %example of hashlocked transaction.
+    SH = secrets:new(),
+    Tx5 = hashlock(S, 200, SH),
+    Tx6 = sign:sign_tx(Tx5, Pub, Priv, tx_pool:accounts()),%partner runs recieve_locked_payment/3, and returns Tx6
+    spend_locked_payment(S, Tx6),%we absorb Tx6.
+    Secret = secrets:read(SH),
+    Tx7 = create_unlock_hash(S, Secret),
+    Tx8 = sign:sign_tx(Tx7, Pub, Priv, tx_pool:accounts()),%partner runs unlock_hash/3 and returns Tx8
+    unlock_hash(S, Secret, Tx8),
+    E = element(2, element(2, read(S))),
+    E = {channel_block,0,Partner,3198,5,[],S,false,259,0,0,0},
+    success.
+
+
+
     
-    
+%success.
+    %spend_locked_payment(24000, 
+			 
+			 

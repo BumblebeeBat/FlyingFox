@@ -1,7 +1,7 @@
 -module(mail).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, pop/3,cost/2,register/2,send/4,pop/0,status/0,test/0]).
--record(msg, {time, msg, size = 0, price = 0, to}).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, pop/1,pop_maker/1,cost/2,register/2,send/4,pop/0,status/0,test/0,register_cost/0]).
+-record(msg, {start, lasts, msg, size = 0, price = 0, to}).
 -record(d, {db = dict:new(), accs = 0, msgs = 0}).
 init(ok) -> {ok, #d{}}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
@@ -16,10 +16,10 @@ handle_cast({new, Acc}, X) ->
             {ok, _} -> X
     end,
     {noreply, B};
-handle_cast({send, To, Message}, X) -> 
+handle_cast({send, To, Message, Seconds}, X) -> 
     Accs = X#d.accs,
     DB = X#d.db,
-    Msg = #msg{msg = Message, time = now(), size = size(Message), price = price(Accs, X#d.msgs), to = To},
+    Msg = #msg{msg = Message, start = now(), lasts = Seconds, size = size(Message), price = price(Accs, X#d.msgs), to = To},
     A = case dict:find(To, DB) of
             error -> [];
             {ok, Val} -> Val
@@ -41,24 +41,36 @@ handle_call(status, _From, X) -> {reply, {X#d.accs, X#d.msgs}, X}.
 -define(POP, <<1,7,3,24,7,4,2>>).
 price(Accounts, Messages) -> 10000 + ((Accounts + Messages) * 100).
 pop() -> ?POP.
-pop(Acc, Sig, Time) ->
-    SmallTime = abs(timer:now_diff(now(), Time) div 1000000),
-    true = SmallTime < 10,
-    H = << Time/binary, ?POP/binary >>,
-    A = block_tree:account(Acc),
+pop_maker(Acc) ->
+    A = block_tree:acc(Acc),
     Pub = accounts:pub(A),
-    true = sign:verify_sig(H, Sig, Pub),
-    M = gen_server:call(?MODULE, {pop, Acc}),
+    encryption:send_msg(nonce:server_get(Acc), Pub).
+pop(M) ->
+    E = encryption:get_msg(M),
+    From = encryption:id(E),
+    Nonce = nonce:customer_get(From),
+    Nonce = encryption:msg(E),
+    %block_tree:account(From),
+    %SmallTime = abs(timer:now_diff(now(), Time) div 1000000),
+    %true = SmallTime < 10,
+    %H = << Time/binary, ?POP/binary >>,
+    %A = block_tree:account(From),
+    %Pub = accounts:pub(A),
+    %true = sign:verify_sig(H, Sig, Pub),
+    pop2(From).
+pop2(From) ->
+    M = gen_server:call(?MODULE, {pop, From}),
     Msg = M#msg.msg,
-    T = timer:now_diff(now(), M#msg.time) + 2000000,%2 second fee automatically.
-    Cost = cost(Msg, T),
+    T = timer:now_diff(now(), M#msg.start) + 2000000,%2 second fee automatically.
+    Cost = cost(Msg, T div 1000000),
     Refund = M#msg.price - Cost,
     if
-        Refund < 1 -> pop(Acc, Sig, Time);
-        true -> {Msg, channel_manager:spend_account(Acc, Refund)}
+        Refund < 1 -> pop2(From);%Acc, Sig, Time);
+        true -> {Msg, channel_manager:spend_account(From, Refund)}
     end.
-cost(Msg, Time) -> 10 * size(Msg) * (Time div 10000).
+cost(Msg, Time) -> 10000 * size(Msg) * Time. %time in seconds
 -define(REGISTER, 100000).
+register_cost() -> ?REGISTER.
 status() -> gen_sever:call(?MODULE, status).
 register(Payment, Acc) ->
     ChId = hd(channel_manager:id(Acc)),
@@ -72,8 +84,8 @@ send(Payment, To, Msg, Seconds) ->
                   HA == ID -> hd(tl(Accs));
                   true -> hd(Accs)
               end,
-    channel_manager:recieve_account(Partner, cost(Msg, Seconds * 1000000), Payment),
-    gen_server:cast(?MODULE, {send, To, Msg}).
+    channel_manager:recieve_account(Partner, cost(Msg, Seconds), Payment),
+    gen_server:cast(?MODULE, {send, To, Msg, Seconds}).
 %delete_account(Acc, Sig) ->
 %    Time = abs(timer:now_diff(now(), M#msg.time) div 1000000),
 %    true = Time < 10,%time must be within 10 seconds of now
@@ -97,8 +109,8 @@ test() ->
     block_tree:buy_block(),
     gen_server:cast(?MODULE, {new, 3}),
     Msg = <<"test">>,
-    gen_server:cast(?MODULE, {send, 3, Msg}),
-    gen_server:cast(?MODULE, {send, 3, Msg}),
+    gen_server:cast(?MODULE, {send, 3, Msg, 0}),
+    gen_server:cast(?MODULE, {send, 3, Msg, 0}),
     Out = gen_server:call(?MODULE, {pop, 3}),
     Msg = Out#msg.msg,
     success.

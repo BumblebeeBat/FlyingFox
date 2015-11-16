@@ -6,7 +6,7 @@
 %#signed{data = #signed_channel_block{channel_block = SignedCB, fee = 100}, sig1 = signature}.
 
 -module(channel_block_tx).
--export([doit/7, origin_tx/3, channel/7, channel_block/5, channel_block/6, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1, publish_channel_block/3, make_signed_cb/4, reveal_union/4, slash_bet/1, make_bet/2, acc1/1, acc2/1, amount/1, bets/1, fast/1, expiration/1, nlock/1, fee/1, add_bet/3, bet_code/1, update/3, is_cb/1, channel_block_from_channel/7, replace_bet/2, test/0]).
+-export([doit/7, origin_tx/3, channel/7, channel_block/5, channel_block/6, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1, publish_channel_block/3, make_signed_cb/4, reveal_union/4, slash_bet/1, make_bet/2, acc1/1, acc2/1, amount/1, bets/1, fast/1, expiration/1, nlock/1, fee/1, add_bet/3, bet_code/1, bet_amount/1, update/3, is_cb/1, channel_block_from_channel/7, replace_bet/2, test/0]).
 -record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0, fee = 0}).
 is_cb(CB) -> is_record(CB, channel_block).
 acc1(CB) -> CB#channel_block.acc1.
@@ -23,6 +23,7 @@ delay(X) -> X#channel_block.delay.
 -record(signed_cb, {acc = 0, nonce = 0, channel_block = #channel_block{}, fee = 0}).
 -record(bet, {amount = 0, code = language:assemble([crash])}).%code is like scriptpubkey from bitcoin.
 bet_code(Bet) -> Bet#bet.code.
+bet_amount(Bet) -> Bet#bet.amount.
 -record(tc, {acc1 = 0, acc2 = 0, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
 add_bet(CB, Amount, Code) ->
     Bets = CB#channel_block.bets,
@@ -37,15 +38,15 @@ update(CB, Amount, Nonce) ->
     io:fwrite("\n"),
     update(CB, Amount, Nonce, CB#channel_block.bets, CB#channel_block.fast, CB#channel_block.delay, CB#channel_block.expiration, CB#channel_block.nlock, CB#channel_block.fee).
 update(CB, Amount, Nonce, NewBets, Fast, Delay, Expiration, Nlock, Fee) -> 
-    BetAmount = bet_amount(CB#channel_block.bets),
+    BetAmount = bets_sum(CB#channel_block.bets),
     Channel = block_tree:channel(CB#channel_block.id),
     CB1C = channels:bal1(Channel),
     CB2C = channels:bal2(Channel),
     TCBA = CB#channel_block.amount,
     %StartAmount = CB1C + CB2C,
 
-    true = CB1C + TCBA - BetAmount > -1,
-    true = CB2C - TCBA - BetAmount > -1,
+    true = CB1C - TCBA - BetAmount > -1,
+    true = CB2C + TCBA - BetAmount > -1,
     
     Height = block_tree:height(),
     true = (CB#channel_block.expiration == 0) or (CB#channel_block.expiration > Height),    
@@ -102,9 +103,9 @@ creator([SignedTx|T], Id) ->
 	true ->
 	    creator(T, Id)
     end.
-bet_amount(X) -> bet_amount(X, 0).
-bet_amount([], X) -> X;
-bet_amount([Tx|Txs], X) -> bet_amount(Txs, X+Tx#bet.amount).
+bets_sum(X) -> bets_sum(X, 0).
+bets_sum([], X) -> X;
+bets_sum([Tx|Txs], X) -> bets_sum(Txs, X+Tx#bet.amount).
 channel_block(Id, Amount, Nonce, Delay, Fee) ->
 channel_block(Id, Amount, Nonce, Delay, Fee, []).
 channel_block(Id, Amount, Nonce, Delay, Fee, Bets) ->
@@ -146,7 +147,7 @@ channel(SignedCB, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     CB1C = channels:bal1(Channel),
     CB2C = channels:bal2(Channel),
     StartAmount = CB1C + CB2C,
-    BetAmount = bet_amount(CB#channel_block.bets),
+    BetAmount = bets_sum(CB#channel_block.bets),
     TCBA = CB#channel_block.amount,
     true = CB1C + TCBA - BetAmount > -1,
     true = CB2C - TCBA - BetAmount > -1,

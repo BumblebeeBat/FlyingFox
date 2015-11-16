@@ -23,6 +23,8 @@ pack(X) -> jiffy:encode(untup(X)).
 -record(d, {a = "", b = "" }).
 test() -> 
     Record = #d{a=[1, 2, <<"abc">>, [], #d{}], b = <<1,2,3,200>> },
+    %ABC = {unlock, 24001,1,[{signed,{channel_block,0,3,-9500,3,[],24001,false,259,0,0,0],"TUVZQ0lRQzlwVkxjQ0hReXhpWE0zOU43bVFOS1pTV01WS0MxMkNUYjUwZSs4MkRnd3dJaEFPZG1lWlp0VXdjUXU0UjQzazhRWkREd29tb1BuQ05TWlhDSEl0QU5PemRj",[-6],[-6]],0]],
+    %New = ["unlock2",24001,1,[["signed",["channel_block",0,3,-9500,3,[-6],24001,false,259,0,0,0],"TUVZQ0lRQzlwVkxjQ0hReXhpWE0zOU43bVFOS1pTV01WS0MxMkNUYjUwZSs4MkRnd3dJaEFPZG1lWlp0VXdjUXU0UjQzazhRWkREd29tb1BuQ05TWlhDSEl0QU5PemRj",[-6],[-6]],0]],
     List = [[],3,[4]],
     Int = 123,
     Int = unpack(pack(Int)),

@@ -58,12 +58,12 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
             Increment = Tx#tc.bal1 + Tx#tc.bal2,
             Increment = Tx#tc.increment,
             true = Increment > (TotalCoins div constants:max_channel()),
-	    Type = Tx#tc.consensus_flag,
-	    true = good_key(Type),
-	    %check if one of the pubkeys is keys:pubkey().
+            Type = Tx#tc.consensus_flag,
+            true = good_key(Type),
+            %check if one of the pubkeys is keys:pubkey().
             %If so, then add it to the mychannels module.
-	    1=1;
-	true ->
+            1=1;
+        true ->
 	    Type = channels:type(Channel),
 	    NewId2 = Tx#tc.id,
 	    AccN1 = channels:acc1(Channel),

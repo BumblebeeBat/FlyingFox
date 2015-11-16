@@ -18,7 +18,7 @@ winners(MyPower, TotalPower, Entropy, Pubkey, J, Limit, Out) ->
     winners(MyPower, TotalPower, Entropy, Pubkey, J+1, Limit, NOut).
 sign() ->
     Id = keys:id(),
-    Acc = block_tree:account(Id),%isn't allowed...
+    Acc = block_tree:account(Id),
     ParentKey = block_tree:read(top),
     PBlock = sign:data(block_tree:block(ParentKey)),
     Entropy = block_tree:block_entropy(PBlock),

@@ -47,17 +47,39 @@ doit({accounts, N}) ->
     {ok, O};
 doit({channel_recieve, ChId, MinAmount, Ch}) ->
     {ok, channel_manager:recieve(ChId, MinAmount, Ch)};
-doit({channel_locked_payment, ChId, Ch}) ->
-    {ok, channel_manager:recieve_locked_payment(ChId, Ch)};
+%doit({channel_locked_payment, ChId_from, Ch, Partner}) ->
+%io:fwrite("Ch "),
+%io:fwrite(packer:pack(Ch)),
+ %   ChId_to = hd(channel_manager:id(Partner)),
+  %  Amount = 0,%should match Ch
+    %Payment = channel_manager:hashlock(ChId_to, Amount, <<>>),%secret hash should go here!
+   % {ok, channel_manager:recieve_locked_payment(ChId_from, Ch)};
 doit({txs}) -> {ok, tx_pool:txs()};
-doit({unlock, ChId, Secret}) ->
-    UH = channel_manager:create_unlock_hash(ChId, Secret),
+%doit({unlock, ChId, Secret}) ->
+%    UH = channel_manager:create_unlock_hash(ChId, Secret),
     %io:fwrite(packer:pack(UH)),
-    {ok, UH};
-doit({unlock2, ChId, Secret, SignedCh}) ->
+%    {ok, UH};
+doit({unlock, ChId, Secret, SignedCh}) ->
     {ok, channel_manager:unlock_hash(ChId, Secret, SignedCh)};
+doit({register, Payment, Acc}) ->
+    {ok, mail:register(Payment, Acc)};
+doit({send, Payment, To, Msg, Seconds}) ->
+    {ok, mail:send(Payment, To, Msg, Seconds)};
+doit({id}) -> {ok, keys:id()};
+doit({pop, Msg}) ->
+    {ok, mail:pop(Msg)};
+doit({register_cost}) ->
+    {ok, mail:register_cost()};
 %need a way to share recent txs.			   
 %I want to share the backup version of all the files.
+doit({new_channel, Tx}) ->
+    %make sure the Tx is more than 1/2 funded by the other person.
+    %make sure the amount of money is below some limit.
+    io:fwrite(packer:pack(Tx)),
+    1=2,
+    NTx = keys:sign(Tx),
+    tx_pool:absorb(NTx),
+    {ok, NTx};
 doit(X) ->
     io:fwrite("I can't handle this \n"),
     io:fwrite(packer:pack(X)), %unlock2
