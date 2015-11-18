@@ -41,18 +41,12 @@ doit({new_pubkey, Password}) ->
     keys:new(Password);
 doit({channel_spend, ChId, Amount}) ->
     {ok, channel_manager:spend(ChId, Amount)};
-doit({hashlock, ChId, Amount, SecretHash}) ->
-    {ok, channel_manager:hashlock(ChId, Amount, SecretHash)};
-doit({spend_locked_payment, ChId, SignedChannel}) ->
-    %to spend, first use hashlock and send to peer. Your peer's responce is SignedChannel.
-    {ok, channel_manager:spend_locked_payment(ChId, SignedChannel)};
+%doit({hashlock, ChId, Amount, SecretHash}) ->
+%    {ok, channel_manager:hashlock(ChId, Amount, SecretHash)};
 doit({test}) -> 
     {test_response};
 doit({get_msg, IP, Port}) ->
-    Time = now() + 10000000,
-    H = << Time/binary, ?POP/binary >>,
     Sig = keys:raw_sign(H),
-    Msg = {pop, keys:id(), Sig, Time},
     M = talker:talk(Msg, IP, Port),
     {ok, inbox:get(M)};
 doit({read_msg, Id, Index}) -> {ok, inbox:read(Id, Index)};
@@ -83,21 +77,28 @@ doit({new_channel, IP, Port, Bal1, Bal2, Fee}) ->
     Ch = talker:talk(Msg, IP, Port),
     tx_pool:absorb(Ch),
     {ok, ok};
-doit({channel_spend, IP, Port, Partner, Amount}) ->
+doit({lightning_spend, IP, Port, Partner, Amount}) ->
     PeerId = talker:talk({id}, IP, Port),
     ChId = hd(channel_manager:id(PeerId)), 
     SecretHash = secrets:new(),
     Payment = channel_manager:hashlock(ChId, Amount, SecretHash),
-    talker:talk({channel_locked_payment, ChId, Payment, Partner}, IP, Port),
+    SignedCh = talker:talk({locked_payment, Payment, Partner}, IP, Port),
+    channel_manager:spend_locked_payment(ChId, SignedCh),
     Acc = block_tree:account(Partner),
-    Msg = encryption:send_msg(SecretHash, accounts:pub(Acc)),
+    Msg = encryption:send_msg(secrets:read(SecretHash), accounts:pub(Acc)),
     Seconds = 30,
     Cost = mail:cost(Msg, Seconds),
     MsgPayment = channel_manager:spend(ChId, Cost),
-    
-
     talker:talk({send, MsgPayment, Partner, Msg, Seconds}, IP, Port),
     {ok, SecretHash};
+doit({unlock_spend, IP, Port, Secret}) ->
+    Ch = channel_manager:create_unlock_hash(ChId, Secret),
+    Ch2 = talker:talk({unlock_hash, ChId, Secret, Ch2}),
+    unlock_hash(ChId, Secret, Ch2).
+
+doit({spend_locked_payment, ChId, SignedChannel}) ->
+    %to spend, first use hashlock and send to peer. Your peer's responce is SignedChannel.
+    {ok, channel_manager:spend_locked_payment(ChId, SignedChannel)};
 doit({channel_unlock, IP, Port, Partner, Secret}) ->
     PeerId = talker:talk({id}, IP, Port),
     ChId = hd(channel_manager:id(PeerId)), 
@@ -105,6 +106,8 @@ doit({channel_unlock, IP, Port, Partner, Secret}) ->
     NewCh = talker:talk({unlock, ChId, Secret, UH}, IP, Port),
     channel_manager:unlock_hash(ChId, Secret, NewCh),
     {ok, ok};
+doit({channel_keys}) -> {ok, channel_manager:keys()};
+     
 doit(X) ->
     io:fwrite("don't know how to handle it \n"),
     io:fwrite(packer:pack(X)),

@@ -238,10 +238,10 @@ test() ->
     Tx5 = hashlock(S, 200, SH),
     Tx6 = sign:sign_tx(Tx5, Pub, Priv, tx_pool:accounts()),%partner runs recieve_locked_payment/3, and returns Tx6
     spend_locked_payment(S, Tx6),%we absorb Tx6.
-    Secret = secrets:read(SH),
-    Tx7 = create_unlock_hash(S, Secret),
+
+    Tx7 = create_unlock_hash(S, secrets:read(SH)),
     Tx8 = sign:sign_tx(Tx7, Pub, Priv, tx_pool:accounts()),%partner runs unlock_hash/3 and returns Tx8
-    unlock_hash(S, Secret, Tx8),
+    unlock_hash(S, secrets:read(SH), Tx8),
     E = element(2, element(2, read(S))),
     E = {channel_block,0,Partner,3198,5,[],S,false,259,0,0,0},
     success.

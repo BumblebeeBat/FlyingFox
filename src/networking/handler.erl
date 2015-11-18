@@ -47,6 +47,10 @@ doit({accounts, N}) ->
     {ok, O};
 doit({channel_recieve, ChId, MinAmount, Ch}) ->
     {ok, channel_manager:recieve(ChId, MinAmount, Ch)};
+doit({locked_payment, Partner, Payment}) ->
+    ChId = channel_manager:id(Partner),
+    Return = channel_manager:recieve_locked_payment(ChId, Payment),
+    {ok, Return}.
 %doit({channel_locked_payment, ChId_from, Ch, Partner}) ->
 %io:fwrite("Ch "),
 %io:fwrite(packer:pack(Ch)),
