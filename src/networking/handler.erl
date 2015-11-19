@@ -47,10 +47,14 @@ doit({accounts, N}) ->
     {ok, O};
 doit({channel_recieve, ChId, MinAmount, Ch}) ->
     {ok, channel_manager:recieve(ChId, MinAmount, Ch)};
-doit({locked_payment, Partner, Payment}) ->
-    ChId = channel_manager:id(Partner),
-    Return = channel_manager:recieve_locked_payment(ChId, Payment),
-    {ok, Return}.
+doit({locked_payment, From, To, Payment, Amount, SecretHash}) ->
+    ChIdFrom = channel_manager:id(From),
+    Return = channel_manager:recieve_locked_payment(ChIdFrom, Payment, Amount, SecretHash),
+    ChIdTo = channel_manager:id(To),
+    PT = sign:data(Payment),
+    Payment2 = channel_manager:hashlock(ChIdTo, Amount, SecretHash),
+    mail:internal_send(Payment, To, free_constants:hashlock_time()),
+    {ok, Return};
 %doit({channel_locked_payment, ChId_from, Ch, Partner}) ->
 %io:fwrite("Ch "),
 %io:fwrite(packer:pack(Ch)),
@@ -76,6 +80,9 @@ doit({register_cost}) ->
     {ok, mail:register_cost()};
 %need a way to share recent txs.			   
 %I want to share the backup version of all the files.
+doit({nonce, ID}) ->
+    A = nonce:customer_get(ID),
+    {ok, A};
 doit({new_channel, Tx}) ->
     %make sure the Tx is more than 1/2 funded by the other person.
     %make sure the amount of money is below some limit.

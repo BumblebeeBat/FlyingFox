@@ -4,8 +4,7 @@
 
 -module(channel_manager).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, 
-unlock_hash/3,hashlock/3,spend/2,recieve/3,read/1,new_channel/2,recieve_locked_payment/2,spend_locked_payment/2,delete/1,id/1,keys/0,create_unlock_hash/2,spend_account/2,recieve_account/3,test/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, unlock_hash/3,hashlock/3,spend/2,recieve/3,read/1,new_channel/2,recieve_locked_payment/4,spend_locked_payment/4,delete/1,id/1,keys/0,create_unlock_hash/2,spend_account/2,recieve_account/3,test/0]).
 -record(f, {channel = [], unlock = []}).
 init(ok) -> {ok, dict:new()}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
@@ -121,12 +120,12 @@ hashlock(ChId, Amount, SecretHash) ->
     keys:sign(channel_block_tx:add_bet(Ch2, Amount div 2, Script)).
 %NewF = #f{channel = Ch3, unlock = [[1]|F#f.unlock]},
 %store(ChId, NewF).
-recieve_locked_payment(ChId, SignedChannel) ->
-    general_locked_payment(ChId, SignedChannel, false).
-spend_locked_payment(ChId, SignedChannel) ->
-    general_locked_payment(ChId, SignedChannel, true),
+recieve_locked_payment(ChId, SignedChannel, Amount, SH) ->
+    general_locked_payment(ChId, SignedChannel, Amount, SH, false).
+spend_locked_payment(ChId, SignedChannel, Amount, SH) ->
+    general_locked_payment(ChId, SignedChannel, Amount, SH, true),
     ok.
-general_locked_payment(ChId, SignedChannel, Spend) ->
+general_locked_payment(ChId, SignedChannel, Amount, SecretHash, Spend) ->
     NewCh = sign:data(SignedChannel),
     true = channel_block_tx:is_cb(NewCh),
     F = read(ChId),
@@ -148,8 +147,10 @@ general_locked_payment(ChId, SignedChannel, Spend) ->
 	    case ID of Acc1 -> 1; Acc2 -> 0 end;
 	true ->
 	    case ID of
-		Acc1 -> true = A > 0, 0;
-		Acc2 -> true = A < 0, 1
+		%Acc1 -> true = A > 0, 0;
+		%Acc2 -> true = A < 0, 1
+		Acc1 -> true = A == (Amount div 2), 0;
+		Acc2 -> true = A == (-Amount div 2), 1
 	    end
     end,
     SecretHash = language:extract_sh(channel_block_tx:bet_code(hd(channel_block_tx:bets(NewCh)))),
@@ -235,9 +236,10 @@ test() ->
 
     %example of hashlocked transaction.
     SH = secrets:new(),
-    Tx5 = hashlock(S, 200, SH),
+    Amount = 200,
+    Tx5 = hashlock(S, Amount, SH),
     Tx6 = sign:sign_tx(Tx5, Pub, Priv, tx_pool:accounts()),%partner runs recieve_locked_payment/3, and returns Tx6
-    spend_locked_payment(S, Tx6),%we absorb Tx6.
+    spend_locked_payment(S, Tx6, Amount, SH),%we absorb Tx6.
 
     Tx7 = create_unlock_hash(S, secrets:read(SH)),
     Tx8 = sign:sign_tx(Tx7, Pub, Priv, tx_pool:accounts()),%partner runs unlock_hash/3 and returns Tx8

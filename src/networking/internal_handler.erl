@@ -46,8 +46,10 @@ doit({channel_spend, ChId, Amount}) ->
 doit({test}) -> 
     {test_response};
 doit({get_msg, IP, Port}) ->
-    Sig = keys:raw_sign(H),
-    M = talker:talk(Msg, IP, Port),
+    ServerId = talker:talk({id}, IP, Port),
+    Msg = mail:pop_maker(),
+    M = talker:talk({pop, Msg}, IP, Port),
+    nonce:server_next(ServerId),
     {ok, inbox:get(M)};
 doit({read_msg, Id, Index}) -> {ok, inbox:read(Id, Index)};
 doit({msg_ids, Id}) -> {ok, inbox:msg_ids(Id)};
@@ -82,8 +84,8 @@ doit({lightning_spend, IP, Port, Partner, Amount}) ->
     ChId = hd(channel_manager:id(PeerId)), 
     SecretHash = secrets:new(),
     Payment = channel_manager:hashlock(ChId, Amount, SecretHash),
-    SignedCh = talker:talk({locked_payment, Payment, Partner}, IP, Port),
-    channel_manager:spend_locked_payment(ChId, SignedCh),
+    SignedCh = talker:talk({locked_payment, Payment, Partner, Amount, SecretHash}, IP, Port),
+    channel_manager:spend_locked_payment(ChId, SignedCh, Amount, SecretHash),
     Acc = block_tree:account(Partner),
     Msg = encryption:send_msg(secrets:read(SecretHash), accounts:pub(Acc)),
     Seconds = 30,
@@ -91,15 +93,14 @@ doit({lightning_spend, IP, Port, Partner, Amount}) ->
     MsgPayment = channel_manager:spend(ChId, Cost),
     talker:talk({send, MsgPayment, Partner, Msg, Seconds}, IP, Port),
     {ok, SecretHash};
-doit({unlock_spend, IP, Port, Secret}) ->
-    Ch = channel_manager:create_unlock_hash(ChId, Secret),
-    Ch2 = talker:talk({unlock_hash, ChId, Secret, Ch2}),
-    unlock_hash(ChId, Secret, Ch2).
-
+%doit({unlock_spend, IP, Port, Secret}) ->
+%Ch = channel_manager:create_unlock_hash(ChId, Secret),
+%Ch2 = talker:talk({unlock_hash, ChId, Secret, Ch2}),
+%unlock_hash(ChId, Secret, Ch2).
 doit({spend_locked_payment, ChId, SignedChannel}) ->
     %to spend, first use hashlock and send to peer. Your peer's responce is SignedChannel.
     {ok, channel_manager:spend_locked_payment(ChId, SignedChannel)};
-doit({channel_unlock, IP, Port, Partner, Secret}) ->
+doit({channel_unlock, IP, Port, Secret}) ->
     PeerId = talker:talk({id}, IP, Port),
     ChId = hd(channel_manager:id(PeerId)), 
     UH = channel_manager:create_unlock_hash(ChId, Secret),

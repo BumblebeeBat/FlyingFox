@@ -27,6 +27,6 @@ function channel_spend(keys) {
     var amount = 200;
     if (keys == [-6]) {variable_get(["channel_keys"], channel_spend);}
     else {
-	local_get(["lightning_spend", [127,0,0,1], 3020, partner, p
+	local_get(["lightning_spend", [127,0,0,1], 3020, partner, amount]);
     }
 }

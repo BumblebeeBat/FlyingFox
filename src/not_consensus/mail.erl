@@ -1,6 +1,6 @@
 -module(mail).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, pop/1,pop_maker/1,cost/2,register/2,send/4,pop/0,status/0,test/0,register_cost/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, pop/1,pop_maker/0,cost/2,register/2,send/4,pop/0,status/0,test/0,register_cost/0]).
 -record(msg, {start, lasts, msg, size = 0, price = 0, to}).
 -record(d, {db = dict:new(), accs = 0, msgs = 0}).
 init(ok) -> {ok, #d{}}.
@@ -41,7 +41,8 @@ handle_call(status, _From, X) -> {reply, {X#d.accs, X#d.msgs}, X}.
 -define(POP, <<1,7,3,24,7,4,2>>).
 price(Accounts, Messages) -> 10000 + ((Accounts + Messages) * 100).
 pop() -> ?POP.
-pop_maker(Acc) ->
+pop_maker() ->
+    Acc = keys:id(),
     A = block_tree:acc(Acc),
     Pub = accounts:pub(A),
     encryption:send_msg(nonce:server_get(Acc), Pub).
@@ -66,7 +67,9 @@ pop2(From) ->
     Refund = M#msg.price - Cost,
     if
         Refund < 1 -> pop2(From);%Acc, Sig, Time);
-        true -> {Msg, channel_manager:spend_account(From, Refund)}
+        true -> 
+	    nonce:customer_next(From),
+	    {Msg, channel_manager:spend_account(From, Refund)}
     end.
 cost(Msg, Time) -> 10000 * size(Msg) * Time. %time in seconds
 -define(REGISTER, 100000).
