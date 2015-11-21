@@ -18,7 +18,7 @@ file(F, O, S) ->
     end.
 -record(p, {p = ""}).
 test() -> 
-    file("src/hash.erl"),
+    file("src/consensus/hash.erl"),
     doit(123),
     doit(abc),
     doit([123]),

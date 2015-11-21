@@ -1,6 +1,6 @@
 -module(mail).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, pop/1,pop_maker/0,cost/2,register/2,send/4,pop/0,status/0,test/0,register_cost/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, pop/1,pop_maker/0,cost/2,register/2,send/4,pop/0,status/0,test/0,register_cost/0,internal_send/3]).
 -record(msg, {start, lasts, msg, size = 0, price = 0, to}).
 -record(d, {db = dict:new(), accs = 0, msgs = 0}).
 init(ok) -> {ok, #d{}}.
@@ -79,7 +79,8 @@ register(Payment, Acc) ->
     ChId = hd(channel_manager:id(Acc)),
     channel_manager:recieve(ChId, ?REGISTER, Payment),
     gen_server:cast(?MODULE, {new, Acc}).
-send(Payment, To, Msg, Seconds) ->
+send(SignedPayment, To, Msg, Seconds) ->
+    Payment = sign:data(SignedPayment),
     Accs = [channel_block_tx:acc2(Payment), channel_block_tx:acc1(Payment)],
     HA = hd(Accs),
     ID = keys:id(),
@@ -87,7 +88,9 @@ send(Payment, To, Msg, Seconds) ->
                   HA == ID -> hd(tl(Accs));
                   true -> hd(Accs)
               end,
-    channel_manager:recieve_account(Partner, cost(Msg, Seconds), Payment),
+    channel_manager:recieve_account(Partner, cost(Msg, Seconds), SignedPayment),
+    internal_send(To, Msg, Seconds).
+internal_send(To, Msg, Seconds) ->
     gen_server:cast(?MODULE, {send, To, Msg, Seconds}).
 %delete_account(Acc, Sig) ->
 %    Time = abs(timer:now_diff(now(), M#msg.time) div 1000000),

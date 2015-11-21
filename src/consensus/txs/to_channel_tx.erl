@@ -1,6 +1,23 @@
 -module(to_channel_tx).%used to create a channel, or increase the amount of money in it.
--export([next_top/2,doit/7,tc_increases/1,to_channel/4,create_channel/5]).
+-export([next_top/2,doit/7,tc_increases/1,to_channel/4,create_channel/5,half_them/1,my_side/1]).
 -record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = <<"delegated_1">>, fee = 0, id = -1, increment = 0}).
+my_side(Tx) ->
+    A1 = Tx#tc.acc1,
+    B1 = Tx#tc.bal1,
+    A2 = Tx#tc.acc2,
+    B2 = Tx#tc.bal2,
+    case keys:id() of
+	A1 -> B1;
+	A2 -> B2
+    end.
+half_them(Tx) ->
+    A1 = Tx#tc.acc1,
+    A2 = Tx#tc.acc2,
+    B = Tx#tc.bal1 < Tx#tc.bal2,
+    case keys:id() of
+	A1 -> B;
+	A2 -> (not B)
+    end.
 good_key(S) -> ((S == <<"delegated_1">>) or (S == <<"delegated_2">>)).
 create_channel(To, MyBalance, TheirBalance, ConsensusFlag, Fee) ->
 %When creating a new channel, you don't choose your own ID for the new channel. It will be selected for you by next available.    

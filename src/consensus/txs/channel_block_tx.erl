@@ -33,9 +33,6 @@ replace_bet(CB, NewBets) ->
     update(CB, 0, 0, NewBets, CB#channel_block.fast, CB#channel_block.delay, CB#channel_block.expiration, CB#channel_block.nlock, CB#channel_block.fee).
     
 update(CB, Amount, Nonce) ->
-    io:fwrite("update channel block amount "),
-    io:fwrite(integer_to_list(Amount)),
-    io:fwrite("\n"),
     update(CB, Amount, Nonce, CB#channel_block.bets, CB#channel_block.fast, CB#channel_block.delay, CB#channel_block.expiration, CB#channel_block.nlock, CB#channel_block.fee).
 update(CB, Amount, Nonce, NewBets, Fast, Delay, Expiration, Nlock, Fee) -> 
     BetAmount = bets_sum(CB#channel_block.bets),
@@ -165,7 +162,6 @@ channel(SignedCB, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
 	    D2 = 0,
 	    D1 = 0;
 	<<"delegated_1">> == Type ->
-	    io:fwrite("bad \n"),
 	    D1 = StartAmount,
 	    D2 = 0;
 	Type == <<"delegated_2">> ->

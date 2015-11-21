@@ -8,9 +8,6 @@
 
 handle(Req, State) ->
     {ok, Data, _} = cowboy_req:body(Req),
-    io:fwrite("handle data "),
-    io:fwrite(Data),
-    io:fwrite("\n"),
     A = packer:unpack(Data),
     B = doit(A),
     D = packer:pack(B),
@@ -27,12 +24,8 @@ doit({block, N}) -> {ok, block_tree:block(block_tree:read_int(N))};
 doit({tophash}) -> {ok, hash:doit(block_tree:top())};
 doit({recent_hash, H}) -> {ok, block_tree:is_key(H)};
 doit({accounts_size}) ->
-    
     {ok, filelib:file_size("backup/accounts.db") div ?WORD};
 doit({tx_absorb, Tx}) -> 
-    io:fwrite("absorb a tx"),
-    io:fwrite(packer:pack(Tx)),
-    io:fwrite("\n"),
     {ok, tx_pool:absorb(Tx)};
 doit({accounts, N}) ->
     {ok, File} = file:open("backup/accounts.db", [read, binary, raw]),
@@ -48,31 +41,20 @@ doit({accounts, N}) ->
 doit({channel_recieve, ChId, MinAmount, Ch}) ->
     {ok, channel_manager:recieve(ChId, MinAmount, Ch)};
 doit({locked_payment, From, To, Payment, Amount, SecretHash}) ->
-    ChIdFrom = channel_manager:id(From),
+    ChIdFrom = hd(channel_manager:id(From)),
     Return = channel_manager:recieve_locked_payment(ChIdFrom, Payment, Amount, SecretHash),
-    ChIdTo = channel_manager:id(To),
-    PT = sign:data(Payment),
+    ChIdTo = hd(channel_manager:id(To)),
     Payment2 = channel_manager:hashlock(ChIdTo, Amount, SecretHash),
-    mail:internal_send(Payment, To, free_constants:hashlock_time()),
+    mail:internal_send(To, Payment2, free_constants:hashlock_time()),%undefined.
     {ok, Return};
-%doit({channel_locked_payment, ChId_from, Ch, Partner}) ->
-%io:fwrite("Ch "),
-%io:fwrite(packer:pack(Ch)),
- %   ChId_to = hd(channel_manager:id(Partner)),
-  %  Amount = 0,%should match Ch
-    %Payment = channel_manager:hashlock(ChId_to, Amount, <<>>),%secret hash should go here!
-   % {ok, channel_manager:recieve_locked_payment(ChId_from, Ch)};
 doit({txs}) -> {ok, tx_pool:txs()};
-%doit({unlock, ChId, Secret}) ->
-%    UH = channel_manager:create_unlock_hash(ChId, Secret),
-    %io:fwrite(packer:pack(UH)),
-%    {ok, UH};
 doit({unlock, ChId, Secret, SignedCh}) ->
     {ok, channel_manager:unlock_hash(ChId, Secret, SignedCh)};
 doit({register, Payment, Acc}) ->
     {ok, mail:register(Payment, Acc)};
 doit({send, Payment, To, Msg, Seconds}) ->
-    {ok, mail:send(Payment, To, Msg, Seconds)};
+    mail:send(Payment, To, Msg, Seconds),
+    {ok, 0};
 doit({id}) -> {ok, keys:id()};
 doit({pop, Msg}) ->
     {ok, mail:pop(Msg)};
@@ -83,12 +65,15 @@ doit({register_cost}) ->
 doit({nonce, ID}) ->
     A = nonce:customer_get(ID),
     {ok, A};
-doit({new_channel, Tx}) ->
+doit({new_channel, SignedTx}) ->
     %make sure the Tx is more than 1/2 funded by the other person.
     %make sure the amount of money is below some limit.
-    io:fwrite(packer:pack(Tx)),
-    1=2,
-    NTx = keys:sign(Tx),
+    Tx = sign:data(SignedTx),
+    true = to_channel_tx:half_them(Tx),
+    MC = free_constants:max_channel(), 
+    MS = to_channel_tx:my_side(Tx),
+    true = MC > MS,
+    NTx = keys:sign(SignedTx),
     tx_pool:absorb(NTx),
     {ok, NTx};
 doit(X) ->

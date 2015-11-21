@@ -6,7 +6,7 @@ function local_get2(t, callback) {
 local_get(["new_pubkey", btoa("abc")]);
 
 variable_get(["pubkey"], function(pubkey) {
-    local_get2(["create_account", pubkey, 1000000, 50]);
+    local_get2(["create_account", pubkey, 2000000, 50]);
     wait_for_id();
 })
 function wait_for_id() {
@@ -18,15 +18,32 @@ function wait_for_id() {
 function new_channel(id) {
     if (id == -1) {variable_get(["id"], new_channel);}
     else {
-	local_get(["new_channel", [127,0,0,1], 3020, 10000, 11000, 50]);
+	console.log("new channel");
+	console.log("id is ");
+	console.log(id);
+	local_get(["new_channel", [127,0,0,1], 3020, 112000, 11000, 50]);
+	console.log("after new channel");
 	variable_get(["channel_keys"], channel_spend);
     }
 }
 function channel_spend(keys) {
-    var partner = 1;
-    var amount = 200;
     if (keys == [-6]) {variable_get(["channel_keys"], channel_spend);}
     else {
-	local_get(["lightning_spend", [127,0,0,1], 3020, partner, amount]);
+	console.log("channel spend");
+	console.log("keys ");
+	console.log(keys);
+	local_get2(["buy_block"]);
+	setTimeout(channel_spend2, 1000);
     }
+}
+function channel_spend2() {
+    console.log("channel spend 2");
+    local_get(["sync", [127,0,0,1], 3020]);
+    setTimeout(channel_spend3, 1000);
+}
+function channel_spend3() {
+    var partner = 1;
+    var amount = 200;
+    console.log("channel spend 3");
+    local_get(["lightning_spend", [127,0,0,1], 3020, partner, amount]);
 }

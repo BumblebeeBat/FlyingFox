@@ -42,7 +42,6 @@ run([36|Code], UsedCode, [Start|[Size|Stack]]) -> %this opcode looks at a sectio
     %This measures backwards.
     %example A, B, C, 3, 0, script_hash takes the hash of [A, B, C]
     H = lists:sublist(UsedCode, Start, Size),
-    %io:fwrite(flip(H)),%[2,{integer,3},{integer,1}],[])
     O = hash:doit(flip(H)),
     run(Code, [36|UsedCode], [O|Stack]);
 run([28|_], _, _) -> %die. Neither person gets money.
@@ -164,10 +163,6 @@ hashlock(ToAmount, SecretHash) ->
     true = ((ToAmount == 0) or (ToAmount == 1)),
     assemble([hash, SecretHash, eq, switch, {f, ToAmount, 1}, 2, else, {f, 1, 2}, 1, then]).
 valid_secret(Secret, Script) -> 
-    %Bool = (hash:doit(Secret) == hd(tl(Script))),
-    io:fwrite("script "),
-    io:fwrite(packer:pack(Script)),
-    io:fwrite("\n"),
     Amount = hd(tl(run([Secret] ++ Script))),
     fractions:to_int(Amount).
 

@@ -11,5 +11,6 @@ talk(Msg, Peer) ->
     {ok, {_, _, R}} = httpc:request(post, {Peer, [], "application/octet-stream", packer:pack(Msg)}, [], []),
     packer:unpack(R).
 talk(Msg, IP, Port) -> talk(Msg, peer(IP, Port)).
+
     
       

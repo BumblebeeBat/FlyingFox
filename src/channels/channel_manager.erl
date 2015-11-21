@@ -142,17 +142,21 @@ general_locked_payment(ChId, SignedChannel, Amount, SecretHash, Spend) ->
     Acc1 = channels:acc1(Channel),
     Acc2 = channels:acc2(Channel),
     ID = keys:id(),
-    ToAmount = if
-	Spend -> 
-	    case ID of Acc1 -> 1; Acc2 -> 0 end;
-	true ->
-	    case ID of
-		%Acc1 -> true = A > 0, 0;
-		%Acc2 -> true = A < 0, 1
-		Acc1 -> true = A == (Amount div 2), 0;
-		Acc2 -> true = A == (-Amount div 2), 1
-	    end
-    end,
+    true = (A == (Amount div 2)),
+    ToAmount = 
+	if
+	    Spend -> 
+		case ID of Acc1 -> 1; Acc2 -> 0 end;
+	    true ->
+		case ID of
+		    Acc1 -> 
+			true = Amount > 0, 
+			0;
+		    Acc2 -> 
+			true = Amount < 0,
+			1
+		end
+	end,
     SecretHash = language:extract_sh(channel_block_tx:bet_code(hd(channel_block_tx:bets(NewCh)))),
     Script = language:hashlock(ToAmount, SecretHash),
     NewCha = channel_block_tx:add_bet(Ch2, A, Script),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce and bet.
@@ -192,8 +196,8 @@ recieve(ChId, MinAmount, SignedPayment) ->
     BTA1C = channels:acc1(Channel),
     BTA2C = channels:acc2(Channel),
     B = case ID of
-        BTA1C -> A;
-        BTA2C -> -A
+        BTA1C -> -A;
+        BTA2C -> A
     end,
     true = B > MinAmount - 1,
     NewF = #f{channel = SignedPayment, unlock = F#f.unlock},

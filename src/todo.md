@@ -12,3 +12,6 @@ hashlock lightning payments
 
 update download_blocks so that we can reach consensus with a node that is further in the future than finality.
 
+handler should have every input and output be encrypted. Otherwise eavesdroppers will publish our channel before we want it published.
+
+update now() .
