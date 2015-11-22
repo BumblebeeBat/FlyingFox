@@ -23,27 +23,42 @@ function new_channel(id) {
 	console.log(id);
 	local_get(["new_channel", [127,0,0,1], 3020, 112000, 11000, 50]);
 	console.log("after new channel");
-	variable_get(["channel_keys"], channel_spend);
+	variable_get(["channel_keys"], buy_block);
     }
 }
-function channel_spend(keys) {
+function buy_block(keys) {
     if (keys == [-6]) {variable_get(["channel_keys"], channel_spend);}
     else {
 	console.log("channel spend");
 	console.log("keys ");
 	console.log(keys);
 	local_get2(["buy_block"]);
-	setTimeout(channel_spend2, 1000);
+	setTimeout(sync, 1000);
     }
 }
-function channel_spend2() {
+function sync() {
     console.log("channel spend 2");
     local_get(["sync", [127,0,0,1], 3020]);
-    setTimeout(channel_spend3, 1000);
+    //setTimeout(lightning_spend, 1000);
+    setTimeout(channel_spend, 1000);
 }
-function channel_spend3() {
+function channel_spend() {
+    local_get(["channel_spend", [127,0,0,1], 3020, 100]);
+}
+
+
+
+
+
+
+function lightning_spend() {
     var partner = 1;
     var amount = 200;
     console.log("channel spend 3");
     local_get(["lightning_spend", [127,0,0,1], 3020, partner, amount]);
+    //message();
+}
+function message() {
+    console.log("send message");
+    local_get(["send_msg", [127,0,0,1], 3020, 1000, 1, btoa("test message"), 40]);
 }

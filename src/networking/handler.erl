@@ -76,6 +76,12 @@ doit({new_channel, SignedTx}) ->
     NTx = keys:sign(SignedTx),
     tx_pool:absorb(NTx),
     {ok, NTx};
+doit({channel_spend, Payment, Partner}) ->
+    ChId = hd(channel_manager:id(Partner)),
+    channel_manager:recieve(ChId, 0, Payment),
+    Tx = sign:data(Payment),
+    R = keys:sign(Tx),
+    {ok, R};
 doit(X) ->
     io:fwrite("I can't handle this \n"),
     io:fwrite(packer:pack(X)), %unlock2

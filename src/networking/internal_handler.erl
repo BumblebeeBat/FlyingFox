@@ -7,6 +7,9 @@
 
 handle(Req, State) ->
     {ok, Data, _} = cowboy_req:body(Req),
+    io:fwrite("internal handler "),
+    io:fwrite(Data),
+    io:fwrite("\n"),
     A = packer:unpack(Data),
     B = doit(A),
     D = packer:pack(B),
@@ -37,8 +40,8 @@ doit({id}) -> {ok,  keys:id()};
 doit({channel_ids, Partner}) -> {ok, channel_manager:id(Partner)};
 doit({new_pubkey, Password}) -> 
     keys:new(Password);
-doit({channel_spend, ChId, Amount}) ->
-    {ok, channel_manager:spend(ChId, Amount)};
+%doit({channel_spend, ChId, Amount}) ->
+%    {ok, channel_manager:spend(ChId, Amount)};
 %doit({hashlock, ChId, Amount, SecretHash}) ->
 %    {ok, channel_manager:hashlock(ChId, Amount, SecretHash)};
 doit({test}) -> 
@@ -62,6 +65,15 @@ doit({register, IP, Port}) ->
     Msg = {register, Payment, keys:id()},
     talker:talk(Msg, IP, Port),
     {ok, ok};
+doit({channel_spend, IP, Port, Amount}) ->
+    {ok, PeerId} = talker:talk({id}, IP, Port),
+    ChId = hd(channel_manager:id(PeerId)), 
+    Payment = channel_manager:spend(ChId, Amount),
+    M = {channel_spend, Payment, keys:id()},
+    {ok, Response} = talker:talk(M, IP, Port),
+    channel_manager:recieve(ChId, -Amount, Response),
+    {ok, ok};
+    
 doit({send_msg, IP, Port, Amount, To, Msg, Seconds}) ->
     {ok, PeerId} = talker:talk({id}, IP, Port),
     ChId = hd(channel_manager:id(PeerId)), 

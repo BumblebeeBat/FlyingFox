@@ -58,7 +58,14 @@ spend_account(Acc, Amount) ->
 spend(ChId, Amount) ->
     F = read(ChId),
     Ch = sign:data(F#f.channel),
-    keys:sign(channel_block_tx:update(Ch, Amount, 1)).
+    %We need to flip the sign of Amount if our id is acc2.
+    A1 = channel_block_tx:acc1(Ch),
+    A2 = channel_block_tx:acc2(Ch),
+    A = case keys:id() of
+	    A1 -> -Amount;
+	    A2 -> Amount
+	end,
+    keys:sign(channel_block_tx:update(Ch, A, 1)).
 match_n(X, Bets) -> match_n(X, Bets, 0).
 match_n(X, [Bet|Bets], N) ->
     Y = language:extract_sh(channel_block_tx:bet_code(Bet)),
@@ -192,12 +199,14 @@ recieve(ChId, MinAmount, SignedPayment) ->
     A = NewAmount - OldAmount,
     N = NewN - OldN,
     true = N > 0,
-    Payment = channel_block_tx:update(Ch, A, N),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce.
+    Payment2 = channel_block_tx:update(Ch, A, N),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce.
+    Payment = Payment2,
+    %recieve. positive goes to 1.
     BTA1C = channels:acc1(Channel),
     BTA2C = channels:acc2(Channel),
     B = case ID of
-        BTA1C -> -A;
-        BTA2C -> A
+        BTA1C -> A;
+        BTA2C -> -A
     end,
     true = B > MinAmount - 1,
     NewF = #f{channel = SignedPayment, unlock = F#f.unlock},
@@ -212,7 +221,7 @@ test() ->
     sign_tx:sign(),
     reveal:reveal(),
     block_tree:buy_block(),
-    CreateTx1 = to_channel_tx:create_channel(Partner, 110000, 1000, <<"delegated_1">>, 0),
+    CreateTx1 = to_channel_tx:create_channel(Partner, 110000, 10000, <<"delegated_1">>, 0),
     SignedCreateTx1 = sign:sign_tx(CreateTx1, Pub, Priv, tx_pool:accounts()),
     tx_pool:absorb(SignedCreateTx1),
     sign_tx:sign(),
@@ -240,7 +249,7 @@ test() ->
 
     %example of hashlocked transaction.
     SH = secrets:new(),
-    Amount = 200,
+    Amount = -200,
     Tx5 = hashlock(S, Amount, SH),
     Tx6 = sign:sign_tx(Tx5, Pub, Priv, tx_pool:accounts()),%partner runs recieve_locked_payment/3, and returns Tx6
     spend_locked_payment(S, Tx6, Amount, SH),%we absorb Tx6.
@@ -249,7 +258,7 @@ test() ->
     Tx8 = sign:sign_tx(Tx7, Pub, Priv, tx_pool:accounts()),%partner runs unlock_hash/3 and returns Tx8
     unlock_hash(S, secrets:read(SH), Tx8),
     E = element(2, element(2, read(S))),
-    E = {channel_block,0,Partner,3198,5,[],S,false,259,0,0,0},
+    E = {channel_block,0,Partner,-3198,5,[],S,false,259,0,0,0},
     success.
 
 
