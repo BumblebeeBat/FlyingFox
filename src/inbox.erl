@@ -59,10 +59,10 @@ delete(Id, Index) -> gen_server:cast(?MODULE, {delete, Id, Index}).
 delete(Id) -> gen_server:cast(?MODULE, {delete, Id}).
 get(Msg) -> 
     M = encryption:get_msg(Msg),
-    FromPub = encryption:from(M),
+    %FromPub = encryption:from(M),
     FromId = encryption:id(M),
-    Peer = block_tree:account(FromId),
-    FromPub = accounts:pub(Peer),
+    %Peer = block_tree:account(FromId),
+    %FromPub = accounts:pub(Peer),
     get_helper(FromId, encryption:msg(M)).
 get_helper(X, Y) -> gen_server:cast(?MODULE, {get, X, Y}).
 peers() -> gen_server:call(?MODULE, peers).

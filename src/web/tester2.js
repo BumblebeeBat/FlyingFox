@@ -21,7 +21,7 @@ function new_channel(id) {
 	console.log("new channel");
 	console.log("id is ");
 	console.log(id);
-	local_get(["new_channel", [127,0,0,1], 3020, 112000, 11000, 50]);
+	local_get(["new_channel", [127,0,0,1], 3020, 1120000, 1100000, 50]);
 	console.log("after new channel");
 	variable_get(["channel_keys"], buy_block);
     }
@@ -40,25 +40,38 @@ function sync() {
     console.log("channel spend 2");
     local_get(["sync", [127,0,0,1], 3020]);
     //setTimeout(lightning_spend, 1000);
-    setTimeout(channel_spend, 1000);
+    setTimeout(function() {variable_get(["id"], message);}, 1000);
+    //setTimeout(message, 1000);
 }
+function message(id) {
+    console.log("send message");
+    local_get(["send_msg", [127,0,0,1], 3020, id, btoa("test message"), 6]);
+    setTimeout(get_message, 1000);
+}
+function get_message() {
+    console.log("get message");
+    local_get(["get_msg", [127,0,0,1], 3020]);
+    setTimeout(function() {variable_get(["id"], read_message);}, 1000);
+}
+function read_message(id) {
+    console.log("read message");
+    variable_get(["read_msg", id, 0], read_message2);
+}
+function read_message2(message) {
+    console.log("read message 2");
+    console.log(atob(message));
+}
+
+
 function channel_spend() {
+    //spends 100.
     local_get(["channel_spend", [127,0,0,1], 3020, 100]);
+    
 }
-
-
-
-
-
-
 function lightning_spend() {
     var partner = 1;
     var amount = 200;
     console.log("channel spend 3");
     local_get(["lightning_spend", [127,0,0,1], 3020, partner, amount]);
     //message();
-}
-function message() {
-    console.log("send message");
-    local_get(["send_msg", [127,0,0,1], 3020, 1000, 1, btoa("test message"), 40]);
 }

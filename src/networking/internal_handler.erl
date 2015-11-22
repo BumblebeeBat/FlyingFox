@@ -48,10 +48,25 @@ doit({test}) ->
     {test_response};
 doit({get_msg, IP, Port}) ->
     {ok, ServerId} = talker:talk({id}, IP, Port),
-    Msg = mail:pop_maker(),
-    {ok, M} = talker:talk({pop, Msg}, IP, Port),
-    nonce:server_next(ServerId),
-    {ok, inbox:get(M)};
+    Msg = mail:pop_maker(ServerId),
+    Out= case talker:talk({pop, Msg}, IP, Port) of
+	     {ok, {pop_response, EMsg, Refund}} ->
+		 io:fwrite("internal handler recieved good msg "),
+		 io:fwrite(packer:pack(EMsg)),
+		 io:fwrite("\n"),
+		 channel_manager:recieve(hd(channel_manager:id(ServerId)), 0, Refund),
+		 nonce:server_next(ServerId),
+		 inbox:get(EMsg);
+	     {ok, {pop_response, _}} ->
+		 io:fwrite("no more messages"),
+		 ok;
+	     X -> 
+		 io:fwrite("internal handler get msg bad "),
+		 io:fwrite(packer:pack(X)),
+		 io:fwrite("\n"),
+		 X
+	 end,
+    {ok, Out};
 doit({read_msg, Id, Index}) -> {ok, inbox:read(Id, Index)};
 doit({msg_ids, Id}) -> {ok, inbox:msg_ids(Id)};
 doit({msg_peers}) -> {ok, inbox:peers()};
@@ -74,12 +89,17 @@ doit({channel_spend, IP, Port, Amount}) ->
     channel_manager:recieve(ChId, -Amount, Response),
     {ok, ok};
     
-doit({send_msg, IP, Port, Amount, To, Msg, Seconds}) ->
+doit({send_msg, IP, Port, To, M, Seconds}) ->
+    Acc = block_tree:account(To),
+    Pub = accounts:pub(Acc),
+    Msg = encryption:send_msg(M, Pub),
+    {ok, Amount} = talker:talk({mail_cost, size(Msg), Seconds}),
     {ok, PeerId} = talker:talk({id}, IP, Port),
     ChId = hd(channel_manager:id(PeerId)), 
     Payment = channel_manager:spend(ChId, Amount),
-    M = {send, Payment, To, Msg, Seconds},
-    talker:talk(M, IP, Port),
+    Foo = {send, Payment, keys:id(), To, Msg, Seconds},
+    {ok, Response} = talker:talk(Foo, IP, Port),
+    channel_manager:recieve(ChId, -Amount, Response),
     {ok, ok};
 doit({new_channel, IP, Port, Bal1, Bal2, Fee}) ->
     {ok, Partner} = talker:talk({id}, IP, Port),

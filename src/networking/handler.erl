@@ -52,9 +52,15 @@ doit({unlock, ChId, Secret, SignedCh}) ->
     {ok, channel_manager:unlock_hash(ChId, Secret, SignedCh)};
 doit({register, Payment, Acc}) ->
     {ok, mail:register(Payment, Acc)};
-doit({send, Payment, To, Msg, Seconds}) ->
-    mail:send(Payment, To, Msg, Seconds),
-    {ok, 0};
+doit({channel_spend, Payment, Partner}) ->
+    {ok, channel_manager:recieve_account(Partner, 0, Payment)};
+doit({mail_cost, Space, Time}) ->
+    {ok, mail:cost(Space, Time)};
+doit({send, Payment, From, To, Msg, Seconds}) ->
+    C = mail:cost(size(Msg), Seconds),
+    R = channel_manager:recieve_account(From, C, Payment),
+    mail:send(To, Msg, Seconds),
+    {ok, R};
 doit({id}) -> {ok, keys:id()};
 doit({pop, Msg}) ->
     {ok, mail:pop(Msg)};
@@ -76,12 +82,6 @@ doit({new_channel, SignedTx}) ->
     NTx = keys:sign(SignedTx),
     tx_pool:absorb(NTx),
     {ok, NTx};
-doit({channel_spend, Payment, Partner}) ->
-    ChId = hd(channel_manager:id(Partner)),
-    channel_manager:recieve(ChId, 0, Payment),
-    Tx = sign:data(Payment),
-    R = keys:sign(Tx),
-    {ok, R};
 doit(X) ->
     io:fwrite("I can't handle this \n"),
     io:fwrite(packer:pack(X)), %unlock2
