@@ -4,7 +4,7 @@
 
 -module(channel_manager).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, unlock_hash/3,hashlock/3,spend/2,recieve/3,read/1,new_channel/2,recieve_locked_payment/4,spend_locked_payment/4,delete/1,id/1,keys/0,create_unlock_hash/2,spend_account/2,recieve_account/3,test/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, unlock_hash/3,hashlock/3,spend/2,recieve/3,read/1,new_channel/2,recieve_locked_payment/4,spend_locked_payment/4,delete/1,id/1,keys/0,create_unlock_hash/2,spend_account/2,recieve_account/3,read_channel/1,test/0]).
 -record(f, {channel = [], unlock = []}).
 init(ok) -> {ok, dict:new()}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
@@ -22,12 +22,14 @@ handle_call(keys, _From, X) ->
 %repeat(Times, X) -> repeat(Times, X, []).
 %repeat(0, _, Out) -> Out;
 %repeat(Times, X, Out) -> repeat(Times-1, X, [X|Out]).
+read_channel(Key) ->
+    F = read(Key),
+    sign:data(F#f.channel).
 keys() -> gen_server:call(?MODULE, keys).
 id(Partner) -> id_helper(Partner, keys(), []).
 id_helper(_, [], Out) -> Out;
 id_helper(Partner, [Key|T], Out) ->
-    F = read(Key),
-    Ch = sign:data(F#f.channel),
+    Ch = read_channel(Key),
     Acc1 = channel_block_tx:acc1(Ch),
     Acc2 = channel_block_tx:acc2(Ch),
     NewOut = if
@@ -56,8 +58,7 @@ delete(ChId) -> gen_server:call(?MODULE, {delete, ChId}).
 spend_account(Acc, Amount) ->
     spend(hd(id(Acc)), Amount).
 spend(ChId, Amount) ->
-    F = read(ChId),
-    Ch = sign:data(F#f.channel),
+    Ch = read_channel(ChId),
     %We need to flip the sign of Amount if our id is acc2.
     A1 = channel_block_tx:acc1(Ch),
     A2 = channel_block_tx:acc2(Ch),
@@ -88,8 +89,7 @@ nth(0, [X|_]) -> X;
 nth(N, [_|T]) -> nth(N-1, T).
 common(ChId, Secret) ->
     SecretHash = hash:doit(Secret),
-    F = read(ChId),
-    OldCh = sign:data(F#f.channel),
+    OldCh = read_channel(ChId),
     Bets = channel_block_tx:bets(OldCh),
     N = match_n(SecretHash, Bets),%if the bets were numbered in order, N is the bet we are unlocking.
     Bet = nth(N, Bets),
@@ -113,8 +113,7 @@ unlock_hash(ChId, Secret, SignedCh) ->
     arbitrage:del(BetCode, ChId),
     keys:sign(NewCh).
 hashlock(ChId, Amount, SecretHash) ->
-    F = read(ChId),
-    Ch = sign:data(F#f.channel),
+    Ch = read_channel(ChId),
     Ch2 = channel_block_tx:update(Ch, Amount div 2, 1),
     Channel = block_tree:channel(ChId),
     Acc1 = channels:acc1(Channel),
