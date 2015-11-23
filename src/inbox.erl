@@ -1,7 +1,7 @@
 %This module keeps track of messages you receive.
 -module(inbox).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, peers/0,msg_ids/1,read/2,delete/2,delete/1,get/1,test/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, peers/0,msg_ids/1,read/2,delete/2,delete/1,get/1,get_helper/2,test/0]).
 -record(f, {next = 0, msgs = dict:new()}).
 init(ok) -> {ok, dict:new()}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
@@ -59,12 +59,11 @@ delete(Id, Index) -> gen_server:cast(?MODULE, {delete, Id, Index}).
 delete(Id) -> gen_server:cast(?MODULE, {delete, Id}).
 get(Msg) -> 
     M = encryption:get_msg(Msg),
-    %FromPub = encryption:from(M),
     FromId = encryption:id(M),
-    %Peer = block_tree:account(FromId),
-    %FromPub = accounts:pub(Peer),
-    get_helper(FromId, encryption:msg(M)).
-get_helper(X, Y) -> gen_server:cast(?MODULE, {get, X, Y}).
+    EM = encryption:msg(M),
+    B = << <<"~>">>/binary, EM/binary >>,
+    get_helper(FromId, B).
+get_helper(From, Message) -> gen_server:cast(?MODULE, {get, From, Message}).
 peers() -> gen_server:call(?MODULE, peers).
 msg_ids(Id) -> gen_server:call(?MODULE, {msg_ids, Id}).
 read(Id, Index) -> gen_server:call(?MODULE, {read, Id, Index}).

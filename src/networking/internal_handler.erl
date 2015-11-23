@@ -100,6 +100,7 @@ doit({send_msg, IP, Port, To, M, Seconds}) ->
     Foo = {send, Payment, keys:id(), To, Msg, Seconds},
     {ok, Response} = talker:talk(Foo, IP, Port),
     channel_manager:recieve(ChId, -Amount, Response),
+    inbox:get_helper(To, M),
     {ok, ok};
 doit({new_channel, IP, Port, Bal1, Bal2, Fee}) ->
     {ok, Partner} = talker:talk({id}, IP, Port),
