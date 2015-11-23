@@ -33,25 +33,25 @@ function buy_block(keys) {
 	console.log("keys ");
 	console.log(keys);
 	local_get2(["buy_block"]);
-	setTimeout(sync, 1000);
+	setTimeout(sync, 100);
     }
 }
 function sync() {
     console.log("channel spend 2");
     local_get(["sync", [127,0,0,1], 3020]);
     //setTimeout(lightning_spend, 1000);
-    setTimeout(function() {variable_get(["id"], message);}, 1000);
+    setTimeout(function() {variable_get(["id"], message);}, 100);
     //setTimeout(message, 1000);
 }
 function message(id) {
     console.log("send message");
     local_get(["send_msg", [127,0,0,1], 3020, id, btoa("test message"), 6]);
-    setTimeout(get_message, 1000);
+    setTimeout(get_message, 100);
 }
 function get_message() {
     console.log("get message");
     local_get(["get_msg", [127,0,0,1], 3020]);
-    setTimeout(function() {variable_get(["id"], read_message);}, 1000);
+    setTimeout(function() {variable_get(["id"], read_message);}, 100);
 }
 function read_message(id) {
     console.log("read message");
