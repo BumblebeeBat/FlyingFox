@@ -59,7 +59,7 @@ function read_message(id) {
 }
 function read_message2(message) {
     console.log("read message 2");
-    console.log(atob(message));
+    document.getElementById("main").innerHTML = atob(message);
 }
 
 
