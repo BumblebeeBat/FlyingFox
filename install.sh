@@ -12,6 +12,4 @@ fi
 #use rebar to install other dependencies, explained in rebar.config
 ./rebar get
 ./rebar compile
-erlc src/networking/port.erl
-mkdir ebin
-mv port.beam ebin
+
