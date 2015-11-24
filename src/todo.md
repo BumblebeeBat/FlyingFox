@@ -1,3 +1,5 @@
+javascript: needs the ability to download messages from node.
+
 Make an OTP package so that it is easier to install.
 
 Display address in javascript.
