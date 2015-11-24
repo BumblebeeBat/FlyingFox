@@ -160,7 +160,7 @@ doit({channel_unlock, IP, Port, Secret}) ->
     channel_manager:unlock_hash(ChId, Secret, NewCh),
     {ok, ok};
 doit({channel_keys}) -> {ok, channel_manager:keys()};
-     
+doit({block_tree_account, Id}) -> {ok, block_tree:account(Id)};
 doit(X) ->
     io:fwrite("don't know how to handle it \n"),
     io:fwrite(packer:pack(X)),
