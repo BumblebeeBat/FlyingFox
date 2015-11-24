@@ -63,7 +63,7 @@ pop(M) ->
 pop2(From) ->
     M = gen_server:call(?MODULE, {pop, From}),
     case M of
-	empty -> "no more messages";
+	empty -> <<"no more messages">>;
 	X -> pop3(From, X)
     end.
 pop3(From, M) ->
