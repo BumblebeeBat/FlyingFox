@@ -6,7 +6,7 @@ function local_get2(t, callback) {
 function register_doit() {
     variable_get(["pubkey"], function(pubkey) {
 	local_get2(["create_account", pubkey, 2000000, 50]);
-	local_get2(["buy_block"]);
+	setTimeout(function() {local_get2(["buy_block"]);}, 1000);  //failing, but why??
 	wait_for_id();
     });
 }
