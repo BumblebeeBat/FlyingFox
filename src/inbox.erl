@@ -65,24 +65,45 @@ get(Msg) ->
     get_helper(FromId, B).
 get_helper(From, Message) -> gen_server:cast(?MODULE, {get, From, Message}).
 peers() -> gen_server:call(?MODULE, peers).
-msg_ids(Id) -> gen_server:call(?MODULE, {msg_ids, Id}).
+msg_ids(Id) -> merge_sort(gen_server:call(?MODULE, {msg_ids, Id})).
 read(Id, Index) -> gen_server:call(?MODULE, {read, Id, Index}).
     
+merge_sort(L) -> ms2(L, []).
+ms2([], Out) ->  ms3(Out);
+ms2([H|T], Out) -> ms2(T, [[H]|Out]).
+ms3(X) when length(X) == 1 -> hd(X);
+ms3(X) -> ms3(ms4(X, [])).
+ms4([], Out) -> Out;
+ms4([X|[]], Out) -> [X|Out];
+ms4([A|[B|X]], Out) -> ms4(X, [merge(A, B)|Out]).
+merge(X, Y) -> merge(flip(X), flip(Y), []).
+merge([], [], Out) -> Out;
+merge([], [Y|Yt], Out) -> merge([], Yt, [Y|Out]);
+merge([X|Xt], [], Out) -> merge(Xt, [], [X|Out]);
+merge([X|Xt], [Y|Yt], Out) when X > Y -> merge(Xt, [Y|Yt], [X|Out]);
+merge([X|Xt], [Y|Yt], Out) -> merge([X|Xt], Yt, [Y|Out]).
+flip(X) -> flip(X, []).
+flip([], Out) -> Out;
+flip([H|T], Out) -> flip(T, [H|Out]).
+    
+    
+
 test() ->
     Peer = 1,
+    Sorted = [1,2,3,4,5,6,7,8,9],
+    Sorted = merge_sort([3,6,5,2,4,8,7,9,1]),    
     get_helper(Peer, "hello"),
     get_helper(Peer, "hello2"),
     get_helper(Peer, "hello3"),
     P = peers(),
     P = [Peer],
     X = msg_ids(Peer),
-    io:fwrite(packer:pack(X)),
-    X = [0,2,1],
+    X = [0,1,2],
     H = read(Peer, 0),
     H = "hello",
     delete(Peer, 0),
     Y = msg_ids(Peer),
-    Y = [2,1],
+    Y = [1,2],
     delete(Peer),
     P2 = peers(),
     P2 = [],

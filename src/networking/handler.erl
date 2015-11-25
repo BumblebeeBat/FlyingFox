@@ -82,6 +82,28 @@ doit({new_channel, SignedTx}) ->
     NTx = keys:sign(SignedTx),
     tx_pool:absorb(NTx),
     {ok, NTx};
+doit({update_channel, ISigned, TheySigned}) ->%The contents of this message NEED to be encrypted. ideally we should encypt every message to this module.
+    Data = sign:data(ISigned),
+    Data = sign:data(TheySigned),
+    true = sign:verify(keys:sign(TheySigned), tx_pool:accounts()),
+    CA1 = channel_block_tx:acc1(Data),
+    CA2 = channel_block_tx:acc2(Data),
+    TheirId = 
+	case keys:id() of
+	    CA1 -> 
+		true = sign:verify_1(ISigned, keys:pubkey()),
+		CA2;
+	    CA2 -> 
+		true = sign:verify_2(ISigned, keys:pubkey()),
+		CA1
+	end,
+    NewNonce = channel_block_tx:nonce(Data),
+    ChId = hd(channel_manager:id(TheirId)),
+    OldCh = channel_manager:read_channel(ChId),
+    OldNonce = channel_block_tx:nonce(OldCh),
+    true = NewNonce > OldNonce,
+    channel_manager:recieve(ChId, -constants:initial_coins(), TheySigned),
+    {ok, 0};
 doit(X) ->
     io:fwrite("I can't handle this \n"),
     io:fwrite(packer:pack(X)), %unlock2

@@ -68,7 +68,8 @@ doit({get_msg, IP, Port}) ->
 		 io:fwrite("internal handler recieved good msg "),
 		 io:fwrite(packer:pack(EMsg)),
 		 io:fwrite("\n"),
-		 channel_manager:recieve(hd(channel_manager:id(ServerId)), 0, Refund),
+		 NewCh = channel_manager:recieve(hd(channel_manager:id(ServerId)), 0, Refund),
+		 talker:talk({update_channel, Refund, NewCh}, IP, Port),
 		 nonce:server_next(ServerId),
 		 inbox:get(EMsg);
 	     {ok, {pop_response, _}} ->
