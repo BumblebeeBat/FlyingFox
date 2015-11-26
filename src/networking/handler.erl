@@ -48,6 +48,7 @@ doit({locked_payment, From, To, Payment, Amount, SecretHash}) ->
     mail:internal_send(To, Payment2, free_constants:hashlock_time()),%undefined.
     {ok, Return};
 doit({txs}) -> {ok, tx_pool:txs()};
+doit({txs, Txs}) -> {ok, download_blocks:absorb_txs(Txs)};
 doit({unlock, ChId, Secret, SignedCh}) ->
     {ok, channel_manager:unlock_hash(ChId, Secret, SignedCh)};
 doit({register, Payment, Acc}) ->

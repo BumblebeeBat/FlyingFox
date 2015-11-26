@@ -1,5 +1,5 @@
 -module(download_blocks).
--export([sync/2]).
+-export([sync/2, absorb_txs/1]).
 
 %download_blocks:sync({127,0,0,1}, 3020).
 sync(IP, Port) ->
@@ -65,5 +65,26 @@ absorb_txs([Tx|T]) ->
 get_txs(IP, Port) ->
     {ok, Txs} = talker:talk({txs}, IP, Port),
     io:fwrite(packer:pack(Txs)),
-    absorb_txs(Txs ++ Txs),
+    MyTxs = tx_pool:txs(),
+    absorb_txs(Txs),
+    Respond = set_minus(MyTxs, Txs),
+    if
+	length(Respond) > 0 ->
+	    talker:talk({txs, Respond}, IP, Port);
+	true -> ok
+    end,
     ok.
+set_minus(A, B) -> set_minus(A, B, []).
+set_minus([], _, Out) -> Out;
+set_minus([A|T], B, Out) ->
+    C = is_in(A, B),
+    if
+	C -> set_minus(T, B, Out);
+	true -> set_minus(T, B, [A|Out])
+    end.
+is_in(A, []) -> false;
+is_in(A, [A|T]) -> true;
+is_in(A, [B|T]) -> is_in(A, T).
+    
+	    
+
