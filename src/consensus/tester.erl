@@ -18,6 +18,7 @@ test1() ->
     S = success,
     S = block_tree:test(),
     S = channels:test(),
+    S = to_channel_tx:test(),
     S = language:test(),
     S = all_secrets:test(),
     S = hash:test(),

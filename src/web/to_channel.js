@@ -1,19 +1,19 @@
-spend1();
-function spend1() {
-    var spend_address = document.createElement("INPUT");
-    spend_address.setAttribute("type", "text"); 
+to_channel1();
+function to_channel1() {
+    var inc1 = document.createElement("INPUT");
+    inc1.setAttribute("type", "text"); 
     var input_info = document.createElement("h8");
-    input_info.innerHTML = "spend to: ";
+    input_info.innerHTML = "you pay: ";
     document.body.appendChild(document.createElement("br"));
     document.body.appendChild(input_info);
-    document.body.appendChild(spend_address);
+    document.body.appendChild(inc1);
     
-    var spend_amount = document.createElement("INPUT");
-    spend_amount.setAttribute("type", "text"); 
+    var inc2 = document.createElement("INPUT");
+    inc2.setAttribute("type", "text"); 
     var amount_info = document.createElement("h8");
-    amount_info.innerHTML = "amount to spend: ";
+    amount_info.innerHTML = "server pays: ";
     document.body.appendChild(amount_info);
-    document.body.appendChild(spend_amount);
+    document.body.appendChild(inc2);
     
     var spend_fee = document.createElement("INPUT");
     spend_fee.setAttribute("type", "text"); 
@@ -24,13 +24,14 @@ function spend1() {
     
     var spend_button = document.createElement("BUTTON");
     spend_button.id = "spend_button";
-    var spend_button_text = document.createTextNode("spend");
+    var spend_button_text = document.createTextNode("pay money into channel");
     spend_button.appendChild(spend_button_text);
     spend_button.onclick = function() {
-	var to = parseInt(spend_address.value, 10);
-	var amount = parseInt(spend_amount.value, 10);
+	var b1 = parseInt(inc1.value, 10);
+	var b2 = parseInt(inc2.value, 10);
 	var fee = parseInt(spend_fee.value, 10);
-	local_get(["spend", to, amount, fee]);
+	local_get(["to_channel", [127,0,0,1], 3020, b1, b2, fee]);
+	local_get(["sync", [127,0,0,1], 3020]);
     };
     document.body.appendChild(spend_button);
 

@@ -76,7 +76,11 @@ doit({new_channel, SignedTx}) ->
     %make sure the Tx is more than 1/2 funded by the other person.
     %make sure the amount of money is below some limit.
     Tx = sign:data(SignedTx),
-    true = to_channel_tx:half_them(Tx),
+    io:fwrite("min ratio tx "),
+    io:fwrite(packer:pack(Tx)),
+    io:fwrite("\n"),
+    true = to_channel_tx:min_ratio(free_constants:liquidity_ratio(), Tx),
+    %true = to_channel_tx:half_them(Tx),
     MC = free_constants:max_channel(), 
     MS = to_channel_tx:my_side(Tx),
     true = MC > MS,
@@ -104,6 +108,11 @@ doit({update_channel, ISigned, TheySigned}) ->%The contents of this message NEED
     OldNonce = channel_block_tx:nonce(OldCh),
     true = NewNonce > OldNonce,
     channel_manager:recieve(ChId, -constants:initial_coins(), TheySigned),
+    {ok, 0};
+doit({to_channel, SignedTx}) ->
+    Tx = sign:data(SignedTx),
+    true = to_channel_tx:min_ratio(free_constants:liquidity_ratio(), Tx),
+    tx_pool:absorb(keys:sign(SignedTx)),
     {ok, 0};
 doit(X) ->
     io:fwrite("I can't handle this \n"),

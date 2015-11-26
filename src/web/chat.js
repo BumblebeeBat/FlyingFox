@@ -32,6 +32,7 @@ function chat_func4(ids, partner, N, M) {
 }
 
 chat_button.onclick = chat_func;
+document.body.appendChild(document.createElement("br"));
 document.body.appendChild(chat_button);
 var scrollBox = document.createElement("div");
 //scrollBox.style = "height:120px;width:120px;border:1px solid #ccc;font:16px/26px Georgia, Garamond, Serif;overflow:auto;";

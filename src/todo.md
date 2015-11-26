@@ -1,4 +1,10 @@
-hashlock lightning payments
+hashlock lightning payments javascript
+display how much space is in our channel javascript
+close_channel javascript multiple steps
+change server javascript
+delete_account javascript
+update inbox to only store 100 messages per partner, and to have max message size.
+button to rotate through your inbox
 
 Make an OTP erts package so that it is easier to install.
 

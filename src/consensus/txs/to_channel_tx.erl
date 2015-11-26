@@ -1,5 +1,5 @@
 -module(to_channel_tx).%used to create a channel, or increase the amount of money in it.
--export([next_top/2,doit/7,tc_increases/1,to_channel/4,create_channel/5,half_them/1,my_side/1]).
+-export([next_top/2,doit/7,tc_increases/1,to_channel/4,create_channel/5,my_side/1,min_ratio/2,test/0,grow_ratio/2]).
 -record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = <<"delegated_1">>, fee = 0, id = -1, increment = 0}).
 my_side(Tx) ->
     A1 = Tx#tc.acc1,
@@ -10,14 +10,14 @@ my_side(Tx) ->
 	A1 -> B1;
 	A2 -> B2
     end.
-half_them(Tx) ->
-    A1 = Tx#tc.acc1,
-    A2 = Tx#tc.acc2,
-    B = Tx#tc.bal1 < Tx#tc.bal2,
-    case keys:id() of
-	A1 -> B;
-	A2 -> (not B)
-    end.
+%half_them(Tx) ->
+%    A1 = Tx#tc.acc1,
+%    A2 = Tx#tc.acc2,
+%    B = Tx#tc.bal1 < Tx#tc.bal2,
+%    case keys:id() of
+%	A1 -> B;
+%	A2 -> (not B)
+%    end.
 good_key(S) -> ((S == <<"delegated_1">>) or (S == <<"delegated_2">>)).
 create_channel(To, MyBalance, TheirBalance, ConsensusFlag, Fee) ->
 %When creating a new channel, you don't choose your own ID for the new channel. It will be selected for you by next available.    
@@ -128,27 +128,45 @@ tc_increases([SignedTx|T], X) ->
 	tc -> tc_increases(T, X+Tx#tc.increment);
 	_ -> tc_increases(T, X)
     end.
-%tc_increases(NewNumber, ParentKey) ->
-%    CF = constants:finality(),
-%    if
-%        NewNumber < CF + 1 -> 0;
-%        true -> 
-%            FBlock = block_tree:read_int(NewNumber - CF, ParentKey),
-%            tc_increases(block_tree:txs(FBlock), ParentKey, 0)
-%    end.
-%tc_increases([], _, X) -> X;
-%tc_increases([SignedTx|T], ParentKey, X) ->
-    %there is a case where the block increases in power, but the account does not...
-    %if the same pair of accounts closes and opens the same channel, in a single block, it shouldn't break anything.
-%Tx = sign:data(SignedTx),
-%if
-%is_record(Tx, tc) ->
-%Channel = block_tree:channel(sign:revealed(SignedTx), ParentKey, dict:new()),
-%Acc1 = channels:acc1(Channel),
-%Acc2 = channels:acc2(Channel),
-%if
-%(Tx#tc.acc1 == Acc1) and (Tx#tc.acc2 == Acc2) -> tc_increases(T, ParentKey, X+Tx#tc.increment);%this check is not good enough. It is possible to attack my making the power tag on the block incorrect.
-%true -> tc_increases(T, ParentKey, X)
-%end;
-%true -> tc_increases(T, ParentKey, X)
-%end.
+
+min_ratio(Max, Tx) ->%This works for new channels. We need a seperate one for adding funds to an existing channel.
+    B1 = Tx#tc.bal1,
+    B2 = Tx#tc.bal2,
+    B = B2 + B1,
+    ratio_helper(B1, B2, B, Max, Tx).
+ratio_helper(B1, B2, B, Max, Tx) ->
+    A1 = Tx#tc.acc1,
+    A2 = Tx#tc.acc2,
+    F = case keys:id() of
+	A1 -> fractions:new(B1, B);
+	A2 -> fractions:new(B2, B)
+    end,
+    io:fwrite("ratio helper min "),
+    io:fwrite(packer:pack(Max)),
+    io:fwrite("\n"),
+    io:fwrite("ratio helper F "),
+    io:fwrite(packer:pack(F)),
+    io:fwrite("\n"),
+    (not fractions:less_than(Max, F)).
+grow_ratio(Max, Tx) ->
+    Channel = block_tree:channel(Tx#tc.id, tx_pool:channels()),
+    I1 = Tx#tc.bal1 - channels:bal1(Channel),
+    I2 = Tx#tc.bal2 - channels:bal2(Channel),
+    I = I1 + I2,
+    ratio_helper(I1, I2, I, Max, Tx).
+
+test() ->
+    TxThem = #tc{bal1 = 0, bal2 = 10},
+    TxMe = #tc{bal1 = 10, bal2 = 0},
+    TxThema = #tc{bal1 = 1, bal2 = 10},
+    TxMea = #tc{bal1 = 10, bal2 = 1},
+    TxHalf = #tc{bal1 = 10, bal2 = 10},
+    Tx = #tc{acc1 = 1, acc2 = 0,nonce = 1,bal1 = 1120000,bal2 = 1100000,fee = 50,id = -1, increment = 2220000},
+    true = min_ratio(fractions:new(2, 3), Tx),
+    true = min_ratio(fractions:new(1, 2), TxThem),
+    false = min_ratio(fractions:new(1, 2), TxMe),
+    true = min_ratio(fractions:new(1, 2), TxThema),
+    false = min_ratio(fractions:new(1, 2), TxMea),
+    true = min_ratio(fractions:new(1, 2), TxHalf),
+    success.
+  
