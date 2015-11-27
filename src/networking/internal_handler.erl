@@ -34,7 +34,8 @@ doit({channel_balance, IP, Port}) ->
 	    A1 -> {channels:bal1(OnChannel), 1};
 	    A2 -> {channels:bal2(OnChannel), -1}
 	end,
-    {ok, Bal + (Sign * channel_block_tx:amount(OffChannel))};
+    BetAmounts = channel_manager:bet_amounts(OffChannel),
+    {ok, Bal + (Sign * channel_block_tx:amount(OffChannel)) - BetAmounts};
 doit({create_account, Pub, Amount, Fee}) -> 
     create_account_tx:create_account(Pub, Amount, Fee);
 doit({spend, To, Amount, Fee}) ->
@@ -143,9 +144,10 @@ doit({lightning_spend, IP, Port, Partner, A}) ->
     {ok, SignedCh} = talker:talk({locked_payment, keys:id(), Partner, Payment, Amount, SecretHash}, IP, Port),
     channel_manager:spend_locked_payment(ChId, SignedCh, Amount, SecretHash),
     Acc = block_tree:account(Partner),
-    Msg = encryption:send_msg(secrets:read(SecretHash), accounts:pub(Acc)),
+    Secret = secrets:read(SecretHash),
+    Msg = encryption:send_msg(Secret, accounts:pub(Acc)),
     Seconds = 30,
-    Cost = mail:cost(Msg, Seconds),
+    Cost = mail:cost(size(Secret), Seconds),%Msg dosn't have "length"..
     MsgPayment = channel_manager:spend(ChId, Cost),
     talker:talk({send, MsgPayment, Partner, Msg, Seconds}, IP, Port),
     {ok, SecretHash};

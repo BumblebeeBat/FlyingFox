@@ -9,21 +9,19 @@ Flying Fox is my attempt to achieve the goals of the truthcoin project: http://w
 
 Sztorc maintains a forum where the different teams trying to build truthcoin can share ideas: http://forum.hive-mind.info/
 
-Flying Fox deviates from Sztorc's design choices in several ways:
+Facts about Flying Fox:
 
-*Not based on bitcoin, it is a new blockchain with a new consensus mechanism optimized for scalability.
+*It is not based on bitcoin. It is a new blockchain with a new consensus mechanism optimized for channels.
 
-*Does not use bitcoin as the internal currency for betting, instead Flying Fox will be a seperate cryptocurrency.
+*Does not used bitcoin, is a new cryptocurrency.
 
-*Finite memory requirement.
+*Finite memory requirement of 2 gigabytes.
 
-*An Erlang/OTP package, because it is a lot easier to verify that erlang code is secure in comparison to C++.
+*Written in the erlang programming language
 
-*Uses lightning network channels for betting. 
+*Betting is inside of the lightning network.
 
 *Judgement on the outcome of bets occurs off-chain, in the lightning network.
-
-*Proof of stake blockchain where each peer's power in the consensus process is determined by how much money they have locked in channels.
 
 Code of conduct, development guidelines: Submit pull requests. If I like, and it passes tests, I will accept. Feel free to ask me questions or make github issues.
 

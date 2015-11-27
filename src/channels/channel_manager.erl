@@ -4,7 +4,7 @@
 
 -module(channel_manager).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, unlock_hash/3,hashlock/3,spend/2,recieve/3,read/1,new_channel/2,recieve_locked_payment/4,spend_locked_payment/4,delete/1,id/1,keys/0,create_unlock_hash/2,spend_account/2,recieve_account/3,read_channel/1,test/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, unlock_hash/3,hashlock/3,spend/2,recieve/3,read/1,new_channel/2,recieve_locked_payment/4,spend_locked_payment/4,delete/1,id/1,keys/0,create_unlock_hash/2,spend_account/2,recieve_account/3,read_channel/1,bet_amounts/1,test/0]).
 -record(f, {channel = [], unlock = []}).
 init(ok) -> {ok, dict:new()}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
@@ -87,6 +87,12 @@ create_unlock_hash(ChId, Secret) ->
     SignedCh.
 nth(0, [X|_]) -> X;
 nth(N, [_|T]) -> nth(N-1, T).
+bet_amounts(CB) ->%channel_block
+    Bets = channel_block_tx:bets(CB),
+    sum_amounts(Bets, 0).
+sum_amounts([], X) -> X;
+sum_amounts([H|T], X) -> sum_amounts(T, X + abs(channel_block_tx:bet_amount(H))).
+    
 common(ChId, Secret) ->
     SecretHash = hash:doit(Secret),
     OldCh = read_channel(ChId),

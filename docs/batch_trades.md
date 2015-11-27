@@ -1,3 +1,5 @@
+Casey Detrio's work on batch trading is important http://cdetr.io/smart-markets/
+
 * the hub agrees to include a bet in a particular round before he knows how many or the price at which the customer gambles.
 * if the hub fails to include a bet that he agreed to include, then the hub and gambler both lose money.
 * bets that are matched in the same round must all be at the same price.
