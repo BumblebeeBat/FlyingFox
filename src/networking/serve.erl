@@ -26,7 +26,9 @@ start(Port) ->
     {ok, _} = cowboy:start_http(http_internal, 100, [{ip, {127,0,0,1}},{port, Port+1}], K_internal),
     {ok, _} = cowboy:start_http(http, 100, [{ip, {0,0,0,0}},{port, Port}], K).
 
-pw() -> pw(port:check()).
+pw() ->  start(port:check()).
 pw(X) ->
+    port:change(X),
     keys:unlock("abc"),
-    start(X).
+    pw().
+

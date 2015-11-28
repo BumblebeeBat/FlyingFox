@@ -30,9 +30,8 @@ function talk2(id) {
 }
 function talk_func() {
     console.log("talk func");
-    var to = document.getElementById("talk_address");
-    var to2 = parseInt(to.value, 10);
-    var msg = document.getElementById("talk_words");
-    local_get(["send_msg", [127,0,0,1], 3020, to2, btoa(msg.value), 6]);//they have 6 seconds to read the messages.
-    
+    var to = parseInt(document.getElementById("talk_address").value, 10);
+    //var to2 = parseInt(to.value, 10);
+    var msg = btoa(document.getElementById("talk_words").value);
+    local_get(["send_msg", [127,0,0,1], 3020, to, msg, 7]);//they have 7 seconds to read the messages.
 }

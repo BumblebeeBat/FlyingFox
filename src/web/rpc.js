@@ -8,13 +8,15 @@ function getter(t, u, callback){
     return xmlhttp
 }
 function get(t, callback) {
-    u = url(PORT, "localhost");
+    PORT = parseInt(document.URL.substring(17, 21), 10);
+    u = url(PORT - 1, "localhost");
     return getter(t, u, callback);
 }
 function url(port, ip) { return "http://".concat(ip).concat(":").concat(port.toString().concat("/")); }
-PORT = 3010;
+//PORT = 3010;
 function local_get(t, callback) {
-    u = url(PORT + 1, "localhost");
+    PORT = parseInt(document.URL.substring(17, 21), 10);
+    u = url(PORT, "localhost");
     return getter(t, u, callback);
 }
 function xml_check(x) { return ((x.readyState === 4) && (x.status === 200)); };

@@ -57,6 +57,9 @@ doit({pubkey}) -> {ok, keys:pubkey()};
 doit({id}) -> {ok,  keys:id()};
 doit({channel_ids, Partner}) -> {ok, channel_manager:id(Partner)};
 doit({new_pubkey, Password}) -> 
+    io:fwrite("internatl handler new pubkey " ),
+    io:fwrite(Password),
+    io:fwrite("\n"),
     keys:new(Password);
 %doit({channel_spend, ChId, Amount}) ->
 %    {ok, channel_manager:spend(ChId, Amount)};

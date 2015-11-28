@@ -7,20 +7,21 @@ function chat_func2(peers) {
     console.log(peers[1]);
     variable_get(["msg_ids", peers[1]], function(x) {chat_func3(x, peers[1])} );
 }
-start = 0;
+start = -1;
 function chat_func3(ids, partner) {
     console.log(ids);
     chat_func4(ids, partner, 1, ids.length);
 }
 function chat_func4(ids, partner, N, M) {
-    if (N == M) {
+    console.log("chat 4");
+    console.log(N);
+    if (N > M) {
 	console.log("done");
-    } else if (ids[N] < start) {
+    } else if (ids[N] < start ) {
 	chat_func4(ids, partner, N + 1, M);
-    } else {
-	var x = ids[N];
-	if (x > start) { start = x + 1;	}
-	variable_get(["read_msg", partner, x], function(msg) {
+    } else if (ids[N] > start ) {
+	start = ids[N];
+	variable_get(["read_msg", partner, ids[N]], function(msg) {
 	    msgs = document.getElementById("messages");
 	    var li = document.createElement("li");
 	    li.innerHTML = atob(msg);
@@ -28,6 +29,8 @@ function chat_func4(ids, partner, N, M) {
 	    chat_func4(ids, partner, N + 1, M);
 	}
 		    );
+    } else {
+	chat_func4(ids, partner, N+1, M);
     }
 }
 
