@@ -1,9 +1,13 @@
 var balance = document.createElement("div");
 balance.id = "balance";
 document.body.appendChild(balance);
+
 var channel_balance = document.createElement("div");
 channel_balance.id = "channel_balance";
 document.body.appendChild(channel_balance);
+var channel_balance2 = document.createElement("div");
+channel_balance2.id = "channel_balance2";
+document.body.appendChild(channel_balance2);
 var b_button = document.createElement("BUTTON");
 b_button.id = "balance_button";
 var button_text_node = document.createTextNode("update balance");
@@ -26,5 +30,9 @@ function balance_update2(bal) {
 function balance_update3(channel_balance) {
     var balance = document.getElementById("channel_balance");
     balance.innerHTML = "channel balance ".concat((channel_balance).toString());
-    
+    variable_get(["channel_balance2", [127,0,0,1], 3020], balance_update4);
+}
+function balance_update4(channel_balance) {
+    var balance = document.getElementById("channel_balance2");
+    balance.innerHTML = "partner's channel balance ".concat((channel_balance).toString());
 }

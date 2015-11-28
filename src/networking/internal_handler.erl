@@ -36,6 +36,20 @@ doit({channel_balance, IP, Port}) ->
 	end,
     BetAmounts = channel_manager:bet_amounts(OffChannel),
     {ok, Bal + (Sign * channel_block_tx:amount(OffChannel)) - BetAmounts};
+doit({channel_balance2, IP, Port}) ->
+    {ok, ServerId} = talker:talk({id}, IP, Port),
+    ChId = hd(channel_manager:id(ServerId)),
+    OnChannel = block_tree:channel(ChId),
+    OffChannel = channel_manager:read_channel(ChId),
+    A1 = channels:acc1(OnChannel),
+    A2 = channels:acc2(OnChannel),
+    {Bal, Sign} = 
+	case keys:id() of
+	    A2 -> {channels:bal1(OnChannel), 1};
+	    A1 -> {channels:bal2(OnChannel), -1}
+	end,
+    BetAmounts = channel_manager:bet_amounts(OffChannel),
+    {ok, Bal + (Sign * channel_block_tx:amount(OffChannel)) - BetAmounts};
 doit({create_account, Pub, Amount, Fee}) -> 
     create_account_tx:create_account(Pub, Amount, Fee);
 doit({spend, To, Amount, Fee}) ->
