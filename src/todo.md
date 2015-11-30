@@ -1,5 +1,4 @@
 hashlock lightning payments javascript
-display how much space is in our channel javascript
 close_channel javascript multiple steps
 change server javascript
 delete_account javascript
