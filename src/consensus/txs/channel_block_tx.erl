@@ -198,20 +198,21 @@ bet_results([B|Bets], [Y|Revealed], BetAmount, {Win1, Win2, Loss}) when not is_l
     X = {Win1, Win2, Loss+B#bet.amount},
     bet_results(Bets, Revealed, BetAmount, X);
 bet_results([B|Bets], [R|Revealed], BA, {Win1, Win2, Loss}) ->
-    {_, X, _} = language:run_script(R++B#bet.code),
+    {Del, X, _} = language:run_script(R++B#bet.code),
     %X = hd(tl(language:run(R++B#bet.code))),
-    TooSmall = fractions:less_than(X, fractions:new(0, 1)),
-    TooBig = fractions:less_than(fractions:new(1, 1), X),
+    Y = fractions:subtract(fractions:subtract(fractions:new(1, 1), X), Del),
+    TooSmall1 = fractions:less_than(X, fractions:new(0, 1)),
+    TooSmall2 = fractions:less_than(Del, fractions:new(0, 1)),
+    TooSmall3 = fractions:less_than(Y, fractions:new(0, 1)),
+    TooBig = fractions:less_than(fractions:new(1, 1), X + Del),
     Out = if
-	      (((X == delete) or TooSmall) or TooBig) -> 
-		  MoreLoss = B#bet.amount,
-		  {Win1, Win2, Loss + MoreLoss};
-
+	      ((TooSmall1 or TooSmall2) or (TooSmall3 or TooBig)) -> 
+		  {Win1, Win2, Loss + B#bet.amount};
 	      true ->
-		  Y = fractions:subtract(fractions:new(1, 1), X),
+		  D = fractions:multiply_int(Del, B#bet.amount),
 		  More1 = fractions:multiply_int(X, B#bet.amount),
 		  More2 = fractions:multiply_int(Y, B#bet.amount),
-		  {Win1 + More1, Win2 + More2, Loss}
+		  {Win1 + More1, Win2 + More2, Loss + D}
 	  end,
     bet_results(Bets, Revealed, BA, Out).
 code(X) -> code(X#channel_block.bets, []).
