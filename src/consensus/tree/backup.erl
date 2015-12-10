@@ -1,7 +1,7 @@
 -module(backup).
 -export([hash/0, backup/0, backup_files/0]).
 
-files() -> ["blocks.db", "block_pointers.db", "accounts.db", "all_secrets.db", "d_accounts.db", "channels.db", "d_channels.db", "entropy.db"].
+files() -> [constants:blocks(), constants:block_pointers(), constants:accounts(), constants:all_secrets(), constants:d_accounts(), constants:channels(), constants:d_channels(), constants:entropy()].
 
 backup_files() -> tl(tl(files())).
 

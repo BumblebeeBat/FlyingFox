@@ -2,8 +2,10 @@
 -module(block_pointers).
 -behaviour(gen_server).
 -export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read/2,write/2,test/0,height/0,append/1,garbage/1,start/0]).
--define(file, "block_pointers.db").
--define(start, "pointers_start.db").
+%-define(file, "block_pointers.db").
+-define(file, constants:block_pointers()).
+%-define(start, "pointers_start.db").
+-define(start, constants:pointers_start()).
 -define(word, 8).
 init(ok) -> 
     process_flag(trap_exit, true),
@@ -37,7 +39,8 @@ handle_call({write, X, N}, _From, Start) ->
     {reply, ok, Start}.
 handle_cast(_, X) -> {noreply, X}.
 shift_subtract(Shift, Subtract) ->
-    T = "temp.db",
+    %T = "temp.db",
+    T = constants:temp(),
     FS = filelib:file_size(?file) div ?word,
     {ok, RFile } = file:open(?file, [read, binary, raw]),
     {ok, WFile } = file:open(T, [binary, raw, write, read]),

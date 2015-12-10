@@ -2,7 +2,8 @@
 -module(entropy).
 -behaviour(gen_server).
 -export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,doit/1,reveal/3,read/1]).
--define(LOC, "entropy.db").
+%-define(LOC, "entropy.db").
+-define(LOC, constants:entropy()).
 -record(x, {start = 0, entropy = []}).
 init(ok) -> 
     process_flag(trap_exit, true),

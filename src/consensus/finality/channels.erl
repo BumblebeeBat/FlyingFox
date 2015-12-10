@@ -1,8 +1,10 @@
 -module(channels).
 -behaviour(gen_server).
 -export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_channel/1,write/2,test/0,size/0,write_helper/3,top/0,array/0,delete/1,walk/2,new/5,timeout/4,acc1/1,acc2/1,bal1/1,bal2/1,type/1,timeout/1,called_timeout/1,timeout_height/1,empty/0,append/1,all_ones/1]).
--define(file, "channels.db").
--define(empty, "d_channels.db").
+%-define(file, "channels.db").
+-define(file, constants:channels()).
+%-define(empty, "d_channels.db").
+-define(empty, constants:d_channels()).
 -define(word, 30).
 %instead of storing pointers to the blockchain, we should store all the info we need. (so we can garbage collect old blocks).
 

@@ -5,7 +5,8 @@
 -module(secrets).
 -behaviour(gen_server).
 -export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read/1,delete/1,new/0,test/0]).
--define(LOC, "secrets.db").
+%-define(LOC, "secrets.db").
+-define(LOC, constants:secrets()).
 init(ok) -> 
     process_flag(trap_exit, true),
     K = case file:read_file(?LOC) of

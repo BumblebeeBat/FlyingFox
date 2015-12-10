@@ -24,11 +24,12 @@ doit({block, N}) -> {ok, block_tree:block(block_tree:read_int(N))};
 doit({tophash}) -> {ok, hash:doit(block_tree:top())};
 doit({recent_hash, H}) -> {ok, block_tree:is_key(H)};
 doit({accounts_size}) ->
-    {ok, filelib:file_size("backup/accounts.db") div ?WORD};
+    %{ok, filelib:file_size("backup/accounts.db") div ?WORD};
+    {ok, filelib:file_size(constants:backup_accounts()) div ?WORD};
 doit({tx_absorb, Tx}) -> 
     {ok, tx_pool:absorb(Tx)};
 doit({accounts, N}) ->
-    {ok, File} = file:open("backup/accounts.db", [read, binary, raw]),
+    {ok, File} = file:open(constants:backup_accounts(), [read, binary, raw]),
     O = case file:pread(File, ?WORD * N, ?WORD) of
 	    eof -> "eof";
 	    {ok, Out} -> Out;
