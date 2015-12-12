@@ -27,5 +27,7 @@ Code of conduct, development guidelines: Submit pull requests. If I like, and it
 
 To run flying fox:
 
+sh install.sh
+
 sh executable_start.sh
 
