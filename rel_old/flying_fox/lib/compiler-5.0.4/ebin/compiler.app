@@ -1,0 +1,22 @@
+%% app generated at {2015,12,12} {19,49,0}
+{application,compiler,
+             [{description,"ERTS  CXC 138 10"},
+              {vsn,"5.0.4"},
+              {id,[]},
+              {modules,[beam_a,beam_asm,beam_block,beam_bool,beam_bsm,
+                        beam_clean,beam_dead,beam_dict,beam_disasm,
+                        beam_except,beam_flatten,beam_jump,beam_listing,
+                        beam_opcodes,beam_peep,beam_receive,beam_split,
+                        beam_trim,beam_type,beam_utils,beam_validator,beam_z,
+                        cerl,cerl_clauses,cerl_inline,cerl_trees,compile,
+                        core_lib,core_lint,core_parse,core_pp,core_scan,
+                        erl_bifs,rec_env,sys_core_dsetel,sys_core_fold,
+                        sys_core_inline,sys_pre_attributes,sys_pre_expand,
+                        v3_codegen,v3_core,v3_kernel,v3_kernel_pp,v3_life]},
+              {registered,[]},
+              {applications,[kernel,stdlib]},
+              {included_applications,[]},
+              {env,[]},
+              {maxT,infinity},
+              {maxP,infinity}]}.
+

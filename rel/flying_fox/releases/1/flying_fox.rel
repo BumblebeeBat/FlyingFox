@@ -1,4 +1,4 @@
-%% rel generated at {2015,12,12} {19,48,55}
+%% rel generated at {2015,12,12} {20,8,29}
 {release,{"flying_fox","1"},
          {erts,"6.4"},
          [{kernel,"3.2"},

@@ -1,0 +1,8 @@
+run_erl [746] Sat Dec 12 19:49:27 2015
+Args before exec of shell:
+run_erl [746] Sat Dec 12 19:49:27 2015
+argv[0] = sh
+run_erl [746] Sat Dec 12 19:49:27 2015
+argv[1] = -c
+run_erl [746] Sat Dec 12 19:49:27 2015
+argv[2] = exec /Users/zack/Hacking/FlyingFox/rel/flying_fox/bin/flying_fox console '' 
