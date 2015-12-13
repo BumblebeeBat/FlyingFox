@@ -8,7 +8,7 @@ else
 fi
 
 #add erlang run time system to path
-PATH=./rel/flying_fox/erts-6.4/bin:$PATH
+PATH=$PATH:./rel/flying_fox/erts-6.4/bin
 
 #use rebar to install other dependencies, explained in rebar.config
 ./rebar get
