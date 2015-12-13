@@ -1,12 +1,11 @@
-%% rel generated at {2015,12,10} {15,42,12}
+%% rel generated at {2015,12,12} {19,48,55}
 {release,{"flying_fox","1"},
          {erts,"6.4"},
          [{kernel,"3.2"},
           {stdlib,"2.4"},
-          {sasl,"2.4.1"},
-          {crypto,"3.5"},
           {ranch,"1.0.0"},
           {jiffy,"0.14.0"},
+          {crypto,"3.5"},
           {cowlib,"1.0.0"},
           {cowboy,"1.0.3"},
           {flying_fox,"1"},

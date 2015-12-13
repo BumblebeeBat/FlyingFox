@@ -1,4 +1,4 @@
-%% app generated at {2015,12,10} {15,42,24}
+%% app generated at {2015,12,12} {19,49,5}
 {application,jiffy,
              [{description,"JSON Decoder/Encoder."},
               {vsn,"0.14.0"},

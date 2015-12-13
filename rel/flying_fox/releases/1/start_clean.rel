@@ -1,4 +1,4 @@
-%% rel generated at {2015,12,10} {15,42,12}
+%% rel generated at {2015,12,12} {19,48,55}
 {release,{"start_clean",[]},
          {erts,"6.4"},
          [{kernel,"3.2"},
@@ -18,7 +18,6 @@
           {observer,"2.0.4",load},
           {public_key,"0.23",load},
           {runtime_tools,"1.8.16",load},
-          {sasl,"2.4.1",load},
           {ssl,"6.0",load},
           {syntax_tools,"1.6.18",load},
           {tools,"2.7.2",load},

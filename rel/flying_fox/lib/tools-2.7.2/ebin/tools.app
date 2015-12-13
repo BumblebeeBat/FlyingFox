@@ -1,4 +1,4 @@
-%% app generated at {2015,12,10} {15,42,25}
+%% app generated at {2015,12,12} {19,49,6}
 {application,tools,
     [{description,"DEVTOOLS  CXC 138 16"},
      {vsn,"2.7.2"},
