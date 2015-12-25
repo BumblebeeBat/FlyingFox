@@ -11,8 +11,9 @@ init(ok) ->
     process_flag(trap_exit, true),
     K = case file:read_file(?LOC) of
 	{error, enoent} ->
-	    dict:new();
-	{ok, Out} -> bytes2dict(Out)
+		dict:new();
+	{ok, Out} -> 
+		bytes2dict(Out)
     end,
     {ok, K}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).

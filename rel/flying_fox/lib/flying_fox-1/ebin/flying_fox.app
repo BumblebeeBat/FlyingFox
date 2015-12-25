@@ -1,4 +1,4 @@
-%% app generated at {2015,12,12} {20,8,40}
+%% app generated at {2015,12,25} {6,45,0}
 {application,flying_fox,
              [{description,"blockchain"},
               {vsn,"1"},

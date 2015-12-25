@@ -126,7 +126,6 @@ read_file(N) ->
 	    io:fwrite(integer_to_list(N)),
 	    io:fwrite("\n");
 	{ok, X} -> 
-	    io:fwrite("read file normal"),
 	    file:close(File), X
     end.
 read_account(N) -> %maybe this should be a call too, that way we can use the ram to see if it is already deleted?
@@ -135,9 +134,6 @@ read_account(N) -> %maybe this should be a call too, that way we can use the ram
 	N >= T -> #acc{};
 	true ->
 	    X = read_file(N),%if this is above the end of the file, then just return an account of all zeros.
-	    io:fwrite("accounts read account "),
-	    io:fwrite(packer:pack(X)),%ok
-	    io:fwrite("\n"),
 	    <<Balance:48, Nonce:32, Delegated:48, Height: 32, P/binary>> = X,
 	    Pub = base64:encode(P),
 	    #acc{balance = Balance, nonce = Nonce, pub = Pub, delegated = Delegated, height = Height}

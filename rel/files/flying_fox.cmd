@@ -17,18 +17,8 @@
     @call :set_trim release_version %%J
 )
 
-@if exist "%releases_dir%\%release_version%\vm.args" (
-    @set vm_args="%releases_dir%\%release_version%\vm.args"
-) else (
-    @set vm_args="%node_root%\etc\vm.args"
-)
-
-@if exist "%releases_dir%\%release_version%\sys.config" (
-    @set sys_config="%releases_dir%\%release_version%\sys.config"
-) else (
-    @set sys_config="%node_root%\etc\app.config"
-)
-
+@set vm_args=%releases_dir%\%release_version%\vm.args
+@set sys_config=%releases_dir%\%release_version%\sys.config
 @set node_boot_script=%releases_dir%\%release_version%\%node_name%
 @set clean_boot_script=%releases_dir%\%release_version%\start_clean
 

@@ -141,12 +141,6 @@ ratio_helper(B1, B2, B, Max, Tx) ->
 	A1 -> fractions:new(B1, B);
 	A2 -> fractions:new(B2, B)
     end,
-    io:fwrite("ratio helper min "),
-    io:fwrite(packer:pack(Max)),
-    io:fwrite("\n"),
-    io:fwrite("ratio helper F "),
-    io:fwrite(packer:pack(F)),
-    io:fwrite("\n"),
     (not fractions:less_than(Max, F)).
 grow_ratio(Max, Tx) ->
     Channel = block_tree:channel(Tx#tc.id, tx_pool:channels()),
