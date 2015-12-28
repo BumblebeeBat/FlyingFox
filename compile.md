@@ -7,33 +7,24 @@ sudo apt-get install libncurses5-dev
 sudo apt-get install libssl-dev
 sudo apt-get install unixodbc-dev
 ```
-
-It needed to be configured, make-ed, 
-
-```
-./configure
-make
-sudo make install
-```
-
 Next, download Flying Fox.
 
 ```
+#for linux
 wget https://github.com/BumblebeeBat/FlyingFox/archive/development.zip
 unzip development.zip
+#for mac, use curl.
 ```
-
-Now you can go into the directory, and install Flying Fox.
+Now you can go into the directory, and compile flying fox.
 
 ```
 cd FlyingFox-development/
 sh install.sh
 ```
-
 Start your node with this script:
 
 ```
 sh start.sh
 ```
-
 Then open this URL in your browser: http://localhost:3011/main.html
+the default password is "abc".

@@ -19,9 +19,13 @@ sync(IP, Port) ->
 
 get_starter_block(IP, Port, Height) ->
     %keep walking backward till we get to a block that has a backup hash...
+    io:fwrite("starter block height"),
+    io:fwrite(integer_to_list(Height)),
+    io:fwrite("\n"),
     Z = block_tree:backup(Height),
     if
 	Z -> talker:talk({block, Height}, IP, Port);
+	Height < 0 -> io:fwrite("starter block failure"), 1=2;
 	true -> get_starter_block(IP, Port, Height - 1)
     end.
 	     
@@ -38,13 +42,20 @@ fresh_sync(IP, Port, PeerData) ->
 	TheirHeight < Z -> 
 	    get_blocks(MyHeight + 1, TheirHeight, IP, Port);
 	true ->
+	    io:fwrite("fs 1"),
 	    SignedBlock = get_starter_block(IP, Port, TheirHeight),
+	    io:fwrite("signed block \n"),
+	    io:fwrite(packer:pack(SignedBlock)),
 	    Block = sign:data(SignedBlock),
+	    io:fwrite("fs 2"),
 	    block_finality:append(SignedBlock, block_tree:block_number(Block)),
 	    DBRoot = block_tree:block_root(Block),
+	    io:fwrite("fs 3"),
 	    absorb_stuff(backup:backup_files(), IP, Port),
 	    DBRoot = backup:hash(),
-	    get_blocks(MyHeight + 1, TheirHeight, IP, Port)
+	    io:fwrite("fs 4"),
+	    get_blocks(MyHeight + 1, TheirHeight, IP, Port),
+	    io:fwrite("fs 5")
     end,
     0.
     %starting from recent block, walk backward to find the backup hash.

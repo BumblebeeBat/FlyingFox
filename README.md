@@ -5,7 +5,7 @@ Flying Fox
 
 Bitcoin Donations: 1GbpRPE83Vjg73KFvTVZ4EnS2qNkiLY5TT
 
-Flying Fox is my attempt to achieve the goals of the truthcoin project: http://www.truthcoin.info/ I respect Paul Sztorc, especially in his ability to communicate truthcoin, which he invented. Him and I are using very different strategies to try and build the same thing.
+Flying Fox is my attempt to achieve the goals of the truthcoin project: http://www.truthcoin.info/ a project invented by Paul Sztorc. Him and I are using very different strategies to try and build the same thing.
 
 Sztorc maintains a forum where the different teams trying to build truthcoin can share ideas: http://forum.hive-mind.info/
 
@@ -25,10 +25,8 @@ Facts about Flying Fox:
 
 Code of conduct, development guidelines: Submit pull requests. If I like, and it passes tests, I will accept. Feel free to ask me questions or make github issues.
 
-To run flying fox:
+Flying Fox does not yet have executable install.
+For now you need to install it from source, look at compile.md
 
-    sh install.sh
-
-    sh executable_start.sh
-
+Then open this URL in your browser: http://localhost:3011/main.html
 the default password is "abc".
