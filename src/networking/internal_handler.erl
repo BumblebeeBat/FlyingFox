@@ -10,6 +10,7 @@ handle(Req, State) ->
     io:fwrite("internal handler "),
     io:fwrite(Data),
     io:fwrite("\n"),
+    true = is_binary(Data),
     A = packer:unpack(Data),
     B = doit(A),
     D = packer:pack(B),
@@ -51,7 +52,8 @@ doit({channel_balance2, IP, Port}) ->
     BetAmounts = channel_manager:bet_amounts(OffChannel),
     {ok, Bal + (Sign * channel_block_tx:amount(OffChannel)) - BetAmounts};
 doit({create_account, Pub, Amount, Fee}) -> 
-    create_account_tx:create_account(Pub, Amount, Fee);
+    create_account_tx:create_account(Pub, Amount, Fee),
+    {ok, ok};
 doit({spend, To, Amount, Fee}) ->
     spend_tx:spend(To, Amount, Fee);
 doit({buy_block}) -> sign_tx:sign(), block_tree:buy_block();

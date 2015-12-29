@@ -1,6 +1,6 @@
 -module(handler).
 
--export([init/3, handle/2, terminate/3]).
+-export([init/3, handle/2, terminate/3, doit/1]).
 %example of talking to this handler:
 %httpc:request(post, {"http://127.0.0.1:3010/", [], "application/octet-stream", "echo"}, [], []).
 %curl -i -d '[-6,"test"]' http://localhost:3011
@@ -11,6 +11,7 @@ handle(Req, State) ->
     io:fwrite("handler got data "),
     io:fwrite(Data),
     io:fwrite("\n"),
+    true = is_binary(Data),
     A = packer:unpack(Data),
     B = doit(A),
     D = packer:pack(B),
@@ -23,7 +24,11 @@ terminate(_Reason, _Req, _State) -> ok.
 -define(WORD, 10000000).%10 megabytes.
 doit({pubkey}) -> {ok, keys:pubkey()};
 doit({height}) -> {ok, block_tree:height()};
-doit({block, N}) -> {ok, block_tree:read_int(N)};
+doit({block, N}) -> 
+    io:fwrite("handler doit block "),
+    io:fwrite(integer_to_list(N)),
+    io:fwrite("\n"),
+    {ok, block_tree:x_to_block(block_tree:read_int(N))};
 doit({tophash}) -> {ok, hash:doit(block_tree:top())};
 doit({recent_hash, H}) -> {ok, block_tree:is_key(H)};
 doit({accounts_size}) ->
