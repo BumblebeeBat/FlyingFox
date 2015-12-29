@@ -9,7 +9,6 @@ word_to_file("blocks") -> constants:blocks();
 word_to_file(block_pointers) -> constants:block_pointers();
 word_to_file("block_pointers") -> constants:block_pointers();
 word_to_file(accounts) -> constants:accounts();
-word_to_file('accounts') -> constants:accounts();
 word_to_file("accounts") -> constants:accounts();
 word_to_file(all_secrets) -> constants:all_secrets();
 word_to_file("all_secrets") -> constants:all_secrets();
@@ -24,6 +23,7 @@ word_to_file("entropy") -> constants:entropy();
 word_to_file(X) ->
     io:fwrite("backup word_to_file can't handle "),
     io:fwrite(packer:pack(X)),
+    io:fwrite(X),
     io:fwrite("\n").
 
 backup_files() -> tl(tl(files())).
