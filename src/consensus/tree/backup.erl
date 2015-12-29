@@ -1,17 +1,37 @@
 -module(backup).
--export([hash/0, backup/0, backup_files/0]).
+-export([hash/0, backup/0, backup_files/0, read/2, read_size/1]).
 
 files() -> [constants:blocks(), constants:block_pointers(), constants:accounts(), constants:all_secrets(), constants:d_accounts(), constants:channels(), constants:d_channels(), constants:entropy()].
+
+word_to_file(blocks) -> constants:blocks();
+word_to_file(block_pointers) -> constants:block_pointers();
+word_to_file(accounts) -> constants:accounts();
+word_to_file(all_secrets) -> constants:all_secrets();
+word_to_file(d_accounts) -> constants:d_accounts();
+word_to_file(channels) -> constants:channels();
+word_to_file(d_channels) -> constants:d_channels();
+word_to_file(entropy) -> constants:entropy().
 
 backup_files() -> tl(tl(files())).
 
 hash() -> hash(files(), []).
 hash([], X) -> hash:doit(X);
 hash([F|T], X) -> hash(T, [hash:file(F)|X]).
-
+-define(backup, "backup/").
 backup() -> backup(files()).
 backup([]) -> ok;
 backup([F|T]) -> 
-    file:copy(F, "backup/"++F),
+     file:copy(F, ?backup++F),
     backup(T).
-		 
+
+-define(word, 100000).
+read_size(F) ->
+    File = word_to_file(F),
+    filelib:file_size(?backup++File) div ?word.
+read(F, N) ->
+    File = word_to_file(F),
+    {ok, RFile } = file:open(?backup++File, [read, binary, raw]),
+    {ok, Out} = file:pread(RFile, N*?word, ?word),
+    file:close(RFile),
+    Out.
+

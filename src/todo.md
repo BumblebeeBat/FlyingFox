@@ -1,3 +1,8 @@
+looking at backup.erl
+working to allow syncing from further behind than finality.
+looking at download_blocks.erl
+
+
 hashlock lightning payments javascript
 close_channel javascript multiple steps
 change server javascript

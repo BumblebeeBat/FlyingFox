@@ -19,9 +19,6 @@ sync(IP, Port) ->
 
 get_starter_block(IP, Port, Height) ->
     %keep walking backward till we get to a block that has a backup hash...
-    io:fwrite("starter block height"),
-    io:fwrite(integer_to_list(Height)),
-    io:fwrite("\n"),
     Z = block_tree:backup(Height),
     if
 	Z -> talker:talk({block, Height}, IP, Port);
@@ -31,10 +28,10 @@ get_starter_block(IP, Port, Height) ->
 	     
 absorb_stuff(Files, IP, _Port) ->
     %should download files.
+    
     io:fwrite("absorb stuff").
 
 fresh_sync(IP, Port, PeerData) ->
-    io:fwrite("fresh sync"),
     TheirHeight = PeerData,
     Z = fractions:multiply_int(constants:backup(), constants:max_reveal()),
     MyHeight = block_tree:height(),
@@ -42,12 +39,13 @@ fresh_sync(IP, Port, PeerData) ->
 	TheirHeight < Z -> 
 	    get_blocks(MyHeight + 1, TheirHeight, IP, Port);
 	true ->
-	    io:fwrite("fs 1"),
-	    SignedBlock = get_starter_block(IP, Port, TheirHeight),
+	    {ok, SignedBlock} = get_starter_block(IP, Port, TheirHeight),
 	    io:fwrite("signed block \n"),
 	    io:fwrite(packer:pack(SignedBlock)),
 	    Block = sign:data(SignedBlock),
-	    io:fwrite("fs 2"),
+	    io:fwrite("fs 2"),%died here
+	    N = block_tree:block_number(Block),%new
+	    block_pointers:set_start(N),
 	    block_finality:append(SignedBlock, block_tree:block_number(Block)),
 	    DBRoot = block_tree:block_root(Block),
 	    io:fwrite("fs 3"),

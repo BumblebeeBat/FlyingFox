@@ -67,6 +67,7 @@ handle_call({write, K, V}, _From, D) ->
 				  Z ->
 				      H = backup:hash(),
 				      H = NewBlock#block.db_root,
+				      backup:backup(),
 				      0;
 				  true -> 0
 			      end,
@@ -251,11 +252,10 @@ channel_helper(N, H) ->
         error -> channel_helper(N, Parent);
         {ok, Val} -> Val
     end.
-buy_block() -> buy_block(tx_pool:txs(), tx_pool:total_coins()).
-buy_block(Txs, TotalCoins) -> buy_block(Txs, TotalCoins, 1).
 backup(N) ->
    (N rem (fractions:multiply_int(constants:backup(), constants:max_reveal()))) == 0.
-
+buy_block() -> buy_block(tx_pool:txs(), tx_pool:total_coins()).
+buy_block(Txs, TotalCoins) -> buy_block(Txs, TotalCoins, 1).
 buy_block(Txs, TotalCoins, BlockGap) ->
     ParentKey = read(top),
     ParentX = read(ParentKey),
