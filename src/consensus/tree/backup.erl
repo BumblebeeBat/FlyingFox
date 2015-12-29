@@ -11,6 +11,10 @@ word_to_file(d_accounts) -> constants:d_accounts();
 word_to_file(channels) -> constants:channels();
 word_to_file(d_channels) -> constants:d_channels();
 word_to_file(entropy) -> constants:entropy().
+word_to_file(X) ->
+    io:fwrite("backup word_to_file can't handle "),
+    io:fwrite(packer:pack(X)),
+    io:fwrite("\n").
 
 backup_files() -> tl(tl(files())).
 
