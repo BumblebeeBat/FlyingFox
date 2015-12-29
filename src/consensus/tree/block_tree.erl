@@ -136,7 +136,7 @@ block(X) ->
 block2txs(X) -> X#block.txs.
 txs() -> txs(read(read(top))).
 txs(X) -> 
-    B = sign:data(X#x.block),
+    B = sign:data(X),
     B#block.txs.
 power() -> power(read(read(top))).
 power(X) -> 
