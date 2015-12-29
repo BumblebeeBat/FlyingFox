@@ -3,11 +3,13 @@
 file_names() -> [accounts, all_secrets, d_accounts, channels, d_channels, entropy].
 files() -> [constants:blocks(), constants:block_pointers(), constants:accounts(), constants:all_secrets(), constants:d_accounts(), constants:channels(), constants:d_channels(), constants:entropy()].
 
+%I am not using list_to_atom here because it is insecure.
 word_to_file(blocks) -> constants:blocks();
 word_to_file("blocks") -> constants:blocks();
 word_to_file(block_pointers) -> constants:block_pointers();
 word_to_file("block_pointers") -> constants:block_pointers();
 word_to_file(accounts) -> constants:accounts();
+word_to_file('accounts') -> constants:accounts();
 word_to_file("accounts") -> constants:accounts();
 word_to_file(all_secrets) -> constants:all_secrets();
 word_to_file("all_secrets") -> constants:all_secrets();
