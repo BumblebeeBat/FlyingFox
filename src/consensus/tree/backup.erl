@@ -1,6 +1,6 @@
 -module(backup).
--export([hash/0, backup/0, backup_files/0, read/2, read_size/1]).
-
+-export([hash/0, backup/0, backup_files/0, read/2, read_size/1, file_names/0]).
+file_names() -> [accounts, all_secrets, d_accounts, channels, d_channels, entropy].
 files() -> [constants:blocks(), constants:block_pointers(), constants:accounts(), constants:all_secrets(), constants:d_accounts(), constants:channels(), constants:d_channels(), constants:entropy()].
 
 word_to_file(blocks) -> constants:blocks();
@@ -24,7 +24,7 @@ backup([F|T]) ->
     file:copy(F, ?backup++F),
     backup(T).
 
--define(word, 100000).
+-define(word, constants:word_size()).
 read_size(F) ->
     File = word_to_file(F),
     filelib:file_size(?backup++File) div ?word.

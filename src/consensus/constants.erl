@@ -81,7 +81,7 @@ d_channels() -> root() ++ "d_channels.db".
 keys() -> root() ++ "keys.db".
 secrets() -> root() ++ "secrets.db".
 backup_accounts() -> root ++ "backup/accounts.db".
-    
+word_size() -> 100000.
 
 test() ->
     A = portion_of_block_creation_fee_validators(), 

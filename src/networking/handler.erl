@@ -115,6 +115,10 @@ doit({to_channel, SignedTx}) ->
     true = to_channel_tx:min_ratio(free_constants:liquidity_ratio(), Tx),
     tx_pool:absorb(keys:sign(SignedTx)),
     {ok, 0};
+doit({backup_size, File}) ->
+    {ok, backup:read_size(File)};
+doit({backup_read, File, N}) ->
+    {ok, backup:read(File, N)};
 doit(X) ->
     io:fwrite("I can't handle this \n"),
     io:fwrite(packer:pack(X)), %unlock2

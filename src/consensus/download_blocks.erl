@@ -26,10 +26,19 @@ get_starter_block(IP, Port, Height) ->
 	true -> get_starter_block(IP, Port, Height - 1)
     end.
 	     
-absorb_stuff(Files, IP, _Port) ->
+absorb_stuff([], IP, Port) -> ok;
+absorb_stuff([File|T], IP, Port) ->
     %should download files.
-    
-    io:fwrite("absorb stuff").
+    Size = talker:talk({backup_size, File}, IP, Port),
+    F = file:open(File, [binary, raw, write, read]),
+    absorb2(F, 0, Size, IP, Port),
+    file:close(F),
+    absorb_stuff(T, IP, Port). 
+absorb2(File, Step, Size, IP, Port) when Step > Size -> ok;
+absorb2(File, Step, Size, IP, Port) ->
+    Chunk = talker:talk({backup_read, File, 0}, IP, Port),
+    file:pwrite(File, Step * constants:word_size(), Chunk),
+    absorb2(File, Step + 1, Size, IP, Port).
 
 fresh_sync(IP, Port, PeerData) ->
     TheirHeight = PeerData,
@@ -47,7 +56,7 @@ fresh_sync(IP, Port, PeerData) ->
 	    block_finality:append(SignedBlock, block_tree:block_number(Block)),
 	    DBRoot = block_tree:block_root(Block),
 	    io:fwrite("fs 3"),
-	    absorb_stuff(backup:backup_files(), IP, Port),
+	    absorb_stuff(backup:file_names(), IP, Port),
 	    DBRoot = backup:hash(),%died here
 	    io:fwrite("fs 4"),
 	    get_blocks(MyHeight + 1, TheirHeight, IP, Port),
