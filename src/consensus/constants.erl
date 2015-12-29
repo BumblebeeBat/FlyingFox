@@ -80,7 +80,7 @@ channels() -> root() ++ "channels.db".
 d_channels() -> root() ++ "d_channels.db".
 keys() -> root() ++ "keys.db".
 secrets() -> root() ++ "secrets.db".
-backup_accounts() -> root ++ "backup/accounts.db".
+backup_accounts() -> root() ++ "backup/accounts.db".
 word_size() -> 100000.
 
 test() ->
