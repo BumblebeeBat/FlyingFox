@@ -8,6 +8,9 @@
 
 handle(Req, State) ->
     {ok, Data, _} = cowboy_req:body(Req),
+    io:fwrite("handler got data "),
+    io:fwrite(Data),
+    io:fwrite("\n"),
     A = packer:unpack(Data),
     B = doit(A),
     D = packer:pack(B),
