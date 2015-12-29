@@ -28,7 +28,7 @@ doit({block, N}) ->
     io:fwrite("handler doit block "),
     io:fwrite(integer_to_list(N)),
     io:fwrite("\n"),
-    {ok, block_tree:x_to_block(block_tree:read_int(N))};
+    {ok, block_tree:read_int(N)};
 doit({tophash}) -> {ok, hash:doit(block_tree:top())};
 doit({recent_hash, H}) -> {ok, block_tree:is_key(H)};
 doit({accounts_size}) ->

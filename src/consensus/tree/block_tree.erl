@@ -27,7 +27,7 @@ read_int_internal(Height, BlockPointer, D) ->
     if
         BlockX == finality -> block_finality:read(Height);
         BlockX#x.height - Height > F -> block_finality:read(Height);
-        BlockX#x.height == Height -> BlockX;
+        BlockX#x.height == Height -> BlockX#x.block;
         true -> read_int_internal(Height, BlockX#x.parent, D)
     end.
 handle_cast(_, X) -> {noreply, X}.
