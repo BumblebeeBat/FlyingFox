@@ -21,7 +21,7 @@ hash([F|T], X) -> hash(T, [hash:file(F)|X]).
 backup() -> backup(files()).
 backup([]) -> ok;
 backup([F|T]) -> 
-     file:copy(F, ?backup++F),
+    file:copy(F, ?backup++F),
     backup(T).
 
 -define(word, 100000).

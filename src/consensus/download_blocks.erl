@@ -40,17 +40,15 @@ fresh_sync(IP, Port, PeerData) ->
 	    get_blocks(MyHeight + 1, TheirHeight, IP, Port);
 	true ->
 	    {ok, SignedBlock} = get_starter_block(IP, Port, TheirHeight),
-	    io:fwrite("signed block \n"),
 	    io:fwrite(packer:pack(SignedBlock)),
 	    Block = sign:data(SignedBlock),
-	    io:fwrite("fs 2"),%died here
-	    N = block_tree:block_number(Block),%new
+	    N = block_tree:block_number(Block),
 	    block_pointers:set_start(N),
 	    block_finality:append(SignedBlock, block_tree:block_number(Block)),
 	    DBRoot = block_tree:block_root(Block),
 	    io:fwrite("fs 3"),
 	    absorb_stuff(backup:backup_files(), IP, Port),
-	    DBRoot = backup:hash(),
+	    DBRoot = backup:hash(),%died here
 	    io:fwrite("fs 4"),
 	    get_blocks(MyHeight + 1, TheirHeight, IP, Port),
 	    io:fwrite("fs 5")
