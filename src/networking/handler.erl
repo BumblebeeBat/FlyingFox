@@ -116,6 +116,9 @@ doit({to_channel, SignedTx}) ->
     tx_pool:absorb(keys:sign(SignedTx)),
     {ok, 0};
 doit({backup_size, File}) ->
+    io:fwrite("backup size handler"),
+    io:fwrite(packer:pack(File)),
+    io:fwrite("\n"),
     {ok, backup:read_size(File)};
 doit({backup_read, File, N}) ->
     {ok, backup:read(File, N)};
