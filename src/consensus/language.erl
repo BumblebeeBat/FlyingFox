@@ -28,36 +28,40 @@ remove_till(_, _, [], _) ->
 flip(X) -> flip(X, []).
 flip([], O) -> O;
 flip([H|T], O) -> flip(T, [H|O]).
-run(Code) -> run(Code, [], []).
-run([], _, Stack) -> Stack;
-run([17|Code], UsedCode, [Bool|Stack]) -> %if (case)
+run(Code) -> run(Code, [], [], []).
+run([], _, _, Stack) -> Stack;
+run([17|Code], UsedCode, Alt, [Bool|Stack]) -> %if (case)
     if
-	Bool -> run(Code, [17|UsedCode], Stack);
+	Bool -> run(Code, [17|UsedCode], Alt, Stack);
 	true -> 
 	    {H, T} = remove_till(18, Code),
-	    run(T, [17|(H++UsedCode)], Stack)
+	    run(T, [17|(H++UsedCode)], Alt, Stack)
     end;
-run([18|Code], UsedCode, Stack) -> %else
+run([18|Code], UsedCode, Alt, Stack) -> %else
     {H, T} = remove_till(19, Code),
-    run(T, [18|(H++UsedCode)], Stack);
+    run(T, [18|(H++UsedCode)], Alt, Stack);
 %run([36|Code], UsedCode, [Start|[Size|Stack]]) -> %this opcode looks at a section of code that was already processed, and computes the hash of those words. paytoscripthash
     %This measures backwards.
     %example A, B, C, 3, 0, script_hash takes the hash of [A, B, C]
 %    H = lists:sublist(UsedCode, Start, Size),
 %    O = hash:doit(flip(H)),
 %    run(Code, [36|UsedCode], [O|Stack]);
-run([37|Code], UsedCode, Stack) -> %counts up how many sections of code we have. Each section is seperated by "seperate" 36.
+run([37|Code], UsedCode, Alt, Stack) -> %counts up how many sections of code we have. Each section is seperated by "seperate" 36.
     Sections = 1 + count(36, Code ++ UsedCode),
-    run(Code, [37|UsedCode], [Sections|Stack]);
-run([38|Code], UsedCode, [N|Stack]) -> %Takes a section of the code, and computes the hash of those words. This is used to merkelize the scriptpubkey so that you only reveal the minimum amount of script necessary when posting to the blockchain.
+    run(Code, [37|UsedCode], Alt, [Sections|Stack]);
+run([38|Code], UsedCode, Alt, [N|Stack]) -> %Takes a section of the code, and computes the hash of those words. This is used to merkelize the scriptpubkey so that you only reveal the minimum amount of script necessary when posting to the blockchain.
     C = flip(UsedCode) ++ Code,
     S = nth_section(N, C),
     H = hash:doit(S),
-    run(Code, [38|UsedCode], [H|Stack]);
-run([28|_], _, _) -> %die. Neither person gets money.
+    run(Code, [38|UsedCode], Alt, [H|Stack]);
+run([39|Code], UsedCode, Alt, [N|Stack]) ->%moves the top of the stack to the top of the alt stack.
+    run(Code, [39|UsedCode], [N|Alt], Stack);
+run([40|Code], UsedCode, [N|Alt], Stack) ->%moves the top of the alt stack to the top of the stack.
+    run(Code, [40|UsedCode], Alt, [N|Stack]);
+run([28|_], _, _, _) -> %die. Neither person gets money.
     [delete];
-run([Word|Code], UsedCode, Stack) ->
-    run(Code, [Word|UsedCode], run_helper(Word, Stack)).
+run([Word|Code], UsedCode, Alt, Stack) ->
+    run(Code, [Word|UsedCode], Alt, run_helper(Word, Stack)).
 run_helper(0, [H|Stack]) -> 
     [hash:doit(H)|Stack];%hash
 run_helper(1, [Pub|[Data|[Sig|Stack]]]) ->%verify_sig
@@ -169,6 +173,8 @@ atom2op(eq) -> 35; %( X Y -- true/false )
 atom2op(seperate) -> 36;
 atom2op(many_sections) -> 37;
 atom2op(hash_section) -> 38;
+atom2op(to_r) -> 39;
+atom2op(from_r) -> 40;
 atom2op(true) -> true;
 atom2op(false) -> false.
 
@@ -214,7 +220,7 @@ test() ->
     true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus])) == [{f, 65, 11}],
     true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus, drop, many_sections])) == [4],
     true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus, drop, 0, hash_section])) == [hash:doit([])],
-
+    true = run(assemble([{f, 1, 2}, to_r, from_r])) == [{f, 1, 2}],
     %Code = [2, 2, plus],
     %ScriptHash = hash:doit(assemble(Code)),
     %true = (run(assemble([27] ++ Code ++ [length(Code),3,scripthash])) == [ScriptHash, 4, 27]),%pay2scripthash
