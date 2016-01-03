@@ -29,6 +29,7 @@ get_starter_block(IP, Port, Height) ->
 absorb_stuff([], IP, Port) -> ok;
 absorb_stuff([File|T], IP, Port) ->
     %should download files.
+    %File is an atom, which cannot be packed with packer...
     Size = talker:talk({backup_size, File}, IP, Port),
     F = file:open(File, [binary, raw, write, read]),
     absorb2(F, 0, Size, IP, Port),
