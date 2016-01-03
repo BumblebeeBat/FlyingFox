@@ -1,5 +1,3 @@
-%How about a word that loads an integer into a stack that we can't retreave from or delete. If the integer gets loaded a second time, then it crashes. This would allow us to make parts of the code exclude each other.
-
 -module(language).
 -export([run/1, test/0, remove_till/2, assemble/1, hashlock/2, extract_sh/1, valid_secret/2, run_script/1]).
 int_arith(2, X, Y) -> X + Y;
@@ -40,12 +38,6 @@ run([17|Code], UsedCode, Alt, [Bool|Stack]) -> %if (case)
 run([18|Code], UsedCode, Alt, Stack) -> %else
     {H, T} = remove_till(19, Code),
     run(T, [18|(H++UsedCode)], Alt, Stack);
-%run([36|Code], UsedCode, [Start|[Size|Stack]]) -> %this opcode looks at a section of code that was already processed, and computes the hash of those words. paytoscripthash
-    %This measures backwards.
-    %example A, B, C, 3, 0, script_hash takes the hash of [A, B, C]
-%    H = lists:sublist(UsedCode, Start, Size),
-%    O = hash:doit(flip(H)),
-%    run(Code, [36|UsedCode], [O|Stack]);
 run([37|Code], UsedCode, Alt, Stack) -> %counts up how many sections of code we have. Each section is seperated by "seperate" 36.
     Sections = 1 + count(36, Code ++ UsedCode),
     run(Code, [37|UsedCode], Alt, [Sections|Stack]);
@@ -144,10 +136,6 @@ atom2op(divide) -> 5;%( X Y -- Z )
 atom2op(gt) -> 6;%( X Y -- true/false )
 atom2op(lt) -> 7;%( X Y -- true/false )
 atom2op(eq_num) -> 8;%( X Y -- true/false )
-atom2op(switch) -> 17;% conditional statement
-% true switch <<"executed">> else <<"ignored">> then 
-% false switch <<"ignored">> else <<"executed">> then 
-atom2op(else) -> 18;% part of an switch conditional statement
 atom2op(swap) -> 9; %( A B -- B A )
 atom2op(drop) -> 10;%( X -- )
 atom2op(dup) -> 11;%( X -- X X )
@@ -156,6 +144,10 @@ atom2op(tor) -> 13;%( a b c -- b c a )
 atom2op(ddup) -> 14;%( a b -- a b a b )
 atom2op(tuckn) -> 15;%( X N -- ) inserts X N-deeper into stack.
 atom2op(pickn) -> 16;%( Stack N -- Stack Nth-item )
+% true switch <<"executed">> else <<"ignored">> then 
+% false switch <<"ignored">> else <<"executed">> then 
+atom2op(switch) -> 17;% conditional statement
+atom2op(else) -> 18;% part of an switch conditional statement
 atom2op(then) -> 19;%part of switch conditional statement.
 atom2op(both) -> 20;%( true/false true/false -- true/false )
 atom2op(either) -> 21;%( true/false true/false -- true/false )
@@ -176,14 +168,14 @@ atom2op(slash) -> 34; %( -- true/false)
 atom2op(eq) -> 35; %( X Y -- true/false )
 %atom2op(scripthash) -> 36; %( size start -- <<Bytes:256>> )
 %this opcode looks at a section of code that was already processed, and computes the hash of those words. paytoscripthash
-atom2op(seperate) -> 36;
-atom2op(many_sections) -> 37;
-atom2op(hash_section) -> 38;
-atom2op(to_r) -> 39;
-atom2op(from_r) -> 40;
-atom2op(section_size) -> 41;
-atom2op(true) -> true;
-atom2op(false) -> false.
+atom2op(seperate) -> 36; %( -- )
+atom2op(many_sections) -> 37; %( -- Many )
+atom2op(hash_section) -> 38; %( Number -- Hash )
+atom2op(to_r) -> 39; %( V -- )
+atom2op(from_r) -> 40; %( -- V )
+atom2op(section_size) -> 41; %( Number -- Other )
+atom2op(true) -> true; %( -- true )
+atom2op(false) -> false. %( -- false )
 
 hashlock(ToAmount, SecretHash) ->
     true = ((ToAmount == 0) or (ToAmount == 1)),
@@ -226,7 +218,7 @@ test() ->
     Sig = sign:sign(Data, Priv),
     true = sign:verify_sig(Data, Sig, Pub),
     true = run(assemble([Sig] ++ [Data, Pub, verify_sig])) == [true],%3rd party signature
-    B = <<169,243,219,139,234,91,46,239,146,55,229,72,9,221,164,63,12,33,143,128,208,211,40,163,63,91,76,255,255,51,72,230>>,%hash of 1.
+    B = hash:doit(1),
     true = run(assemble([1] ++ [hash, B, eq])) == [true],%normal hashlock
     true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus])) == [{f, 65, 11}],
     true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus, drop, many_sections])) == [4],
@@ -234,10 +226,10 @@ test() ->
     true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus, drop, -3, hash_section])) == [hash:doit([{f, 10, 11}])], %hash_section accepts negative value inputs too.
     true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus, drop, -3, section_size])) == [1], %hash_section accepts negative value inputs too.
     true = run(assemble([{f, 1, 2}, to_r, from_r])) == [{f, 1, 2}],
+    %(i) merkle tree transform to cut the size of the state, and (ii) lightning networks at the same time
     %Code = [2, 2, plus],
     %ScriptHash = hash:doit(assemble(Code)),
     %true = (run(assemble([27] ++ Code ++ [length(Code),3,scripthash])) == [ScriptHash, 4, 27]),%pay2scripthash
-    %(i) merkle tree transform to cut the size of the state, and (ii) lightning networks at the same time
     %C = [true, 2, drop],
     %CodeHash = hash:doit(assemble(C)),
     %ScriptPubkey = [switch, length(C), 4, scripthash, CodeHash, eq, swap, hash, B, eq, both, else, then],
