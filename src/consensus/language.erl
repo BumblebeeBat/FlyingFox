@@ -58,6 +58,12 @@ run([39|Code], UsedCode, Alt, [N|Stack]) ->%moves the top of the stack to the to
     run(Code, [39|UsedCode], [N|Alt], Stack);
 run([40|Code], UsedCode, [N|Alt], Stack) ->%moves the top of the alt stack to the top of the stack.
     run(Code, [40|UsedCode], Alt, [N|Stack]);
+run([41|Code], UsedCode, Alt, [N|Stack]) -> %Takes a section of the code, and computes the amount of those words. 
+    C = flip(UsedCode) ++ Code,
+    S = nth_section(N, C),
+    L = length(S),
+    run(Code, [41|UsedCode], Alt, [L|Stack]);
+
 run([28|_], _, _, _) -> %die. Neither person gets money.
     [delete];
 run([Word|Code], UsedCode, Alt, Stack) ->
@@ -175,6 +181,7 @@ atom2op(many_sections) -> 37;
 atom2op(hash_section) -> 38;
 atom2op(to_r) -> 39;
 atom2op(from_r) -> 40;
+atom2op(section_size) -> 41;
 atom2op(true) -> true;
 atom2op(false) -> false.
 
@@ -195,6 +202,10 @@ count(X, L) -> count(X, L, 0).
 count(_, [], N) -> N;
 count(X, [X|R], N) -> count(X, R, N+1);
 count(X, [_|R], N) -> count(X, R, N).
+nth_section(N, C) when N < 0 -> 
+    Sections = 1 + count(36, C),
+    M = Sections + N,
+    nth_section(M, C);
 nth_section(0, C) -> till_36(C, []);
 nth_section(N, [36|C]) -> nth_section(N-1, C);
 nth_section(N, [_|C]) -> nth_section(N, C);
@@ -219,7 +230,9 @@ test() ->
     true = run(assemble([1] ++ [hash, B, eq])) == [true],%normal hashlock
     true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus])) == [{f, 65, 11}],
     true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus, drop, many_sections])) == [4],
-    true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus, drop, 0, hash_section])) == [hash:doit([])],
+    true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus, drop, 1, hash_section])) == [hash:doit([{f, 10, 11}])],
+    true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus, drop, -3, hash_section])) == [hash:doit([{f, 10, 11}])], %hash_section accepts negative value inputs too.
+    true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus, drop, -3, section_size])) == [1], %hash_section accepts negative value inputs too.
     true = run(assemble([{f, 1, 2}, to_r, from_r])) == [{f, 1, 2}],
     %Code = [2, 2, plus],
     %ScriptHash = hash:doit(assemble(Code)),
