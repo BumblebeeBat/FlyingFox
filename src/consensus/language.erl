@@ -1,3 +1,5 @@
+%How about a word that loads an integer into a stack that we can't retreave from or delete. If the integer gets loaded a second time, then it crashes. This would allow us to make parts of the code exclude each other.
+
 -module(language).
 -export([run/1, test/0, remove_till/2, assemble/1, hashlock/2, extract_sh/1, valid_secret/2, run_script/1]).
 int_arith(2, X, Y) -> X + Y;
@@ -38,12 +40,20 @@ run([17|Code], UsedCode, [Bool|Stack]) -> %if (case)
 run([18|Code], UsedCode, Stack) -> %else
     {H, T} = remove_till(19, Code),
     run(T, [18|(H++UsedCode)], Stack);
-run([36|Code], UsedCode, [Start|[Size|Stack]]) -> %this opcode looks at a section of code that was already processed, and computes the hash of those words. paytoscripthash
+%run([36|Code], UsedCode, [Start|[Size|Stack]]) -> %this opcode looks at a section of code that was already processed, and computes the hash of those words. paytoscripthash
     %This measures backwards.
     %example A, B, C, 3, 0, script_hash takes the hash of [A, B, C]
-    H = lists:sublist(UsedCode, Start, Size),
-    O = hash:doit(flip(H)),
-    run(Code, [36|UsedCode], [O|Stack]);
+%    H = lists:sublist(UsedCode, Start, Size),
+%    O = hash:doit(flip(H)),
+%    run(Code, [36|UsedCode], [O|Stack]);
+run([37|Code], UsedCode, Stack) -> %counts up how many sections of code we have. Each section is seperated by "seperate" 36.
+    Sections = 1 + count(36, Code ++ UsedCode),
+    run(Code, [37|UsedCode], [Sections|Stack]);
+run([38|Code], UsedCode, [N|Stack]) -> %Takes a section of the code, and computes the hash of those words. This is used to merkelize the scriptpubkey so that you only reveal the minimum amount of script necessary when posting to the blockchain.
+    C = flip(UsedCode) ++ Code,
+    S = nth_section(N, C),
+    H = hash:doit(S),
+    run(Code, [38|UsedCode], [H|Stack]);
 run([28|_], _, _) -> %die. Neither person gets money.
     [delete];
 run([Word|Code], UsedCode, Stack) ->
@@ -100,6 +110,7 @@ run_helper(32, Stack) -> [block_tree:height()|Stack];%height
 run_helper(33, Stack) -> [length(Stack)|Stack];%stack size
 run_helper(34, Stack) -> [false|Stack];%this returns true if called from a channel_slash tx.
 run_helper(35, [X |[Y |Stack]]) -> [(X == Y)|Stack];%check if 2 non-numerical values are equal. like binary.
+run_helper(36, Stack) -> Stack;
 run_helper({f, T, B}, Stack) -> [{f, T, B}|Stack];%load fraction into stack.
 run_helper(B, Stack) when is_binary(B)-> [B|Stack];%load binary into stack.
 run_helper({integer, I}, Stack) -> [I|Stack];%load integer into stack
@@ -153,9 +164,11 @@ atom2op(height) -> 32; %( -- Height )
 atom2op(stack_size) -> 33; %( -- Size )
 atom2op(slash) -> 34; %( -- true/false)
 atom2op(eq) -> 35; %( X Y -- true/false )
-atom2op(scripthash) -> 36; %( size start -- <<Bytes:256>> )
+%atom2op(scripthash) -> 36; %( size start -- <<Bytes:256>> )
 %this opcode looks at a section of code that was already processed, and computes the hash of those words. paytoscripthash
-
+atom2op(seperate) -> 36;
+atom2op(many_sections) -> 37;
+atom2op(hash_section) -> 38;
 atom2op(true) -> true;
 atom2op(false) -> false.
 
@@ -172,6 +185,17 @@ run_script(Code) ->
     %{nonce, Amount to transfer, Amount to delete}
     % the highest nonced scriptsig is the only valid scriptsig.
     {hd(Out), hd(tl(Out)), hd(tl(tl(Out)))}.
+count(X, L) -> count(X, L, 0).
+count(_, [], N) -> N;
+count(X, [X|R], N) -> count(X, R, N+1);
+count(X, [_|R], N) -> count(X, R, N).
+nth_section(0, C) -> till_36(C, []);
+nth_section(N, [36|C]) -> nth_section(N-1, C);
+nth_section(N, [_|C]) -> nth_section(N, C);
+nth_section(_, []) -> io:fwrite("error, there aren't enough code seperators.").
+till_36([], Out) -> flip(Out);
+till_36([36|_], Out) -> flip(Out);
+till_36([X|In], Out) -> till_36(In, [X|Out]).
     
 test() ->    
     true = run(assemble([10, 2, plus])) == [12],
@@ -187,15 +211,20 @@ test() ->
     true = run(assemble([Sig] ++ [Data, Pub, verify_sig])) == [true],%3rd party signature
     B = <<169,243,219,139,234,91,46,239,146,55,229,72,9,221,164,63,12,33,143,128,208,211,40,163,63,91,76,255,255,51,72,230>>,%hash of 1.
     true = run(assemble([1] ++ [hash, B, eq])) == [true],%normal hashlock
-    Code = [2, 2, plus],
-    ScriptHash = hash:doit(assemble(Code)),
-    true = (run(assemble([27] ++ Code ++ [length(Code),3,scripthash])) == [ScriptHash, 4, 27]),%pay2scripthash
+    true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus])) == [{f, 65, 11}],
+    true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus, drop, many_sections])) == [4],
+    true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus, drop, 0, hash_section])) == [hash:doit([])],
+
+    %Code = [2, 2, plus],
+    %ScriptHash = hash:doit(assemble(Code)),
+    %true = (run(assemble([27] ++ Code ++ [length(Code),3,scripthash])) == [ScriptHash, 4, 27]),%pay2scripthash
     %(i) merkle tree transform to cut the size of the state, and (ii) lightning networks at the same time
-    C = [true, 2, drop],
-    CodeHash = hash:doit(assemble(C)),
-    ScriptPubkey = [switch, length(C), 4, scripthash, CodeHash, eq, swap, hash, B, eq, both, else, then],
-    ScriptKey1 = [false],
-    ScriptKey2 = [1, true, 2, drop],
-    true = run(assemble(ScriptKey1 ++ ScriptPubkey)) == [],
-    true = run(assemble(ScriptKey2 ++ ScriptPubkey)) == [true],
+    %C = [true, 2, drop],
+    %CodeHash = hash:doit(assemble(C)),
+    %ScriptPubkey = [switch, length(C), 4, scripthash, CodeHash, eq, swap, hash, B, eq, both, else, then],
+    %ScriptKey1 = [false],
+    %ScriptKey2 = [1, true, 2, drop],
+    %true = run(assemble(ScriptKey1 ++ ScriptPubkey)) == [],
+    %true = run(assemble(ScriptKey2 ++ ScriptPubkey)) == [true],
+
     success.

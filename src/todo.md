@@ -21,24 +21,8 @@ handler should have every input and output be encrypted. Otherwise eavesdroppers
 
 update now() 
 
-Language should have 3 outputs: portion of money that gets deleted, portion that gets spent, and nonce.
+the scripting language needs to be the result of compiling a high level language. The high level language is prolog??
+
+language has some notes at the top for updates.
 
 
-
-consensus/db.erl:    File = "database.db",
-consensus/entropy.erl:-define(LOC, "entropy.db").
-consensus/finality/accounts.erl:-define(file, "accounts.db").
-consensus/finality/accounts.erl:-define(empty, "d_accounts.db").
-consensus/finality/all_secrets.erl:-define(LOC, "all_secrets.db").
-consensus/finality/block_finality/block_dump.erl:-define(file, "blocks.db").
-consensus/finality/block_finality/block_dump.erl:    T = "temp.db",
-consensus/finality/block_finality/block_pointers.erl:-define(file, "block_pointers.db").
-consensus/finality/block_finality/block_pointers.erl:-define(start, "pointers_start.db").
-consensus/finality/block_finality/block_pointers.erl:    T = "temp.db",
-consensus/finality/channels.erl:-define(file, "channels.db").
-consensus/finality/channels.erl:-define(empty, "d_channels.db").
-consensus/keys.erl:-define(LOC(), "keys.db").
-consensus/secrets.erl:-define(LOC, "secrets.db").
-consensus/tree/backup.erl:files() -> ["blocks.db", "block_pointers.db", "accounts.db", "all_secrets.db", "d_accounts.db", "channels.db", "d_channels.db", "entropy.db"].
-networking/handler.erl:    {ok, filelib:file_size("backup/accounts.db") div ?WORD};
-networking/handler.erl:    {ok, File} = file:open("backup/accounts.db", [read, binary, raw]),
