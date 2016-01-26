@@ -1,7 +1,7 @@
-%New transaction type, similar to slasher.
-%Each validator needs a minimum amount of money in their account.
+%similar to slasher.
+%Each account needs a minimum amount of money.
 %If you can provide evidence that someone doesn't have enough money left to validate, you can take some of their money, which simultaniously deletes all their delegation, and changes the consensus_flag in the channels to off.
-%Otherwise it would be possible to reduce the total number of validators without paying a fee.
+
 -module(repo_tx).
 -export([doit/7, repo/3, losses/1]).
 -record(repo, {acc = 0, nonce = 0, target = 0, fee = 0, delegated = 0, channels = []}).

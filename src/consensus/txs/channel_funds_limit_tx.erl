@@ -1,6 +1,6 @@
 -module(channel_funds_limit_tx).
 -export([doit/7, losses/3, make_tx/2]).
-%add another type of transaction for closing channels. This one should allow you to instantly close the channel, and take all the money, but only if your partner is very low on funds, and will soon lose his account.
+%allows you to instantly close the channel, and take all the money, but only if your partner is very low on funds, and will soon lose his account.
 -record(channel_funds_limit, {acc = 0, nonce = 0, id = 0, fee = 0}).
 make_tx(ChannelId, Fee) ->
     Id = keys:id(),
