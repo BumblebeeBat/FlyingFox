@@ -69,8 +69,6 @@ Spends money into a channel. Possibly creates new channel. This extends the amou
 - Normally users give the correct money to the correct person before publishing the channel-block.
 - If the channel-block still contains contracts when it is published, then we check to see if the oracle has signed.
 - If the oracle did not sign, the money is deleted. If the oracle does sign, then the money is split up the way the oracle decided.
-- Re-using existing predictions should be free.
-- Should be possible to make some money in the channel state dependent on the existence of a signature valid for some given address and data. This way we can hash lock the existence of a signature to a payment.
 
 When bets are made, there is space for the oracle to write a number between 0 and 1, and sign. This determines how the outcome. This signature can be reused on other `channel_blocks` that were gambling on the same contract, so you don't have to consult the judge more than once for the same question. Eventually we want to allow the Sztorc consensus protocol for combining groups of judges' decisions.
 

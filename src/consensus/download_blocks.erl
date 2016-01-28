@@ -30,16 +30,28 @@ absorb_stuff([], IP, Port) -> ok;
 absorb_stuff([File|T], IP, Port) ->
     %should download files.
     %File is an atom, which cannot be packed with packer...
-    Size = talker:talk({backup_size, File}, IP, Port),
-    F = file:open(File, [binary, raw, write, read]),
-    absorb2(F, 0, Size, IP, Port),
+    {ok, Size} = talker:talk({backup_size, File}, IP, Port),
+    io:fwrite("absorb stuff\n"),
+    io:fwrite(File),
+    io:fwrite("\n"),
+    {ok, F} = file:open(File, [binary, raw, write, read]),
+    absorb2(File, F, 0, Size, IP, Port),
     file:close(F),
     absorb_stuff(T, IP, Port). 
-absorb2(File, Step, Size, IP, Port) when Step > Size -> ok;
-absorb2(File, Step, Size, IP, Port) ->
-    Chunk = talker:talk({backup_read, File, 0}, IP, Port),
+absorb2(_, _, Step, Size, _, _) when Step >= Size -> ok;
+absorb2(FileName, File, Step, Size, IP, Port) ->
+    io:fwrite("size "),
+    io:fwrite(integer_to_list(Size)),
+    io:fwrite("\n"),
+    io:fwrite("step "),
+    io:fwrite(integer_to_list(Step)),
+    io:fwrite("\n"),
+    io:fwrite("port "),
+    io:fwrite(integer_to_list(Port)),
+    io:fwrite("\n"),
+    {ok, Chunk} = talker:talk({backup_read, FileName, Step}, IP, Port),
     file:pwrite(File, Step * constants:word_size(), Chunk),
-    absorb2(File, Step + 1, Size, IP, Port).
+    absorb2(FileName, File, Step + 1, Size, IP, Port).
 
 fresh_sync(IP, Port, PeerData) ->
     TheirHeight = PeerData,

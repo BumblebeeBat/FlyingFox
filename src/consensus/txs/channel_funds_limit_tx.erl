@@ -65,7 +65,8 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
 	    D2 = 0,
 	    D = B;
 	true -> 
-	    D = 0, D2 = 0
+	    D2 = 0, 
+	    D = 0
     end,
     N = accounts:update(Acc, NewHeight, B - Tx#channel_funds_limit.fee, -D, 1, TotalCoins),
     N2 = accounts:update(Partner, NewHeight, 0, -D2, 0, TotalCoins, nocheck),
