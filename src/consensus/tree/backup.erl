@@ -41,7 +41,7 @@ backup([F|T]) ->
 -define(word, constants:word_size()).
 read_size(F) ->
     File = word_to_file(F),
-    1+(filelib:file_size(?backup++File) div ?word).
+    filelib:file_size(?backup++File) div ?word.
 read(F, N) ->
     File = word_to_file(F),
     {ok, RFile } = file:open(?backup++File, [read, binary, raw]),
