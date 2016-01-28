@@ -34,11 +34,11 @@ absorb_stuff([File|T], IP, Port) ->
     io:fwrite("absorb stuff\n"),
     io:fwrite(File),
     io:fwrite("\n"),
-    {ok, F} = file:open(File, [binary, raw, write, read]),
+    {ok, F} = file:open(File++".db", [binary, raw, write, read]),
     absorb2(File, F, 0, Size, IP, Port),
     file:close(F),
     absorb_stuff(T, IP, Port). 
-absorb2(_, _, Step, Size, _, _) when Step >= Size -> ok;
+absorb2(_, _, Step, Size, _, _) when Step > Size -> ok;
 absorb2(FileName, File, Step, Size, IP, Port) ->
     io:fwrite("size "),
     io:fwrite(integer_to_list(Size)),
