@@ -32,7 +32,7 @@ hash() -> hash(files(), []).
 hash([], X) -> hash:doit(X);
 hash([F|T], X) -> hash(T, [hash:file(F)|X]).
 -define(backup, "backup/").
-backup() -> backup(files()).
+backup() -> backup(backup_files()).
 backup([]) -> ok;
 backup([F|T]) -> 
     file:copy(F, ?backup++F),

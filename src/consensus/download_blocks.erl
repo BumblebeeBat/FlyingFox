@@ -63,6 +63,7 @@ fresh_sync(IP, Port, PeerData) ->
 	    get_blocks(MyHeight + 1, TheirHeight, IP, Port);
 	true ->
 	    {ok, SignedBlock} = get_starter_block(IP, Port, TheirHeight),
+	    %Is 246 or no??
 	    io:fwrite(packer:pack(SignedBlock)),
 	    Block = sign:data(SignedBlock),
 	    N = block_tree:block_number(Block),
