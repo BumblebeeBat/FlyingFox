@@ -30,7 +30,7 @@ backup_files() -> tl(tl(files())).
 
 hash() -> hash(files(), []).
 hash([], X) -> hash:doit(X);
-hash([F|T], X) -> hash(T, [hash:file("backup/"++F)|X]).
+hash([F|T], X) -> hash(T, [hash:file(F)|X]).
 -define(backup, "backup/").
 backup() -> backup(files()).
 backup([]) -> ok;
