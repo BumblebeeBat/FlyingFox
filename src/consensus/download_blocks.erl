@@ -37,6 +37,7 @@ absorb_stuff([File|T], IP, Port) ->
     {ok, F} = file:open(File++".db", [binary, raw, write, read]),
     absorb2(File, F, 0, Size, IP, Port),
     file:close(F),
+    file:copy(File++".db", "backup/"++File++".db"),
     absorb_stuff(T, IP, Port). 
 absorb2(_, _, Step, Size, _, _) when Step > Size -> ok;
 absorb2(FileName, File, Step, Size, IP, Port) ->
