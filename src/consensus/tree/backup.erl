@@ -28,7 +28,7 @@ word_to_file(X) ->
 
 backup_files() -> tl(tl(files())).
 
-hash() -> hash(files(), []).
+hash() -> hash(backup_files(), []).
 hash([], X) -> hash:doit(X);
 hash([F|T], X) -> hash(T, [hash:file(F)|X]).
 -define(backup, "backup/").
