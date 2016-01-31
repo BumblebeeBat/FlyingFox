@@ -34,10 +34,10 @@ absorb_stuff([File|T], IP, Port) ->
     io:fwrite("absorb stuff\n"),
     io:fwrite(File),
     io:fwrite("\n"),
-    {ok, F} = file:open(File++".db", [binary, raw, write, read]),
+    {ok, F} = file:open(File, [binary, raw, write, read]),
     absorb2(File, F, 0, Size, IP, Port),
     file:close(F),
-    file:copy(File++".db", "backup/"++File++".db"),
+    file:copy(File, "backup/"++File),
     absorb_stuff(T, IP, Port). 
 absorb2(_, _, Step, Size, _, _) when Step > Size -> ok;
 absorb2(FileName, File, Step, Size, IP, Port) ->
@@ -49,6 +49,9 @@ absorb2(FileName, File, Step, Size, IP, Port) ->
     io:fwrite("\n"),
     io:fwrite("port "),
     io:fwrite(integer_to_list(Port)),
+    io:fwrite("\n"),
+    io:fwrite("file name "),
+    io:fwrite(FileName),
     io:fwrite("\n"),
     {ok, Chunk} = talker:talk({backup_read, FileName, Step}, IP, Port),
     file:pwrite(File, Step * constants:word_size(), Chunk),
@@ -71,10 +74,12 @@ fresh_sync(IP, Port, PeerData) ->
 	    block_finality:append(SignedBlock, block_tree:block_number(Block)),
 	    DBRoot = block_tree:block_root(Block),
 	    io:fwrite("fs 3"),
-	    absorb_stuff(backup:file_names(), IP, Port),
-	    DBRoot = backup:hash(),%died here
+	    absorb_stuff(backup:files(), IP, Port),
+	    DBRoot = backup:hash(),
+	    block_tree:unsafe_write(SignedBlock),
+	    block_tree:write(dict:new(), dict:new(), SignedBlock, [], N, dict:new(), Block),%here
 	    io:fwrite("fs 4"),
-	    get_blocks(MyHeight + 1, TheirHeight, IP, Port),
+	    get_blocks(N + 1, TheirHeight, IP, Port),
 	    io:fwrite("fs 5")
     end,
     0.

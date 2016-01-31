@@ -42,6 +42,10 @@ handle_call({read, V}, _From, D) ->
 	    error -> <<"none">>
 	end,
     {reply, X, D};
+handle_call({unsafe_write, K, V}, _From, D) -> 
+    NewBlock = sign:data(V#x.block),
+    ND = dict:store(top, hash:doit(NewBlock), D),
+    {reply, 0, dict:store(K, V, ND)};
 handle_call({write, K, V}, _From, D) -> 
     T = dict:fetch(top, D),
     Top = dict:fetch(T, D),
@@ -158,10 +162,27 @@ read_int(Height) ->
 read_int(Height, BlockPointer) ->
     true = Height > -1,
     gen_server:call(?MODULE, {read_int, Height, BlockPointer}).
+unsafe_write(SignedBlock) ->
+    Block = sign:data(SignedBlock),
+    NewNumber = Block#block.number,
+    Winners = sign_tx:winners(Block#block.txs),
+    true = Winners > (constants:minimum_validators_per_block() - 1),
+%check that the amount bonded is within a small margin of the average of the last several blocks. Check that the amount being spent is less than 1/2 the amount bonded.
+    Size = size(zlib:compress(term_to_binary(Block))),
+    true = Size < constants:max_block_size(),
+    Entropy = entropy:doit(NewNumber),
+    Entropy = Block#block.entropy, 
+    %{ChannelsDict, AccountsDict, NewTotalCoins, Secrets} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new(), Parent#block.total_coins, dict:new(), NewNumber),
+    NewTotalCoins = Block#block.total_coins,
+    V = #x{accounts = dict:new(), channels = dict:new(), block = SignedBlock, parent = [], height = NewNumber, secrets = dict:new()},
+    %possibly change top block, and prune one or more blocks, and merge a block with the finality databases.
+    Key = hash:doit(sign:data(SignedBlock)),
+    gen_server:call(?MODULE, {unsafe_write, Key, V}),
+    tx_pool:dump(Block#block.total_coins).
     
 write(SignedBlock) ->
-    PSB = packer:pack(SignedBlock),
-    SignedBlock = packer:unpack(PSB),
+    %PSB = packer:pack(SignedBlock),
+    %SignedBlock = packer:unpack(PSB),
     Block = sign:data(SignedBlock),
     BH = hash:doit(Block),
     false = is_key(BH),

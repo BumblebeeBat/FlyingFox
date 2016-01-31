@@ -1,6 +1,6 @@
 -module(backup).
--export([hash/0, backup/0, backup_files/0, read/2, read_size/1, file_names/0]).
-file_names() -> ["accounts", "all_secrets", "d_accounts", "channels", "d_channels", "entropy"].
+-export([hash/0, backup/0, backup_files/0, read/2, read_size/1, files/0]).
+%file_names() -> ["accounts", "all_secrets", "d_accounts", "channels", "d_channels", "entropy"].
 files() -> [constants:blocks(), constants:block_pointers(), constants:accounts(), constants:all_secrets(), constants:d_accounts(), constants:channels(), constants:d_channels(), constants:entropy()].
 
 %I am not using list_to_atom here because it is insecure.
@@ -39,11 +39,11 @@ backup([F|T]) ->
     backup(T).
 
 -define(word, constants:word_size()).
-read_size(F) ->
-    File = word_to_file(F),
+read_size(File) ->
+    %File = word_to_file(F),
     filelib:file_size(?backup++File) div ?word.
-read(F, N) ->
-    File = word_to_file(F),
+read(File, N) ->
+    %File = word_to_file(F),
     {ok, RFile } = file:open(?backup++File, [read, binary, raw]),
     {ok, Out} = file:pread(RFile, N*?word, ?word),
     file:close(RFile),
