@@ -16,13 +16,18 @@ dump() -> gen_server:cast(?MODULE, dump).
 txs() -> gen_server:call(?MODULE, txs).
 digest([], _, Channels, Accounts, TotalCoins, SecretHashes, _) -> {Channels, Accounts, TotalCoins, SecretHashes};
 digest([SignedTx|Txs], ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight) ->
+    io:fwrite("digest txs \n"),
+    io:fwrite(packer:pack(SignedTx)),
+    io:fwrite("\n"),
     true = sign:verify(SignedTx, Accounts),
     Tx = sign:data(SignedTx),
     {NewChannels, NewAccounts, NewTotalCoins, NewSecretHashes} = 
 	case element(1, Tx) of
 	    channel_funds_limit -> channel_funds_limit_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
 	    repo -> repo_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
-            sign_tx -> sign_tx:doit(Tx, Txs, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
+            sign_tx -> 
+		io:fwrite("signed tx\n"),
+		sign_tx:doit(Tx, Txs, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
             ca -> create_account_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
             spend -> spend_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
             da -> delete_account_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);

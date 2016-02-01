@@ -76,8 +76,19 @@ fresh_sync(IP, Port, PeerData) ->
 	    io:fwrite("fs 3"),
 	    absorb_stuff(backup:files(), IP, Port),
 	    DBRoot = backup:hash(),
-	    block_tree:unsafe_write(SignedBlock),
-	    block_tree:write(dict:new(), dict:new(), SignedBlock, [], N, dict:new(), Block),%here
+	    io:fwrite("fs 32"),
+	    {ok, StartBlock} = talker:talk({block, N - constants:finality()}, IP, Port),
+	    io:fwrite("fs 33"),
+	    io:fwrite("startBlock "),
+	    io:fwrite(packer:pack(StartBlock)),
+	    io:fwrite("\n"),
+	    block_tree:unsafe_write(StartBlock),
+	    io:fwrite("fs 34"),
+	    get_blocks(N + 1 - constants:finality(), N - 1, IP, Port),
+	    io:fwrite("fs 35"),
+	    block_tree:absorb([SignedBlock]),
+	    %block_tree:unsafe_write(SignedBlock),%need from finality earlier.
+	    io:fwrite("fs 4"),
 	    io:fwrite("fs 4"),
 	    get_blocks(N + 1, TheirHeight, IP, Port),
 	    io:fwrite("fs 5")

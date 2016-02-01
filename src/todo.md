@@ -1,4 +1,11 @@
-download_blocks line 76.
+change unsafe_write so that the block doesn't change any state. It is just loaded into the blocktree.
+Start unsafe write on one block earlier.
+Use normal write on the block that had been unsafe.
+
+
+download_blocks line 79.
+I need to start downloading blocks from finality before the root, to fill up ram with blocktree.
+
 I need to add that block to the blocktree as a root to build off of.
 http://zackbitcoin.pythonanywhere.com/looking at backup.erl
 working to allow syncing from further behind than finality.
