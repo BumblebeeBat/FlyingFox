@@ -1,3 +1,6 @@
+
+blocks are being stored in too-high of numbers. use block_finality:read(400) and see how wrong the blocks are. the height is wrong. The binary signatures are wrong.
+
 change unsafe_write so that the block doesn't change any state. It is just loaded into the blocktree.
 Start unsafe write on one block earlier.
 Use normal write on the block that had been unsafe.

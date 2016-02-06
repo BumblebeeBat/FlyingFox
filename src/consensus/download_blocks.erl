@@ -66,25 +66,31 @@ fresh_sync(IP, Port, PeerData) ->
 	    get_blocks(MyHeight + 1, TheirHeight, IP, Port);
 	true ->
 	    {ok, SignedBlock} = get_starter_block(IP, Port, TheirHeight),
-	    %Is 246 or no??
 	    io:fwrite(packer:pack(SignedBlock)),
 	    Block = sign:data(SignedBlock),
 	    N = block_tree:block_number(Block),
-	    block_pointers:set_start(N),
-	    block_finality:append(SignedBlock, block_tree:block_number(Block)),
+	    block_pointers:set_start(N - constants:max_reveal() - 1),
+	    %block_finality:append(SignedBlock, block_tree:block_number(Block)),
 	    DBRoot = block_tree:block_root(Block),
 	    io:fwrite("fs 3"),
 	    absorb_stuff(backup:files(), IP, Port),
 	    DBRoot = backup:hash(),
 	    io:fwrite("fs 32"),
-	    {ok, StartBlock} = talker:talk({block, N - constants:finality() - 1}, IP, Port),
-	    io:fwrite("fs 33"),
-	    io:fwrite("startBlock "),
-	    io:fwrite(packer:pack(StartBlock)),
+	    %{ok, StartBlock} = talker:talk({block, N - constants:max_reveal() - 1}, IP, Port),
+	    %block_tree:unsafe_write(StartBlock),
+	    io:fwrite("unsafe from "),
+	    io:fwrite(integer_to_list(N - constants:max_reveal() - 1)),
+	    io:fwrite(" till "),
+	    io:fwrite(integer_to_list(N - constants:min_reveal() - 1)),
 	    io:fwrite("\n"),
-	    block_tree:unsafe_write(StartBlock),
-	    io:fwrite("fs 34"),
-	    get_blocks(N - constants:finality(), N - 1, IP, Port),
+	    unsafe_get_blocks(N - constants:max_reveal() - 1, N - constants:min_reveal() - 1, IP, Port, finality),
+	    io:fwrite("fs 34"), %here
+	    io:fwrite("unsafe from "),
+	    io:fwrite(integer_to_list(N - constants:min_reveal())),
+	    io:fwrite(" till "),
+	    io:fwrite(integer_to_list(N - 1)),
+	    io:fwrite("\n"),
+	    get_blocks(N - constants:min_reveal(), N - 1, IP, Port),
 	    io:fwrite("fs 35"),
 	    block_tree:absorb([SignedBlock]),
 	    %block_tree:unsafe_write(SignedBlock),%need from finality earlier.
@@ -98,12 +104,17 @@ fresh_sync(IP, Port, PeerData) ->
     %download the files, and check that they match the backup hash.
     %load the blocks in from oldest to newest.
 
-get_blocks(Start, Finish, IP, Port) when Start>Finish -> ok;
+unsafe_get_blocks(Start, Finish, _, _, _) when Start>Finish ->ok;
+unsafe_get_blocks(Start, Finish, IP, Port, ParentKey) ->
+    {ok, SignedBlock} = talker:talk({block, Start}, IP, Port),
+    %block_tree:absorb([SignedBlock]),
+    Hash = block_tree:unsafe_write(SignedBlock, ParentKey),
+    unsafe_get_blocks(Start + 1, Finish, IP, Port, Hash).
+get_blocks(Start, Finish, _, _) when Start>Finish -> ok;
 get_blocks(Start, Finish, IP, Port) ->
     {ok, SignedBlock} = talker:talk({block, Start}, IP, Port),
     block_tree:absorb([SignedBlock]),
-    get_blocks(Start + 1, Finish, IP, Port),
-    ok.
+    get_blocks(Start + 1, Finish, IP, Port).
 absorb_txs([]) -> ok;
 absorb_txs([Tx|T]) -> 
     spawn(tx_pool, absorb, [Tx]),
