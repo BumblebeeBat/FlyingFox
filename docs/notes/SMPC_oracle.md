@@ -21,3 +21,15 @@ Lightning hashlocks.
 The 2 channels don't update to the new state until a hashlock secret is revealed.
 The same hashlock secret updates both channels at once.
 
+
+Vitalik talking about SMPC in a racent blogpost:
+
+https://blog.ethereum.org/2016/01/15/privacy-on-the-blockchain/
+
+"""
+The requirement of trust on the participants is also an onerous one; note that, as is the case with many other applications, the participants have the ability to save the data and then collude to uncover at any future point in history. Additionally, it is impossible to tell that they have done this, and so it is impossible to incentivize the participants to maintain the system’s privacy; for this reason, secure multi-party computation is arguably much more suited to private blockchains, where incentives can come from outside the protocol, than public chains.
+"""
+
+This is a serious limitation of Flying Fox.
+We need the SMPC encrypters to be incentivized to keep their secrets secret, even though
+
