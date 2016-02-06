@@ -131,8 +131,12 @@ total_coins() -> total_coins(sign:data(block(read(read(top))))).
 total_coins(X) -> 
     X#block.total_coins.
 block() -> block(read(read(top))).
+block(X) when is_record(X, x) -> 
+    X#x.block;
+block(<<"none">>) -> 
+    1=2;
 block(X) -> 
-    X#x.block.
+    block(read(X)).
 %if
 	%is_record(X, x) -> sign:data(X#x.block);
 %is_record(X, x) -> X#x.block;

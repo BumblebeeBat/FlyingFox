@@ -50,38 +50,25 @@ all_winners(MyBonds, TotalBonds, Seed, Pub, [H|T]) ->
     true = winner(MyBonds, TotalBonds, Seed, Pub, H),
     all_winners(MyBonds, TotalBonds, Seed, Pub, T).
 doit(Tx, Txs, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight) ->%signers is the number of signers for this block.
-    io:fwrite("signed tx doit 1\n"),
     WL = length(Tx#sign_tx.winners),
     true = WL > 0,
     Acc = block_tree:account(Tx#sign_tx.acc, ParentKey, Accounts),
     FinalityAcc = accounts:read_account(Tx#sign_tx.acc),
     MyPower = min(accounts:delegated(Acc), accounts:delegated(FinalityAcc)),
-    io:fwrite("signed tx doit 2\n"),
-    io:fwrite(packer:pack(block_tree:read(block_tree:read(ParentKey)))),
     Block = sign:data(block_tree:block(block_tree:read(ParentKey))),
-    io:fwrite("signed tx doit 20\n"),
     Pnum = block_tree:block_number(Block),
-    io:fwrite("signed tx doit 21\n"),
     Pnum = Tx#sign_tx.number,
-    io:fwrite("signed tx doit 22\n"),
     all_winners(MyPower, block_tree:block_power(Block), block_tree:block_entropy(Block), accounts:pub(Acc), Tx#sign_tx.winners),
-    io:fwrite("signed tx doit 23\n"),
     ParentKey = Tx#sign_tx.prev_hash,
-    io:fwrite("signed tx doit 3\n"),
     false = repeat(Tx#sign_tx.acc, Txs),%makes sure each validator only signs the block once.
     Lose = fractions:multiply_int(constants:security_bonds_per_winner(), TotalCoins)* WL,
     N = accounts:update(Acc, NewHeight, -Lose, 0, 1, TotalCoins),
     Nonce = accounts:nonce(N),
-    io:fwrite("signed tx doit 4\n"),
-    io:fwrite("account\n"),
-    io:fwrite(packer:pack(N)),
-    io:fwrite("\n"),
     Nonce = Tx#sign_tx.nonce,
     NewAccounts = dict:store(Tx#sign_tx.acc, N, Accounts),
     SH = Tx#sign_tx.secret_hash,
     %SHstate = block_tree:secret(NewHeight, SH, ParentKey, SecretHashes),
     %SHstate = false,
-    io:fwrite("signed tx doit 5\n"),
     NewSecretHash = dict:store({Pnum, SH}, true, SecretHashes),%newheight should instead be the height of the previous block.
     {Channels, NewAccounts, TotalCoins - Lose, NewSecretHash}.
 repeat(_, []) -> false;
