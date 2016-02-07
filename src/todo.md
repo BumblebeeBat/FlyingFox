@@ -1,3 +1,6 @@
+download blocks: unsafe_get_blocks
+need to calculate "secrets" and add it to finality.
+
 
 blocks are being stored in too-high of numbers. use block_finality:read(400) and see how wrong the blocks are. the height is wrong. The binary signatures are wrong.
 

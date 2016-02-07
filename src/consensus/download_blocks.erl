@@ -69,11 +69,11 @@ fresh_sync(IP, Port, PeerData) ->
 	    io:fwrite(packer:pack(SignedBlock)),
 	    Block = sign:data(SignedBlock),
 	    N = block_tree:block_number(Block),
-	    block_pointers:set_start(N - constants:max_reveal() - 1),
+	    block_pointers:set_start(N - constants:max_reveal() - 2),
 	    %block_finality:append(SignedBlock, block_tree:block_number(Block)),
 	    DBRoot = block_tree:block_root(Block),
 	    io:fwrite("fs 3"),
-	    absorb_stuff(backup:files(), IP, Port),
+	    absorb_stuff(backup:backup_files(), IP, Port),
 	    DBRoot = backup:hash(),
 	    io:fwrite("fs 32"),
 	    %{ok, StartBlock} = talker:talk({block, N - constants:max_reveal() - 1}, IP, Port),
@@ -84,6 +84,8 @@ fresh_sync(IP, Port, PeerData) ->
 	    io:fwrite(integer_to_list(N - constants:min_reveal() - 1)),
 	    io:fwrite("\n"),
 	    unsafe_get_blocks(N - constants:max_reveal() - 1, N - constants:min_reveal() - 1, IP, Port, finality),
+	    {ok, End} = talker:talk({block, N - constants:min_reveal() - 1}, IP, Port),
+	    block_tree:unsafe_write(End, finality),
 	    io:fwrite("fs 34"), %here
 	    io:fwrite("unsafe from "),
 	    io:fwrite(integer_to_list(N - constants:min_reveal())),
@@ -107,8 +109,10 @@ fresh_sync(IP, Port, PeerData) ->
 unsafe_get_blocks(Start, Finish, _, _, _) when Start>Finish ->ok;
 unsafe_get_blocks(Start, Finish, IP, Port, ParentKey) ->
     {ok, SignedBlock} = talker:talk({block, Start}, IP, Port),
-    %block_tree:absorb([SignedBlock]),
-    Hash = block_tree:unsafe_write(SignedBlock, ParentKey),
+    %working here.
+    %Hash = block_tree:unsafe_write(SignedBlock, ParentKey),
+    %{ChannelsDict, AccountsDict, NewTotalCoins, Secrets} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new(), Parent#block.total_coins, dict:new(), NewNumber),    
+    Hash = block_finality:append(SignedBlock, Start),
     unsafe_get_blocks(Start + 1, Finish, IP, Port, Hash).
 get_blocks(Start, Finish, _, _) when Start>Finish -> ok;
 get_blocks(Start, Finish, IP, Port) ->

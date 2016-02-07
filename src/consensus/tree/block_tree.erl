@@ -59,14 +59,13 @@ handle_call({write, K, V}, _From, D) ->
                  %possible pruning, and merge digests into finality.
 		 DD = if 
 			  NewHeight > Finality ->
-			      {Child, MK, M} = merger(T, D),
-			      Block = sign:data(M#x.block),
+			      {Child, OldKey, X} = merger(T, D),
+			      Block = sign:data(X#x.block),
 			      BN = block_tree:block_number(Block),
-			      A = M#x.accounts,
-			      C = M#x.channels,
-			      S = M#x.secrets,
+			      A = X#x.accounts,
+			      C = X#x.channels,
+			      S = X#x.secrets,
 			      Z = backup(NewHeight),
-
 			      if
 				  Z ->
 				      H = backup:hash(),
@@ -75,11 +74,11 @@ handle_call({write, K, V}, _From, D) ->
 				      0;
 				  true -> 0
 			      end,
-			      if BN > 0 -> block_finality:append(M#x.block, M#x.height); true -> 0 end,
+			      if BN > 0 -> block_finality:append(X#x.block, X#x.height); true -> 0 end,
 			      finality_absorb(S, A, C),
 			      P = dict:fetch(Child, D),
 			      NewP = #x{block = P#x.block, height = P#x.height, parent = finality, accounts = P#x.accounts, channels = P#x.channels, secrets = P#x.secrets},
-			      dict:store(Child, NewP, dict:erase(MK, D));
+			      dict:store(Child, NewP, dict:erase(OldKey, D));
 		     true  -> D
 		 end,
                  txs:dump(),
@@ -184,7 +183,7 @@ unsafe_write(SignedBlock, ParentKey) ->
     Key = hash:doit(sign:data(SignedBlock)),
     gen_server:call(?MODULE, {unsafe_write, Key, V}),
     tx_pool:dump(Block#block.total_coins),
-    hash:doit(Block).
+    Key.
     
 write(SignedBlock) ->
     %PSB = packer:pack(SignedBlock),
@@ -239,6 +238,9 @@ secret(N, SH, H, SecretsDict) ->
 secret_helper({N, SH}, finality) -> all_secrets:exists(N, SH);
 secret_helper(Key, H) -> 
     X = read(H),
+    io:fwrite("block tree X "),
+    io:fwrite(packer:pack(X)),
+    io:fwrite("\n"),
     Secrets = X#x.secrets,
     Parent = X#x.parent,
     case dict:find(Key, Secrets) of

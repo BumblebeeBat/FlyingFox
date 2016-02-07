@@ -30,6 +30,7 @@ replace_height(N, [Block|T], NewBlock) -> [Block|replace_height(N-1, T, NewBlock
 handle_cast({remove, Height, SH}, X) -> 
     H = Height - X#x.start,
     NewX = #x{start = X#x.start, blocks = replace_height(H, X#x.blocks, remove_sh(SH, nth(H, X#x.blocks)))},
+    save(NewX),
     {noreply, NewX};
 handle_cast({add, Height, SH}, X) -> 
     if
@@ -41,6 +42,7 @@ handle_cast({add, Height, SH}, X) ->
 	    H = Height-NewStart,
 	    Keep = buffer(Gap+5, remove_front(NewStart - Start, X#x.blocks)),
 	    NewX = #x{start = NewStart, blocks = replace_height(H, Keep, [SH|nth(H, Keep)])},
+	    save(NewX),
 	    {noreply, NewX}
     end.
 buffer(Width, L) ->
