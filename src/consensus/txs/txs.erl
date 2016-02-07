@@ -27,7 +27,8 @@ digest([SignedTx|Txs], ParentKey, Channels, Accounts, TotalCoins, SecretHashes, 
             ca -> create_account_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
             spend -> spend_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
             da -> delete_account_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
-            slasher_tx -> slasher_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
+            slasher_tx -> 
+		slasher_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
             reveal -> reveal_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes);
             tc -> to_channel_tx:doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
             signed_cb -> channel_block_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);

@@ -229,6 +229,7 @@ absorb([Block|T]) -> write(Block), absorb(T).
 %secret(N, SH) -> secret(N, SH, tx_pool:secrets()).
 %secret(N, SH, SecretsDict) -> secret(N, SH, read(top), SecretsDict).
 secret(N, SH, H, SecretsDict) ->
+    io:fwrite("block tree secret\n"),
     Key = {N, SH},
     B = dict:is_key(Key, SecretsDict),
     if
@@ -238,9 +239,6 @@ secret(N, SH, H, SecretsDict) ->
 secret_helper({N, SH}, finality) -> all_secrets:exists(N, SH);
 secret_helper(Key, H) -> 
     X = read(H),
-    io:fwrite("block tree X "),
-    io:fwrite(packer:pack(X)),
-    io:fwrite("\n"),
     Secrets = X#x.secrets,
     Parent = X#x.parent,
     case dict:find(Key, Secrets) of
@@ -317,16 +315,24 @@ buy_block(Txs, TotalCoins, BlockGap) ->
     absorb([keys:sign(Block)]).
 sign_tx(Tx, Pub, Priv) -> sign:sign_tx(Tx, Pub, Priv, tx_pool:accounts()).
 test() -> 
+    io:fwrite("block tree test 0"),
     {Pub, Priv} = sign:new_key(),
     create_account_tx:create_account(Pub, 620000, 0),
     spend_tx:spend(1, 10, 0),
     sign_tx:sign(),
     reveal:reveal(),
+    io:fwrite("block tree test 1"),
     buy_block(),
-    tx_pool:absorb(sign_tx(slasher_tx:slasher(1, keys:sign({sign_tx, 0, 0, 0, 0, 0, 0})), Pub, Priv)),
+    A3 = sign_tx(slasher_tx:slasher(1, keys:sign({sign_tx, 0, 0, 0, 0, 0, 0})), Pub, Priv),
+    io:fwrite("block tree test 103"),
+    tx_pool:absorb(A3),
+    io:fwrite("block tree test 11"),
     CreateTx1 = to_channel_tx:create_channel(1, 110000, 1000, <<"delegated_1">>, 0),
+    io:fwrite("block tree test 12"),
     SignedCreateTx1 = sign_tx(CreateTx1, Pub, Priv),
+    io:fwrite("block tree test 13"),
     tx_pool:absorb(SignedCreateTx1),
+    io:fwrite("block tree test 2"),
     CreateTx2 = to_channel_tx:create_channel(1, 110000, 1000, <<"delegated_1">>, 0),
     SignedCreateTx2 = sign_tx(CreateTx2, Pub, Priv),
     tx_pool:absorb(SignedCreateTx2),
@@ -334,12 +340,14 @@ test() ->
     SignedCreateTx3 = sign_tx(CreateTx3, Pub, Priv),
     tx_pool:absorb(SignedCreateTx3),
     sign_tx:sign(),
+    io:fwrite("block tree test 3"),
     reveal:reveal(),
     buy_block(),
     ToChannel = to_channel_tx:to_channel(24000, 0, 10, 0),
     SignedToChannel = sign_tx(ToChannel, Pub, Priv),
     tx_pool:absorb(SignedToChannel),
     sign_tx:sign(),
+    io:fwrite("block tree test 4"),
     reveal:reveal(),
     buy_block(),%needs to start with some big channels with myself, so I have enough delegation.
     ChannelTx = channel_block_tx:close_channel(24000, -200, 1, 0),
@@ -351,6 +359,7 @@ test() ->
     Acc1 = account(1),
     A1 = accounts:balance(Acc1),
     channel_block_tx:publish_channel_block(SignedChannelTx, 0, []),
+    io:fwrite("block tree test 5"),
     %tx_pool:absorb(SignedChannelTx),
     Acc2 = account(1),
     A2 = accounts:balance(Acc2),

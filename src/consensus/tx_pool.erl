@@ -46,7 +46,11 @@ absorb(SignedTx) ->
 	    false = sign_tx:repeat(element(2, Tx), txs());
 	true -> 0
     end,
+    io:fwrite("\n"),
+    io:fwrite(packer:pack(NewTx)),
+    io:fwrite("tx pool 5\n"),
     {NewChannels, NewAccounts, NewTotalCoins, NewSecrets} = txs:digest([NewTx], block_tree:read(top), Channels, accounts(), total_coins(), secrets(), H+1),%Usually blocks are one after the other. Some txs may have to get removed if height increases by more than 1 between adjacent blocks.
+    io:fwrite("tx pool 6\n"),
     gen_server:cast(?MODULE, {absorb, NewTx, NewChannels, NewAccounts, NewTotalCoins, NewSecrets}).
 
 -record(spend, {from = 0, nonce = 0, to = 0, amount = 0}).
