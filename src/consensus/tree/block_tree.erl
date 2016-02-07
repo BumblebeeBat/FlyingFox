@@ -229,7 +229,6 @@ absorb([Block|T]) -> write(Block), absorb(T).
 %secret(N, SH) -> secret(N, SH, tx_pool:secrets()).
 %secret(N, SH, SecretsDict) -> secret(N, SH, read(top), SecretsDict).
 secret(N, SH, H, SecretsDict) ->
-    io:fwrite("block tree secret\n"),
     Key = {N, SH},
     B = dict:is_key(Key, SecretsDict),
     if

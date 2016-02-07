@@ -1,6 +1,6 @@
 -module(all_secrets).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,add/2,exists/2,remove/2]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, test/0,add/2,exists/2,remove/2,check/0,reset/0]).
 %-define(LOC, "all_secrets.db").
 -define(LOC, constants:all_secrets()).
 -define(Start, 0).
@@ -27,6 +27,8 @@ remove_sh(X, [X|T]) -> T;
 remove_sh(X, [H|T]) -> [H|remove_sh(X, T)].
 replace_height(0, [_|T], NewBlock) -> [NewBlock|T];
 replace_height(N, [Block|T], NewBlock) -> [Block|replace_height(N-1, T, NewBlock)].
+handle_cast(reset, _) ->
+    {noreply, bytes2database(read())};
 handle_cast({remove, Height, SH}, X) -> 
     H = Height - X#x.start,
     NewX = #x{start = X#x.start, blocks = replace_height(H, X#x.blocks, remove_sh(SH, nth(H, X#x.blocks)))},
@@ -57,6 +59,7 @@ nth(N, [_|T]) -> nth(N-1, T).
 in_list(_, []) -> false;
 in_list(X, [X|_]) -> true;
 in_list(X, [_|T]) -> in_list(X, T).
+handle_call(check, _From, X) -> {reply, X, X};
 handle_call({exists, Height, SH}, _From, X) -> 
     H = Height - X#x.start,
     Gap = constants:max_reveal() - constants:min_reveal(),
@@ -68,6 +71,7 @@ handle_call({exists, Height, SH}, _From, X) ->
 		in_list(SH, Block)
 	end,
     {reply, O, X}.
+check() -> gen_server:call(?MODULE, check).
 exists(Height, SH) -> 
     if
 	Height < 1 -> false;
@@ -86,6 +90,7 @@ remove(Height, SH) ->
 	E -> gen_server:cast(?MODULE, {remove, Height, SH});
 	true -> ok
     end.
+reset() -> gen_server:cast(?MODULE, reset).
 
 %234 blocks between minreveal and maxreveal * 54 secrets per block * 32 bytes per secret = 404352 bytes = ~1/2 megabyte, so we can keep it in ram.
 %once a secret gets revealed, we should remove it.
