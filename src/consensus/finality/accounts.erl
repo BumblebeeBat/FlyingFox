@@ -5,7 +5,7 @@
 %Top should point to the lowest known address that is deleted.
 -module(accounts).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_account/1,write/2,test/0,size/0,write_helper/3,top/0,delete/1,array/0,update/6,update/7,empty/0,empty/1,nonce/1,delegated/1,pub/1,balance/1,height/1,walk/2,unit_cost/2]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_account/1,write/2,test/0,size/0,write_helper/3,top/0,delete/1,array/0,update/6,update/7,empty/0,empty/1,nonce/1,delegated/1,pub/1,balance/1,height/1,walk/2,unit_cost/2,reset/0]).
 %-define(file, "accounts.db").
 -define(file, constants:accounts()).
 %-define(empty, "d_accounts.db").
@@ -102,9 +102,12 @@ walk_helper(<<>>, Counter) -> Counter;
 walk_helper(<< 127:8, B/bitstring>>, Counter) -> walk_helper(B, Counter + 8);
 walk_helper(<< 1:1, B/bitstring>>, Counter) -> walk_helper(B, Counter + 1);
 walk_helper(<< 0:1, _B/bitstring>>, Counter) -> Counter.
+handle_cast(reset, _) ->
+    {ok, X} = init(ok),
+    {noreply, X};
 handle_cast({delete, N}, {Top, Array}) -> 
     Byte = hd(binary_to_list(read_empty(N))),
-    Remove = bnot round(math:pow(2, N rem 8)),
+    Remove = bnot round(math:pow(2, 8 - (N rem 8))),
     NewByte = Byte band Remove,
     write_helper(N div 8, <<NewByte>>, ?empty),
     <<A:N,_:1,B/bitstring>> = Array,
@@ -118,7 +121,7 @@ handle_cast({write, N, Val}, {Top, Array}) ->
         true -> 0 = 0
     end,
     Byte = hd(binary_to_list(read_empty(N))),
-    Remove = round(math:pow(2, N rem 8)),
+    Remove = round(math:pow(2, 8 - (N rem 8))),
     NewByte = Byte bor Remove,
     write_helper(N div 8, <<NewByte>>, ?empty),
     <<A:N,_:1,B/bitstring>> = Array,
@@ -171,6 +174,8 @@ write(N, Acc) ->
     gen_server:cast(?MODULE, {write, N, Val}).
 size() -> filelib:file_size(?file) div ?word.
 append(Acc) -> write(top(), Acc).
+reset() -> gen_server:cast(?MODULE, reset).
+
 test() -> 
     << 13:4 >> = << 1:1, 1:1, 0:1, 1:1 >>,%13=8+4+1
     0 = walk(0, << >>),

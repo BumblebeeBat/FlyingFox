@@ -1,6 +1,6 @@
 -module(channels).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_channel/1,write/2,test/0,size/0,write_helper/3,top/0,array/0,delete/1,walk/2,new/5,timeout/4,acc1/1,acc2/1,bal1/1,bal2/1,type/1,timeout/1,called_timeout/1,timeout_height/1,empty/0,append/1,all_ones/1]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_channel/1,write/2,test/0,size/0,write_helper/3,top/0,array/0,delete/1,walk/2,new/5,timeout/4,acc1/1,acc2/1,bal1/1,bal2/1,type/1,timeout/1,called_timeout/1,timeout_height/1,empty/0,append/1,all_ones/1,reset/0]).
 %-define(file, "channels.db").
 -define(file, constants:channels()).
 %-define(empty, "d_channels.db").
@@ -77,6 +77,9 @@ walk_helper(<<>>, Counter) -> Counter;
 walk_helper(<< 257:9, B/bitstring>>, Counter) -> walk_helper(B, Counter + 9);
 walk_helper(<< 1:1, B/bitstring>>, Counter) -> walk_helper(B, Counter + 1);
 walk_helper(<< 0:1, _B/bitstring>>, Counter) -> Counter.
+handle_cast(reset, _) ->
+    {ok, X} = init(ok),
+    {noreply, X};
 handle_cast({delete, N}, {Top, Array}) -> 
     Byte = hd(binary_to_list(read_empty(N))),
     Remove = bnot round(math:pow(2, N rem 9)),
@@ -174,6 +177,8 @@ write(N, Ch) ->
 %gen_server:cast(?MODULE, {write, N, Val}).
 size() -> 1 + filelib:file_size(?file) div ?word.
 append(Ch) -> write(top(), Ch).
+reset() -> gen_server:cast(?MODULE, reset).
+
 test() -> 
     all_ones(24000),
     << 13:4 >> = << 1:1, 1:1, 0:1, 1:1 >>,%13=8+4+1

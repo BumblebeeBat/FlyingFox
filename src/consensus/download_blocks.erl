@@ -75,6 +75,8 @@ fresh_sync(IP, Port, PeerData) ->
 	    io:fwrite("fs 3"),
 	    absorb_stuff(backup:backup_files(), IP, Port),
 	    all_secrets:reset(),
+	    accounts:reset(),
+	    channels:reset(),
 	    DBRoot = backup:hash(),
 	    io:fwrite("fs 32"),
 	    %{ok, StartBlock} = talker:talk({block, N - constants:max_reveal() - 1}, IP, Port),
