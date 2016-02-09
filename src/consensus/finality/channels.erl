@@ -82,7 +82,7 @@ handle_cast(reset, _) ->
     {noreply, X};
 handle_cast({delete, N}, {Top, Array}) -> 
     Byte = hd(binary_to_list(read_empty(N))),
-    Remove = bnot round(math:pow(2, N rem 9)),
+    Remove = bnot round(math:pow(2, 7 - (N rem 8))),
     NewByte = Byte band Remove,
     write_helper(N div 8, <<NewByte>>, ?empty),
     <<A:N,_:1,B/bitstring>> = Array,
@@ -96,7 +96,7 @@ handle_cast({write, N, Val}, {Top, Array}) ->
         true -> 0 = 0
     end,
     Byte = hd(binary_to_list(read_empty(N))),
-    Remove = round(math:pow(2, N rem 8)),
+    Remove = round(math:pow(2, 7 - (N rem 8))),
     NewByte = Byte bor Remove,
     write_helper(N div 8, <<NewByte>>, ?empty),
     <<A:N,_:1,B/bitstring>> = Array,

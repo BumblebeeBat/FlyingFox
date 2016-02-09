@@ -535,6 +535,7 @@ long_test() ->
     EmptyAccount = accounts:empty(),
     Acc2a = account(2),
     false = EmptyAccount == Acc2a,
+    timer:sleep(5000),
     channel_funds_limit_tx:make_tx(24000, 0),
     repo_tx:repo(2, 0, []),
     Acc2b = account(2),
