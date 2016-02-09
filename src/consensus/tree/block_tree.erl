@@ -1,6 +1,6 @@
 -module(block_tree).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, long_test/0,test/0,write/1,unsafe_write/2,top/0,read/1,read_int/2,read_int/1,secret/4,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/2, block_power/1,block_entropy/1,empty_block/0,total_coins/0, buy_block/0, block_number/1, block2txs/1, block_root/1,backup/1,x_to_block/1,check/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, long_test/0,test/0,write/1,top/0,read/1,read_int/2,read_int/1,secret/4,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/2, block_power/1,block_entropy/1,empty_block/0,total_coins/0, buy_block/0, block_number/1, block2txs/1, block_root/1,backup/1,x_to_block/1,check/0,reset/0]).
 -record(block, {acc = 0, number = 0, hash = "", txs = [], power = fractions:multiply_int(constants:initial_portion_delegated(), constants:initial_coins()), entropy = 0, total_coins = constants:initial_coins(), db_root = <<>>}).
 %power is how many coin are in channels. it is for consensus.
 block_root(B) -> B#block.db_root.
@@ -25,11 +25,15 @@ read_int_internal(Height, BlockPointer, D) ->
     BlockX = dict:fetch(BlockPointer, D),
     F = constants:finality(),
     if
-        BlockX == finality -> block_finality:read(Height);
+        %BlockX == finality -> block_finality:read(Height);
         BlockX#x.height - Height > F -> block_finality:read(Height);
         BlockX#x.height == Height -> BlockX#x.block;
+	BlockX#x.parent == finality -> block_finality:read(Height);
         true -> read_int_internal(Height, BlockX#x.parent, D)
     end.
+handle_cast(reset, _) -> 
+    {ok, DB} = init(ok),
+    {noreply, DB};
 handle_cast(_, X) -> {noreply, X}.
 handle_call({read_int, Height, ParentKey}, _From, D) -> 
     {reply, read_int_internal(Height, ParentKey, D), D};
@@ -42,10 +46,10 @@ handle_call({read, V}, _From, D) ->
 	    error -> <<"none">>
 	end,
     {reply, X, D};
-handle_call({unsafe_write, K, V}, _From, D) -> 
-    NewBlock = sign:data(V#x.block),
-    ND = dict:store(top, hash:doit(NewBlock), D),
-    {reply, 0, dict:store(K, V, ND)};
+%handle_call({unsafe_write, K, V}, _From, D) -> 
+%    NewBlock = sign:data(V#x.block),
+%    ND = dict:store(top, hash:doit(NewBlock), D),
+%    {reply, 0, dict:store(K, V, ND)};
 handle_call(check, _From, D) -> {reply, D, D};
 handle_call({write, K, V}, _From, D) -> 
     T = dict:fetch(top, D),
@@ -126,6 +130,7 @@ merger(Child, Key, D) ->
 	finality -> {Child, Key, X};
 	Y -> merger(Key, Y, D)
     end.
+reset() -> gen_server:cast(?MODULE, reset).
 top() -> gen_server:call(?MODULE, top).
 is_key(X) -> gen_server:call(?MODULE, {key, X}).
 read(K) -> gen_server:call(?MODULE, {read, K}).
@@ -169,11 +174,11 @@ read_int(Height) ->
 read_int(Height, BlockPointer) ->
     true = Height > -1,
     gen_server:call(?MODULE, {read_int, Height, BlockPointer}).
-unsafe_write(SignedBlock, ParentKey) ->
-    Block = sign:data(SignedBlock),
-    NewNumber = Block#block.number,
-    Winners = sign_tx:winners(Block#block.txs),
-    true = Winners > (constants:minimum_validators_per_block() - 1),
+%unsafe_write(SignedBlock, ParentKey) ->
+%N    Block = sign:data(SignedBlock),
+%    NewNumber = Block#block.number,
+%    Winners = sign_tx:winners(Block#block.txs),
+%    true = Winners > (constants:minimum_validators_per_block() - 1),
 %check that the amount bonded is within a small margin of the average of the last several blocks. Check that the amount being spent is less than 1/2 the amount bonded.
     %Size = size(zlib:compress(term_to_binary(Block))),
     %true = Size < constants:max_block_size(),
@@ -181,19 +186,22 @@ unsafe_write(SignedBlock, ParentKey) ->
     %Entropy = Block#block.entropy, 
     %NewTotalCoins = Block#block.total_coins,
     %{ChannelsDict, AccountsDict, _, Secrets} = txs:digest(Block#block.txs, finality, dict:new(), dict:new(), NewTotalCoins, dict:new(), NewNumber),
-    V = #x{accounts = dict:new(), channels = dict:new(), block = SignedBlock, parent = ParentKey, height = NewNumber, secrets = dict:new()},
+%    V = #x{accounts = dict:new(), channels = dict:new(), block = SignedBlock, parent = ParentKey, height = NewNumber, secrets = dict:new()},
     %possibly change top block, and prune one or more blocks, and merge a block with the finality databases.
-    Key = hash:doit(sign:data(SignedBlock)),
-    gen_server:call(?MODULE, {unsafe_write, Key, V}),
-    tx_pool:dump(Block#block.total_coins),
-    Key.
+%    Key = hash:doit(sign:data(SignedBlock)),
+%    gen_server:call(?MODULE, {unsafe_write, Key, V}),
+%    tx_pool:dump(Block#block.total_coins),
+%    Key.
     
 write(SignedBlock) ->
     %PSB = packer:pack(SignedBlock),
     %SignedBlock = packer:unpack(PSB),
     Block = sign:data(SignedBlock),
     BH = hash:doit(Block),
-    false = is_key(BH),
+    write2(is_key(BH), SignedBlock).
+write2(true, SignedBlock) -> ok;
+write2(false, SignedBlock) ->
+    Block = sign:data(SignedBlock),
     ParentKey = Block#block.hash,
     Parentx = read(ParentKey),
     Parent = sign:data(Parentx#x.block),%we need to charge more if this skipped height. 

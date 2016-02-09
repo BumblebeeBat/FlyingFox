@@ -84,18 +84,20 @@ fresh_sync(IP, Port, PeerData) ->
 	    io:fwrite(" till "),
 	    io:fwrite(integer_to_list(N - constants:min_reveal() - 2)),
 	    io:fwrite("\n"),
-	    unsafe_get_blocks(N - constants:max_reveal() - 1, N - constants:min_reveal() - 2, IP, Port, finality),
-	    %I am unsafe_get_blocksing too many blocks.
+	    CONST = 0,
+	    blocks_to_finality(N - constants:max_reveal() - 1, N - constants:finality() - 1 + CONST, IP, Port, finality),
+	    %I am blocks_to_finalitying too many blocks.
 	    %up to finality in the past should go into block_finality. Between then and now should go into the blocktree. Finally, I can use get_blocks() to catch up.
-	    {ok, End} = talker:talk({block, N - constants:min_reveal() - 1}, IP, Port),
-	    block_tree:unsafe_write(End, finality),
+	    block_tree:reset(),
+	    %{ok, End} = talker:talk({block, N - constants:finality() - 1 + CONST}, IP, Port),
+	    %block_tree:unsafe_write(End, finality),
 	    io:fwrite("fs 34"), %here
 	    io:fwrite("unsafe from "),
-	    io:fwrite(integer_to_list(N - constants:min_reveal())),
+	    io:fwrite(integer_to_list(N - constants:min_reveal() - 1 + CONST)),
 	    io:fwrite(" till "),
 	    io:fwrite(integer_to_list(N)),
 	    io:fwrite("\n"),
-	    get_blocks(N - constants:min_reveal(), N, IP, Port),
+	    get_blocks(N - constants:finality() + CONST - 1, N, IP, Port),
 	    io:fwrite("fs 35"),
 	    %block_tree:absorb([SignedBlock]),
 	    %block_tree:unsafe_write(SignedBlock),%need from finality earlier.
@@ -109,15 +111,15 @@ fresh_sync(IP, Port, PeerData) ->
     %download the files, and check that they match the backup hash.
     %load the blocks in from oldest to newest.
 
-unsafe_get_blocks(Start, Finish, _, _, _) when Start>Finish ->ok;
-unsafe_get_blocks(Start, Finish, IP, Port, ParentKey) ->
+blocks_to_finality(Start, Finish, _, _, _) when Start>Finish ->ok;
+blocks_to_finality(Start, Finish, IP, Port, ParentKey) ->
     {ok, SignedBlock} = talker:talk({block, Start}, IP, Port),
     %working here.
     %Hash = block_tree:unsafe_write(SignedBlock, ParentKey),
     %{ChannelsDict, AccountsDict, NewTotalCoins, Secrets} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new(), Parent#block.total_coins, dict:new(), NewNumber),    
     Hash = block_finality:append(SignedBlock, Start),
     %finality_absorb(Secrets, Accounts, Channels), ?????
-    unsafe_get_blocks(Start + 1, Finish, IP, Port, Hash).
+    blocks_to_finality(Start + 1, Finish, IP, Port, Hash).
 get_blocks(Start, Finish, _, _) when Start>Finish -> ok;
 get_blocks(Start, Finish, IP, Port) ->
     {ok, SignedBlock} = talker:talk({block, Start}, IP, Port),
