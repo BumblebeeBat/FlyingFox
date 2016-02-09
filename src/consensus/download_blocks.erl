@@ -82,20 +82,22 @@ fresh_sync(IP, Port, PeerData) ->
 	    io:fwrite("unsafe from "),
 	    io:fwrite(integer_to_list(N - constants:max_reveal() - 1)),
 	    io:fwrite(" till "),
-	    io:fwrite(integer_to_list(N - constants:min_reveal() - 1)),
+	    io:fwrite(integer_to_list(N - constants:min_reveal() - 2)),
 	    io:fwrite("\n"),
-	    unsafe_get_blocks(N - constants:max_reveal() - 1, N - constants:min_reveal() - 1, IP, Port, finality),
+	    unsafe_get_blocks(N - constants:max_reveal() - 1, N - constants:min_reveal() - 2, IP, Port, finality),
+	    %I am unsafe_get_blocksing too many blocks.
+	    %up to finality in the past should go into block_finality. Between then and now should go into the blocktree. Finally, I can use get_blocks() to catch up.
 	    {ok, End} = talker:talk({block, N - constants:min_reveal() - 1}, IP, Port),
 	    block_tree:unsafe_write(End, finality),
 	    io:fwrite("fs 34"), %here
 	    io:fwrite("unsafe from "),
 	    io:fwrite(integer_to_list(N - constants:min_reveal())),
 	    io:fwrite(" till "),
-	    io:fwrite(integer_to_list(N - 1)),
+	    io:fwrite(integer_to_list(N)),
 	    io:fwrite("\n"),
-	    get_blocks(N - constants:min_reveal(), N - 1, IP, Port),
+	    get_blocks(N - constants:min_reveal(), N, IP, Port),
 	    io:fwrite("fs 35"),
-	    block_tree:absorb([SignedBlock]),
+	    %block_tree:absorb([SignedBlock]),
 	    %block_tree:unsafe_write(SignedBlock),%need from finality earlier.
 	    io:fwrite("fs 4"),
 	    io:fwrite("fs 4"),

@@ -3,7 +3,7 @@ Lightning Consensus
 
 A cryptocurrency is money built out of software that is difficult to counterfeit. 
 
-The consensus protocol is the rules that participants must obey to participate in a cryptocurrency. The rules are carefully chosen so that it is expensive to break the protocol. The most popular cryptocurrency consensus protocols today are of the proof-of-work variety. Other proposals are: delegated proof-of-stake, various security bond proof of stakes, byzantine fault tolerant algorithms, and coin-age proof of stake.
+The consensus protocol is the rules that participants must obey to participate in a cryptocurrency. The rules are carefully chosen so that it is expensive to control money that you don't own. The most popular cryptocurrency consensus protocols today are of the proof-of-work variety. Other proposals are: delegated proof-of-stake, various security bond proof of stakes, byzantine fault tolerant algorithms, and coin-age proof of stake.
 Lightning Consensus is a new consensus protocol proposed in this paper. It is designed to be less expensive to operate than the existing methods, and more scalable. 
 
 A payment channel is a relationship between 2 people so that they can send money repeatedly, and only record their final settlement on the blockchain, which is more affordable than storing every money-transfer on the blockchain. The rules of the payment channel can be enforced by providing evidence to the blockchain about the current channel state. The lightning network is created by connecting multiple channel-payments together so that either all of them are valid, or none of them are. So if Alice has a channel with Bob and Bob has a channel with Charlie, Bob can facilitate a money transfer from Alice to Charlie without any of them having to trust each other.
@@ -23,3 +23,12 @@ The most powerful validators will have servers running 24/7 in multiple location
 Flying Fox is the first blockchain to implement lightning consensus.
 
 related article: http://www.truthcoin.info/blog/pow-cheapest/
+
+
+The critical value we care about for blockchain consensus is the (cost to control 0.01% more of consensus for people who do not own any coins)/(cost to control 0.01% more of consensus for people who own 10% of coins.) I call it the efficiency of the blockchain. For POW it is 1, because you mine at the same rate regardless of how many coins you own. For every POS proposed, besides Flying Fox, it is about 1, the cost of locking up coins is the same, whether you own the coins or not. The cost of buying votes is the same, whether you own the coins or not. 
+In Flying Fox, the effeciency is >100.
+
+If you don't own any money, but want to control consensus, this is possible in Flying Fox. You open a channel with someone who does have money, have yourself be the validator, and pay them to keep some money in this channel.
+Since you have no money, you can't facilitate channel payments to anyone else. Your partners money is locked up and innaccessible. Your partner is losing value by the interest rate. You need to pay them at least this much.
+
+If you do own 10% of money, then you can make tons of channels with lots of people. If you want to control a little more consensus, it is really easy to convince a partner to store money in a channel with you. You can facilitate money transfers anywhere they wanted to spend anyway. Their money is totally accessible. You might not need to pay them at all.

@@ -63,6 +63,28 @@ delegated(Acc) -> Acc#acc.delegated.
 pub(Acc) -> Acc#acc.pub.
 balance(Acc) -> Acc#acc.balance.
 height(Acc) -> Acc#acc.height.
+write_helper(N, <<Balance:48, Nonce:32, Delegated:48, Height:32, P/binary>>, File) ->
+    io:fwrite("accounts write helper\n"),
+    io:fwrite("N "),
+    io:fwrite(integer_to_list(N)),
+    io:fwrite("\n"),
+    Val = <<Balance:48, Nonce:32, Delegated:48, Height:32, P/binary>>,
+    io:fwrite("Balance "),
+    io:fwrite(integer_to_list(Balance)),
+    io:fwrite("\n"),
+    io:fwrite("Nonce "),
+    io:fwrite(integer_to_list(Nonce)),
+    io:fwrite("\n"),
+    io:fwrite("Height "),
+    io:fwrite(integer_to_list(Height)),
+    io:fwrite("\n"),
+    case file:open(File, [write, read, raw]) of
+        {ok, F} ->
+            file:pwrite(F, N, Val),%multiplying by word is no good for empty...
+            file:close(F);
+        {error, _Reason} ->
+            write_helper(N, Val, File)
+    end;
 write_helper(N, Val, File) ->
 %since we are reading it a bunch of changes at a time for each block, there should be a way to only open the file once, make all the changes, and then close it. 
     case file:open(File, [write, read, raw]) of

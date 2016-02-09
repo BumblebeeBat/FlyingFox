@@ -1,6 +1,6 @@
 -module(block_tree).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, long_test/0,test/0,write/1,unsafe_write/2,top/0,read/1,read_int/2,read_int/1,secret/4,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/2, block_power/1,block_entropy/1,empty_block/0,total_coins/0, buy_block/0, block_number/1, block2txs/1, block_root/1,backup/1,x_to_block/1]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, long_test/0,test/0,write/1,unsafe_write/2,top/0,read/1,read_int/2,read_int/1,secret/4,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/2, block_power/1,block_entropy/1,empty_block/0,total_coins/0, buy_block/0, block_number/1, block2txs/1, block_root/1,backup/1,x_to_block/1,check/0]).
 -record(block, {acc = 0, number = 0, hash = "", txs = [], power = fractions:multiply_int(constants:initial_portion_delegated(), constants:initial_coins()), entropy = 0, total_coins = constants:initial_coins(), db_root = <<>>}).
 %power is how many coin are in channels. it is for consensus.
 block_root(B) -> B#block.db_root.
@@ -46,6 +46,7 @@ handle_call({unsafe_write, K, V}, _From, D) ->
     NewBlock = sign:data(V#x.block),
     ND = dict:store(top, hash:doit(NewBlock), D),
     {reply, 0, dict:store(K, V, ND)};
+handle_call(check, _From, D) -> {reply, D, D};
 handle_call({write, K, V}, _From, D) -> 
     T = dict:fetch(top, D),
     Top = dict:fetch(T, D),
@@ -54,11 +55,13 @@ handle_call({write, K, V}, _From, D) ->
     TopHeight = TopHeightB#block.number,
     NewHeight = NewBlock#block.number,
     Finality = constants:finality(),
+    L = length(dict:fetch_keys(D)),
     ND = if
-        NewHeight > TopHeight -> 
-                 %possible pruning, and merge digests into finality.
+	     NewHeight > TopHeight ->
+	    %possible pruning, and merge digests into finality.
 		 DD = if 
-			  NewHeight > Finality ->
+			  L > Finality -> 
+			  %NewHeight > Finality ->
 			      {Child, OldKey, X} = merger(T, D),
 			      Block = sign:data(X#x.block),
 			      BN = block_tree:block_number(Block),
@@ -228,6 +231,8 @@ absorb([]) -> ok;
 absorb([Block|T]) -> write(Block), absorb(T).
 %secret(N, SH) -> secret(N, SH, tx_pool:secrets()).
 %secret(N, SH, SecretsDict) -> secret(N, SH, read(top), SecretsDict).
+check() ->
+    gen_server:call(?MODULE, check).
 secret(N, SH, H, SecretsDict) ->
     Key = {N, SH},
     B = dict:is_key(Key, SecretsDict),
