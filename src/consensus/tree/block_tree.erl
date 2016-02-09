@@ -12,7 +12,9 @@ empty_block() -> #block{}.
 x_to_block(X) -> X#x.block.
 init(ok) -> 
     SignedBlock = block_finality:top_block(),
-    X = #x{block = SignedBlock},
+    Block = sign:data(SignedBlock),
+    N = Block#block.number,
+    X = #x{block = SignedBlock, height = N},
     BH = hash:doit(sign:data(SignedBlock)),
     D = dict:store(top, BH, dict:new()),
     E = dict:store(BH, X, D),
