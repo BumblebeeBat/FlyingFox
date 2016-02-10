@@ -1,4 +1,12 @@
 touch temp.db
 rm *.db
-rm backup/*.db
+
+if [ -d "backup" ]
+then
+    touch backup/temp.db
+    rm backup/*.db
+else
+    mkdir backup
+fi
+
 cp keys_backup keys.db

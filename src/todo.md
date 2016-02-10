@@ -1,11 +1,3 @@
-line 89 of download blocks has an idea.
-
-When we try to sync, constants:accounts(), and constants:all_secrets() are not identical to the backup version. 
-
-http://zackbitcoin.pythonanywhere.com/looking at backup.erl
-working to allow syncing from further behind than finality.
-look at block_tree around line 74. Probably we need to do a block_finality:append(block, height) to stick our new block into finality. Maybe we don't need to put it into the blocktree? or maybe we need both.
-
 hashlock lightning payments javascript
 close_channel javascript multiple steps
 change server javascript
