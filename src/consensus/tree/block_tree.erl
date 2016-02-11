@@ -220,7 +220,6 @@ write2(false, SignedBlock) ->
     true = Size < constants:max_block_size(),
     Entropy = entropy:doit(NewNumber),
     Entropy = Block#block.entropy, 
-    io:fwrite("right here"),
     {ChannelsDict, AccountsDict, NewTotalCoins, Secrets} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new(), Parent#block.total_coins, dict:new(), NewNumber),
     NewTotalCoins = Block#block.total_coins,
 %take fee from block creator in the digest.
@@ -231,18 +230,6 @@ write2(false, SignedBlock) ->
     RepoLosses = repo_tx:losses(Block#block.txs),
     CFLLosses = channel_funds_limit_tx:losses(Block#block.txs, dict:new(), ParentKey),
     NewPower = power(Parentx#x.block) + TcIncreases - CCLosses - RepoLosses - CFLLosses,%increases from to_channel tx fed into finality (when the channel is still open) - decreases from channel closures in this block (for channels that have been open since finality).
-    io:fwrite("newpower is "),
-    io:fwrite(integer_to_list(NewPower)),
-    io:fwrite("\n"),
-    io:fwrite("power should be "),
-    io:fwrite(integer_to_list(power(SignedBlock))),
-    io:fwrite("\n"),
-    io:fwrite("CCLosses is "),
-    io:fwrite(integer_to_list(CCLosses)),
-    io:fwrite("\n"),
-    io:fwrite("CFLLosses is "),
-    io:fwrite(integer_to_list(CFLLosses)),
-    io:fwrite("\n"),
     NewPower = power(SignedBlock),
     V = #x{accounts = AccountsDict, channels = ChannelsDict, block = SignedBlock, parent = ParentKey, height = Parentx#x.height + 1, secrets = Secrets},
     %possibly change top block, and prune one or more blocks, and merge a block with the finality databases.
@@ -284,14 +271,6 @@ account_helper(N, finality) -> accounts:read_account(N);
 account_helper(N, H) ->
     X = read(H),
     S = size(X),
-    if
-	S == 4 ->
-	    io:fwrite("N is "),
-	    io:fwrite(integer_to_list(N)),
-	    io:fwrite("\n"),
-	    io:fwrite(X);
-	true -> 0
-    end,
     Accounts = X#x.accounts,
     Parent = X#x.parent,
     case dict:find(N, Accounts) of

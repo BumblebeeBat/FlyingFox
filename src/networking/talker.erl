@@ -2,7 +2,14 @@
 -export([talk/1, talk/3, local_talk/1]).
 
 peer(IP, Port) ->
-    "http://" ++ inet_parse:ntoa(IP) ++ ":" ++ integer_to_list(Port) ++ "/".
+    %{ok, Address} = inet_parse:address(IP),
+    L = size(IP),
+    T = inet_parse:ntoa(IP),
+    Z = case L of    
+	    4 -> T;
+	    8 -> "[" ++ T ++ "]"
+	end,
+    "http://" ++ Z ++ ":" ++ integer_to_list(Port) ++ "/".
 
 local_talk(Msg) ->
     Peer = "http://127.0.0.1:3011/",

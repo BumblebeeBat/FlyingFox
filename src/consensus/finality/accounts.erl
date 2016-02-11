@@ -6,13 +6,11 @@
 -module(accounts).
 -behaviour(gen_server).
 -export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_account/1,write/2,test/0,size/0,write_helper/3,top/0,delete/1,array/0,update/6,update/7,empty/0,empty/1,nonce/1,delegated/1,pub/1,balance/1,height/1,walk/2,unit_cost/2,reset/0]).
-%-define(file, "accounts.db").
 -define(file, constants:accounts()).
-%-define(empty, "d_accounts.db").
 -define(empty, constants:d_accounts()).
 %Pub is 65 bytes. balance is 48 bits. Nonce is 32 bits. delegated is 48 bits. height is 32 bits, bringing the total to 85 bytes.
 -define(word, 85).
--record(acc, {balance = 0, nonce = 0, pub = "", delegated = 0, height = 0}).%need to add entry for height. This is the height when delegation fees were last payed. 
+-record(acc, {balance = 0, nonce = 0, pub = "", delegated = 0, height = 0}).%the height when delegation fees were last payed. 
 init(ok) -> 
 
     case file:read_file(?empty) of
@@ -63,28 +61,15 @@ delegated(Acc) -> Acc#acc.delegated.
 pub(Acc) -> Acc#acc.pub.
 balance(Acc) -> Acc#acc.balance.
 height(Acc) -> Acc#acc.height.
-write_helper(N, <<Balance:48, Nonce:32, Delegated:48, Height:32, P/binary>>, File) ->
-    io:fwrite("accounts write helper\n"),
-    io:fwrite("N "),
-    io:fwrite(integer_to_list(N)),
-    io:fwrite("\n"),
-    Val = <<Balance:48, Nonce:32, Delegated:48, Height:32, P/binary>>,
-    io:fwrite("Balance "),
-    io:fwrite(integer_to_list(Balance)),
-    io:fwrite("\n"),
-    io:fwrite("Nonce "),
-    io:fwrite(integer_to_list(Nonce)),
-    io:fwrite("\n"),
-    io:fwrite("Height "),
-    io:fwrite(integer_to_list(Height)),
-    io:fwrite("\n"),
-    case file:open(File, [write, read, raw]) of
-        {ok, F} ->
-            file:pwrite(F, N, Val),%multiplying by word is no good for empty...
-            file:close(F);
-        {error, _Reason} ->
-            write_helper(N, Val, File)
-    end;
+%write_helper(N, <<Balance:48, Nonce:32, Delegated:48, Height:32, P/binary>>, File) ->
+%    Val = <<Balance:48, Nonce:32, Delegated:48, Height:32, P/binary>>,
+%    case file:open(File, [write, read, raw]) of
+%        {ok, F} ->
+%            file:pwrite(F, N, Val),
+%            file:close(F);
+%        {error, _Reason} ->
+%            write_helper(N, Val, File)
+%    end;
 write_helper(N, Val, File) ->
 %since we are reading it a bunch of changes at a time for each block, there should be a way to only open the file once, make all the changes, and then close it. 
     case file:open(File, [write, read, raw]) of
