@@ -9,8 +9,7 @@ finality() -> 26.%/docs/security.py explains why.
 validators_elected_per_block() -> 54.
 minimum_validators_per_block() -> 36.
 chances_per_address() -> 200. %Each address has this many chances to be a validator per block. this makes it possible to be validator more than once on the same block. 
-master_pub() -> <<"BNKU96iGTD3dJGOk91eAVQAYmasQ/AZg6MYwyPcXcP9iV6icLDBPl8tHeIeJMcPiAQRnpFR7d2p+6Qmsx/9xQxw=">>.
-%max_size() -> 200000000000.%should be 200 gigabytes, does not include old blocks.
+master_pub() -> <<"BKRFGBFSZ8jIxUzqrxDeWB7tYivzWi+rkm5rdYR2y5BNmX9bfdbU0dxlRQXhFjpagRwyr52uxLwE66z5Td2i8lE=">>.
 max_size() -> 2000000000.%should be 2 gigabytes, does not include old blocks.
 backup() -> fractions:new(19, 20).
 %-define(MBS, max_size() div max_reveal() div 10).%use about 10% of size for blocks.
