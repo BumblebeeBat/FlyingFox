@@ -23,7 +23,7 @@ function spend1() {
     var spend_button_text = document.createTextNode("lightning spend");
     spend_button.appendChild(spend_button_text);
     spend_button.onclick = function() {
-	local_get(["lightning_spend", [127,0,0,1], 3020, parseInt(spend_address.value, 10), parseInt(amount.value, 10)]);
+	local_get(["lightning_spend", IP, Port, parseInt(spend_address.value, 10), parseInt(amount.value, 10)]);
     };
     document.body.appendChild(spend_button);
 

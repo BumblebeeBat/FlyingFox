@@ -30,8 +30,8 @@ function to_channel1() {
 	var b1 = parseInt(inc1.value, 10);
 	var b2 = parseInt(inc2.value, 10);
 	var fee = parseInt(spend_fee.value, 10);
-	local_get(["to_channel", [127,0,0,1], 3020, b1, b2, fee]);
-	local_get(["sync", [127,0,0,1], 3020]);
+	local_get(["to_channel", IP, Port, b1, b2, fee]);
+	local_get(["sync", IP, Port]);
     };
     document.body.appendChild(spend_button);
 

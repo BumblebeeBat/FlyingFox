@@ -94,7 +94,7 @@ function hashlock(chid) {
 }
 function unlock(chid) {
     console.log("unlock1");
-    secret = "AQIDBA==",
+    secret = "AQIDBA==";
     variable_public_get2(
 	["unlock", chid, secret],
 	function(ch) {

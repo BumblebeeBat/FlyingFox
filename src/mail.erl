@@ -19,7 +19,7 @@ handle_cast({new, Acc}, X) ->
 handle_cast({send, To, Message, Seconds}, X) -> 
     Accs = X#d.accs,
     DB = X#d.db,
-    Msg = #msg{msg = Message, start = now(), lasts = Seconds, size = size(Message), to = To},%price is the rate at which this costs money?
+    Msg = #msg{msg = Message, start = erlang:monotonic_time(), lasts = Seconds, size = size(Message), to = To},%price is the rate at which this costs money?
     A = case dict:find(To, DB) of
             error -> [];
             {ok, Val} -> Val
@@ -53,7 +53,7 @@ pop(M) ->
     Nonce = nonce:customer_get(From),
     Nonce = encryption:msg(E),
     %block_tree:account(From),
-    %SmallTime = abs(timer:now_diff(now(), Time) div 1000000),
+    %SmallTime = abs(timer:now_diff(erlang:monotonic_time(), Time) div 1000000),
     %true = SmallTime < 10,
     %H = << Time/binary, ?POP/binary >>,
     %A = block_tree:account(From),
@@ -71,7 +71,8 @@ pop3(From, M) ->
     io:fwrite(packer:pack(M)),
     io:fwrite("\n"),
     Msg = M#msg.msg,
-    T = timer:now_diff(now(), M#msg.start) + 2000000,%2 second fee automatically.
+    T = ((erlang:monotonic_time() - M#msg.start) div 1000) + 2000000,%2 second fee automatically.
+    %T = timer:now_diff(erlang:monotonic_time(), M#msg.start) + 2000000,%2 second fee automatically.
     Cost = cost(size(Msg), M#msg.lasts),
     R = (M#msg.lasts * 1000000),
     Refund = ((R - T) * Cost) div R,
@@ -101,7 +102,7 @@ send(To, Msg, Seconds) ->
 internal_send(To, Msg, Seconds) ->
     send(To, Msg, Seconds).
 %delete_account(Acc, Sig) ->
-%    Time = abs(timer:now_diff(now(), M#msg.time) div 1000000),
+%    Time = abs(timer:now_diff(erlang:monotonic_time(), M#msg.time) div 1000000),
 %    true = Time < 10,%time must be within 10 seconds of now
     %Sig must be over Time appended with <<"delete account">>.
 %    ok = gen_server:call(?MODULE, {del_acc, Acc}),

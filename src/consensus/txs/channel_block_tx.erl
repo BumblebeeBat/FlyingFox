@@ -6,7 +6,7 @@
 %#signed{data = #signed_channel_block{channel_block = SignedCB, fee = 100}, sig1 = signature}.
 
 -module(channel_block_tx).
--export([doit/7, origin_tx/3, channel/7, channel_block/5, channel_block/6, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1, publish_channel_block/3, make_signed_cb/4, reveal_union/4, slash_bet/1, make_bet/2, acc1/1, acc2/1, amount/1, bets/1, fast/1, expiration/1, nlock/1, fee/1, add_bet/3, bet_code/1, bet_amount/1, update/3, is_cb/1, channel_block_from_channel/7, replace_bet/2, test/0]).
+-export([doit/7, origin_tx/3, channel/7, channel_block/5, channel_block/6, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1, publish_channel_block/3, make_signed_cb/4, reveal_union/4, slash_bet/1, make_bet/2, acc1/1, acc2/1, amount/1, bets/1, fast/1, expiration/1, nlock/1, fee/1, add_bet/3, bet_code/1, bet_amount/1, update/3, is_cb/1, channel_block_from_channel/8, replace_bet/2, test/0]).
 -record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0, fee = 0}).
 is_cb(CB) -> is_record(CB, channel_block).
 acc1(CB) -> CB#channel_block.acc1.
@@ -107,10 +107,10 @@ channel_block(Id, Amount, Nonce, Delay, Fee) ->
 channel_block(Id, Amount, Nonce, Delay, Fee, []).
 channel_block(Id, Amount, Nonce, Delay, Fee, Bets) ->
     Channel = block_tree:channel(Id),
-    channel_block_from_channel(Id, Channel, Amount, Nonce, Delay, Fee, Bets).
-channel_block_from_channel(Id, Channel, Amount, Nonce, Delay, Fee, Bets) ->
+    channel_block_from_channel(Id, Channel, Amount, Nonce, Delay, Fee, Bets, tx_pool:accounts()).
+channel_block_from_channel(Id, Channel, Amount, Nonce, Delay, Fee, Bets, Accounts) ->
     true = Delay < constants:max_reveal(),
-    keys:sign(#channel_block{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), amount = Amount, nonce = Nonce, id = Id, fast = false, delay = Delay, fee = Fee, bets=Bets}).
+    keys:sign(#channel_block{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), amount = Amount, nonce = Nonce, id = Id, fast = false, delay = Delay, fee = Fee, bets=Bets}, Accounts).
 
 
 publish_channel_block(CB, Fee, Evidence) ->

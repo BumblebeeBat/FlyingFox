@@ -1,3 +1,5 @@
+var IP = [52, 36, 106, 100];
+var Port = 3010;
 function getter(t, u, callback){
     t = JSON.stringify(t);
     //console.log("getter ".concat(t));

@@ -33,5 +33,5 @@ function talk_func() {
     var to = parseInt(document.getElementById("talk_address").value, 10);
     //var to2 = parseInt(to.value, 10);
     var msg = btoa(document.getElementById("talk_words").value);
-    local_get(["send_msg", [127,0,0,1], 3020, to, msg, 7]);//they have 7 seconds to read the messages.
+    local_get(["send_msg", IP, Port, to, msg, 7]);//they have 7 seconds to read the messages.
 }

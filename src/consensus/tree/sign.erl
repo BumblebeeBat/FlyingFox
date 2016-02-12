@@ -14,7 +14,10 @@ new_key() ->
     {Pub, Priv} = crypto:generate_key(ecdh, params()),
     {en(Pub), en(Priv)}.
 sign(S, Priv) -> en(crypto:sign(ecdsa, sha256, term_to_binary(S), [de(Priv), params()])).
-verify_sig(S, Sig, Pub) -> crypto:verify(ecdsa, sha256, term_to_binary(S), de(Sig), [de(Pub), params()]).
+verify_sig(S, Sig, Pub) -> 
+    SD = de(Sig),
+    PD = de(Pub),
+    crypto:verify(ecdsa, sha256, term_to_binary(S), SD, [PD, params()]).
 verify_1(Tx, Pub) -> verify_sig(Tx#signed.data, Tx#signed.sig, Pub).
 verify_2(Tx, Pub) -> verify_sig(Tx#signed.data, Tx#signed.sig2, Pub).
 verify_both(Tx, Pub1, Pub2) ->

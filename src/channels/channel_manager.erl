@@ -4,7 +4,7 @@
 
 -module(channel_manager).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, unlock_hash/3,hashlock/3,spend/2,recieve/3,read/1,new_channel/2,recieve_locked_payment/4,spend_locked_payment/4,delete/1,id/1,keys/0,create_unlock_hash/2,spend_account/2,recieve_account/3,read_channel/1,bet_amounts/1,test/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, unlock_hash/3,hashlock/3,spend/2,recieve/3,read/1,new_channel/3,recieve_locked_payment/4,spend_locked_payment/4,delete/1,id/1,keys/0,create_unlock_hash/2,spend_account/2,recieve_account/3,read_channel/1,bet_amounts/1,test/0]).
 -record(f, {channel = [], unlock = []}).
 init(ok) -> {ok, dict:new()}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
@@ -41,8 +41,8 @@ id_helper(Partner, [Key|T], Out) ->
 store(ChId, F) -> 
     gen_server:cast(?MODULE, {store, ChId, F}).
 
-new_channel(ChId, Channel) -> 
-    Ch = channel_block_tx:channel_block_from_channel(ChId, Channel, 0, 1, constants:max_reveal()-1, 0, []),
+new_channel(ChId, Channel, Accounts) -> 
+    Ch = channel_block_tx:channel_block_from_channel(ChId, Channel, 0, 1, constants:max_reveal()-1, 0, [], Accounts),
     F = #f{channel = Ch, unlock = []},
     store(ChId, F).
 

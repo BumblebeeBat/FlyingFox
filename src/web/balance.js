@@ -25,12 +25,12 @@ function balance_update2(bal) {
     var balance = document.getElementById("balance");
     var b = (bal).toString();
     balance.innerHTML = "your balance ".concat(b);
-    variable_get(["channel_balance", [127,0,0,1], 3020], balance_update3);
+    variable_get(["channel_balance", IP, Port], balance_update3);
 }
 function balance_update3(channel_balance) {
     var balance = document.getElementById("channel_balance");
     balance.innerHTML = "channel balance ".concat((channel_balance).toString());
-    variable_get(["channel_balance2", [127,0,0,1], 3020], balance_update4);
+    variable_get(["channel_balance2", IP, Port], balance_update4);
 }
 function balance_update4(channel_balance) {
     var balance = document.getElementById("channel_balance2");

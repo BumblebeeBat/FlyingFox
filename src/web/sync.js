@@ -6,7 +6,7 @@ function sync1() {
     var button_text = document.createTextNode("sync");
     button.appendChild(button_text);
     button.onclick = function() {
-	local_get(["sync", [127,0,0,1], 3020]);
+	local_get(["sync", IP, Port]);
     };
     document.body.appendChild(button);
 }
