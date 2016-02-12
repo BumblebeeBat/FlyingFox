@@ -12,7 +12,8 @@ sync(IP, Port) ->
         TheirHeight > MyHeight ->
             get_blocks(MyHeight + 1, TheirHeight, IP, Port);
 	MyHeight > TheirHeight ->
-	    give_blocks(TheirHeight, MyHeight, IP, Port)
+	    give_blocks(TheirHeight + 1, MyHeight, IP, Port);
+	true -> 1 = 1
     end,
     get_txs(IP, Port).
     
@@ -87,8 +88,15 @@ blocks_to_finality(Start, Finish, IP, Port) ->
 give_blocks(Start, Finish, _, _) when Start>Finish -> ok;
 give_blocks(Start, Finish, IP, Port) ->
     Block = block_tree:read_int(Start),
-    talker:talk({give_block, Block}, IP, Port),
-    give_blocks(Start + 1, Finish, IP, Port).
+    io:fwrite("block "),
+    io:fwrite(packer:pack(Block)),
+    io:fwrite("\n"),
+    T = case talker:talk({give_block, Block}, IP, Port) of
+	    {ok, 0} -> 1;
+	    {error, _} -> 0
+	end,
+    give_blocks(Start + T, Finish, IP, Port).
+		   
 get_blocks(Start, Finish, _, _) when Start>Finish -> ok;
 get_blocks(Start, Finish, IP, Port) ->
     {ok, SignedBlock} = talker:talk({block, Start}, IP, Port),
@@ -97,7 +105,7 @@ get_blocks(Start, Finish, IP, Port) ->
 absorb_txs([]) -> ok;
 absorb_txs([Tx|T]) -> 
     spawn(tx_pool, absorb, [Tx]),
-    timer:sleep(100),
+    timer:sleep(1000),
     absorb_txs(T).
 get_txs(IP, Port) ->
     {ok, Txs} = talker:talk({txs}, IP, Port),

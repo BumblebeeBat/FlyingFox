@@ -138,6 +138,8 @@ read_file(N) ->
 	{ok, X} -> 
 	    file:close(File), X
     end.
+read_account(-1) -> 
+    io:fwrite("\nError ----> use keys:update_id(_).\n");
 read_account(N) -> %maybe this should be a call too, that way we can use the ram to see if it is already deleted?
     T = top(),
     if

@@ -19,6 +19,8 @@ talk(Msg) ->
     talk(Msg, Peer).
 talk(Msg, Peer) ->
     case httpc:request(post, {Peer, [], "application/octet-stream", packer:pack(Msg)}, [{timeout, 1000}], []) of
+	{ok, {_, _, []}} -> 
+	    {error, undefined};
 	{ok, {_, _, R}} -> 
 	    packer:unpack(R);
 	{error, timeout} ->

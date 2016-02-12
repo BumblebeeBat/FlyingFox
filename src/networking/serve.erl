@@ -30,6 +30,5 @@ start(Port) ->
 pw() ->  start(port:check()).
 pw(X) ->
     port:change(X),
-    keys:unlock("abc"),
     pw().
 
