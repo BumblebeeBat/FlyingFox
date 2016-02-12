@@ -24,6 +24,9 @@ terminate(_Reason, _Req, _State) -> ok.
 -define(WORD, 10000000).%10 megabytes.
 doit({pubkey}) -> {ok, keys:pubkey()};
 doit({height}) -> {ok, block_tree:height()};
+doit({give_block, SignedBlock}) -> 
+    block_tree:absorb([SignedBlock]),
+    {ok, 0};
 doit({block, N}) -> 
     io:fwrite("handler doit block "),
     io:fwrite(integer_to_list(N)),

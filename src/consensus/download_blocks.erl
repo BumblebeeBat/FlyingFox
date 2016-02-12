@@ -3,16 +3,16 @@
 
 %download_blocks:sync({127,0,0,1}, 3020).
 sync(IP, Port) ->
-    {ok, PeerData} = talker:talk({height}, IP, Port),
-    TheirHeight = PeerData,
+    {ok, TheirHeight} = talker:talk({height}, IP, Port),
     MyHeight = block_tree:height(),
     MH = MyHeight + constants:max_reveal(),
     if
         TheirHeight > MH ->
-            fresh_sync(IP, Port, PeerData);
+            fresh_sync(IP, Port, TheirHeight);
         TheirHeight > MyHeight ->
-            get_blocks(MyHeight + 1, TheirHeight, IP, Port)
-        %true -> 0
+            get_blocks(MyHeight + 1, TheirHeight, IP, Port);
+	MyHeight > TheirHeight ->
+	    give_blocks(TheirHeight, MyHeight, IP, Port)
     end,
     get_txs(IP, Port).
     
@@ -84,6 +84,11 @@ blocks_to_finality(Start, Finish, IP, Port) ->
     {ok, SignedBlock} = talker:talk({block, Start}, IP, Port),
     block_finality:append(SignedBlock, Start),
     blocks_to_finality(Start + 1, Finish, IP, Port).
+give_blocks(Start, Finish, _, _) when Start>Finish -> ok;
+give_blocks(Start, Finish, IP, Port) ->
+    Block = block_tree:read_int(Start),
+    talker:talk({give_block, Block}, IP, Port),
+    give_blocks(Start + 1, Finish, IP, Port).
 get_blocks(Start, Finish, _, _) when Start>Finish -> ok;
 get_blocks(Start, Finish, IP, Port) ->
     {ok, SignedBlock} = talker:talk({block, Start}, IP, Port),
