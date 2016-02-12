@@ -105,7 +105,6 @@ get_blocks(Start, Finish, IP, Port) ->
 absorb_txs([]) -> ok;
 absorb_txs([Tx|T]) -> 
     spawn(tx_pool, absorb, [Tx]),
-    timer:sleep(1000),
     absorb_txs(T).
 get_txs(IP, Port) ->
     {ok, Txs} = talker:talk({txs}, IP, Port),
