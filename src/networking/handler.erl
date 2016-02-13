@@ -38,7 +38,7 @@ doit({accounts_size}) ->
     %{ok, filelib:file_size("backup/accounts.db") div ?WORD};
     {ok, filelib:file_size(constants:backup_accounts()) div ?WORD};
 doit({tx_absorb, Tx}) -> 
-    {ok, tx_pool:absorb(Tx)};
+    {ok, tx_pool_feeder:absorb(Tx)};
 doit({accounts, N}) ->
     {ok, File} = file:open(constants:backup_accounts(), [read, binary, raw]),
     O = case file:pread(File, ?WORD * N, ?WORD) of
@@ -101,7 +101,7 @@ doit({new_channel, SignedTx}) ->
     MS = to_channel_tx:my_side(Tx),
     true = MC > MS,
     NTx = keys:sign(SignedTx),
-    tx_pool:absorb(NTx),
+    tx_pool_feeder:absorb(NTx),
     {ok, NTx};
 doit({update_channel, ISigned, TheySigned}) ->%The contents of this message NEED to be encrypted. ideally we should encypt every message to this module.
     Data = sign:data(ISigned),
@@ -128,7 +128,7 @@ doit({update_channel, ISigned, TheySigned}) ->%The contents of this message NEED
 doit({to_channel, SignedTx}) ->
     Tx = sign:data(SignedTx),
     true = to_channel_tx:min_ratio(free_constants:liquidity_ratio(), Tx),
-    tx_pool:absorb(keys:sign(SignedTx)),
+    tx_pool_feeder:absorb(keys:sign(SignedTx)),
     {ok, 0};
 doit({backup_size, File}) ->
     io:fwrite("backup size handler"),

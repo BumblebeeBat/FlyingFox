@@ -6,7 +6,7 @@ create_account(Pub, Amount, Fee) ->
     Id = keys:id(),
     Acc = block_tree:account(Id),
     Tx = #ca{from = Id, nonce = accounts:nonce(Acc) + 1, pub = Pub, amount = Amount, fee = Fee},
-    tx_pool:absorb(keys:sign(Tx)).
+    tx_pool_feeder:absorb(keys:sign(Tx)).
 next_top(DBroot, Accounts) -> 
     Array = accounts:array(),
     next_top_helper(Array, accounts:top(), DBroot, Accounts).

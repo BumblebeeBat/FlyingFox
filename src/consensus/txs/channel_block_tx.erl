@@ -115,7 +115,7 @@ channel_block_from_channel(Id, Channel, Amount, Nonce, Delay, Fee, Bets, Account
 
 publish_channel_block(CB, Fee, Evidence) ->
     ID = keys:id(),
-    tx_pool:absorb(keys:sign(make_signed_cb(ID, CB, Fee, Evidence))).
+    tx_pool_feeder:absorb(keys:sign(make_signed_cb(ID, CB, Fee, Evidence))).
 origin_tx(BlockNumber, ParentKey, ID) ->
     OriginBlock = block_tree:read_int(BlockNumber, ParentKey),
     OriginTxs = block_tree:txs(OriginBlock),

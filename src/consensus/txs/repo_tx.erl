@@ -11,7 +11,7 @@ repo(Target, Fee, Channels) ->
     T = block_tree:account(Target),
     true = low_balance(T, block_tree:total_coins(), block_tree:height()),
     Nonce = accounts:nonce(A),
-    tx_pool:absorb(keys:sign(#repo{acc = Acc, nonce = Nonce + 1, target = Target, fee = Fee, channels = Channels, delegated = accounts:delegated(T)})).
+    tx_pool_feeder:absorb(keys:sign(#repo{acc = Acc, nonce = Nonce + 1, target = Target, fee = Fee, channels = Channels, delegated = accounts:delegated(T)})).
 low_balance(Acc, TotalCoins, NewHeight) -> 
     UCost = accounts:unit_cost(Acc, TotalCoins),
     MinBalance = UCost * constants:max_reveal(),

@@ -34,7 +34,7 @@ reveal2(Id, Start, End) ->%This is an inefficient implementation. Checks all 9 *
 				not BTS ->
 				    already_did_it;
 				true ->
-				    tx_pool:absorb(keys:sign(#reveal_tx{acc = Id, nonce = accounts:nonce(block_tree:account(Id)) + 1, secret = Secret, height = Start}))
+				    tx_pool_feeder:absorb(keys:sign(#reveal_tx{acc = Id, nonce = accounts:nonce(block_tree:account(Id)) + 1, secret = Secret, height = Start}))
 			    end
 		    end
 	    end

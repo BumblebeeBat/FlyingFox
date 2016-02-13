@@ -15,7 +15,7 @@ make_tx(ChannelId, Fee) ->
     %end,
     %Partner = block_tree:account(Part),
     %true = low_balance(Partner, block_tree:total_coins(), block_tree:height()),
-    tx_pool:absorb(keys:sign(#channel_funds_limit{acc = Id, nonce = Nonce + 1, id = ChannelId, fee = Fee})).
+    tx_pool_feeder:absorb(keys:sign(#channel_funds_limit{acc = Id, nonce = Nonce + 1, id = ChannelId, fee = Fee})).
 losses(Txs, Channels, ParentKey) -> losses(Txs, Channels, ParentKey, 0).
 losses([], _, _, X) -> X;
 losses([SignedTx|Txs], Channels, ParentKey, X) -> 

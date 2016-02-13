@@ -24,5 +24,5 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
 slow_close(Id) ->
     MyId = keys:id(),
     Acc = block_tree:account(MyId),
-    tx_pool:absorb(keys:sign(#channel_close{acc = MyId, nonce = accounts:nonce(Acc) + 1, id = Id})).
+    tx_pool_feeder:absorb(keys:sign(#channel_close{acc = MyId, nonce = accounts:nonce(Acc) + 1, id = Id})).
 

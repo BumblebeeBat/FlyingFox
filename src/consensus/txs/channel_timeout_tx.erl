@@ -9,7 +9,7 @@ timeout_channel(ChannelTx, Evidence) ->
     Acc = block_tree:account(Id),
     Tx = #timeout{acc = Id, nonce = accounts:nonce(Acc) + 1, channel_block = keys:sign(ChannelTx)},
     STx = sign:set_revealed(keys:sign(Tx), Evidence),
-    tx_pool:absorb(STx).
+    tx_pool_feeder:absorb(STx).
 
 doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     SignedCB = Tx#timeout.channel_block, 
