@@ -1,5 +1,4 @@
-tx_pool module is no good. the {absorb, SignedTx} version of handle cast has way too much in it. if txs:digest() should crash, it shouldn't crash tx_pool. 
-We tried fixing tx_pool, but now it doesn't work at all.
+javascript for creating accounts doesn't work now. The address gets all messed up.
 
 automatically ask for recent hash from 52.36.106.100:3010, then start downloading from anyone who agrees with that hash.
 download_blocks:sync({52,36,106,100}, 3010).
