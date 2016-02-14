@@ -11,8 +11,11 @@ If we disconnect the consensus from coin creation, then we can create something 
 We need a tool to measure the current POW price. Then we can sell as many coins as they want at that price.
 To calculate the price, the block creator should have the ability to earn back a portion of the coins he burns D.
 The block creator should choose a number B between 0 and 1. The bigger the B, the more work he has to do.
+
 At 0, he gets none of his money back, at 1 he gets it all back. like B*D
+
 The closer he is to 1, the more POW mining he has to do exponentially. Like C/(1-B)
+
 The optimal strategy of the block creator is to select B such that his reward is big, but the amount of work he has to do is small.
 
 I drew a greph and did this math in pen, check coin_creation.jpg
