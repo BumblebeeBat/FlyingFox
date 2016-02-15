@@ -30,11 +30,22 @@ G(x) = f*POW(x) is the cost of the POW. f is the exchange rate. W
 When the creator reveals w, we can derive B = w/(C+w), which gives us an estimate for f.
 Since C is tuned to be 1, w will also usually be about 1, so B ~= 1/2.
 
-0 = d/dx profit(x)|[x = 1/2] = d/dx(reward(x) - G(x))|[x = 1/2] = D - f*C*((c*(1/2)+c/2)/((1/2)^2)) = 0
+0 = d/dx profit(x)|[x = 1/2] 
+
+  = d/dx(reward(x) - G(x))|[x = 1/2] 
+
+  = D - f*C*((c*(1/2)+c/2)/((1/2)^2))
+
 -> 4f = D
+
 -> f = D/4
+
 -> G(x) = D*x/4/(1-x)
+
 We want to find X s.t. G(X) = R(X)
+
 D*X = D*X/4/(1-X) -> 1 = 4(1-X) -> X = 3/4
+
 so the price is right where X=3/4. To win 3/4, you need to work 3/4 * C / (1/4) = 3*C.
+
 The creator does 1/3 as much work to win 2/3 as much money. So that means the block creator pays 1/2 the normal price.
