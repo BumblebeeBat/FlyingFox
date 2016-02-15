@@ -23,18 +23,18 @@ The optimal strategy of the block creator is to select B such that his reward is
 D is the money that is usually destroyed to create a block. The block creator can win some of it back by providing POW=w.
 C is the 80th percentile amount of work the block creator provided over the last 100 blocks. Units of POW are scaled so that C is always = 1. It is measured in the number of times the hash function was called to create the digital artifact. 
 
-POW-1(w) = 1/(C/w+1) is a mapping from any amount of work to the range 0-1. This is the portion of the reward that he wins back.
-POW(x) = x*C/(1-x) is the inverse.
+POW-1(w) = 1/(1/w+1) is a mapping from any amount of work to the range 0-1. This is the portion of the reward that he wins back.
+POW(x) = x*1/(1-x) is the inverse.
 
 G(x) = f*POW(x) is the cost of the POW. f is the exchange rate. W
-When the creator reveals w, we can derive B = w/(C+w), which gives us an estimate for f.
+When the creator reveals w, we can derive B = w/(1+w), which gives us an estimate for f.
 Since C is tuned to be 1, w will also usually be about 1, so B ~= 1/2.
 
 0 = d/dx profit(x)|[x = 1/2] 
 
   = d/dx(reward(x) - G(x))|[x = 1/2] 
 
-  = D - f*C*((c*(1/2)+c/2)/((1/2)^2))
+  = D - f*(((1/2)+1/2)/((1/2)^2))
 
 -> 4f = D
 
