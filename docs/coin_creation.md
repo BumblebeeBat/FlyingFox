@@ -17,12 +17,12 @@ If we disconnect the consensus from coin creation, then we can create something 
 We need a mechanism to measure the current POW price. Then we can sell as many coins as they want at that price.
 Below I will derive such a mechanism:
 To calculate the price, the block creator should have the ability to earn back a portion of the coins he burns D.
-The block creator should choose a number B between 0 and 1. The bigger the B, the more work he has to do.
+The block creator should choose a number B between 0 and 1. The bigger the B, the more work he has to do exponentially (w).
 
 The optimal strategy of the block creator is to select B such that his reward is big, but the amount of work he has to do is small. Based on the number the block creator selects, we can approximate the real price of POW.
 
 D is the money that is usually destroyed to create a block. The block creator can win some of it back by providing POW=w.
-C is the median amount of work the block creator provided over the last 100 blocks. Units of POW are scaled so that C is always = 1. It is measured in the number of times the hash function was called to create the digital artifact. 
+C is the 80th percentile amount of work the block creator provided over the last 100 blocks. Units of POW are scaled so that C is always = 1. It is measured in the number of times the hash function was called to create the digital artifact. 
 
 POW-1(w) = 1/(C/w+1) is a mapping from any amount of work to the range 0-1. This is the portion of the reward that he wins.
 POW(x) = x*C/(1-x) is the inverse.
