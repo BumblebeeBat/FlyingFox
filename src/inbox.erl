@@ -35,7 +35,7 @@ handle_cast({get, Id, Msg}, X) ->
     N = F#f.next,
     D = dict:store(N, Msg, F#f.msgs),
     E = dict:erase(N-free_constants:inbox_per_peer(), D),
-    S = length(Msg),
+    S = size(Msg),
     true = S < free_constants:max_message_size(),
     NewX = dict:store(Id, #f{next = N+1, msgs = E}, X),
     {noreply, NewX}.
