@@ -23,10 +23,14 @@ next_top_helper(Array, Top, DBroot, Accounts) ->
     end.
     
 doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NS, NewHeight) ->
+    Pub = if
+	      size(Tx#ca.pub) == 65 -> base64:encode(Tx#ca.pub);
+	      true -> Tx#ca.pub
+	  end,
     F = block_tree:account(Tx#ca.from, ParentKey, Accounts),
     NewId = next_top(ParentKey, Accounts),
     true = NewId < constants:max_address(),
-    NT = accounts:update(accounts:empty(Tx#ca.pub), NewHeight, Tx#ca.amount, 0, 0, TotalCoins),
+    NT = accounts:update(accounts:empty(Pub), NewHeight, Tx#ca.amount, 0, 0, TotalCoins),
     NF = accounts:update(F, NewHeight, (-Tx#ca.amount - constants:create_account_fee() - Tx#ca.fee), 0, 1, TotalCoins),
     Nonce = accounts:nonce(NF),
     Nonce = Tx#ca.nonce,
@@ -35,7 +39,7 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NS, NewHeight) ->
     MyId = keys:id(),
     MyPub = keys:pubkey(),
     if
-	((Tx#ca.pub == MyPub) and (MyId == -1)) -> keys:update_id(NewId);
+	((Pub == MyPub) and (MyId == -1)) -> keys:update_id(NewId);
 	true -> 1 = 1
     end,
     {Channels, Accounts3, TotalCoins - constants:create_account_fee(), NS}.
