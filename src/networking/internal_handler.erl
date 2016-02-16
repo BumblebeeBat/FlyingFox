@@ -95,7 +95,7 @@ doit({get_msg, IP, Port}) ->
 		 talker:talk({update_channel, Refund, NewCh}, IP, Port),
 		 nonce:server_next(ServerId),
 		 inbox:get(EMsg);
-	     {ok, {pop_response, _}} ->
+	     {ok, <<"no more messages">>} ->
 		 io:fwrite("no more messages"),
 		 ok;
 	     X -> 
