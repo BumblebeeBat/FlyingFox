@@ -118,7 +118,7 @@ test() ->
     block_tree:buy_block(),
     CreateTx1 = to_channel_tx:create_channel(3, 110000, 1000, <<"delegated_1">>, 0),
     SignedCreateTx1 = sign:sign_tx(CreateTx1, Pub, Priv, tx_pool:accounts()),
-    tx_pool:absorb(SignedCreateTx1),
+    tx_pool_feeder:absorb(SignedCreateTx1),
     sign_tx:sign(),
     reveal:reveal(),
     block_tree:buy_block(),

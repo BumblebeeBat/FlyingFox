@@ -8,7 +8,7 @@ channel_slash(ChannelTx) ->
     channel_slash(ChannelTx, MyId).
 channel_slash(ChannelTx, MyId) ->
     Acc = block_tree:account(MyId),
-    tx_pool:absorb(keys:sign(#channel_slash{acc = MyId, nonce = accounts:nonce(Acc), channel_block = ChannelTx})).
+    tx_pool_feeder:absorb(keys:sign(#channel_slash{acc = MyId, nonce = accounts:nonce(Acc), channel_block = ChannelTx})).
 make_tx(Id, CB, Fee) ->
     %Id = keys:id(),
     Acc = block_tree:account(Id),

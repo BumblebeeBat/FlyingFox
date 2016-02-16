@@ -146,7 +146,7 @@ doit({new_channel, IP, Port, Bal1, Bal2, Fee}) ->
     Tx = keys:sign(to_channel_tx:create_channel(Partner, Bal1, Bal2, Type, Fee)),
     Msg = {new_channel, Tx},
     {ok, Ch} = talker:talk(Msg, IP, Port),
-    tx_pool:absorb(Ch),
+    tx_pool_feeder:absorb(Ch),
     {ok, ok};
 doit({lightning_spend, IP, Port, Partner, A}) ->
     {ok, PeerId} = talker:talk({id}, IP, Port),

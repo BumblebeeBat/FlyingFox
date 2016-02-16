@@ -1,5 +1,7 @@
-var IP = [52, 36, 106, 100];
-var Port = 3010;
+//var IP = [52, 36, 106, 100];// server
+var IP = [127, 0, 0, 1];
+//var Port = 3010;
+var Port = 3030;
 function getter(t, u, callback){
     t = JSON.stringify(t);
     //console.log("getter ".concat(t));
@@ -9,15 +11,14 @@ function getter(t, u, callback){
     xmlhttp.send(t);
     return xmlhttp
 }
+var PORT = parseInt(document.URL.substring(17, 21), 10);
 function get(t, callback) {
-    PORT = parseInt(document.URL.substring(17, 21), 10);
     u = url(PORT - 1, "localhost");
     return getter(t, u, callback);
 }
 function url(port, ip) { return "http://".concat(ip).concat(":").concat(port.toString().concat("/")); }
 //PORT = 3010;
 function local_get(t, callback) {
-    PORT = parseInt(document.URL.substring(17, 21), 10);
     u = url(PORT, "localhost");
     return getter(t, u, callback);
 }
