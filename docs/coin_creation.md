@@ -10,7 +10,7 @@ When the demand for gold goes up, we invest more into mining, and rate of gold p
 When the demand for bitcoin goes up, we invest more into mining, and the rate of coin production stays static.
 
 Having a fixed unchanging rate of supply is bad. It makes the currency price very volatile.
-What we really want is for it to always cost 1000 coins of POW to produce 1000 cryptocoins.
+What we really want is for it to always cost 1000 coins of POW to produce 1000 coins.
 
 If we disconnect the consensus from coin creation, then we can create something much more elegant. We can sell small amount of coins for small amounts of POW to determine the current exchange rate between coins and POW, then offer to sell any amount of coins at the current exchange rate. The resulting blockchain would be able to grow it's market cap very quickly when it needs to, without changing the price of individual coins.
 
@@ -23,10 +23,10 @@ The optimal strategy of the block creator is to select B such that his reward is
 D is the money that is usually destroyed to create a block. The block creator can win some of it back by providing POW=w.
 C is the 80th percentile amount of work the block creator provided over the last 100 blocks. Units of POW are scaled so that C is always = 1. It is measured in the number of times the hash function was called to create the digital artifact. 
 
-POW-1(w) = 1/(1/w+1) is a mapping from any amount of work to the range 0-1. This is the portion of the reward that he wins back.
+POW-1(w) = 1/(1/w+1) is a mapping from any amount of work to the range 0-1. This is B, the portion of the reward that he wins back.
 POW(x) = x*1/(1-x) is the inverse.
 
-G(x) = f*POW(x) is the cost of the POW. f is the exchange rate. W
+G(x) = f*POW(x) is the cost of the POW. f is the exchange rate. 
 When the creator reveals w, we can derive B = w/(1+w), which gives us an estimate for f.
 Since C is tuned to be 1, w will also usually be about 1, so B ~= 1/2.
 
