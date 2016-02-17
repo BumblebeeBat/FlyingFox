@@ -29,7 +29,7 @@ handle_cast({send, To, Message, Seconds}, X) ->
     {noreply, NewX}.
 handle_call({pop_hashes, Acc}, _From, X) -> 
     Out = case dict:find(Acc, X#d.db) of
-	      error -> empty;
+	      error -> <<"empty">>;
 	      {ok, Msgs} -> dict:fetch_keys(Msgs)
 	  end,
     {reply, Out, X};
