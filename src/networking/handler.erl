@@ -79,8 +79,10 @@ doit({send, Payment, From, To, Msg, Seconds}) ->
     mail:send(To, Msg, Seconds),
     {ok, R};
 doit({id}) -> {ok, keys:id()};
-doit({pop, Msg}) ->
-    {ok, mail:pop(Msg)};
+doit({pop_hashes, Account}) ->
+    {ok, mail:pop_hashes(Account)};
+doit({pop, Account, Hashes}) ->
+    {ok, mail:pop(Account, Hashes)};
 doit({register_cost}) ->
     {ok, mail:register_cost()};
 %need a way to share recent txs.			   

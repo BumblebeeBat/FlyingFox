@@ -1,6 +1,6 @@
 -module(mail).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, pop/1,pop_maker/1,cost/2,register/2,send/3,pop/0,status/0,test/0,register_cost/0,internal_send/3]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, pop/2,pop_hashes/1,cost/2,register/2,send/3,status/0,test/0,register_cost/0,internal_send/3]).
 -record(msg, {start, lasts, msg, size = 0, to}).
 -record(d, {db = dict:new(), accs = 0, msgs = 0}).
 init(ok) -> {ok, #d{}}.
@@ -11,7 +11,7 @@ handle_info(_, X) -> {noreply, X}.
 handle_cast({new, Acc}, X) -> 
     B = case dict:find(Acc, X#d.db) of
             error ->
-                NewD = dict:store([], Acc, X#d.db),
+                NewD = dict:store(dict:new(), Acc, X#d.db),
                 #d{db = NewD, accs = X#d.accs, msgs = X#d.msgs};
             {ok, _} -> X
     end,
@@ -21,50 +21,49 @@ handle_cast({send, To, Message, Seconds}, X) ->
     DB = X#d.db,
     Msg = #msg{msg = Message, start = erlang:monotonic_time(), lasts = Seconds, size = size(Message), to = To},%price is the rate at which this costs money?
     A = case dict:find(To, DB) of
-            error -> [];
+            error -> dict:new();
             {ok, Val} -> Val
     end,
-    NewD = dict:store(To, [Msg|A], DB),
+    NewD = dict:store(To,dict:store(hash:doit(Msg), Msg, A), DB),
     NewX = #d{db = NewD, accs = Accs, msgs = X#d.msgs + 1},
     {noreply, NewX}.
-handle_call({pop, Acc}, _From, X) -> 
+handle_call({pop_hashes, Acc}, _From, X) -> 
+    Out = case dict:find(Acc, X#d.db) of
+	      error -> empty;
+	      {ok, Msgs} -> dict:fetch_keys(Msgs)
+	  end,
+    {reply, Out, X};
+handle_call({pop, Acc, Hash}, _From, X) -> 
     {Out, NewX} = 
         case dict:find(Acc, X#d.db) of
             error -> {empty, X};
-            {ok, []} -> {empty, X};
-            {ok, Val} ->
-                D = dict:store(Acc, tl(Val), X#d.db),
+            %{ok, []} -> {empty, X};
+            {ok, Msgs} ->
+		D = dict:store(Acc, dict:erase(Hash, Msgs), X#d.db),
+		    %D = dict:store(Acc, tl(Val), X#d.db),
                 NX = #d{db = D, accs = X#d.accs, msgs = X#d.msgs-1},
-                {hd(Val), NX}
+		case dict:find(Hash, Msgs) of
+		    error -> {empty2, X};
+		    Y -> {Y, NX}
+		end
         end,
     {reply, Out, NewX};
 handle_call(status, _From, X) -> {reply, X#d.db, X}.
--define(POP, <<1,7,3,24,7,4,2>>).
+%-define(POP, <<1,7,3,24,7,4,2>>).
 %price(Accounts, Messages) -> 10000 + ((Accounts + Messages) * 100).
-pop() -> ?POP.
-pop_maker(To) ->
+%pop() -> ?POP.
+%pop_maker(To) ->
     %Acc = keys:id(),
-    A = block_tree:account(To),
-    Pub = accounts:pub(A),
-    encryption:send_msg(nonce:server_get(To), Pub).
-pop(M) ->
-    E = encryption:get_msg(M),
-    From = encryption:id(E),
-    Nonce = nonce:customer_get(From),
-    Nonce = encryption:msg(E),
-    %block_tree:account(From),
-    %SmallTime = abs(timer:now_diff(erlang:monotonic_time(), Time) div 1000000),
-    %true = SmallTime < 10,
-    %H = << Time/binary, ?POP/binary >>,
-    %A = block_tree:account(From),
-    %Pub = accounts:pub(A),
-    %true = sign:verify_sig(H, Sig, Pub),
-    pop2(From).
-pop2(From) ->
-    M = gen_server:call(?MODULE, {pop, From}),
-    case M of
+%A = block_tree:account(To),
+%Pub = accounts:pub(A),
+%encryption:send_msg(nonce:server_get(To), Pub).
+pop_hashes(Account) ->
+    gen_server:call(?MODULE, {pop_hashes, Account}).
+pop(Account, Hashe) ->
+    X = gen_server:call(?MODULE, {pop, Account, Hashe}),
+    case X of 
 	empty -> <<"no more messages">>;
-	X -> pop3(From, X)
+	X -> pop3(Account, X)
     end.
 pop3(From, M) ->
     io:fwrite("pop2 M "),
@@ -84,9 +83,9 @@ pop3(From, M) ->
 	    io:fwrite("you needed"),
 	    io:fwrite(integer_to_list(T)),
 	    io:fwrite("\n"),
-	    pop2(From);%Acc, Sig, Time);
+	    {ok, ok};
         true -> 
-	    nonce:customer_next(From),
+	    %nonce:customer_next(From),
 	    {pop_response, Msg, channel_manager:spend_account(From, Refund)}
     end.
 cost(MsgSize, Time) -> 10000 * MsgSize * Time. %time in seconds
@@ -126,6 +125,14 @@ test() ->
     Msg = <<"test">>,
     gen_server:cast(?MODULE, {send, 3, Msg, 0}),
     gen_server:cast(?MODULE, {send, 3, Msg, 0}),
-    Out = gen_server:call(?MODULE, {pop, 3}),
+    %io:fwrite(pop_hashes(3)),
+    PH = pop_hashes(3),
+    {ok, Out} = gen_server:call(?MODULE, {pop, 3, hd(PH)}),
+    io:fwrite("msg "),
+    io:fwrite(packer:pack(Msg)),
+    io:fwrite("\n"),
+    io:fwrite("out "),
+    io:fwrite(packer:pack(Out)),
+    io:fwrite("\n"),
     Msg = Out#msg.msg,
     success.

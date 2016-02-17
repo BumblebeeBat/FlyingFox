@@ -85,24 +85,10 @@ doit({test}) ->
     {test_response};
 doit({get_msg, IP, Port}) ->
     {ok, ServerId} = talker:talk({id}, IP, Port),
-    Msg = mail:pop_maker(ServerId),
-    Out= case talker:talk({pop, Msg}, IP, Port) of
-	     {ok, {pop_response, EMsg, Refund}} ->
-		 io:fwrite("internal handler recieved good msg "),
-		 io:fwrite(packer:pack(EMsg)),
-		 io:fwrite("\n"),
-		 NewCh = channel_manager:recieve(hd(channel_manager:id(ServerId)), 0, Refund),
-		 talker:talk({update_channel, Refund, NewCh}, IP, Port),
-		 nonce:server_next(ServerId),
-		 inbox:get(EMsg);
-	     {ok, <<"no more messages">>} ->
-		 io:fwrite("no more messages"),
-		 ok;
-	     X -> 
-		 io:fwrite("internal handler get msg bad "),
-		 io:fwrite(packer:pack(X)),
-		 io:fwrite("\n"),
-		 X
+    %Msg = mail:pop_maker(ServerId),
+    Out= case talker:talk({pop_hashes, keys:id()}, IP, Port) of
+	     [] -> <<"no messages">>;
+	     T -> absorb_msgs(T, IP, Port, ServerId)
 	 end,
     {ok, Out};
 doit({read_msg, Id, Index}) -> {ok, inbox:read(Id, Index)};
@@ -191,3 +177,19 @@ doit(X) ->
     io:fwrite(packer:pack(X)),
     io:fwrite("\n"),
     {error}.
+absorb_msgs([], _, _, _) -> ok;
+absorb_msgs([H|T], IP, Port, ServerId) -> 
+    case talker:talk({pop, keys:id(), H}, IP, Port) of
+	{ok, {pop_response, EMsg, Refund}} ->
+	    io:fwrite("internal handler recieved good msg "),
+	    io:fwrite(packer:pack(EMsg)),
+	    io:fwrite("\n"),
+	    NewCh = channel_manager:recieve(hd(channel_manager:id(ServerId)), 0, Refund),
+	    talker:talk({update_channel, Refund, NewCh}, IP, Port),
+	    inbox:get(EMsg);
+	X -> 
+	    io:fwrite("internal handler get msg bad "),
+	    io:fwrite(packer:pack(X)),
+	    io:fwrite("\n")
+    end,
+    absorb_msgs(T, IP, Port, ServerId).

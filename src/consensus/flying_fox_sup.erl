@@ -24,7 +24,6 @@ init([]) ->
 	  ?CHILD(inbox, worker),
 	  ?CHILD(mail, worker),
 	  ?CHILD(arbitrage, worker),
-	  ?CHILD(nonce, worker),
 	  ?CHILD(tx_pool_feeder, worker),
 	  ?CHILD(channel_manager, worker)
 	],
