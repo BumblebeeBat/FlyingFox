@@ -1,7 +1,3 @@
-The message "Send me the most recent message in my inbox" broken. The worry is that an attacker could re-send the same looking message to empty your inbox. The nonce system was a fix where the server and customer each remembered the same number, and each message incremented the number by one.
-
-The nonce system is very ugly. Instead, we need the ability to ask for a list of hashes of the messages in the inbox. Then we can request individual messages by hash.
-
 It would be nice if we have a javascript interface to send spam-less messages. The recipient has the option of deleting the sender's funds.
 
 javascript for creating accounts doesn't work now. The address gets all messed up.
