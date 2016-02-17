@@ -1,7 +1,5 @@
 It would be nice if we have a javascript interface to send spam-less messages. The recipient has the option of deleting the sender's funds.
 
-javascript for creating accounts doesn't work now. The address gets all messed up.
-
 automatically ask for recent hash from 52.36.106.100:3010, then start downloading from anyone who agrees with that hash.
 download_blocks:sync({52,36,106,100}, 3010).
 
