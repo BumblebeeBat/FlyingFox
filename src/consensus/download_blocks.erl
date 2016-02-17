@@ -104,6 +104,9 @@ get_blocks(Start, Finish, IP, Port) ->
     get_blocks(Start + 1, Finish, IP, Port).
 absorb_txs([]) -> ok;
 absorb_txs([Tx|T]) -> 
+    io:fwrite("attempt to absorb tx "),
+    io:fwrite(packer:pack(Tx)),
+    io:fwrite("\n"),
     spawn(tx_pool_feeder, absorb, [Tx]),
     absorb_txs(T).
 get_txs(IP, Port) ->

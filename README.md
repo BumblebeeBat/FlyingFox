@@ -7,8 +7,6 @@ Bitcoin Donations: 1GbpRPE83Vjg73KFvTVZ4EnS2qNkiLY5TT
 
 Facts about Flying Fox:
 
-*It is a blockchain
-
 *It uses state channels as a scalability solution.
 
 *It has a consensus mechanism optimized for state channels.

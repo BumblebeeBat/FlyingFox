@@ -1,3 +1,8 @@
+channel_manager has a race condition. If we try to make multiple payments at once, they can get mixed up.
+We need a new gen_server that feeds instructions to channel_manager one at a time, kinda like how tx_pool has tx_pool_feeder
+
+When we restart a node, it shouldn't create a new channel. It should remember from last time.
+
 It would be nice if we have a javascript interface to send spam-less messages. The recipient has the option of deleting the sender's funds.
 
 automatically ask for recent hash from 52.36.106.100:3010, then start downloading from anyone who agrees with that hash.

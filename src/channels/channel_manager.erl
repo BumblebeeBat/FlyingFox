@@ -6,10 +6,22 @@
 -behaviour(gen_server).
 -export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, unlock_hash/3,hashlock/3,spend/2,recieve/3,read/1,new_channel/3,recieve_locked_payment/4,spend_locked_payment/4,delete/1,id/1,keys/0,create_unlock_hash/2,spend_account/2,recieve_account/3,read_channel/1,bet_amounts/1,test/0]).
 -record(f, {channel = [], unlock = []}).
-init(ok) -> {ok, dict:new()}.
+-define(LOC, constants:channel_manager()).
+init(ok) -> 
+    process_flag(trap_exit, true),
+    X = db:read(?LOC),
+    if
+        X == "" -> 
+            K = dict:new(),
+            db:save(?LOC,K);
+        true -> K = X
+    end,
+    {ok, K}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
-terminate(_, _) -> io:format("died!"), ok.
+terminate(_, _) -> 
+    db:save(?LOC,K),
+    io:format("channel_manager died!"), ok.
 handle_info(_, X) -> {noreply, X}.
 handle_cast({store, N, Ch}, X) -> 
     {noreply, dict:store(N, Ch, X)};
@@ -265,11 +277,5 @@ test() ->
     E = element(2, element(2, read(S))),
     E = {channel_block,0,Partner,-3198,5,[],S,false,259,0,0,0},
     success.
-
-
-
-    
-%success.
-    %spend_locked_payment(24000, 
 			 
 			 
