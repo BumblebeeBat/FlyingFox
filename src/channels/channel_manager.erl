@@ -19,7 +19,7 @@ init(ok) ->
     {ok, K}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
-terminate(_, _) -> 
+terminate(_, K) -> 
     db:save(?LOC,K),
     io:format("channel_manager died!"), ok.
 handle_info(_, X) -> {noreply, X}.

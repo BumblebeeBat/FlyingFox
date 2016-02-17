@@ -69,9 +69,9 @@ root() ->
 database() -> root() ++ "database.db".
 entropy() -> root() ++ "entropy.db".
 channel_manager() -> root() ++ "channel_manager.db".
-accounts() -> root() ++ "accounts.db".%
+accounts() -> root() ++ "accounts.db".
 d_accounts() -> root() ++ "d_accounts.db".
-all_secrets() -> root() ++ "all_secrets.db".%
+all_secrets() -> root() ++ "all_secrets.db".
 blocks() -> root() ++ "blocks.db".
 temp() -> root() ++ "temp.db".
 block_pointers() -> root() ++ "block_pointers.db".
