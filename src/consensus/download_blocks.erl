@@ -88,9 +88,9 @@ blocks_to_finality(Start, Finish, IP, Port) ->
 give_blocks(Start, Finish, _, _) when Start>Finish -> ok;
 give_blocks(Start, Finish, IP, Port) ->
     Block = block_tree:read_int(Start),
-    io:fwrite("block "),
-    io:fwrite(packer:pack(Block)),
-    io:fwrite("\n"),
+    %io:fwrite("block "),
+    %io:fwrite(packer:pack(Block)),
+    %io:fwrite("\n"),
     T = case talker:talk({give_block, Block}, IP, Port) of
 	    {ok, 0} -> 1;
 	    {error, _} -> 0
