@@ -87,8 +87,8 @@ doit({get_msg, IP, Port}) ->
     {ok, ServerId} = talker:talk({id}, IP, Port),
     %Msg = mail:pop_maker(ServerId),
     Out= case talker:talk({pop_hashes, keys:id()}, IP, Port) of
-	     [] -> <<"no messages">>;
-	     T -> absorb_msgs(T, IP, Port, ServerId)
+	     {ok, <<"empty">>} -> <<"no messages">>;
+	     {ok, T} -> absorb_msgs(T, IP, Port, ServerId)
 	 end,
     {ok, Out};
 doit({read_msg, Id, Index}) -> {ok, inbox:read(Id, Index)};
