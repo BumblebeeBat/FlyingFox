@@ -63,7 +63,7 @@ pop(Account, Hashe) ->
     X = gen_server:call(?MODULE, {pop, Account, Hashe}),
     case X of 
 	empty -> <<"no more messages">>;
-	X -> pop3(Account, X)
+	{ok, X} -> pop3(Account, X)
     end.
 pop3(From, M) ->
     io:fwrite("pop2 M "),

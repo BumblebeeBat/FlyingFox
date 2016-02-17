@@ -70,6 +70,7 @@ get_helper(From, Message) -> gen_server:cast(?MODULE, {get, From, Message}).
 peers() -> gen_server:call(?MODULE, peers).
 msg_ids(Id) -> merge_sort(gen_server:call(?MODULE, {msg_ids, Id})).
 read(Id, Index) -> gen_server:call(?MODULE, {read, Id, Index}).
+merge_sort(no_peer) -> <<"no peer">>;
 merge_sort(L) -> ms2(L, []).
 ms2([], Out) ->  ms3(Out);
 ms2([H|T], Out) -> ms2(T, [[H]|Out]).
