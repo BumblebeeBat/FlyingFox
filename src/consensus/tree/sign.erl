@@ -43,18 +43,23 @@ verify(SignedTx, Accounts) ->
 sign_tx(SignedTx, Pub, Priv, Accounts) when element(1, SignedTx) == signed ->
     Tx = SignedTx#signed.data,
     R = SignedTx#signed.revealed,
-    Sig = sign(Tx, Priv),
     N = element(2, Tx),
     Acc = block_tree:account(N, Accounts),
     APub = accounts:pub(Acc),
     if
-	APub == Pub -> #signed{data=Tx, sig=Sig, sig2=SignedTx#signed.sig2, revealed=R};
+	APub == Pub -> 
+	    Sig = sign(Tx, Priv),
+	    #signed{data=Tx, sig=Sig, sig2=SignedTx#signed.sig2, revealed=R};
 	true ->
 	    N2 = element(3, Tx),
 	    Acc2 = block_tree:account(N2, Accounts),
 	    BPub = accounts:pub(Acc2),
-	    Pub = BPub,
-	    #signed{data=Tx, sig=SignedTx#signed.sig, sig2=Sig, revealed=R}
+	    if
+		Pub == BPub ->
+		    Sig = sign(Tx, Priv),
+		    #signed{data=Tx, sig=SignedTx#signed.sig, sig2=Sig, revealed=R};
+		true -> {error, <<"cannot sign">>}
+	    end
     end;
 sign_tx(Tx, Pub, Priv, Accounts) ->
     Sig = sign(Tx, Priv),

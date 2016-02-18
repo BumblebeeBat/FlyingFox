@@ -3,29 +3,19 @@
 -export([start_link/0,init/1,stop/0]).%,start_http/0]).
 -define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
 start_link() -> supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+-define(keys, [keys, accounts, channels, block_dump, block_pointers, block_finality, secrets, entropy, all_secrets, port, block_tree, tx_pool, inbox, mail, arbitrage, tx_pool_feeder, channel_manager]).
+
+child_maker([]) -> [];
+child_maker([H|T]) -> [?CHILD(H, worker)|child_maker(T)].
+child_killer([]) -> [];
+child_killer([H|T]) -> 
+    supervisor:terminate_child(flying_fox_sup, H),
+    child_killer(T).
 stop() -> 
-    %exit(keys, kill).
-    supervisor:terminate_child(flying_fox_sup, keys).
+    child_killer(?keys).
+%exit(keys, kill).
+%supervisor:terminate_child(flying_fox_sup, keys).
 init([]) ->
-    Children = 
-	[ 
-	  ?CHILD(keys, worker),
-	  ?CHILD(accounts, worker),
-	  ?CHILD(channels, worker),
-	  ?CHILD(block_dump, worker),
-	  ?CHILD(block_pointers, worker),
-	  ?CHILD(block_finality, worker),
-	  ?CHILD(secrets, worker),
-	  ?CHILD(entropy, worker),
-	  ?CHILD(all_secrets, worker),
-	  ?CHILD(port, worker),
-	  ?CHILD(block_tree, worker),
-	  ?CHILD(tx_pool, worker),
-	  ?CHILD(inbox, worker),
-	  ?CHILD(mail, worker),
-	  ?CHILD(arbitrage, worker),
-	  ?CHILD(tx_pool_feeder, worker),
-	  ?CHILD(channel_manager, worker)
-	],
+    Children = child_maker(?keys),
     {ok, { {one_for_one, 5, 10}, Children} }.
 

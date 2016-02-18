@@ -12,6 +12,9 @@ empty_block() -> #block{}.
 x_to_block(X) -> X#x.block.
 init(ok) -> 
     SignedBlock = block_finality:top_block(),
+    io:fwrite("top block "),
+    io:fwrite(packer:pack(SignedBlock)),
+    io:fwrite("\n"),
     Block = sign:data(SignedBlock),
     N = Block#block.number,
     X = #x{block = SignedBlock, height = N},
