@@ -7,9 +7,9 @@ Bitcoin Donations: 1GbpRPE83Vjg73KFvTVZ4EnS2qNkiLY5TT
 
 Facts about Flying Fox:
 
-*It uses state channels as a scalability solution.
+*It uses state channels as a scalability solution. http://www.jeffcoleman.ca/state-channels/
 
-*It has a consensus mechanism optimized for state channels.
+*It has a consensus mechanism optimized for state channels. "lightning_consensus.md" explains how it works.
 
 *Finite memory requirement of 2 gigabytes.
 
@@ -17,7 +17,7 @@ Facts about Flying Fox:
 
 *Betting is inside of the lightning network.
 
-*Judgement on the outcome of bets occurs off-chain, in the lightning network.
+*Judgement on the outcome of bets occurs off-chain, in the lightning network. Truthcoin style oracles http://www.truthcoin.info/
 
 Code of conduct, development guidelines: Submit pull requests. If I like, and it passes tests, I will accept. Feel free to ask me questions or make github issues.
 
