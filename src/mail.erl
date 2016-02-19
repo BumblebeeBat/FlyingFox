@@ -94,7 +94,7 @@ register_cost() -> ?REGISTER.
 status() -> gen_server:call(?MODULE, status).
 register(Payment, Acc) ->
     ChId = hd(channel_manager:id(Acc)),
-    channel_manager:recieve(ChId, ?REGISTER, Payment),
+    channel_manager_feeder:recieve(ChId, ?REGISTER, Payment),
     gen_server:cast(?MODULE, {new, Acc}).
 send(To, Msg, Seconds) ->
     gen_server:cast(?MODULE, {send, To, Msg, Seconds}).

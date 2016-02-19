@@ -20,6 +20,4 @@ reward is 20%
 12 signers
 reward is 40%
 
-minimum amount of money per address. maybe a new tx type for deleting addresses would be useful? We could pay people for deleting addresses.
-
 maybe we should charge proof of work for creating blocks, and have it increase exponentially depending how many blocks are being skipped?

@@ -110,7 +110,7 @@ doit({channel_spend, IP, Port, Amount}) ->
     Payment = channel_manager:spend(ChId, Amount),
     M = {channel_spend, Payment, keys:id()},
     {ok, Response} = talker:talk(M, IP, Port),
-    channel_manager:recieve(ChId, -Amount, Response),
+    channel_manager_feeder:recieve(ChId, -Amount, Response),
     {ok, ok};
     
 doit({send_msg, IP, Port, To, M, Seconds}) ->
@@ -123,7 +123,7 @@ doit({send_msg, IP, Port, To, M, Seconds}) ->
     Payment = channel_manager:spend(ChId, Amount),
     Foo = {send, Payment, keys:id(), To, Msg, Seconds},
     {ok, Response} = talker:talk(Foo, IP, Port),
-    channel_manager:recieve(ChId, -Amount, Response),
+    channel_manager_feeder:recieve(ChId, -Amount, Response),
     inbox:get_helper(To, M),
     {ok, ok};
 doit({new_channel, IP, Port, Bal1, Bal2, Fee}) ->
@@ -184,7 +184,7 @@ absorb_msgs([H|T], IP, Port, ServerId) ->
 	    io:fwrite("internal handler recieved good msg "),
 	    io:fwrite(packer:pack(EMsg)),
 	    io:fwrite("\n"),
-	    NewCh = channel_manager:recieve(hd(channel_manager:id(ServerId)), 0, Refund),
+	    NewCh = channel_manager_feeder:recieve(hd(channel_manager:id(ServerId)), 0, Refund),
 	    talker:talk({update_channel, Refund, NewCh}, IP, Port),
 	    inbox:get(EMsg);
 	X -> 

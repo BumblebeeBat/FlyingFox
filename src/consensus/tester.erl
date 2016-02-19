@@ -36,7 +36,6 @@ test1() ->
     S = fractions:test(),
     S = inbox:test(),
     S = mail:test(),
-    %S = nonce:test(),
     S = arbitrage:test(),
     S = channel_manager:test(),
     S.

@@ -51,7 +51,7 @@ doit({accounts, N}) ->
     file:close(File),
     {ok, O};
 doit({channel_recieve, ChId, MinAmount, Ch}) ->
-    {ok, channel_manager:recieve(ChId, MinAmount, Ch)};
+    {ok, channel_manager_feeder:recieve(ChId, MinAmount, Ch)};
 doit({locked_payment, From, To, Payment, Amount, SecretHash}) ->
     ChIdTo = hd(channel_manager:id(To)),
     ChIdFrom = hd(channel_manager:id(From)),
@@ -70,12 +70,12 @@ doit({unlock, ChId, Secret, SignedCh}) ->
 doit({register, Payment, Acc}) ->
     {ok, mail:register(Payment, Acc)};
 doit({channel_spend, Payment, Partner}) ->
-    {ok, channel_manager:recieve_account(Partner, 0, Payment)};
+    {ok, channel_manager_feeder:recieve_account(Partner, 0, Payment)};
 doit({mail_cost, Space, Time}) ->
     {ok, mail:cost(Space, Time)};
 doit({send, Payment, From, To, Msg, Seconds}) ->
     C = mail:cost(size(Msg), Seconds),
-    R = channel_manager:recieve_account(From, C, Payment),
+    R = channel_manager_feeder:recieve_account(From, C, Payment),
     mail:send(To, Msg, Seconds),
     {ok, R};
 doit({id}) -> {ok, keys:id()};
@@ -125,7 +125,7 @@ doit({update_channel, ISigned, TheySigned}) ->%The contents of this message NEED
     OldCh = channel_manager:read_channel(ChId),
     OldNonce = channel_block_tx:nonce(OldCh),
     true = NewNonce > OldNonce,
-    channel_manager:recieve(ChId, -constants:initial_coins(), TheySigned),
+    channel_manager_feeder:recieve(ChId, -constants:initial_coins(), TheySigned),
     {ok, 0};
 doit({to_channel, SignedTx}) ->
     Tx = sign:data(SignedTx),
