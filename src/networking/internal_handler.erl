@@ -100,14 +100,14 @@ doit({register, IP, Port}) ->
     {ok, PeerId} = talker:talk({id}, IP, Port),
     ChId = hd(channel_manager:id(PeerId)), 
     {ok, Amount} = talker:talk({register_cost}, IP, Port),
-    Payment = channel_manager:spend(ChId, Amount),
+    Payment = channel_manager_feeder:spend(ChId, Amount),
     Msg = {register, Payment, keys:id()},
     talker:talk(Msg, IP, Port),
     {ok, ok};
 doit({channel_spend, IP, Port, Amount}) ->
     {ok, PeerId} = talker:talk({id}, IP, Port),
     ChId = hd(channel_manager:id(PeerId)), 
-    Payment = channel_manager:spend(ChId, Amount),
+    Payment = channel_manager_feeder:spend(ChId, Amount),
     M = {channel_spend, Payment, keys:id()},
     {ok, Response} = talker:talk(M, IP, Port),
     channel_manager_feeder:recieve(ChId, -Amount, Response),
@@ -120,7 +120,7 @@ doit({send_msg, IP, Port, To, M, Seconds}) ->
     {ok, Amount} = talker:talk({mail_cost, size(Msg), Seconds}),
     {ok, PeerId} = talker:talk({id}, IP, Port),
     ChId = hd(channel_manager:id(PeerId)), 
-    Payment = channel_manager:spend(ChId, Amount),
+    Payment = channel_manager_feeder:spend(ChId, Amount),
     Foo = {send, Payment, keys:id(), To, Msg, Seconds},
     {ok, Response} = talker:talk(Foo, IP, Port),
     channel_manager_feeder:recieve(ChId, -Amount, Response),
@@ -147,13 +147,13 @@ doit({lightning_spend, IP, Port, Partner, A}) ->
     SecretHash = secrets:new(),
     Payment = channel_manager:hashlock(ChId, Amount, SecretHash),
     {ok, SignedCh} = talker:talk({locked_payment, keys:id(), Partner, Payment, Amount, SecretHash}, IP, Port),
-    channel_manager:spend_locked_payment(ChId, SignedCh, Amount, SecretHash),
+    channel_manager_feeder:spend_locked_payment(ChId, SignedCh, Amount, SecretHash),
     Acc = block_tree:account(Partner),
     Secret = secrets:read(SecretHash),
     Msg = encryption:send_msg(Secret, accounts:pub(Acc)),
     Seconds = 30,
     Cost = mail:cost(size(Secret), Seconds),%Msg dosn't have "length"..
-    MsgPayment = channel_manager:spend(ChId, Cost),
+    MsgPayment = channel_manager_feeder:spend(ChId, Cost),
     talker:talk({send, MsgPayment, Partner, Msg, Seconds}, IP, Port),
     {ok, SecretHash};
 %doit({unlock_spend, IP, Port, Secret}) ->

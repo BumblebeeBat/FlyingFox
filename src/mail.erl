@@ -86,7 +86,7 @@ pop3(From, M) ->
 	    {ok, ok};
         true -> 
 	    %nonce:customer_next(From),
-	    {pop_response, Msg, channel_manager:spend_account(From, Refund)}
+	    {pop_response, Msg, channel_manager_feeder:spend_account(From, Refund)}
     end.
 cost(MsgSize, Time) -> 10000 * MsgSize * Time. %time in seconds
 -define(REGISTER, 100000).
