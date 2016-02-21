@@ -1,3 +1,6 @@
+https://blog.ethereum.org/2016/02/17/smart-contracts-courts-not-smart-judges/
+Upgrade the off-chain code so that it is computed by binary search.
+
 javascript to stop the node: `flying_fox_sup:stop()`
 
 It would be nice if we have a javascript interface to send spam-less messages. The recipient has the option of deleting the sender's funds.
