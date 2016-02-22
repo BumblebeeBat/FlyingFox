@@ -64,7 +64,7 @@ doit({txs, Txs}) ->
     download_blocks:absorb_txs(Txs),
     download_blocks:absorb_txs(Txs),
     download_blocks:absorb_txs(Txs),
-    {ok, ok};
+    {ok, 0};
 doit({unlock, ChId, Secret, SignedCh}) ->
     {ok, channel_manager:unlock_hash(ChId, Secret, SignedCh)};
 doit({register, Payment, Acc}) ->
