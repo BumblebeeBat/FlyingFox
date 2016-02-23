@@ -1,14 +1,17 @@
 //register_doit();
 local_get(["sync", IP, Port]);
-variable_get(["channel_keys"], register_doit());
+variable_get(["channel_keys"], function(x) {register_doit(x)});
 function register_doit(x) {
     console.log("wait for id");
     console.log("x is ");
     console.log(x);
-    if (typeof x !== 'undefined'){
-	setTimeout(function() {register_doit(x);}, 200);
-    } else if (x == []) {
+    if (typeof x == 'undefined'){
+	setTimeout(function() {variable_get(["channel_keys"], function(x) {register_doit(x)});}, 1000);
+    } else if ( ( x.length == 1 ) && ( x.pop() == -6 ) ) {
 	variable_get(["id"], new_channel);
+    } else {
+	console.log("did not work, x was");
+	console.log(x);
     }
 }
 function new_channel(id) {
