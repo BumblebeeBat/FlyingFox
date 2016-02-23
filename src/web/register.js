@@ -1,9 +1,13 @@
 //register_doit();
+local_get(["sync", IP, Port]);
 variable_get(["channel_keys"], register_doit());
 function register_doit(x) {
-    local_get(["sync", IP, Port]);
     console.log("wait for id");
-    if (x == []) {
+    console.log("x is ");
+    console.log(x);
+    if (typeof x !== 'undefined'){
+	setTimeout(function() {register_doit(x);}, 200);
+    } else if (x == []) {
 	variable_get(["id"], new_channel);
     }
 }

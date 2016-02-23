@@ -1,6 +1,12 @@
 The market cap of bitcoin is only in the billions. We want a cryptocurrency to be in the trillions as soon as possible, so that it can be used for commerce. 
 
-Bitcoin only allows for the creation of a small fixed number of new coins per day. If I had $1 trillion, and I wanted to turn it all into bitcoin, I could not do it. There aren't enough bitcoins in existence.
+There are 2 ways to increase the market cap of a blockchain:
+1) You can burn value by advertising
+2) You can burn value by proof of work
+
+The (1) method doesn't work well, because the person who pays for the advertising owns less than 1/2 of the coins, so gets less than 1/2 the profit.
+
+Method (2) works well, but it is traditionally very limited. Bitcoin only allows for the creation of a small fixed number of new coins per day. If I had $1 trillion, and I wanted to turn it all into bitcoin, I could not do it. There aren't enough bitcoins in existence.
 
 The following proposal is for a POW system that would allow any amount of new coins to be created in a day. If I had a $ trillion, and I wanted to turn it all into bitcoin, I could. And the bitcoin market cap would be $1 trillion higher.
 
