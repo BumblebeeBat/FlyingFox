@@ -4,11 +4,11 @@ var t = document.createTextNode("load messages");
 chat_button.appendChild(t);
 function chat_func() {// variable_get(["msg_peers"], chat_func2); }
 //function chat_func2(peers) {
+    start = -1;
     var chat_buddy = parseInt(document.getElementById("talk_address").value, 10);
     //console.log(peers[1]);
     variable_get(["msg_ids", chat_buddy], function(x) {chat_func3(x, chat_buddy)} );
 }
-start = -1;
 function chat_func3(ids, partner) {
     console.log(ids);
     msgs = document.getElementById("messages");
