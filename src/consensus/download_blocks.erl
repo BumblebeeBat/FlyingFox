@@ -110,14 +110,19 @@ absorb_txs([Tx|T]) ->
     spawn(tx_pool_feeder, absorb, [Tx]),
     absorb_txs(T).
 get_txs(IP, Port) ->
-    {ok, Txs} = talker:talk({txs}, IP, Port),
-    MyTxs = tx_pool:txs(),
-    absorb_txs(Txs),
-    Respond = set_minus(MyTxs, Txs),
-    if
-	length(Respond) > 0 ->
-	    talker:talk({txs, Respond}, IP, Port);
-	true -> ok
+    case talker:talk({txs}, IP, Port) of
+	{error, timeout} -> 
+	    timer:sleep(200),
+	    get_txs(IP, Port);
+	{ok, Txs} ->
+	    MyTxs = tx_pool:txs(),
+	    absorb_txs(Txs),
+	    Respond = set_minus(MyTxs, Txs),
+	    if
+		length(Respond) > 0 ->
+		    talker:talk({txs, Respond}, IP, Port);
+		true -> ok
+	    end
     end,
     ok.
 set_minus(A, B) -> set_minus(A, B, []).

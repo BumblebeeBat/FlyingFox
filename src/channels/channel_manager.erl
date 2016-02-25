@@ -58,9 +58,14 @@ is_in(X, [_|T]) -> is_in(X, T).
 
 read(ChId) -> 
     K = keys(),
-    true = is_in(ChId, K),
-    {ok, Out} = gen_server:call(?MODULE, {read, ChId}),
-    Out.
+    %true = is_in(ChId, K),
+    case is_in(ChId, K) of
+	true ->
+	    {ok, Out} = gen_server:call(?MODULE, {read, ChId}),
+	    Out;
+	false -> 
+	    empty
+    end.
 delete(ChId) -> gen_server:call(?MODULE, {delete, ChId}).
 bet_amounts(CB) ->
     Bets = channel_block_tx:bets(CB),
