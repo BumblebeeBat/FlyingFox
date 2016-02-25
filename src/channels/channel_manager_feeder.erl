@@ -10,7 +10,6 @@ handle_info(_, X) -> {noreply, X}.
 handle_cast(_, X) -> {noreply, X}.
 handle_call({spend, ChId, Amount}, _From, X) ->
     Ch = read_channel(ChId),
-    %We need to flip the sign of Amount if our id is acc2.
     A1 = channel_block_tx:acc1(Ch),
     A2 = channel_block_tx:acc2(Ch),
     A = case keys:id() of

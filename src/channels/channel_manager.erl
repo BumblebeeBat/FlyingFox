@@ -4,7 +4,7 @@
 
 -module(channel_manager).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, hashlock/3,read/1,delete/1,id/1,keys/0,read_channel/1,bet_amounts/1,test/0,store/2]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, hashlock/3,read/1,delete/1,id/1,keys/0,read_channel/1,bet_amounts/1,test/0,store/2,reset/0]).
 -define(LOC, constants:channel_manager()).
 init(ok) -> 
     process_flag(trap_exit, true),
@@ -22,6 +22,10 @@ terminate(_, K) ->
     db:save(?LOC,K),
     io:format("channel_manager died!"), ok.
 handle_info(_, X) -> {noreply, X}.
+handle_cast(reset, _) -> 
+    D = dict:new(),
+    db:save(?LOC, D),
+    {noreply, D};
 handle_cast({store, N, Ch}, X) -> 
     {noreply, dict:store(N, Ch, X)};
 handle_cast({delete, N}, X) -> 
@@ -51,6 +55,8 @@ read_channel(Key) ->
     sign:data(channel_manager_feeder:channel(F)).
 store(ChId, F) -> 
     gen_server:cast(?MODULE, {store, ChId, F}).
+reset() ->
+    gen_server:cast(?MODULE, reset).
 
 is_in(_, []) -> false;
 is_in(X, [X|_]) -> true;
