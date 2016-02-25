@@ -1,16 +1,4 @@
-** {{badmatch,1},
-    [{create_account_tx,doit,7,
-                        [{file,"src/consensus/txs/create_account_tx.erl"},
-                         {line,36}]},
-     {txs,digest,7,[{file,"src/consensus/txs/txs.erl"},{line,27}]},
-     {tx_pool_feeder,handle_call,3,
-                     [{file,"src/consensus/tx_pool_feeder.erl"},{line,36}]},
-     {gen_server,try_handle_call,4,[{file,"gen_server.erl"},{line,629}]},
-     {gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,661}]},
-     {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
-
-
-
+We should change the way flying fox scripts get merkelized. It should be like an case-opcode, where the code that gets executed needs to match a hash.
 
 https://blog.ethereum.org/2016/02/17/smart-contracts-courts-not-smart-judges/
 Upgrade the off-chain code so that it is computed by binary search.
