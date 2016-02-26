@@ -118,7 +118,7 @@ get_txs(IP, Port) ->
 	{ok, Txs} ->
 	    MyTxs = tx_pool:txs(),
 	    absorb_txs(set_minus(Txs, MyTxs)),
-	    Respond = set_minus(MyTxs, Txs),
+	    Respond = flip(set_minus(MyTxs, Txs)),
 	    if
 		length(Respond) > 0 ->
 		    talker:talk({txs, Respond}, IP, Port);
@@ -139,4 +139,10 @@ is_in(A, [A|_]) -> true;
 is_in(A, [_|T]) -> is_in(A, T).
     
 	    
+flip(X) -> flip(X, []).
+flip([], X) -> X;
+flip([H|T], X) -> flip(T, [H|X]).
+		    
+    
+    
 
