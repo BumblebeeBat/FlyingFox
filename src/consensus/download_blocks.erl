@@ -107,8 +107,8 @@ absorb_txs([Tx|T]) ->
     io:fwrite("attempt to absorb tx "),
     io:fwrite(packer:pack(Tx)),
     io:fwrite("\n"),
-    tx_pool_feeder:absorb(Tx),
-    %spawn(tx_pool_feeder, absorb, [Tx]),
+    %tx_pool_feeder:absorb(Tx),
+    spawn(tx_pool_feeder, absorb, [Tx]),
     absorb_txs(T).
 get_txs(IP, Port) ->
     case talker:talk({txs}, IP, Port) of
@@ -117,7 +117,7 @@ get_txs(IP, Port) ->
 	    get_txs(IP, Port);
 	{ok, Txs} ->
 	    MyTxs = tx_pool:txs(),
-	    absorb_txs(Txs),
+	    absorb_txs(set_minus(Txs, MyTxs)),
 	    Respond = set_minus(MyTxs, Txs),
 	    if
 		length(Respond) > 0 ->

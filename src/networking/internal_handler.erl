@@ -134,18 +134,11 @@ doit({new_channel, IP, Port, Bal1, Bal2, Fee}) ->
     {ok, Ch} = talker:talk(Msg, IP, Port),
     tx_pool_feeder:absorb(Ch),
     {ok, ok};
-doit({lightning_spend, IP, Port, Partner, A}) ->
+doit({lightning_spend, IP, Port, Partner, Amount}) ->
     {ok, PeerId} = talker:talk({id}, IP, Port),
-    ChId = hd(channel_manager:id(PeerId)), 
-    Channel = block_tree:channel(ChId),
-    A1 = channels:acc1(Channel),
-    A2 = channels:acc2(Channel),
-    Amount = case keys:id() of
-	A2 -> A;
-	A1 -> -A
-    end,
+    ChId = hd(channel_manager:id(PeerId)),
     SecretHash = secrets:new(),
-    Payment = channel_manager:hashlock(ChId, Amount, SecretHash),
+    Payment = channel_manager:new_hashlock(PeerId, Amount, SecretHash),
     {ok, SignedCh} = talker:talk({locked_payment, keys:id(), Partner, Payment, Amount, SecretHash}, IP, Port),
     channel_manager_feeder:spend_locked_payment(ChId, SignedCh, Amount, SecretHash),
     Acc = block_tree:account(Partner),

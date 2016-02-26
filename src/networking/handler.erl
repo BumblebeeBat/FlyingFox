@@ -53,11 +53,13 @@ doit({accounts, N}) ->
 doit({channel_recieve, ChId, MinAmount, Ch}) ->
     {ok, channel_manager_feeder:recieve(ChId, MinAmount, Ch)};
 doit({locked_payment, From, To, Payment, Amount, SecretHash}) ->
-    ChIdTo = hd(channel_manager:id(To)),
+    %ChIdTo = hd(channel_manager:id(To)),
     ChIdFrom = hd(channel_manager:id(From)),
     Return = channel_manager_feeder:recieve_locked_payment(ChIdFrom, Payment, Amount, SecretHash),
-    Payment2 = channel_manager:hashlock(ChIdTo, Amount, SecretHash),
-    mail:internal_send(To, Payment2, free_constants:hashlock_time()),%undefined.
+
+    Payment2 = channel_manager:new_hashlock(To, Amount, SecretHash),
+    %Payment2 = channel_manager:hashlock(ChIdTo, Amount, SecretHash),
+    mail:internal_send(To, Payment2, free_constants:hashlock_time()),
     {ok, Return};
 doit({txs}) -> {ok, tx_pool:txs()};
 doit({txs, Txs}) -> 

@@ -4,7 +4,7 @@
 
 -module(channel_manager).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, hashlock/3,read/1,delete/1,id/1,keys/0,read_channel/1,bet_amounts/1,test/0,store/2,reset/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, hashlock/3,new_hashlock/3,read/1,delete/1,id/1,keys/0,read_channel/1,bet_amounts/1,test/0,store/2]).
 -define(LOC, constants:channel_manager()).
 init(ok) -> 
     process_flag(trap_exit, true),
@@ -22,10 +22,6 @@ terminate(_, K) ->
     db:save(?LOC,K),
     io:format("channel_manager died!"), ok.
 handle_info(_, X) -> {noreply, X}.
-handle_cast(reset, _) -> 
-    D = dict:new(),
-    db:save(?LOC, D),
-    {noreply, D};
 handle_cast({store, N, Ch}, X) -> 
     {noreply, dict:store(N, Ch, X)};
 handle_cast({delete, N}, X) -> 
@@ -55,9 +51,6 @@ read_channel(Key) ->
     sign:data(channel_manager_feeder:channel(F)).
 store(ChId, F) -> 
     gen_server:cast(?MODULE, {store, ChId, F}).
-reset() ->
-    gen_server:cast(?MODULE, reset).
-
 is_in(_, []) -> false;
 is_in(X, [X|_]) -> true;
 is_in(X, [_|T]) -> is_in(X, T).
@@ -90,6 +83,18 @@ hashlock(ChId, Amount, SecretHash) ->
         end,
     Script = language:hashlock(MyAccount, SecretHash),
     keys:sign(channel_block_tx:add_bet(Ch2, Amount div 2, Script)).
+new_hashlock(Partner, A, SecretHash) ->
+    ChId = hd(channel_manager:id(Partner)),
+    Channel = block_tree:channel(ChId),
+    A1 = channels:acc1(Channel),
+    A2 = channels:acc2(Channel),
+    Amount = case keys:id() of
+	A2 -> A;
+	A1 -> -A
+    end,
+    %SecretHash = secrets:new(),
+    channel_manager:hashlock(ChId, Amount, SecretHash).
+
 test() ->    
     {Pub, Priv} = sign:new_key(),
     create_account_tx:create_account(Pub, 620000, 0),
