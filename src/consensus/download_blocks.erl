@@ -117,7 +117,7 @@ get_txs(IP, Port) ->
 	    get_txs(IP, Port);
 	{ok, Txs} ->
 	    MyTxs = tx_pool:txs(),
-	    absorb_txs(set_minus(Txs, MyTxs)),
+	    absorb_txs(flip(set_minus(Txs, MyTxs))),
 	    Respond = flip(set_minus(MyTxs, Txs)),
 	    if
 		length(Respond) > 0 ->
