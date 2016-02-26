@@ -1,4 +1,8 @@
 We need a mechanism to measure the current POW price. Then we can sell as many coins as they want at that price.
+
+We need to disconnect the consensus from coin creation. We can sell small amount of coins for small amounts of POW to determine the current exchange rate between coins and POW, then offer to sell any amount of coins at the current exchange rate. 
+
+
 Below I will derive such a mechanism:
 The block creator should choose a number B between 0 and 1. The bigger the B, the more work he has to do exponentially (w).
 
