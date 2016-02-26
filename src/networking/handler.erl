@@ -64,8 +64,6 @@ doit({locked_payment, From, To, Payment, Amount, SecretHash}) ->
 doit({txs}) -> {ok, tx_pool:txs()};
 doit({txs, Txs}) -> 
     download_blocks:absorb_txs(Txs),
-    download_blocks:absorb_txs(Txs),
-    download_blocks:absorb_txs(Txs),
     {ok, 0};
 doit({unlock, ChId, Secret, SignedCh}) ->
     {ok, channel_manager_feeder:unlock_hash(ChId, Secret, SignedCh)};
