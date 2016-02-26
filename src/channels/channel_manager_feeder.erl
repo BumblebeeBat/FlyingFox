@@ -46,7 +46,7 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     io:fwrite("Amount is: "),
     io:fwrite(integer_to_list(Amount)),
     io:fwrite("\n"),
-    true = (A == (Amount div 2)),
+    true = (-A == (Amount div 2)),
     ToAmount = 
 	if
 	    Spend -> 
@@ -54,10 +54,10 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
 	    true ->
 		case ID of
 		    Acc1 -> 
-			true = Amount > 0, 
+			true = A > 0, 
 			0;
 		    Acc2 -> 
-			true = Amount < 0,
+			true = A < 0,
 			1
 		end
 	end,
