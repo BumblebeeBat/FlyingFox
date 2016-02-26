@@ -40,6 +40,12 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     Acc1 = channels:acc1(Channel),
     Acc2 = channels:acc2(Channel),
     ID = keys:id(),
+    io:fwrite("A is: "),
+    io:fwrite(integer_to_list(A)),
+    io:fwrite("\n"),
+    io:fwrite("Amount is: "),
+    io:fwrite(integer_to_list(Amount)),
+    io:fwrite("\n"),
     true = (A == (Amount div 2)),
     ToAmount = 
 	if
