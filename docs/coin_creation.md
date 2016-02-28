@@ -22,6 +22,8 @@ You only own 8% now, not 10%, but it is worth the same amount as before.
 
 If you think having a fixed supply of coins is best, then answer this: Why do startups dilute shares?
 
+Paul Graham's thoughts on this: http://paulgraham.com/equity.html
+
 ## Gold, origins of money example
 
 Money happens because everyone tries to hold assets that maintain their value for a long time, and are easy to spend.
@@ -67,5 +69,6 @@ If we are able to mine the gold at 100 million meals per day, then we could affo
 Problems for the reader:
 
 1) If a fixed supply of shares is best, why are startups willing to dilute shares when they get investors?
+
 2) for gold, doubling mining investment rate doubles the rate of gold production. Bitcoin is unique in that doubling the rate of investment doesn't change the rate of production at all. Can you give any reasoning for why it is bad to change the rate of production relative to investment for new coins, but good to change the rate of production to keep it at a fixed ratio to the current price of a coin?
 
