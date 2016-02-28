@@ -45,7 +45,6 @@ function login_new() {
 	} else {
 	    var con = document.createElement("p");
 	    con.innerHTML = "passwords don't match";
-	    document.body.appendChild(document.createElement("br"));
 	    document.body.appendChild(con);	    
 	}
     };

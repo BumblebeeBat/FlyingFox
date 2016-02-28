@@ -28,3 +28,9 @@ Start your node with this script:
 sh start.sh
 ```
 Then open this URL in your browser: http://localhost:3011/login.html
+
+When you are done, you can turn the node off by clicking "halt" in your browser, or by running this command in the flying fox command line interface:
+
+```
+flying_fox_sup:stop()
+```
