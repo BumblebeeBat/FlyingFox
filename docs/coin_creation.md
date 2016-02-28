@@ -4,6 +4,8 @@ The following proposal is for a POW system that would allow any amount of new co
 
 ## Startup example
 
+Startups are optimized to increase in value very quickly. We can repurpose their design choices to make a blockchain with a fast-growing market cap.
+
 Looking at an example from the startup world. Lets say you own 10% of a small company, and someone shows up to make a huge investment, buying 50% of the company at a price that makes the company worth 10x more.
 Now you don't own 10%, you only own 5%, but the company is worth 10 times more, so your investment is worth 5x more, even though you have a smaller percentage of the total. Your shares got diluted, but you still earned profit.
 
