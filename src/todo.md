@@ -1,3 +1,12 @@
+need to use the arbitrage gen_server, in channels.
+Use it to keep track of which pairs of channels are linked.
+If 2 channels have linked state, it is important that we remove the links in the right order, or else we could get robbed.
+
+need to update channel manager to save 2 copies of the channel state. One is the highest nonced that I have signed, the other is the highest nonced that my partner has signed that I know about.
+It is important to know about your partner's highest nonce, because we have to use arbitrage to unlink in the correct order. If you don't know your partner's current state, then you can't know if they are still linked.
+
+
+
 We should change the way flying fox scripts get merkelized. It should be like an case-opcode, where the code that gets executed needs to match a hash.
 
 https://blog.ethereum.org/2016/02/17/smart-contracts-courts-not-smart-judges/

@@ -173,6 +173,10 @@ doit(X) ->
 absorb_msgs([], _, _, _) -> ok;
 absorb_msgs([H|T], IP, Port, ServerId) -> 
     case talker:talk({pop, keys:id(), H}, IP, Port) of
+	{ok, {locked_payment, Payment}} ->
+	    {locked_payment, P, ChId, Amount, SecretHash} = Payment,
+	    Return = channel_manager_feeder:recieve_locked_payment(ChId, P, Amount, SecretHash),
+	    talker:talk({locked_payment2, Return, ChId, Amount, SecretHash}, IP, Port);
 	{ok, {pop_response, EMsg, Refund}} ->
 	    io:fwrite("internal handler recieved good msg "),
 	    io:fwrite(packer:pack(EMsg)),

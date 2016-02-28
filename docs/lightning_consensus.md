@@ -1,7 +1,7 @@
 Lightning Consensus
 ===================
 
-A cryptocurrency is money built out of software that is difficult to counterfeit. 
+A cryptocurrency is money built out of software. 
 
 The consensus protocol is the rules that participants must obey to participate in a cryptocurrency. The rules are carefully chosen so that it is expensive to control money that you don't own. The most popular cryptocurrency consensus protocols today are of the proof-of-work variety. Other proposals are: delegated proof-of-stake, various security bond proof of stakes, byzantine fault tolerant algorithms, and coin-age proof of stake.
 Lightning Consensus is a new consensus protocol proposed in this paper. It is designed to be less expensive to operate than the existing methods, and more scalable. 

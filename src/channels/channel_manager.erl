@@ -92,8 +92,7 @@ new_hashlock(Partner, A, SecretHash) ->
 	A2 -> A;
 	A1 -> -A
     end,
-    %SecretHash = secrets:new(),
-    channel_manager:hashlock(ChId, Amount, SecretHash).
+    hashlock(ChId, Amount, SecretHash).
 
 test() ->    
     {Pub, Priv} = sign:new_key(),

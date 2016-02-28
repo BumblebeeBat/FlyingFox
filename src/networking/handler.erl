@@ -58,9 +58,14 @@ doit({locked_payment, From, To, Payment, Amount, SecretHash}) ->
     Return = channel_manager_feeder:recieve_locked_payment(ChIdFrom, Payment, Amount, SecretHash),
 
     Payment2 = channel_manager:new_hashlock(To, Amount, SecretHash),
+    
     %Payment2 = channel_manager:hashlock(ChIdTo, Amount, SecretHash),
-    mail:internal_send(To, Payment2, free_constants:hashlock_time()),
+    M = {locked_payment, Payment2, ChIdFrom, Amount, SecretHash},
+    mail:internal_send(To, M, no_refund),
     {ok, Return};
+doit({locked_payment2, Payment, ChId, Amount, SecretHash}) ->
+    channel_manager_feeder:spend_locked_payment(ChId, Payment, Amount, SecretHash),
+    {ok, 0};
 doit({txs}) -> {ok, tx_pool:txs()};
 doit({txs, Txs}) -> 
     download_blocks:absorb_txs(Txs),

@@ -46,19 +46,23 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     io:fwrite("Amount is: "),
     io:fwrite(integer_to_list(Amount)),
     io:fwrite("\n"),
-    true = (-A == (Amount div 2)),
     ToAmount = 
-	if
-	    Spend -> 
-		case ID of Acc1 -> 1; Acc2 -> 0 end;
-	    true ->
-		case ID of
-		    Acc1 -> 
-			true = A > 0, 
-			0;
-		    Acc2 -> 
+	case ID of
+	    Acc1 ->
+		true = (A == (Amount div 2)),
+		if 
+		    Spend -> 1; 
+		    true -> 
+			true = A > 0,
+			0 
+		end;
+	    Acc2 ->
+		true = (-A == (Amount div 2)),
+		if 
+		    Spend -> 2; 
+		    true -> 
 			true = A < 0,
-			1
+			1 
 		end
 	end,
     SecretHash = language:extract_sh(channel_block_tx:bet_code(hd(channel_block_tx:bets(NewCh)))),
