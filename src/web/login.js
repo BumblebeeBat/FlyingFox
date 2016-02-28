@@ -23,14 +23,14 @@ function login_new() {
     var new_password = document.createElement("INPUT");
     new_password.setAttribute("type", "text"); 
     var amount_info = document.createElement("h8");
-    amount_info.innerHTML = "amount to spend: ";
+    amount_info.innerHTML = "new password: ";
     document.body.appendChild(amount_info);
     document.body.appendChild(new_password);
     
     var new_password_check = document.createElement("INPUT");
     new_password_check.setAttribute("type", "text"); 
     var fee_info = document.createElement("h8");
-    fee_info.innerHTML = "fee: ";
+    fee_info.innerHTML = "confirm new password: ";
     document.body.appendChild(fee_info);
     document.body.appendChild(new_password_check);
     
@@ -41,6 +41,7 @@ function login_new() {
     spend_button.onclick = function() {
 	if (new_password.value == new_password_check.value) {
 	    local_get(["key_new", btoa(new_password.value)]);
+	    variable_get(["key_status"], function(x) {login_0(x)});
 	} else {
 	    var con = document.createElement("p");
 	    con.innerHTML = "passwords don't match";
