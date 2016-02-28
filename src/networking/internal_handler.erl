@@ -165,6 +165,7 @@ doit({channel_unlock, IP, Port, Secret}) ->
     {ok, ok};
 doit({channel_keys}) -> {ok, channel_manager:keys()};
 doit({block_tree_account, Id}) -> {ok, block_tree:account(Id)};
+doit({halt}) -> {ok, flying_fox_sup:stop()};
 doit(X) ->
     io:fwrite("don't know how to handle it \n"),
     io:fwrite(packer:pack(X)),

@@ -9,7 +9,7 @@ Facts about Flying Fox:
 
 *It uses state channels as a scalability solution. http://www.jeffcoleman.ca/state-channels/
 
-*It has a consensus mechanism optimized for state channels. "lightning_consensus.md" explains how it works.
+*It has a consensus mechanism optimized for state channels. "lightning_consensus.md" in /docs explains how it works.
 
 *Finite memory requirement of 2 gigabytes.
 
@@ -19,9 +19,8 @@ Facts about Flying Fox:
 
 *Judgement on the outcome of bets occurs off-chain, in the lightning network. Truthcoin style oracles http://www.truthcoin.info/
 
-Code of conduct, development guidelines: Submit pull requests. If I like, and it passes tests, I will accept. Feel free to ask me questions or make github issues.
+Code of conduct, development guidelines: Submit pull requests. If I like your code, and it passes tests, I will accept it. Feel free to ask me questions or make github issues.
 
 Flying Fox does not yet have executable install.
 For now you need to install it from source, look at compile.md
 
-Then open this URL in your browser: http://localhost:3011/main.html
