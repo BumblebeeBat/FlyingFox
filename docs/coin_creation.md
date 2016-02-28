@@ -20,6 +20,8 @@ The new market cap $4+$1 =  $5 billion
 20% is how much they paid, so they should own 20% of the coins.
 You only own 8% now, not 10%, but it is worth the same amount as before.
 
+If you think having a fixed supply of coins is best, then answer this: Why do startups dilute shares?
+
 ## Gold, origins of money example
 
 Money happens because everyone tries to hold assets that maintain their value for a long time, and are easy to spend.
@@ -49,4 +51,21 @@ Method (2) works well, but it is traditionally very limited. Bitcoin only allows
 It is bad to connect the consensus mechanism to the coin creation mechanism, because the rate of coin creation should be determined by the demand for new coin.
 
 Having a fixed unchanging rate of supply is bad. It makes the currency price very volatile, because the supply of new coins can't react to changes in demand.
+
+## growing the market cap of gold example
+
+If we needed 1 billion meals of gold to make a big purchase of oil, but all known gold stores only added up to 100 million meals, we could take 900 million meals of food, and use it to pay human laborers to produce 900 million meals worth of gold.
+Then we would have 1 billion meals worth of gold, and could afford the purchase.
+
+Telling the oil vendor that we want to pay only 10% because the market cap of gold is too low wont work.
+The vendor will only sell if he gets paid in full.
+
+If there was a limit (like labor shortage) stopping us from mining more than 1 million meals of gold per day, then it would take 900 days to mine enough gold to make the purchase.
+If we are able to mine the gold at 100 million meals per day, then we could afford to purchase the gold after only 9 days of mining.
+
+
+Problems for the reader:
+
+1) If a fixed supply of shares is best, why are startups willing to dilute shares when they get investors?
+2) for gold, doubling mining investment rate doubles the rate of gold production. Bitcoin is unique in that doubling the rate of investment doesn't change the rate of production at all. Can you give any reasoning for why it is bad to change the rate of production relative to investment for new coins, but good to change the rate of production to keep it at a fixed ratio to the current price of a coin?
 
