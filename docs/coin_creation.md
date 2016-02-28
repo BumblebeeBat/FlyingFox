@@ -22,7 +22,7 @@ You only own 8% now, not 10%, but it is worth the same amount as before.
 
 If you think having a fixed supply of coins is best, then answer this: Why do startups dilute shares?
 
-Paul Graham's thoughts on this: http://paulgraham.com/equity.html
+Paul Graham's thoughts on how much startups should be willing to dilute shares in exchange for investment: http://paulgraham.com/equity.html
 
 ## Gold, origins of money example
 
