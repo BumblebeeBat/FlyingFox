@@ -41,3 +41,7 @@ D*X = D*X/4/(1-X) -> 1 = 4(1-X) -> X = 3/4
 so the price is right where X=3/4. To win 3/4, you need to work 3/4 * C / (1/4) = 3*C.
 
 The creator does 1/3 as much work to win 2/3 as much money. So that means the block creator pays 1/2 the normal price.
+
+It is important that the block creator chooses their mining dificulty before they start mining.
+
+The thing that gets mined should look like a bitcoin header:
