@@ -9,7 +9,7 @@ The block creator should choose a number B between 0 and 1. The bigger the B, th
 The optimal strategy of the block creator is to select B such that his reward is big, but the amount of work he has to do is small. Based on the number the block creator selects, we can approximate the real price of POW.
 
 D is the money that is usually destroyed to create a block. The block creator can win some of it back by providing POW=w.
-C is the 80th percentile amount of work the block creator provided over the last 100 blocks. Units of POW are scaled so that C is always = 1. It is measured in the number of times the hash function was called to create the digital artifact. 
+C is the mean amount of work the block creator provided over the last 100 blocks. Units of POW are scaled so that C is always = 1. It is measured in the number of times the hash function was called to create the digital artifact. 
 
 POW-1(w) = w/(w+C) is a mapping from any amount of work to the range 0-1. This is B, the portion of the reward that he wins back.
 POW(x) = x*C/(1-x) is the inverse.

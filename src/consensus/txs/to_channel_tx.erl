@@ -117,7 +117,9 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     Ch = channels:new(Tx#tc.acc1, Tx#tc.acc2, Tx#tc.bal1, Tx#tc.bal2, Type),
     CM_current = channel_manager:read(NewId2),
     if
-	((CM_current == empty) and ((Channel == EmptyChannel) and ((APub1 == MyKey) or (APub2 == MyKey)))) -> channel_manager_feeder:new_channel(NewId2, Ch, Accounts);
+	((CM_current == empty) and ((Channel == EmptyChannel) and ((APub1 == MyKey) or (APub2 == MyKey)))) -> 
+	    channel_partner:new_channel(NewId2, Ch, Accounts),
+	    channel_manager_feeder:new_channel(NewId2, Ch, Accounts);
 	true -> 1=1
     end,
     NewAccounts1 = dict:store(Tx#tc.acc1, N1, Accounts),

@@ -139,6 +139,7 @@ doit({lightning_spend, IP, Port, Partner, Amount}) ->
     ChId = hd(channel_manager:id(PeerId)),
     SecretHash = secrets:new(),
     Payment = channel_manager:new_hashlock(PeerId, Amount, SecretHash),
+    channel_partner:store(ChId, Payment),
     {ok, SignedCh} = talker:talk({locked_payment, keys:id(), Partner, Payment, Amount, SecretHash}, IP, Port),
     channel_manager_feeder:spend_locked_payment(ChId, SignedCh, Amount, SecretHash),
     Acc = block_tree:account(Partner),
@@ -160,6 +161,7 @@ doit({channel_unlock, IP, Port, Secret}) ->
     {ok, PeerId} = talker:talk({id}, IP, Port),
     ChId = hd(channel_manager:id(PeerId)), 
     UH = channel_manager:create_unlock_hash(ChId, Secret),
+    channel_partner:store(ChId, UH),
     {ok, NewCh} = talker:talk({unlock, ChId, Secret, UH}, IP, Port),
     channel_manager:unlock_hash(ChId, Secret, NewCh),
     {ok, ok};
@@ -182,12 +184,15 @@ absorb_msgs([H|T], IP, Port, ServerId) ->
 	{ok, {locked_payment, Payment}} ->
 	    {locked_payment, P, ChId, Amount, SecretHash} = Payment,
 	    Return = channel_manager_feeder:recieve_locked_payment(ChId, P, Amount, SecretHash),
+	    channel_partner:store(ChId, Return),
 	    talker:talk({locked_payment2, Return, ChId, Amount, SecretHash}, IP, Port);
 	{ok, {pop_response, EMsg, Refund}} ->
 	    io:fwrite("internal handler recieved good msg "),
 	    io:fwrite(packer:pack(EMsg)),
 	    io:fwrite("\n"),
 	    NewCh = channel_manager_feeder:recieve(hd(channel_manager:id(ServerId)), 0, Refund),
+	    ChId = hd(channel_manger:id(ServerId)),
+	    channel_partner:store(ChId, NewCh),
 	    talker:talk({update_channel, Refund, NewCh}, IP, Port),
 	    inbox:get(EMsg);
 	X -> 

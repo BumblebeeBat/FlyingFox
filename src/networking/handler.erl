@@ -51,18 +51,20 @@ doit({accounts, N}) ->
     file:close(File),
     {ok, O};
 doit({channel_recieve, ChId, MinAmount, Ch}) ->
-    {ok, channel_manager_feeder:recieve(ChId, MinAmount, Ch)};
+    Response = channel_manager_feeder:recieve(ChId, MinAmount, Ch),
+    channel_partner:store(ChId, Response),
+    {ok, Response};
 doit({locked_payment, From, To, Payment, Amount, SecretHash}) ->
-    %ChIdTo = hd(channel_manager:id(To)),
     ChIdFrom = hd(channel_manager:id(From)),
     Return = channel_manager_feeder:recieve_locked_payment(ChIdFrom, Payment, Amount, SecretHash),
-
+    channel_partner:store(ChIdFrom, Return),
     Payment2 = channel_manager:new_hashlock(To, Amount, SecretHash),
-    
-    %Payment2 = channel_manager:hashlock(ChIdTo, Amount, SecretHash),
+    ChIdTo = hd(channel_manager:id(To)),
+    channel_partner:store(ChIdTo, Payment2),
     M = {locked_payment, Payment2, ChIdFrom, Amount, SecretHash},
     mail:internal_send(To, M, no_refund),
     {ok, Return};
+%locked_payment2 is the response from a message we sent to their mail box.
 doit({locked_payment2, Payment, ChId, Amount, SecretHash}) ->
     channel_manager_feeder:spend_locked_payment(ChId, Payment, Amount, SecretHash),
     {ok, 0};
@@ -71,16 +73,23 @@ doit({txs, Txs}) ->
     download_blocks:absorb_txs(Txs),
     {ok, 0};
 doit({unlock, ChId, Secret, SignedCh}) ->
-    {ok, channel_manager_feeder:unlock_hash(ChId, Secret, SignedCh)};
+    Response = channel_manager_feeder:unlock_hash(ChId, Secret, SignedCh),
+    channel_partner:store(ChId, Response),
+    {ok, Response};
 doit({register, Payment, Acc}) ->
     {ok, mail:register(Payment, Acc)};
 doit({channel_spend, Payment, Partner}) ->
-    {ok, channel_manager_feeder:recieve_account(Partner, 0, Payment)};
+    Response = channel_manager_feeder:recieve_account(Partner, 0, Payment),
+    ChId = hd(channel_manager:id(Partner)),
+    channel_partner:store(ChId, Response),
+    {ok, Response};
 doit({mail_cost, Space, Time}) ->
     {ok, mail:cost(Space, Time)};
 doit({send, Payment, From, To, Msg, Seconds}) ->
     C = mail:cost(size(Msg), Seconds),
-    R = channel_manager_feeder:recieve_account(From, C, Payment),
+    ChId = channel_manager:id(From),
+    R = channel_manager_feeder:recieve(ChId, C, Payment),
+    channel_partner:store(ChId, R),
     mail:send(To, Msg, Seconds),
     {ok, R};
 doit({id}) -> {ok, keys:id()};
@@ -111,6 +120,7 @@ doit({new_channel, SignedTx}) ->
     tx_pool_feeder:absorb(NTx),
     {ok, NTx};
 doit({update_channel, ISigned, TheySigned}) ->%The contents of this message NEED to be encrypted. ideally we should encypt every message to this module.
+    %update_channel is a response when someone reads a message from their inbox and gets a refund for some of the money
     Data = sign:data(ISigned),
     Data = sign:data(TheySigned),
     true = sign:verify(keys:sign(TheySigned), tx_pool:accounts()),

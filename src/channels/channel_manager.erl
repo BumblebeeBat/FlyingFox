@@ -23,6 +23,7 @@ terminate(_, K) ->
     io:format("channel_manager died!"), ok.
 handle_info(_, X) -> {noreply, X}.
 handle_cast({store, N, Ch}, X) -> 
+    %It would be nice to add a rule that we can only increase the nonce.
     {noreply, dict:store(N, Ch, X)};
 handle_cast({delete, N}, X) -> 
     {noreply, dict:erase(N, X)}.

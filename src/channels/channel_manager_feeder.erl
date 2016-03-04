@@ -8,16 +8,6 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 terminate(_, _) -> io:format("died!"), ok.
 handle_info(_, X) -> {noreply, X}.
 handle_cast(_, X) -> {noreply, X}.
-handle_call({spend, ChId, Amount}, _From, X) ->
-    Ch = read_channel(ChId),
-    A1 = channel_block_tx:acc1(Ch),
-    A2 = channel_block_tx:acc2(Ch),
-    A = case keys:id() of
-	    A1 -> -Amount;
-	    A2 -> Amount
-	end,
-    Out = keys:sign(channel_block_tx:update(Ch, A, 1)),
-    {reply, Out, X};
 handle_call({new_channel, ChId, Channel, Accounts}, _From, X) ->
     Ch = channel_block_tx:channel_block_from_channel(ChId, Channel, 0, 1, constants:max_reveal()-1, 0, [], Accounts),
     F = #f{channel = Ch, unlock = []},
@@ -183,4 +173,12 @@ new_channel(ChId, Channel, Accounts) ->
 spend_account(Acc, Amount) ->
     spend(hd(channel_manager:id(Acc)), Amount).
 spend(ChId, Amount) ->
-    gen_server:call(?MODULE, {spend, ChId, Amount}).
+    Ch = read_channel(ChId),
+    A1 = channel_block_tx:acc1(Ch),
+    A2 = channel_block_tx:acc2(Ch),
+    A = case keys:id() of
+	    A1 -> -Amount;
+	    A2 -> Amount
+	end,
+    keys:sign(channel_block_tx:update(Ch, A, 1)).
+
