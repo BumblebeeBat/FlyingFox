@@ -1,5 +1,3 @@
-Maybe instead of sending channel messages to their mail box, we should give them an api where they can look up if the channel was updated?
-
 need to use the arbitrage gen_server, in channels.
 Use it to keep track of which pairs of channels are linked.
 If 2 channels have linked state, it is important that we remove the links in the right order, or else we could get robbed.
@@ -41,3 +39,6 @@ the idea was introduced here: https://blog.ethereum.org/2014/11/25/proof-stake-l
 Weak subjectivity is necessary for security reasons. It stops long range attacks.
 
 Add onion routing to messaging
+
+Maybe instead of sending channel messages to their mail box, we should give them an api where they can look up if the channel was updated?
+

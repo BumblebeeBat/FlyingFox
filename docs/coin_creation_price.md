@@ -8,3 +8,7 @@ This reminds me of charging 101 electricity to produce 100 coins on the chain. I
 
 Charging 100 for 100 is more balanced.
 
+It seems like the validators should have some control to shift this price up and down.
+
+The market cap will double about 40 times.
+If someone does the effort of doubling the market cap, it makes sense to reward them with at 1% of the market cap.

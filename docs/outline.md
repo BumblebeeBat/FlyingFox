@@ -32,6 +32,7 @@ Every address has a nonce that updates on each tx. To be valid, the tx must incl
 - channel_close
 - channel_funds_limit
 - repo
+- pow
 
 #### spend:
 For users to give money to each other. Creator of the tx has a fee which is >=0. The fee pays the creator of the block.
@@ -97,6 +98,13 @@ similar to slasher.
 Each account needs a minimum amount of money.
 If you can provide evidence that someone doesn't have enough money left to validate, you can take some of their money, which simultaniously deletes all their delegation, and changes the consensus_flag in the channels to off.
 
+#### pow
+
+When you need to get work done, it is possible to make a contract on the bitcoin blockchain to anonymously hire someone to do your Flying Fox work for you.
+Can grow the market cap up to 0.1% per block. Price to produce new coins is determined by a mechanism the block creator participates in.
+80 bytes total, {4:version, 32:hashPrevBlock, 32:MerkleRoot, 4:time, 4:difficulty, 4:nonce}
+inside the work we need 1) address to be rewarded, 2) hash of a recent block. 
+The more recent the block you reference, the bigger the reward.
 
 Thoughts on bets:
 forth-like language, similar to bitcoin.

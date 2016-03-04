@@ -2,6 +2,8 @@
 -compile(export_all).
 %-export([export_all]).
 %-define(InitialCoins, round(math:pow(2, 48)) - 1).
+%2^74 bits is 25 bitcoin =~ $10,000
+%2^64 bits is $10
 -define(InitialCoins, round(math:pow(2, 41)) - 1).
 initial_coins() -> ?InitialCoins.
 initial_portion_delegated() -> fractions:new(3, 4).
