@@ -1,4 +1,4 @@
-%this module needs to keep track of the highest-nonced transaction recieved in each channel.
+%this module needs to keep track of the highest-nonced transaction that the peer could possibly be aware of.
 
 %We need the ability to spend and receive money, and to spend and receive hashlocked money.
 

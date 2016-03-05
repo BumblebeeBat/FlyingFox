@@ -72,7 +72,16 @@ bet_amounts(CB) ->
     sum_amounts(Bets, 0).
 sum_amounts([], X) -> X;
 sum_amounts([H|T], X) -> sum_amounts(T, X + abs(channel_block_tx:bet_amount(H))).
-hashlock(ChId, Amount, SecretHash) ->
+
+new_hashlock(Partner, A, SecretHash) ->
+    ChId = hd(channel_manager:id(Partner)),
+    Channel = block_tree:channel(ChId),
+    A1 = channels:acc1(Channel),
+    A2 = channels:acc2(Channel),
+    Amount = case keys:id() of
+	A2 -> A;
+	A1 -> -A
+    end,
     Ch = read_channel(ChId),
     Ch2 = channel_block_tx:update(Ch, Amount div 2, 1),
     Channel = block_tree:channel(ChId),
@@ -84,16 +93,7 @@ hashlock(ChId, Amount, SecretHash) ->
         end,
     Script = language:hashlock(MyAccount, SecretHash),
     keys:sign(channel_block_tx:add_bet(Ch2, Amount div 2, Script)).
-new_hashlock(Partner, A, SecretHash) ->
-    ChId = hd(channel_manager:id(Partner)),
-    Channel = block_tree:channel(ChId),
-    A1 = channels:acc1(Channel),
-    A2 = channels:acc2(Channel),
-    Amount = case keys:id() of
-	A2 -> A;
-	A1 -> -A
-    end,
-    hashlock(ChId, Amount, SecretHash).
+
 
 test() ->    
     {Pub, Priv} = sign:new_key(),

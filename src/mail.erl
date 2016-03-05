@@ -71,8 +71,10 @@ pop3(From, M) ->
     io:fwrite("\n"),
     S = M#msg.start,
     if
-	S == no_refund ->
+	S == locked_payment ->
 	    {locked_payment, M#msg.msg};
+	S == locked_payment ->
+	    {unlock, M#msg.msg};
 	true ->
 	    Msg = M#msg.msg,
 	    T = ((erlang:monotonic_time() - M#msg.start) div 1000) + 2000000,%2 second fee automatically.

@@ -35,19 +35,29 @@ enough_work(Tx) ->
 enough(_, 0) -> true;
 enough(<<1:1, _/bitstring>>, _) -> false;
 enough(<<0:1, B/bitstring>>, D) -> enough(B, D div 2).
-exponent(X) -> sqrt(X*X*X).
-sqrt(X) -> sqrt(X, 1, 50).
-sqrt(_, X, 0) -> X;
-sqrt(X, Y, N) -> sqrt(X, (Y+(X div Y)) div 2, N-1).
-next_nonce(<<255, 255, 255, 255, 255, 255, 255, 255>>) -> <<0:64>>;
-next_nonce(<<X, 255, 255, 255, 255, 255, 255, 255>>) -> <<(X+1):8, 0:56>>;
-next_nonce(<<A, X, 255, 255, 255, 255, 255, 255>>) -> <<A, (X+1):8, 0:48>>;
-next_nonce(<<A, B, X, 255, 255, 255, 255, 255>>) -> <<A, B, (X+1):8, 0:40>>;
-next_nonce(<<A, B, C, X, 255, 255, 255, 255>>) -> <<A, B, C, (X+1):8, 0:32>>;
-next_nonce(<<A, B, C, D, X, 255, 255, 255>>) -> <<A, B, C, D, (X+1):8, 0:24>>;
-next_nonce(<<A, B, C, D, E, X, 255, 255>>) -> <<A, B, C, D, E, (X+1):8, 0:16>>;
-next_nonce(<<A, B, C, D, E, F, X, 255>>) -> <<A, B, C, D, E, F, (X+1):8, 0:8>>;
-next_nonce(<<A, B, C, D, E, F, G, X>>) -> <<A, B, C, D, E, F, G, (X+1):8>>.
+%input of exponent is in range 0-2^32, output needs at least range 0-2^100
+exponent(X) -> X*X*X*X.
+%sqrt(X) -> sqrt(X, 1, 50).
+%sqrt(_, X, 0) -> X;
+%sqrt(X, Y, N) -> sqrt(X, (Y+(X div Y)) div 2, N-1).
+next_nonce(<<A, B, C, D, E, F, G, X>>) when not(X == 255) -> 
+    <<A, B, C, D, E, F, G, (X+1):8>>;
+next_nonce(<<A, B, C, D, E, F, X, 255>>) when not(X == 255) -> 
+    <<A, B, C, D, E, F, (X+1):8, 0:8>>;
+next_nonce(<<A, B, C, D, E, X, 255, 255>>) when not(X == 255) -> 
+    <<A, B, C, D, E, (X+1):8, 0:16>>;
+next_nonce(<<A, B, C, D, X, 255, 255, 255>>) when not(X == 255) -> 
+    <<A, B, C, D, (X+1):8, 0:24>>;
+next_nonce(<<A, B, C, X, 255, 255, 255, 255>>) when not(X == 255) -> 
+    <<A, B, C, (X+1):8, 0:32>>;
+next_nonce(<<A, B, X, 255, 255, 255, 255, 255>>) when not(X == 255) -> 
+    <<A, B, (X+1):8, 0:40>>;
+next_nonce(<<A, X, 255, 255, 255, 255, 255, 255>>) when not(X == 255) -> 
+    <<A, (X+1):8, 0:48>>;
+next_nonce(<<X, 255, 255, 255, 255, 255, 255, 255>>) when not(X == 255)-> 
+    <<(X+1):8, 0:56>>;
+next_nonce(<<255, 255, 255, 255, 255, 255, 255, 255>>) -> 
+    <<0:64>>.
 doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     Goal = Tx#pow.amount,
     %true = enough_work(Tx, Difficulty),
@@ -68,6 +78,6 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
 test() ->
     %pow(Goal, TimeLimit, Difficulty, RecentHash)
     Difficulty = 10,
-    Goal = 10,
+    Goal = 100,
     %number of hashes we have to do is about Goal*sqrt(Difficulty^3)
-    pow(Goal, 1000000, Difficulty, <<0:256>>).
+    pow(Goal, 5000000, Difficulty, <<0:256>>).

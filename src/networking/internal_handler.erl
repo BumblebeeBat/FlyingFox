@@ -160,10 +160,10 @@ doit({lightning_spend, IP, Port, Partner, Amount}) ->
 doit({channel_unlock, IP, Port, Secret}) ->
     {ok, PeerId} = talker:talk({id}, IP, Port),
     ChId = hd(channel_manager:id(PeerId)), 
-    UH = channel_manager:create_unlock_hash(ChId, Secret),
+    UH = channel_manager_feeder:create_unlock_hash(ChId, Secret),
     channel_partner:store(ChId, UH),
     {ok, NewCh} = talker:talk({unlock, ChId, Secret, UH}, IP, Port),
-    channel_manager:unlock_hash(ChId, Secret, NewCh),
+    channel_manager_feeder:unlock_hash(ChId, Secret, NewCh),
     {ok, ok};
 doit({channel_keys}) -> {ok, channel_manager:keys()};
 doit({block_tree_account, Id}) -> {ok, block_tree:account(Id)};
@@ -181,6 +181,10 @@ doit(X) ->
 absorb_msgs([], _, _, _) -> ok;
 absorb_msgs([H|T], IP, Port, ServerId) -> 
     case talker:talk({pop, keys:id(), H}, IP, Port) of
+	{ok, {unlock, Payment}} ->
+	    {unlock, Payment, ChId, Amount, Secret} = Payment,
+	    Return = channel_manager:create_unlock_hash(ChId, Secret),
+	    channel_partner:store(ChId, Return),
 	{ok, {locked_payment, Payment}} ->
 	    {locked_payment, P, ChId, Amount, SecretHash} = Payment,
 	    Return = channel_manager_feeder:recieve_locked_payment(ChId, P, Amount, SecretHash),

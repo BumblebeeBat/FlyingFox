@@ -2,9 +2,6 @@ need to use the arbitrage gen_server, in channels.
 Use it to keep track of which pairs of channels are linked.
 If 2 channels have linked state, it is important that we remove the links in the right order, or else we could get robbed.
 
-need to update channel manager to save 2 copies of the channel state. One is the highest nonced that I have signed, the other is the highest nonced that my partner has signed that I know about.
-It is important to know about your partner's highest nonce, because we have to use arbitrage to unlink in the correct order. If you don't know your partner's current state, then you can't know if they are still linked.
-
 Need to add some transaction types for the new type of mining.
 80 bytes total, {4:version, 32:hashPrevBlock, 32:MerkleRoot, 4:time, 4:difficulty, 4:nonce}
 Maybe I should start out owning $1,000,000 of coins or so, otherwise it will be too cheap for a whale to print a bunch of coins and refuse to take part in consensus. The $1,000,000 of coins could be unspendable, only for consensus purposes.
