@@ -19,7 +19,6 @@ If I want to pay you through a server:
 
 3) the server tells you about the payment, and starts updating your channel. The server gives you the encrypted secret.
 * server updates channel_partner
-* uses mailbox
 * you update channel_manager
 
 4) you finish updating the channel by sending a signature. And you unlock the funds by sending the secret to the server
@@ -31,7 +30,6 @@ If I want to pay you through a server:
 * server updates channel_partner
 
 6) the server sends you the secret and a signature to unlock my payment.
-* uses mailbox
 * server updates channel_partner
 * I update channel_manager
 
@@ -42,8 +40,9 @@ If I want to pay you through a server:
 
 
 For a bet, both parties need to put some money at stake. This can be done trustlessly by adding a hashlock to the bet. Until the hashlock is removed, each party would get their own money back. Once the hashlock is removed, the bet becomes active.
+Only the server should know the secret at first.
 
-1) I tell the server I want to add money to the bet. I update my channel state. I send a signature and new channel state to the server.
+1) I tell the server I want to add money to the bet. I update my channel state. I send a signature and new channel state to the server. The server generates the secrethash for the hashlock.
 * I update channel_partner
 * server updates channel_manager
 * server updates arbitrage
@@ -53,7 +52,6 @@ For a bet, both parties need to put some money at stake. This can be done trustl
 * I update channel_manager
 
 3) The server tells you about the bet, and starts updating your channel by giving you new channel state and a signature.
-* uses mailbox
 * server updates channel_partner
 * you update channel_manager
 
@@ -65,24 +63,19 @@ For a bet, both parties need to put some money at stake. This can be done trustl
 * you update channel_manager
 * server updates channel_partner
 
-6) The server starts updating my channel by sending me a signature and new channel state in my mailbox.
-* uses mailbox
+6) The server starts updating my channel by sending me a signature and new channel state. The server reveals the secret at this time.
 * server updates channel_partner
 * I update channel_manager
 
-7) I accept the channel update, and reveal my secret to the channel to update the state again. I send a signature and the new channel state to the server.
+7) I accept the channel update. I send a signature to the server.
 * server updates channel_manager
 * I update channel_partner
 
-8) The server updates my channel with the secret by giving me a signature.
-* server updates channel_partner
-* I update channel_manager
-
-9) The server shows you the secret to starts updating your channel.
+8) The server shows you the secret to starts updating your channel.
 * server updates channel_partner
 * you update channel_manager
 
-10) you finish updating your channel by sending a signature to the server.
+9) you finish updating your channel by sending a signature to the server.
 * server updates arbitrage
 * server updates channel_manager
 * you update channel_partner
