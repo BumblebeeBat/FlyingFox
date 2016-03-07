@@ -17,6 +17,7 @@ It would be nice if we have a javascript interface to send spam-less messages. T
 
 hashlock lightning payments javascript
 close_channel javascript multiple steps
+*Look in channel_partner. Make sure our partner has = or < nonce than channel_manager.
 change server javascript
 delete_account javascript
 button to rotate through your inbox

@@ -2,6 +2,26 @@ The market cap of bitcoin is only in the billions. We want a cryptocurrency to b
 
 The following proposal is for a POW system that would allow any amount of new coins to be created in a day. If I had a $ trillion, and I wanted to turn it all into cryptocurrency, I could. The market cap would be $1 trillion higher. The price of individual coins remains unchanged.
 
+## Small blockchain example
+
+Before dilution:
+A owns 33% of the coins.
+B owns 33% of the coins.
+C owns 33% of the coins.
+33% of the coins is worth about the same as 10,000 meals of food.
+
+The investment that dilutes is:
+D burns electricity worth about 10,000 meals of food in POW.
+
+After dilution:
+A owns 25%
+B owns 25%
+C owns 25%
+D owns 25%
+25% of the coins is worth the same as about 10,000 meals of food.
+
+Maybe we should charge D a couple percentage higher or lower than that, I am not sure.
+
 ## Startup example
 
 Startups are optimized to increase in value very quickly. We can repurpose their design choices to make a blockchain with a fast-growing market cap.

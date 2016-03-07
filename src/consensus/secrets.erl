@@ -4,7 +4,7 @@
 %needs garbage collection.
 -module(secrets).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read/1,delete/1,new/0,test/0,check/0,dict2bytes/1,bytes2dict/1]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read/1,delete/1,new/0,test/0,check/0,dict2bytes/1,bytes2dict/1,add/1]).
 %-define(LOC, "secrets.db").
 -define(LOC, constants:secrets()).
 init(ok) -> 
@@ -30,10 +30,13 @@ handle_call({read, SH}, _From, X) ->
 	{ok, Y} -> Y
 	end,
     {reply, Z, X}.
+add(S) ->
+    SH = hash:doit(S),
+    gen_server:cast(?MODULE, {add, S, SH}).
 new() -> 
     S = crypto:strong_rand_bytes(32),
     SH = hash:doit(S),
-    gen_server:cast(?MODULE, {add, S, SH}),
+    add(S),
     SH.
 check() -> gen_server:call(?MODULE, check).
 read(SH) -> gen_server:call(?MODULE, {read, SH}).

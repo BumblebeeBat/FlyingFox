@@ -9,27 +9,29 @@ arbitrage is some state that the server keeps track of. It lists 2 channels, and
 If I want to pay you through a server:
 
 1) I tell the server I want to send the payment, and propose new channel state. And I give the server the secret encrypted so only you can read it.
-* I update channel_me
 * server updates channel_partner
 * server updates arbitrage
 
 2) the server finishes updating my channel by sending me a signature.
+* I update channel_me
 * server updates channel_me
 * I update channel_partner
 
 3) the server tells you about the payment, and starts updating your channel. The server gives you the encrypted secret.
-* server updates channel_me
+* you update channel_me
 * you update channel_partner
 
 4) you finish updating the channel by sending a signature. And you unlock the funds by sending the secret to the server
-* you update channel_me
-* server updates channel_partner
+* you update channel_partner
+* server updates channel_me
+
+// line 88 in handler.erl
 
 5) the server acknowledges that the secret is valid by sending you a signature, which finishes updating your channel.
 * you update channel_partner
 * server updates channel_me
 
-6) the server sends you the secret and a signature to unlock my payment.
+6) the server sends the secret and a signature to unlock my payment.
 * server updates channel_me
 * I update channel_partner
 

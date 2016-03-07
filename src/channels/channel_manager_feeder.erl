@@ -72,7 +72,6 @@ handle_call({unlock_hash, ChId, Secret, SignedCh}, _From, X) ->
     %channel_block_tx:add,
     NewF = #f{channel = SignedCh, unlock = NewUnlock},
     channel_manager:store(ChId, NewF),
-    arbitrage:del(BetCode, ChId),
     Out = keys:sign(NewCh),
     {reply, Out, X};
 handle_call({recieve, ID, Payment, MinAmount, ChId, SignedPayment}, _From, X) -> 

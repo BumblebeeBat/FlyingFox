@@ -59,15 +59,19 @@ doit({locked_payment, From, To, Payment, Amount, SecretHash}) ->
     Return = channel_manager_feeder:recieve_locked_payment(ChIdFrom, Payment, Amount, SecretHash),
     channel_partner:store(ChIdFrom, Return),
     ChIdTo = hd(channel_manager:id(To)),
-    arbitrage:absorb(Payment, ChIdFrom, ChIdTo),
     Payment2 = channel_manager:new_hashlock(To, Amount, SecretHash),
+    arbitrage:absorb(Payment, ChIdFrom, ChIdTo, Amount),
+    channel_partner:store(ChIdTo, Payment2),
     M = {locked_payment, Payment2, ChIdFrom, Amount, SecretHash},
+
     mail:internal_send(To, M, locked_payment),
     {ok, Return};
 %locked_payment2 is the response from a message we sent to their mail box.
 doit({locked_payment2, Payment, ChId, Amount, SecretHash}) ->
+    %OldChannel = channel_manager:read_channel(ChId),
+    arbitrage:second_lock(Payment, ChId, Amount),
     channel_manager_feeder:spend_locked_payment(ChId, Payment, Amount, SecretHash),
-    channel_partner:store(ChIdTo, Payment2),
+    %channel_partner:store(ChIdTo, Payment2),
     {ok, 0};
 doit({txs}) -> {ok, tx_pool:txs()};
 doit({txs, Txs}) -> 
@@ -75,15 +79,21 @@ doit({txs, Txs}) ->
     {ok, 0};
 doit({unlock, ChId, Secret, SignedCh}) ->
     Response = channel_manager_feeder:unlock_hash(ChId, Secret, SignedCh),
-    arbitrage:check(Bet),
-    %Now that one is unlocked, we should unlock the other. Maybe we should use mailbox? or maybe we should update the api, so they can lookup how the channel state updated?
-    M = {unlock, Payment2, ChIdFrom, Amount, Secret},
+    arbitrage:first_unlock(SignedCh),
+    io:fwrite(SignedCh),
+    %unpack SignedCh to get To
+    To = 0,
+    ChId2 = hd(channel_manager:id(To)),
+    Payment2 = channel_manager_feeder:create_unlock_hash(ChId2, Secret),
+    channel_partner:store(ChId2, Payment2),
+    M = {unlock, Payment2, ChId, Secret},
     mail:internal_send(To, M, unlock),
     channel_partner:store(ChId, Response),
     {ok, Response};
-doit({unlock2, Payment, ChId, Amount, SecretHash}) ->
+doit({unlock2, SignedCh, ChId, Secret}) ->
+    arbitrage:second_unlock(SignedCh),
     channel_manager_feeder:unlock_hash(ChId, Secret, SignedCh),
-    
+    arbitrage:delete(SignedCh),
     {ok, 0};
 doit({register, Payment, Acc}) ->
     {ok, mail:register(Payment, Acc)};
@@ -146,7 +156,7 @@ doit({update_channel, ISigned, TheySigned}) ->%The contents of this message NEED
 		CA1
 	end,
     NewNonce = channel_block_tx:nonce(Data),
-    %ChId = hd(channel_manager:id(TheirId)),
+    ChId = hd(channel_manager:id(TheirId)),
     %Data = sign:data(hd(channel_partner:read(ChId))),
     OldCh = channel_manager:read_channel(ChId),
     OldNonce = channel_block_tx:nonce(OldCh),

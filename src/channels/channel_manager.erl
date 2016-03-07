@@ -4,7 +4,7 @@
 
 -module(channel_manager).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, hashlock/3,new_hashlock/3,read/1,delete/1,id/1,keys/0,read_channel/1,bet_amounts/1,test/0,store/2]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, new_hashlock/3,read/1,delete/1,id/1,keys/0,read_channel/1,bet_amounts/1,test/0,store/2]).
 -define(LOC, constants:channel_manager()).
 init(ok) -> 
     process_flag(trap_exit, true),
@@ -82,6 +82,8 @@ new_hashlock(Partner, A, SecretHash) ->
 	A2 -> A;
 	A1 -> -A
     end,
+    hashlock(ChId, Amount, SecretHash).
+hashlock(ChId, Amount, SecretHash) ->
     Ch = read_channel(ChId),
     Ch2 = channel_block_tx:update(Ch, Amount div 2, 1),
     Channel = block_tree:channel(ChId),
