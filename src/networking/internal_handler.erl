@@ -178,6 +178,9 @@ doit({block_tree_account, Id}) -> {ok, block_tree:account(Id)};
 doit({halt}) -> {ok, flying_fox_sup:stop()};
 doit({key_status}) -> {ok, list_to_binary(atom_to_list(keys:status()))};
 doit({key_unlock, Password}) -> {ok, list_to_binary(atom_to_list(keys:unlock(Password)))};
+doit({keys_id_update, ID}) -> 
+    keys:update_id(ID),
+    {ok, 0};
 doit({key_new, Password}) -> 
     keys:new(Password),
     {ok, 0};
