@@ -1,5 +1,4 @@
 %this module needs to keep track of the highest-nonced transaction recieved in each channel.
-
 %We need the ability to spend and receive money, and to spend and receive hashlocked money.
 
 -module(channel_manager).
@@ -133,10 +132,10 @@ test() ->
     Tx5 = hashlock(S, Amount, SH),
     Tx6 = sign:sign_tx(Tx5, Pub, Priv, tx_pool:accounts()),%partner runs recieve_locked_payment/3, and returns Tx6
     channel_manager_feeder:spend_locked_payment(S, Tx6, Amount, SH),%we absorb Tx6.
-
     Tx7 = channel_manager_feeder:create_unlock_hash(S, secrets:read(SH)),
+    BH = hash:doit(channel_block_tx:bet_code(hd(channel_block_tx:bets(sign:data(Tx6))))),
     Tx8 = sign:sign_tx(Tx7, Pub, Priv, tx_pool:accounts()),%partner runs unlock_hash/3 and returns Tx8
-    channel_manager_feeder:unlock_hash(S, secrets:read(SH), Tx8),
+    channel_manager_feeder:unlock_hash(S, secrets:read(SH), Tx8, BH),
     E = element(2, element(2, read(S))),
     E = {channel_block,0,Partner,-3198,5,[],S,false,259,0,0,0},
     success.

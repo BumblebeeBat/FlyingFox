@@ -54,32 +54,35 @@ doit({channel_recieve, ChId, MinAmount, Ch}) ->
     Response = channel_manager_feeder:recieve(ChId, MinAmount, Ch),
     channel_partner:store(ChId, Response),
     {ok, Response};
-doit({locked_payment, From, To, Payment, Amount, SecretHash}) ->
+doit({locked_payment, From, To, Payment, Amount, SecretHash, BetHash}) ->
     ChIdFrom = hd(channel_manager:id(From)),
     Return = channel_manager_feeder:recieve_locked_payment(ChIdFrom, Payment, Amount, SecretHash),
     channel_partner:store(ChIdFrom, Return),
     ChIdTo = hd(channel_manager:id(To)),
     Payment2 = channel_manager:new_hashlock(To, Amount, SecretHash),
-    arbitrage:absorb(Payment, ChIdFrom, ChIdTo, Amount),
+    Bet = hd(channel_block_tx:bets(sign:data(Payment2))),
+    BetCode = channel_block_tx:bet_code(Bet),
+    BetHash = hash:doit(BetCode),
+    arbitrage:new(Payment, ChIdFrom, ChIdTo, Amount),
     channel_partner:store(ChIdTo, Payment2),
-    M = {locked_payment, Payment2, ChIdFrom, Amount, SecretHash},
+    M = {locked_payment, Payment2, ChIdFrom, Amount, SecretHash, BetHash},
 
     mail:internal_send(To, M, locked_payment),
     {ok, Return};
 %locked_payment2 is the response from a message we sent to their mail box.
-doit({locked_payment2, Payment, ChId, Amount, SecretHash}) ->
+doit({locked_payment2, Payment, Amount, SecretHash, BetHash}) ->
     %OldChannel = channel_manager:read_channel(ChId),
-    arbitrage:second_lock(Payment, ChId, Amount),
-    channel_manager_feeder:spend_locked_payment(ChId, Payment, Amount, SecretHash),
-    %channel_partner:store(ChIdTo, Payment2),
+    ChIdGain = arbitrage:agree(Payment, Amount, BetHash),
+    channel_manager_feeder:spend_locked_payment(ChIdGain, Payment, Amount, SecretHash),
+    channel_partner:store(ChIdGain, Payment),
     {ok, 0};
 doit({txs}) -> {ok, tx_pool:txs()};
 doit({txs, Txs}) -> 
     download_blocks:absorb_txs(Txs),
     {ok, 0};
 doit({unlock, ChId, Secret, SignedCh}) ->
+    %arbitrage:second_unlock(SignedCh),
     Response = channel_manager_feeder:unlock_hash(ChId, Secret, SignedCh),
-    arbitrage:first_unlock(SignedCh),
     io:fwrite(SignedCh),
     %unpack SignedCh to get To
     To = 0,
@@ -90,10 +93,10 @@ doit({unlock, ChId, Secret, SignedCh}) ->
     mail:internal_send(To, M, unlock),
     channel_partner:store(ChId, Response),
     {ok, Response};
-doit({unlock2, SignedCh, ChId, Secret}) ->
-    arbitrage:second_unlock(SignedCh),
-    channel_manager_feeder:unlock_hash(ChId, Secret, SignedCh),
-    arbitrage:delete(SignedCh),
+doit({unlock2, SignedCh, ChId, Secret, BH}) ->
+    %arbitrage:second_unlock(SignedCh),
+    channel_manager_feeder:unlock_hash(ChId, Secret, BH, SignedCh),
+    arbitrage:delete(SignedCh, BH),
     {ok, 0};
 doit({register, Payment, Acc}) ->
     {ok, mail:register(Payment, Acc)};

@@ -1,7 +1,7 @@
-var IP = [52, 36, 106, 100];// server
-//var IP = [127, 0, 0, 1];
-var Port = 3010;
-//var Port = 3030;
+//var IP = [52, 36, 106, 100];// server
+var IP = [127, 0, 0, 1];
+//var Port = 3010;
+var Port = 3030;
 function getter(t, u, callback){
     t = JSON.stringify(t);
     //console.log("getter ".concat(t));

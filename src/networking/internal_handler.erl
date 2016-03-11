@@ -139,8 +139,10 @@ doit({lightning_spend, IP, Port, Partner, Amount}) ->
     ChId = hd(channel_manager:id(PeerId)),
     SecretHash = secrets:new(),
     Payment = channel_manager:new_hashlock(PeerId, Amount, SecretHash),
+    Bet = channel_block_tx:bet_code(hd(channel_block_tx:bets(sign:data(Payment)))),
+    BetHash = hash:doit(Bet),
     channel_partner:store(ChId, Payment),
-    {ok, SignedCh} = talker:talk({locked_payment, keys:id(), Partner, Payment, Amount, SecretHash}, IP, Port),
+    {ok, SignedCh} = talker:talk({locked_payment, keys:id(), Partner, Payment, Amount, SecretHash, BetHash}, IP, Port),
     channel_manager_feeder:spend_locked_payment(ChId, SignedCh, Amount, SecretHash),
     Acc = block_tree:account(Partner),
     Secret = secrets:read(SecretHash),
@@ -199,10 +201,10 @@ absorb_msgs([H|T], IP, Port, ServerId) ->
 	    channel_partner:store(ChId, Return),
 	    talker:talk({unlock2, Return, ChId, Secret}, IP, Port);
 	{ok, {locked_payment, Payment}} ->
-	    {locked_payment, P, ChId, Amount, SecretHash} = Payment,
-	    Return = channel_manager_feeder:recieve_locked_payment(ChId, P, Amount, SecretHash),
-	    channel_partner:store(ChId, Return),
-	    talker:talk({locked_payment2, Return, ChId, Amount, SecretHash}, IP, Port),
+	    {locked_payment, P, ChIdFrom, Amount, SecretHash, BetHash} = Payment,
+	    Return = channel_manager_feeder:recieve_locked_payment(ChIdFrom, P, Amount, SecretHash, BetHash),
+	    channel_partner:store(ChIdFrom, Return),
+	    talker:talk({locked_payment2, Return, Amount, SecretHash}, IP, Port),
 	    SC = secrets:check(),
 	    case dict:find(SecretHash, SC) of
 		error -> 0;
