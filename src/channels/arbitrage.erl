@@ -45,7 +45,7 @@ new(Tx, ChIdLose, ChIdGain, Amount) ->
     io:fwrite(integer_to_list(channel_block_tx:bet_amount(Bet))),
     io:fwrite("\n"),
     To = (channel_block_tx:bet_to(Bet) * 2) - 1,
-    Amount = (To * channel_block_tx:bet_amount(Bet) * 2),
+    Amount = (To * channel_block_tx:bet_amount(Bet) * -2),
     Code = channel_block_tx:bet_code(Bet),
     ChId1 = channel_block_tx:acc1(CB),
     ChId2 = channel_block_tx:acc2(CB),
