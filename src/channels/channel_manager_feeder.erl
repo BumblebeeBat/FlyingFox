@@ -188,6 +188,7 @@ common(ChId, Secret) ->
     NewBets = remove_nth(N, Bets),
     NewBets = remove_bet(hash:doit(BetCode), Bets),
     NewCh = channel_block_tx:replace_bet(OldCh, NewBets),
+    true = channel_block_tx:nonce(OldCh) < channel_block_tx:nonce(NewCh),
     io:fwrite("with bet "),
     io:fwrite(packer:pack(NewCh)),
     io:fwrite("\n"),
