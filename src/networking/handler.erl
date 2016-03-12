@@ -118,7 +118,7 @@ doit({mail_cost, Space, Time}) ->
     {ok, mail:cost(Space, Time)};
 doit({send, Payment, From, To, Msg, Seconds}) ->
     C = mail:cost(size(Msg), Seconds),
-    ChId = channel_manager:id(From),
+    ChId = hd(channel_manager:id(From)),
     R = channel_manager_feeder:recieve(ChId, C, Payment),
     channel_partner:store(ChId, R),
     mail:send(To, Msg, Seconds),

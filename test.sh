@@ -1,10 +1,12 @@
 #sh start.sh 3010 &
-#sh start.sh 3020 &
-
+#sh ../FlyingFox2/start.sh 3020 &
+#sh ../FlyingFox3/start.sh 3030 &
+#sleep 10
 #pubkey
 curl -i -d '["pubkey"]' http://localhost:3011
 
 
+curl -i -d '["key_unlock", "YWJj"]' http://localhost:3011
 curl -i -d '["key_unlock", "YWJj"]' http://localhost:3021
 curl -i -d '["key_unlock", "YWJj"]' http://localhost:3031
 
@@ -17,3 +19,9 @@ curl -i -d '["create_account", "Qk9ZclBvNjlhaVNRV0w1NGZ6UjJBdFJaQ29JSkxkS2U4WGVl
 curl -i -d '["sync", [127,0,0,1], 3030]' http://localhost:3011
 curl -i -d '["sync", [127,0,0,1], 3030]' http://localhost:3021
 
+curl -i -d '["new_channel", [127,0,0,1], 3030, 1000000, 900000, 50]' http://localhost:3011
+curl -i -d '["sync", [127,0,0,1], 3030]' http://localhost:3011
+curl -i -d '["sync", [127,0,0,1], 3030]' http://localhost:3021
+curl -i -d '["new_channel", [127,0,0,1], 3030, 500000, 450000, 50]' http://localhost:3021
+
+curl -i -d '["lightning_spend", [127,0,0,1], 3030, 2, 4]' http://localhost:3011
