@@ -114,7 +114,13 @@ agree(Tx, Amount, BH) ->
     io:fwrite(packer:pack(channel_block_tx:bets(CB))),
     io:fwrite("\n"),
     Bet = bet_find(BH, channel_block_tx:bets(CB)),
-    A = channel_block_tx:amount(CB),
+    A = channel_block_tx:bet_amount(Bet) * channel_block_tx:bet_to(Bet),
+    io:fwrite("Amount "),
+    io:fwrite(integer_to_list(Amount)),
+    io:fwrite("\n"),
+    io:fwrite("A "),
+    io:fwrite(integer_to_list(A)),
+    io:fwrite("\n"),
     if
 	A>0 ->
 	    A = Amount, 
