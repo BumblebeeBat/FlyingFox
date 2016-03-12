@@ -137,9 +137,9 @@ agree(Tx, Amount, BH) ->
     Bet2 = bet_find(BH, channel_block_tx:bets(OChannel)),
     To2 = (channel_block_tx:bet_to(Bet2) * 2) - 1,
     BetAmount = channel_block_tx:bet_amount(Bet2),
-    Amount = (To2 * BetAmount * 2),
+    A2 = (To2 * BetAmount),
     
-    A2 = channel_block_tx:amount(OChannel),
+    %A2 = channel_block_tx:amount(OChannel),
     io:fwrite("A2 "),
     io:fwrite(integer_to_list(A2)),
     io:fwrite("\n"),
@@ -149,9 +149,8 @@ agree(Tx, Amount, BH) ->
     AA = abs(A2),
     AA = abs(A),
     AA = abs(Amount div 2),
-    TB = To2*BetAmount,
     if
-	TB < 0 ->
+	A2 < 0 ->
 	    K = channel_block_tx:acc1(OChannel);
 	true ->
 	    K = channel_block_tx:acc2(OChannel)
