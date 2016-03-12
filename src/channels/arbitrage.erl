@@ -57,6 +57,12 @@ new(Tx, ChIdLose, ChIdGain, Amount) ->
 	    IdLose = ChId2,
 	    IdGain = ChId1
     end,
+    io:fwrite("chidlose "),
+    io:fwrite(integer_to_list(hd(channel_manager:id(IdLose)))),
+    io:fwrite("\n"),
+    io:fwrite("chidlose should be "),
+    io:fwrite(integer_to_list(ChIdLose)),
+    io:fwrite("\n"),
     ChIdLose = hd(channel_manager:id(IdLose)),
     ChIdGain = hd(channel_manager:id(IdGain)),
     add(Code, ChIdLose, ChIdGain, Amount).
