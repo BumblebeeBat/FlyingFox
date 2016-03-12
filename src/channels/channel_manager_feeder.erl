@@ -104,6 +104,12 @@ handle_call({recieve, ID, MinAmount, ChId, SignedPayment}, _From, X) ->
     Channel = block_tree:channel(ChId),
     A = NewAmount - OldAmount,
     N = NewN - OldN,
+    io:fwrite("old channel"),
+    io:fwrite(packer:pack(Ch)),
+    io:fwrite("\n"),
+    io:fwrite("new channel"),
+    io:fwrite(packer:pack(Payment)),
+    io:fwrite("\n"),
     true = N > 0,
     Payment2 = channel_block_tx:update(Ch, A, N),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce.
     Payment = Payment2,
