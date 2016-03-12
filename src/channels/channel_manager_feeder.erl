@@ -44,8 +44,8 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     %B = A * To -1,
     %true = (-A == (Amount div 2)),
     case To of
-	1 -> true = (-A == (Amount div 2));
-	0 -> true = (A == (Amount div 2))
+	1 -> true = (A == (Amount div 2));
+	0 -> true = (-A == (Amount div 2))
     end,
     ToAmount = 
 	case ID of
@@ -67,12 +67,6 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     SecretHash = language:extract_sh(channel_block_tx:bet_code(Bet)),
     Script = language:hashlock(SecretHash),
     NewCha = channel_block_tx:add_bet(Ch2, A, Script, ToAmount),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce and bet.
-    io:fwrite("NewCha is "),
-    io:fwrite(packer:pack(NewCha)),
-    io:fwrite("\n"),
-    io:fwrite("NewCh is "),
-    io:fwrite(packer:pack(NewCh)),
-    io:fwrite("\n"),
     NewCh = NewCha,
     NewF = #f{channel = SignedChannel, unlock = [[28]|F#f.unlock]},
     channel_manager:store(ChId, NewF),
@@ -188,7 +182,6 @@ common(ChId, Secret) ->
     NewBets = remove_nth(N, Bets),
     NewBets = remove_bet(hash:doit(BetCode), Bets),
     NewCh = channel_block_tx:replace_bet(OldCh, NewBets),
-    true = channel_block_tx:nonce(OldCh) < channel_block_tx:nonce(NewCh),
     %io:fwrite("with bet "),
     %io:fwrite(packer:pack(NewCh)),
     %io:fwrite("\n"),
@@ -202,6 +195,7 @@ common(ChId, Secret) ->
 	end,
     D = fractions:multiply_int(C, A),
     NewNewCh = channel_block_tx:update(NewCh, D, 1),%
+    true = channel_block_tx:nonce(OldCh) < channel_block_tx:nonce(NewNewCh),
     %we need to change amount.
     {keys:sign(NewNewCh), N, BetCode}.
 create_unlock_hash(ChId, Secret) ->
