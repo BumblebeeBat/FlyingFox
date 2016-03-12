@@ -66,10 +66,10 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
 	    Acc2 ->
 		if 
 		    Spend -> 
-			A = -(BetTo * Amount div 2),
+			A = (BetTo * Amount div 2),
 			0; 
 		    true -> 
-			A = (BetTo * Amount div 2),
+			A = -(BetTo * Amount div 2),
 			true = A < 0,
 			1 
 		end
