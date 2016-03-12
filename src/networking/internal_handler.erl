@@ -211,7 +211,7 @@ absorb_msgs([H|T], IP, Port, ServerId) ->
 	    talker:talk({unlock2, Return, ChId, Secret}, IP, Port);
 	{ok, {locked_payment, Payment}} ->
 	    {locked_payment, P, ChIdFrom, Amount, SecretHash, BetHash} = Payment,
-	    Return = channel_manager_feeder:recieve_locked_payment(ChIdFrom, P, Amount, SecretHash, BetHash),
+	    Return = channel_manager_feeder:recieve_locked_payment(ChIdFrom, P, Amount, SecretHash),
 	    channel_partner:store(ChIdFrom, Return),
 	    talker:talk({locked_payment2, Return, Amount, SecretHash}, IP, Port),
 	    SC = secrets:check(),
