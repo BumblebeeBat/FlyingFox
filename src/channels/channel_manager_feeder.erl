@@ -45,8 +45,11 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     %B = A * To -1,
     %true = (-A == (Amount div 2)),
     io:fwrite("pair is "),
-    io:fwrite(packer:pack({Spend, ID, Acc1, BetTo, Amount})),
+    io:fwrite(packer:pack({Spend, ID, Acc1, BetTo, Amount, A})),
     io:fwrite("\n"),
+    %[true,0,0,1,-200]
+    %bad [true,0,0,1,4]
+    %bad [false,2,2,-1,4]
     To = 
 	case ID of
 	    Acc1 ->
