@@ -61,10 +61,13 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
 			1 
 		end
 	end,
+    io:fwrite("pair is "),
+    io:fwrite(packer:pack({To, Spend})),
+    io:fwrite("\n"),
     case {To, Spend} of
 	{1, true} -> true = (A == (Amount div 2));
-	{0, false} -> true = (A == (Amount div 2));
-	{0, true} -> true = (-A == (Amount div 2));
+	{0, false} -> true = (-A == (Amount div 2));
+	{0, true} -> true = (A == (Amount div 2));
 	{1, false} -> true = (-A == (Amount div 2))
     end,
     SecretHash = language:extract_sh(channel_block_tx:bet_code(Bet)),
