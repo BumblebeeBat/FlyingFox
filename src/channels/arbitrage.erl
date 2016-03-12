@@ -92,14 +92,14 @@ delete(Tx, BH) ->
     del(Bet, ChIdLose, ChIdGain, Amount).
 not_in(H, []) -> true;
 not_in(Hash, [H|T]) -> 
-    A = hash:doit(channel_block_tx:channel_bet(H)),
+    A = hash:doit(channel_block_tx:bet_code(H)),
     if
 	A == H -> false;
 	true -> not_in(Hash, T)
     end.
 bet_find(BH, []) -> 1=2;
 bet_find(BH, [H|T]) -> 
-    A = hash:doit(channel_block_tx:channel_bet(H)),
+    A = hash:doit(channel_block_tx:bet_code(H)),
     if
 	A == BH -> H;
 	true -> bet_find(BH, T)
