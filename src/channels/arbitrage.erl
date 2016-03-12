@@ -38,13 +38,14 @@ new(Tx, ChIdLose, ChIdGain, Amount) ->
     %["signed",["channel_block",0,1,-500,2,[-6,["bet",-500,[-6,0,"/rmUU2AW8ecM6TSQbyIhuc/0GWW9RLzNNSFvx/5NONY=",35,17,["f",0,1],["f",1,1],["integer",2],18,["f",0,1],["f",1,2],["integer",1],19]]],24000,false,259,0,0,0],"TUVVQ0lBR0JnL0RsZTJ1L29LckM3R01KMm9Gemhrc0xSaEpkNm5TV2dTMzdwNkVaQWlFQTNmZG41Y3JYZmw4RnVXWDNINkMyeDlvZkFSQU56bzBRaVpmUDhsZkZ6a0U9",[-6],[-6]]
     CB = sign:data(Tx),
     Bet = hd(channel_block_tx:bets(CB)),
-    io:fwrite("should be "),
+    io:fwrite("should be "), % 2
     io:fwrite(integer_to_list(Amount)),
     io:fwrite("\n"),
-    io:fwrite("is "),
+    io:fwrite("is "), % -1
     io:fwrite(integer_to_list(channel_block_tx:bet_amount(Bet))),
     io:fwrite("\n"),
-    Amount = channel_block_tx:bet_amount(Bet),
+    To = (channel_block_tx:bet_to(Bet) * 2) - 1,
+    Amount = (To * channel_block_tx:bet_amount(Bet) * 2),
     Code = channel_block_tx:bet_code(Bet),
     ChId1 = channel_block_tx:acc1(CB),
     ChId2 = channel_block_tx:acc2(CB),
