@@ -75,8 +75,7 @@ doit({locked_payment, From, To, Payment, Amount, SecretHash, BetHash}) ->
     BetHash2 = BetHash,
     arbitrage:new(Payment, ChIdFrom, ChIdTo, Amount),
     channel_partner:store(ChIdTo, Payment2),
-    M = {locked_payment, Payment2, ChIdFrom, Amount, SecretHash, BetHash},
-
+    M = {locked_payment, Payment2, ChIdTo, Amount, SecretHash, BetHash},
     mail:internal_send(To, M, locked_payment),
     {ok, Return};
 %locked_payment2 is the response from a message we sent to their mail box.
