@@ -35,9 +35,6 @@ add(S) ->
     gen_server:cast(?MODULE, {add, S, SH}).
 new() -> 
     S = crypto:strong_rand_bytes(32),
-    io:fwrite("secret is "),
-    io:fwrite(S),
-    io:fwrite("\n"),
     SH = hash:doit(S),
     add(S),
     SH.
