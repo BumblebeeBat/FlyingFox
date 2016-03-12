@@ -164,6 +164,9 @@ check_loser(Bet, ChIdLose, Amount) ->
     io:fwrite("\n"),
     BH = hash:doit(Bet),
     L = check_hash(BH),
+    io:fwrite("L is "),
+    io:fwrite(packer:pack(L)),
+    io:fwrite("\n"),
     check_loser2(ChIdLose, Amount, L).
 check_loser2(_, _, []) -> 1=2;
 check_loser2(ChId, Amount, [{ChIdLoser, ChId, Amount}|T]) -> 
