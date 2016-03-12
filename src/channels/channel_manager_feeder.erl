@@ -36,26 +36,29 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     io:fwrite("Amount is: "),
     io:fwrite(integer_to_list(Amount)),
     io:fwrite("\n"),
+    Bet = hd(channel_block_tx:bets(NewCh)),
+    To = (2 * channel_block_tx:bet_to(Bet)) - 1,
+    B = A * To,
     ToAmount = 
 	case ID of
 	    Acc1 ->
-		true = (A == (Amount div 2)),
+		true = (B == (Amount div 2)),
 		if 
 		    Spend -> 1; 
 		    true -> 
-			true = A > 0,
+			true = B > 0,
 			0 
 		end;
 	    Acc2 ->
-		true = (-A == (Amount div 2)),
+		true = (-B == (Amount div 2)),
 		if 
 		    Spend -> 2; 
 		    true -> 
-			true = A < 0,
+			true = B < 0,
 			1 
 		end
 	end,
-    SecretHash = language:extract_sh(channel_block_tx:bet_code(hd(channel_block_tx:bets(NewCh)))),
+    SecretHash = language:extract_sh(channel_block_tx:bet_code(Bet)),
     Script = language:hashlock(SecretHash),
     NewCha = channel_block_tx:add_bet(Ch2, A, Script, ToAmount),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce and bet.
     io:fwrite("NewCha is "),
