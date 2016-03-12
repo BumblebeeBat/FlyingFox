@@ -50,30 +50,20 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     %[true,0,0,1,-200, -100]
     %bad [true,0,0,1,4,-2]
     %bad [false,2,2,-1,4,2]
-    To = 
-	case ID of
-	    Acc1 ->
-		%A = (BetTo * Amount div 2), %good/bad :(
-		if 
-		    Spend -> 
-			A = Amount div 2, %good/bad :(
-			1; 
-		    true -> 
-			A = -Amount div 2, 
-			true = A > 0,
-			0 
-		end;
-	    Acc2 ->
-		if 
-		    Spend -> 
-			A = Amount div 2,
-			0; 
-		    true -> 
-			A = -Amount div 2,
-			true = A < 0,
-			1 
-		end
-	end,
+    AA = abs(A),
+    AA = abs(Amount div 2),
+    TT = case ID of
+	     Acc1 -> 1;
+	     Acc2 -> -1
+	 end,
+    To = if
+	     Spend -> 
+		 true = (A * TT) < 0,
+		 (TT+1) div 2;
+	     true -> 
+		 true = (A * TT) > 0,
+		 -((TT-1) div 2)
+	 end,
     SecretHash = language:extract_sh(channel_block_tx:bet_code(Bet)),
     Script = language:hashlock(SecretHash),
     NewCha = channel_block_tx:add_bet(Ch2, A, Script, To),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce and bet.
