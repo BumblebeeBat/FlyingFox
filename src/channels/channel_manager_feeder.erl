@@ -93,7 +93,8 @@ handle_call({unlock_hash, ChId, Secret, SignedCh, BH}, _From, X) ->
     channel_manager:store(ChId, NewF),
     Out = keys:sign(NewCh),
     {reply, Out, X};
-handle_call({recieve, ID, Payment, MinAmount, ChId, SignedPayment}, _From, X) -> 
+handle_call({recieve, ID, MinAmount, ChId, SignedPayment}, _From, X) -> 
+    Payment = sign:data(Payment),
     F = channel_manager:read(ChId),
     Ch = sign:data(F#f.channel),
     NewAmount = channel_block_tx:amount(Payment),
@@ -124,6 +125,9 @@ recieve_account(Acc, MinAmount, SignedPayment) ->
     recieve(hd(channel_manager:id(Acc)), MinAmount, SignedPayment).
 recieve(ChId, MinAmount, SignedPayment) ->
     %we need to verify that the other party signed it.
+    io:fwrite("chid is bad "),
+    io:fwrite(integet_to_list(ChId)),
+    io:fwrite("\n"),
     ID = keys:id(),
     Payment = sign:data(SignedPayment),
     A1 = channel_block_tx:acc1(Payment),
@@ -137,7 +141,7 @@ recieve(ChId, MinAmount, SignedPayment) ->
                A2 -> sign:verify_1(SignedPayment, Pub1)
     end,
     true = channel_block_tx:is_cb(Payment),
-    gen_server:call(?MODULE, {recieve, ID, Payment, MinAmount, ChId, SignedPayment}).
+    gen_server:call(?MODULE, {recieve, ID, MinAmount, ChId, SignedPayment}).
 channel(X) -> X#f.channel.
 read_channel(Key) ->
     F = channel_manager:read(Key),
