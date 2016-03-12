@@ -39,10 +39,10 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     Bet = hd(channel_block_tx:bets(NewCh)),
     %To = (2 * channel_block_tx:bet_to(Bet)) - 1,
     %B = A * To -1,
+    true = (-A == (Amount div 2)),
     ToAmount = 
 	case ID of
 	    Acc1 ->
-		true = (A == (Amount div 2)),
 		if 
 		    Spend -> 1; 
 		    true -> 
@@ -50,7 +50,6 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
 			0 
 		end;
 	    Acc2 ->
-		true = (-A == (Amount div 2)),
 		if 
 		    Spend -> 0; 
 		    true -> 
