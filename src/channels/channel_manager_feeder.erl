@@ -176,6 +176,7 @@ remove_nth(N, Bets) -> remove_nth(N, Bets, []).
 remove_nth(0, [_|Bets], Out) -> lists:reverse(Out) ++ Bets;
 remove_nth(N, [B|Bets], Out) -> remove_nth(N, Bets, [B|Out]).
 
+common(ChId, {secret, Secret}) -> common(ChId, Secret);
 common(ChId, Secret) ->
     io:fwrite("secret is "),
     io:fwrite(Secret),
