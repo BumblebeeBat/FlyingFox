@@ -37,7 +37,7 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     io:fwrite(integer_to_list(Amount)),
     io:fwrite("\n"),
     Bet = hd(channel_block_tx:bets(NewCh)),
-    To = (2 * channel_block_tx:bet_to(Bet)) - 1,
+    %To = (2 * channel_block_tx:bet_to(Bet)) - 1,
     %B = A * To -1,
     true = (A == (Amount div 2)),
     ToAmount = 
@@ -46,14 +46,14 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
 		if 
 		    Spend -> 1; 
 		    true -> 
-			true = B > 0,
+			true = A > 0,
 			0 
 		end;
 	    Acc2 ->
 		if 
 		    Spend -> 0; 
 		    true -> 
-			true = B < 0,
+			true = A < 0,
 			1 
 		end
 	end,
