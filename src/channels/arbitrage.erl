@@ -134,7 +134,7 @@ agree(Tx, Amount, BH) ->
 	    P = channel_block_tx:acc2(CB)
     end,
     ChIdGain = channel_manager:id(P),
-    ChIdLoser = check_loser(Bet, ChIdGain, Amount),
+    ChIdLoser = check_loser(channel_block_tx:bet_code(Bet), ChIdGain, Amount),
     OChannel = channel_manager:read_channel(ChIdLoser),
     A2 = channel_block_tx:amount(OChannel),
     if
