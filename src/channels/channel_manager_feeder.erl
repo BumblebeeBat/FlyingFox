@@ -40,14 +40,11 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     io:fwrite(integer_to_list(Amount)),
     io:fwrite("\n"),
     Bet = hd(channel_block_tx:bets(NewCh)),
+    A = channel_block_tx:bet_amount(Bet),
     To = channel_block_tx:bet_to(Bet),
     %B = A * To -1,
     %true = (-A == (Amount div 2)),
-    case To of
-	1 -> true = (A == (Amount div 2));
-	0 -> true = (-A == (Amount div 2))
-    end,
-    ToAmount = 
+    To = 
 	case ID of
 	    Acc1 ->
 		if 
@@ -64,9 +61,15 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
 			1 
 		end
 	end,
+    case {To, Spend} of
+	{1, true} -> true = (A == (Amount div 2));
+	{0, false} -> true = (A == (Amount div 2));
+	{0, true} -> true = (-A == (Amount div 2));
+	{1, false} -> true = (-A == (Amount div 2))
+    end,
     SecretHash = language:extract_sh(channel_block_tx:bet_code(Bet)),
     Script = language:hashlock(SecretHash),
-    NewCha = channel_block_tx:add_bet(Ch2, A, Script, ToAmount),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce and bet.
+    NewCha = channel_block_tx:add_bet(Ch2, A, Script, To),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce and bet.
     NewCh = NewCha,
     NewF = #f{channel = SignedChannel, unlock = [[28]|F#f.unlock]},
     channel_manager:store(ChId, NewF),
