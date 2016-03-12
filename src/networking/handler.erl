@@ -92,7 +92,7 @@ doit({txs, Txs}) ->
 doit({unlock, ChId, Secret, SignedCh}) ->
     %arbitrage:second_unlock(SignedCh),
     OldCh = channel_manager:read(ChId),
-    BetHash = hash:doit(channel_block_tx:bet_code(hd(channel_block_tx:bets(sign:data(OldCh))))),
+    BetHash = hash:doit(channel_block_tx:bet_code(hd(channel_block_tx:bets(OldCh)))),
     Response = channel_manager_feeder:unlock_hash(ChId, Secret, SignedCh, BetHash),
     io:fwrite(SignedCh),
     %unpack SignedCh to get To
