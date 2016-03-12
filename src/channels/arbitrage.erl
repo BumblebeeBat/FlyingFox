@@ -125,20 +125,19 @@ agree(Tx, Amount, BH) ->
     io:fwrite("A "),
     io:fwrite(integer_to_list(A)),
     io:fwrite("\n"),
-    if
-	A>0 ->
-	    A = Amount div 2, 
-	    P = channel_block_tx:acc1(CB),
-
-	    K = channel_block_tx:acc2(CB);
-	true ->
-	    A = -Amount div 2,
-	    K = channel_block_tx:acc1(CB),
-	    P = channel_block_tx:acc2(CB)
-    end,
+    Acc1 = channel_block_tx:acc1(CB),
+    Acc2 = channel_block_tx:acc2(CB),
+    P = case K of
+	    Acc1 -> Acc2;
+	    Acc2 -> Acc1
+	end,
     ChIdGain = hd(channel_manager:id(P)),
     ChIdLoser = check_loser(channel_block_tx:bet_code(Bet), ChIdGain, Amount),
     OChannel = channel_manager:read_channel(ChIdLoser),
+    Bet2 = bet_find(BH, channel_block_tx:bets(OChannel)),
+    To = (channel_block_tx:bet_to(Bet2) * 2) - 1,
+    Amount = (To * channel_block_tx:bet_amount(Bet) * 2),
+    
     A2 = channel_block_tx:amount(OChannel),
     io:fwrite("A2 "),
     io:fwrite(integer_to_list(A2)),
@@ -147,12 +146,13 @@ agree(Tx, Amount, BH) ->
     io:fwrite(integer_to_list(Amount)),
     io:fwrite("\n"),
     AA = abs(A2),
+    AA = abs(A),
     AA = abs(Amount div 2),
     if
 	A2 > 0 ->
-	    K = channel_block_tx:account1(OChannel);
+	    K = channel_block_tx:acc2(OChannel);
 	true ->
-	    K = channel_block_tx:account2(OChannel)
+	    K = channel_block_tx:acc1(OChannel)
     end,
     ChIdGain.
 check_winner(Bet, ChIdLose, Amount) -> 
