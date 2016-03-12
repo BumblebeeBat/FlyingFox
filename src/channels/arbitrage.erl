@@ -58,7 +58,7 @@ new(Tx, ChIdLose, ChIdGain, Amount) ->
 add(Bet, ChIdLose, ChIdGain, Amount) -> 
     %Make sure we can't add the same triple twice!!
     io:fwrite("Bet code "),
-    io:fwrite(Bet),
+    io:fwrite(packer:pack(Bet)),
     io:fwrite("\n"),
     BH = hash:doit(Bet),
     L = check_hash(BH),
@@ -160,7 +160,7 @@ check_winner2(ChId, Amount, [{_, _, _}|T]) ->
     check_winner2(ChId, Amount, T).
 check_loser(Bet, ChIdLose, Amount) -> 
     io:fwrite("Bet code "),
-    io:fwrite(Bet),
+    io:fwrite(packer:pack(Bet)),
     io:fwrite("\n"),
     BH = hash:doit(Bet),
     L = check_hash(BH),
