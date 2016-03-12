@@ -69,8 +69,8 @@ get(Msg, IP, Port) ->
 	    secrets:add(Secret),
 	    SH = hash:doit(Secret),
 	    internal_handler:got_secret(Secret, IP, Port);
-	is_binary(EM) ->
-	    B = << <<"~>">>/binary, EM/binary >>,
+	X ->
+	    B = << <<"~>">>/binary, X/binary >>,
 	    get_helper(FromId, B)
     end.
 
