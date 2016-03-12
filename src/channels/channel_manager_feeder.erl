@@ -176,7 +176,7 @@ common(ChId, Secret) ->
     BetCode = channel_block_tx:bet_code(Bet),
     Amount = language:valid_secret(Secret, BetCode),
     NewBets = remove_nth(N, Bets),
-    %NewBets = remove_bet(hash:doit(BetCode), Bets),
+    NewBets = remove_bet(hash:doit(BetCode), Bets),
     NewCh = channel_block_tx:replace_bet(OldCh, NewBets),
     io:fwrite("with bet "),
     io:fwrite(packer:pack(NewCh)),
