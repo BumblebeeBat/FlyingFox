@@ -89,7 +89,7 @@ handle_call({unlock_hash, ChId, Secret, SignedCh, BH}, _From, X) ->
     F = channel_manager:read(ChId),
     NewUnlock = replace_n(N, Secret, F#f.unlock),
     %channel_block_tx:add,
-    NewF = #f{channel = SignedCh, unlock = NewUnlock},
+    NewF = #f{channel = SignedCh2, unlock = NewUnlock},
     channel_manager:store(ChId, NewF),
     Out = keys:sign(NewCh),
     {reply, Out, X};
@@ -154,22 +154,37 @@ replace_n(0, New, [_|L], Out) ->
     lists:reverse(Out) ++ [New] ++ L;
 replace_n(N, New, [H|L], Out) -> 
     replace_n(N-1, New, L, [H|Out]).
+remove_bet(_, []) 1=2;
+remove_bet(Hash, [H|T]) -> 
+    A = hash:doit(channel_block_tx:bet_code(H)),
+    if
+	A == Hash -> T;
+	true -> [H|remove_bet(Hash, T)]
+    end.
+	    
 remove_nth(N, Bets) -> remove_nth(N, Bets, []).
 remove_nth(0, [_|Bets], Out) -> lists:reverse(Out) ++ Bets;
 remove_nth(N, [B|Bets], Out) -> remove_nth(N, Bets, [B|Out]).
 
 common(ChId, Secret) ->
-    SecretHash = hash:doit(Secret),
+    %SecretHash = hash:doit(Secret),
     OldCh = read_channel(ChId),
     Bets = channel_block_tx:bets(OldCh),
     N = match_n(SecretHash, Bets),%if the bets were numbered in order, N is the bet we are unlocking.
-    Bet = nth(N, Bets),
+    %Bet = nth(N, Bets),
     A = channel_block_tx:bet_amount(Bet),
     BetCode = channel_block_tx:bet_code(Bet),
-    ToFlip = channel_block_tx:bet_to(Bet),
     Amount = language:valid_secret(Secret, BetCode),
     NewBets = remove_nth(N, Bets),
+    %NewBets = remove_bet(hash:doit(BetCode), Bets),
     NewCh = channel_block_tx:replace_bet(OldCh, NewBets),
+    io:fwrite("with bet "),
+    io:fwrite(packer:pack(NewCh)),
+    io:fwrite("\n"),
+    io:fwrite("without bet "),
+    io:fwrite(packer:pack(OldCh)),
+    io:fwrite("\n"),
+    ToFlip = channel_block_tx:bet_to(Bet),
     C = if 
 	    ToFlip == 0 -> fractions:subtract({f, 1, 1}, Amount);
 	    true -> Amount
