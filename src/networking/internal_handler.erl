@@ -156,7 +156,7 @@ doit({lightning_spend, IP, Port, Partner, Amount}) ->
     Seconds = 30,
     Cost = mail:cost(size(Secret), Seconds),%Msg dosn't have "length"..
     MsgPayment = channel_manager_feeder:spend(ChId, Cost),
-    talker:talk({send, MsgPayment, Partner, Msg, Seconds}, IP, Port),
+    talker:talk({send, MsgPayment, keys:id(), Partner, Msg, Seconds}, IP, Port),
     {ok, SecretHash};
 %doit({unlock_spend, IP, Port, Secret}) ->
 %Ch = channel_manager:create_unlock_hash(ChId, Secret),
@@ -213,7 +213,7 @@ absorb_msgs([H|T], IP, Port, ServerId) ->
 	    {locked_payment, P, ChIdFrom, Amount, SecretHash, BetHash} = Payment,
 	    Return = channel_manager_feeder:recieve_locked_payment(ChIdFrom, P, Amount, SecretHash),
 	    channel_partner:store(ChIdFrom, Return),
-	    talker:talk({locked_payment2, Return, Amount, SecretHash}, IP, Port),
+	    talker:talk({locked_payment2, Return, Amount, SecretHash, BetHash}, IP, Port),
 	    SC = secrets:check(),
 	    case dict:find(SecretHash, SC) of
 		error -> 0;
