@@ -154,7 +154,7 @@ replace_n(0, New, [_|L], Out) ->
     lists:reverse(Out) ++ [New] ++ L;
 replace_n(N, New, [H|L], Out) -> 
     replace_n(N-1, New, L, [H|Out]).
-remove_bet(_, []) 1=2;
+remove_bet(_, []) -> 1=2;
 remove_bet(Hash, [H|T]) -> 
     A = hash:doit(channel_block_tx:bet_code(H)),
     if
@@ -167,11 +167,11 @@ remove_nth(0, [_|Bets], Out) -> lists:reverse(Out) ++ Bets;
 remove_nth(N, [B|Bets], Out) -> remove_nth(N, Bets, [B|Out]).
 
 common(ChId, Secret) ->
-    %SecretHash = hash:doit(Secret),
+    SecretHash = hash:doit(Secret),
     OldCh = read_channel(ChId),
     Bets = channel_block_tx:bets(OldCh),
     N = match_n(SecretHash, Bets),%if the bets were numbered in order, N is the bet we are unlocking.
-    %Bet = nth(N, Bets),
+    Bet = nth(N, Bets),
     A = channel_block_tx:bet_amount(Bet),
     BetCode = channel_block_tx:bet_code(Bet),
     Amount = language:valid_secret(Secret, BetCode),
