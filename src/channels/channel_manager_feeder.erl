@@ -41,19 +41,25 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     io:fwrite("\n"),
     Bet = hd(channel_block_tx:bets(NewCh)),
     A = channel_block_tx:bet_amount(Bet),
-    To = channel_block_tx:bet_to(Bet),
+    BetTo = (2 * channel_block_tx:bet_to(Bet)) - 1,
     %B = A * To -1,
     %true = (-A == (Amount div 2)),
+    io:fwrite("pair is "),
+    io:fwrite(packer:pack({Spend, ID})),
+    io:fwrite("\n"),
     To = 
 	case ID of
 	    Acc1 ->
+		A = (BetTo * Amount div 2), %good/bad :(
 		if 
-		    Spend -> 1; 
+		    Spend -> 
+			1; 
 		    true -> 
 			true = A > 0,
 			0 
 		end;
 	    Acc2 ->
+		A = -(BetTo * Amount div 2),
 		if 
 		    Spend -> 0; 
 		    true -> 
@@ -61,19 +67,6 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
 			1 
 		end
 	end,
-    io:fwrite("pair is "),
-    io:fwrite(packer:pack({To, Spend, ID})),
-    io:fwrite("\n"),
-    case {To, Spend, ID} of
-	{1, true, Acc1} -> true = (A == (Amount div 2)); %good
-	{0, false, Acc1} -> true = (-A == (Amount div 2));
-	{0, true, Acc1} -> true = (A == (Amount div 2));
-	{1, false, Acc1} -> true = (-A == (Amount div 2));
-	{1, true, Acc2} -> true = (-A == (Amount div 2));
-	{0, false, Acc2} -> true = (A == (Amount div 2));
-	{0, true, Acc2} -> true = (-A == (Amount div 2));
-	{1, false, Acc2} -> true = (-A == (Amount div 2)) %good
-    end,
     SecretHash = language:extract_sh(channel_block_tx:bet_code(Bet)),
     Script = language:hashlock(SecretHash),
     NewCha = channel_block_tx:add_bet(Ch2, A, Script, To),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce and bet.
