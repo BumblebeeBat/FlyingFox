@@ -135,8 +135,8 @@ agree(Tx, Amount, BH) ->
     ChIdLoser = check_loser(channel_block_tx:bet_code(Bet), ChIdGain, Amount),
     OChannel = channel_manager:read_channel(ChIdLoser),
     Bet2 = bet_find(BH, channel_block_tx:bets(OChannel)),
-    To = (channel_block_tx:bet_to(Bet2) * 2) - 1,
-    Amount = (To * channel_block_tx:bet_amount(Bet) * 2),
+    To2 = (channel_block_tx:bet_to(Bet2) * 2) - 1,
+    Amount = (To2 * channel_block_tx:bet_amount(Bet) * 2),
     
     A2 = channel_block_tx:amount(OChannel),
     io:fwrite("A2 "),
