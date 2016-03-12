@@ -49,22 +49,11 @@ new(Tx, ChIdLose, ChIdGain, Amount) ->
     Code = channel_block_tx:bet_code(Bet),
     ChId1 = channel_block_tx:acc1(CB),
     ChId2 = channel_block_tx:acc2(CB),
-    if
-	Amount > 0 -> 
-	    IdLose = ChId1,
-	    IdGain = ChId2;
-	Amount < 0 -> 
-	    IdLose = ChId2,
-	    IdGain = ChId1
+    IdLose = if
+	Amount > 0 -> ChId1;
+	Amount < 0 -> ChId2
     end,
-    io:fwrite("chidgain "),
-    io:fwrite(integer_to_list(hd(channel_manager:id(IdGain)))),
-    io:fwrite("\n"),
-    io:fwrite("chidgain should be "),
-    io:fwrite(integer_to_list(ChIdGain)),
-    io:fwrite("\n"),
     ChIdLose = hd(channel_manager:id(IdLose)),
-    ChIdGain = hd(channel_manager:id(IdGain)),
     add(Code, ChIdLose, ChIdGain, Amount).
 add(Bet, ChIdLose, ChIdGain, Amount) -> 
     %Make sure we can't add the same triple twice!!
