@@ -1,3 +1,9 @@
+Arbitrage was made incorrectly. We can't store by the hash of the bet, because the 2 bets aren't always identical.
+The server is account2 on both bets, so the bets are inverses.
+
+Probably we should store by the hash of the secret for now.
+Later when we have arbitrary bets, this will have to be decided. Maybe I should have a seperate bit to inverse the bet, that way both sides can be identical?
+
 need to use the arbitrage gen_server, in channels.
 Use it to keep track of which pairs of channels are linked.
 If 2 channels have linked state, it is important that we remove the links in the right order, or else we could get robbed.

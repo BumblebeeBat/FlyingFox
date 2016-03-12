@@ -92,8 +92,8 @@ hashlock(ChId, Amount, SecretHash) ->
             Acc1 -> 1;
             Acc2 -> 0
         end,
-    Script = language:hashlock(MyAccount, SecretHash),
-    keys:sign(channel_block_tx:add_bet(Ch2, Amount div 2, Script)).
+    Script = language:hashlock(SecretHash),
+    keys:sign(channel_block_tx:add_bet(Ch2, Amount div 2, Script, MyAccount)).
 
 
 test() ->    
@@ -131,12 +131,23 @@ test() ->
     Amount = -200,
     Tx5 = hashlock(S, Amount, SH),
     Tx6 = sign:sign_tx(Tx5, Pub, Priv, tx_pool:accounts()),%partner runs recieve_locked_payment/3, and returns Tx6
+    io:fwrite("E is "),
+    io:fwrite(packer:pack(element(2, element(2, read(S))))),
+    io:fwrite("\n"),
+
     channel_manager_feeder:spend_locked_payment(S, Tx6, Amount, SH),%we absorb Tx6.
     Tx7 = channel_manager_feeder:create_unlock_hash(S, secrets:read(SH)),
     BH = hash:doit(channel_block_tx:bet_code(hd(channel_block_tx:bets(sign:data(Tx6))))),
     Tx8 = sign:sign_tx(Tx7, Pub, Priv, tx_pool:accounts()),%partner runs unlock_hash/3 and returns Tx8
+    io:fwrite("E is "),
+    io:fwrite(packer:pack(element(2, element(2, read(S))))),
+    io:fwrite("\n"),
+
     channel_manager_feeder:unlock_hash(S, secrets:read(SH), Tx8, BH),
     E = element(2, element(2, read(S))),
+    io:fwrite("E is "),
+    io:fwrite(packer:pack(element(2, element(2, read(S))))),
+    io:fwrite("\n"),
     E = {channel_block,0,Partner,-3198,5,[],S,false,259,0,0,0},
     success.
 			 

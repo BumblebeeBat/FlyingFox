@@ -6,7 +6,7 @@
 %#signed{data = #signed_channel_block{channel_block = SignedCB, fee = 100}, sig1 = signature}.
 
 -module(channel_block_tx).
--export([doit/7, origin_tx/3, channel/7, channel_block/5, channel_block/6, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1, publish_channel_block/3, make_signed_cb/4, reveal_union/4, slash_bet/1, make_bet/2, acc1/1, acc2/1, amount/1, bets/1, fast/1, expiration/1, nlock/1, fee/1, add_bet/3, bet_code/1, bet_amount/1, update/3, is_cb/1, channel_block_from_channel/8, replace_bet/2, test/0]).
+-export([doit/7, origin_tx/3, channel/7, channel_block/5, channel_block/6, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1, publish_channel_block/3, make_signed_cb/4, reveal_union/4, slash_bet/1, make_bet/2, acc1/1, acc2/1, amount/1, bets/1, fast/1, expiration/1, nlock/1, fee/1, add_bet/4, bet_code/1, bet_amount/1, bet_to/1, update/3, is_cb/1, channel_block_from_channel/8, replace_bet/2, test/0]).
 -record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0, fee = 0}).
 is_cb(CB) -> is_record(CB, channel_block).
 acc1(CB) -> CB#channel_block.acc1.
@@ -21,13 +21,14 @@ fee(Ch) -> Ch#channel_block.fee.
 nonce(X) -> X#channel_block.nonce.
 delay(X) -> X#channel_block.delay.
 -record(signed_cb, {acc = 0, nonce = 0, channel_block = #channel_block{}, fee = 0}).
--record(bet, {amount = 0, code = language:assemble([crash])}).%code is like scriptpubkey from bitcoin.
+-record(bet, {amount = 0, code = language:assemble([crash]), to = 0}).%code is like scriptpubkey from bitcoin.
 bet_code(Bet) -> Bet#bet.code.
 bet_amount(Bet) -> Bet#bet.amount.
+bet_to(Bet) -> Bet#bet.to.
 -record(tc, {acc1 = 0, acc2 = 0, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
-add_bet(CB, Amount, Code) ->
+add_bet(CB, Amount, Code, To) ->
     Bets = CB#channel_block.bets,
-    NewBets = [#bet{amount = Amount, code = Code}|Bets],
+    NewBets = [#bet{amount = Amount, code = Code, to = To}|Bets],
     replace_bet(CB, NewBets).
 replace_bet(CB, NewBets) ->
     update(CB, 0, 0, NewBets, CB#channel_block.fast, CB#channel_block.delay, CB#channel_block.expiration, CB#channel_block.nlock, CB#channel_block.fee).
@@ -205,14 +206,16 @@ bet_results([B|Bets], [R|Revealed], BA, {Win1, Win2, Loss}) ->
     TooSmall2 = fractions:less_than(Del, fractions:new(0, 1)),
     TooSmall3 = fractions:less_than(Y, fractions:new(0, 1)),
     TooBig = fractions:less_than(fractions:new(1, 1), X + Del),
+    D = fractions:multiply_int(Del, B#bet.amount),
+    More1 = fractions:multiply_int(X, B#bet.amount),
+    More2 = fractions:multiply_int(Y, B#bet.amount),
     Out = if
 	      ((TooSmall1 or TooSmall2) or (TooSmall3 or TooBig)) -> 
 		  {Win1, Win2, Loss + B#bet.amount};
+	      B#bet.to == 0 ->
+		  {Win1 + More1, Win2 + More2, Loss + D};
 	      true ->
-		  D = fractions:multiply_int(Del, B#bet.amount),
-		  More1 = fractions:multiply_int(X, B#bet.amount),
-		  More2 = fractions:multiply_int(Y, B#bet.amount),
-		  {Win1 + More1, Win2 + More2, Loss + D}
+		  {Win1 + More2, Win2 + More1, Loss + D}
 	  end,
     bet_results(Bets, Revealed, BA, Out).
 code(X) -> code(X#channel_block.bets, []).

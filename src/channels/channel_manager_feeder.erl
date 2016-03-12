@@ -56,8 +56,8 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
 		end
 	end,
     SecretHash = language:extract_sh(channel_block_tx:bet_code(hd(channel_block_tx:bets(NewCh)))),
-    Script = language:hashlock(ToAmount, SecretHash),
-    NewCha = channel_block_tx:add_bet(Ch2, A, Script),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce and bet.
+    Script = language:hashlock(SecretHash),
+    NewCha = channel_block_tx:add_bet(Ch2, A, Script, ToAmount),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce and bet.
     NewCh = NewCha,
     NewF = #f{channel = SignedChannel, unlock = [[28]|F#f.unlock]},
     channel_manager:store(ChId, NewF),
@@ -151,10 +151,16 @@ common(ChId, Secret) ->
     Bet = nth(N, Bets),
     A = channel_block_tx:bet_amount(Bet),
     BetCode = channel_block_tx:bet_code(Bet),
+    ToFlip = channel_block_tx:bet_to(Bet),
     Amount = language:valid_secret(Secret, BetCode),
     NewBets = remove_nth(N, Bets),
     NewCh = channel_block_tx:replace_bet(OldCh, NewBets),
-    NewNewCh = channel_block_tx:update(NewCh, Amount * A, 1),%
+    C = if 
+	    ToFlip == 0 -> fractions:subtract({f, 1, 1}, Amount);
+	    true -> Amount
+	end,
+    D = fractions:multiply_int(C, A),
+    NewNewCh = channel_block_tx:update(NewCh, D, 1),%
     %we need to change amount.
     {keys:sign(NewNewCh), N, BetCode}.
 create_unlock_hash(ChId, Secret) ->
