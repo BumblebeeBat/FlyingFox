@@ -177,6 +177,9 @@ remove_nth(0, [_|Bets], Out) -> lists:reverse(Out) ++ Bets;
 remove_nth(N, [B|Bets], Out) -> remove_nth(N, Bets, [B|Out]).
 
 common(ChId, Secret) ->
+    io:fwrite("secret is "),
+    io:fwrite(Secret),
+    io:fwrite("\n"),
     SecretHash = hash:doit(Secret),
     OldCh = read_channel(ChId),
     Bets = channel_block_tx:bets(OldCh),
