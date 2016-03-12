@@ -140,8 +140,14 @@ agree(Tx, Amount, BH) ->
     ChIdLoser = check_loser(channel_block_tx:bet_code(Bet), ChIdGain, Amount),
     OChannel = channel_manager:read_channel(ChIdLoser),
     A2 = channel_block_tx:amount(OChannel),
+    io:fwrite("A2 "),
+    io:fwrite(integer_to_list(A2)),
+    io:fwrite("\n"),
+    io:fwrite("Amount "),
+    io:fwrite(integer_to_list(Amount)),
+    io:fwrite("\n"),
     AA = abs(A2),
-    AA = abs(Amount),
+    AA = abs(Amount div 2),
     if
 	A2 > 0 ->
 	    K = channel_block_tx:account1(OChannel);
