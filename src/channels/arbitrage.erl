@@ -115,7 +115,7 @@ agree(Tx, Amount, BH) ->
     io:fwrite("\n"),
     Bet = bet_find(BH, channel_block_tx:bets(CB)),
     To = (channel_block_tx:bet_to(Bet) * 2) - 1,
-    A = channel_block_tx:bet_amount(Bet) * To,
+    A = channel_block_tx:bet_amount(Bet) * To * -1,
     io:fwrite("Amount "),
     io:fwrite(integer_to_list(Amount)),
     io:fwrite("\n"),
