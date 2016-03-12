@@ -79,6 +79,9 @@ pop3(From, M) ->
 	    Msg = M#msg.msg,
 	    T = ((erlang:monotonic_time() - M#msg.start) div 1000) + 2000000,%2 second fee automatically.
 						%T = timer:now_diff(erlang:monotonic_time(), M#msg.start) + 2000000,%2 second fee automatically.
+	    io:fwrite("M is "),
+	    io:fwrite(packer:pack(M)),
+	    io:fwrite("\n"),
 	    Cost = cost(size(Msg), M#msg.lasts),
 	    R = (M#msg.lasts * 1000000),
 	    Refund = ((R - T) * Cost) div R,
