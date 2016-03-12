@@ -149,10 +149,10 @@ agree(Tx, Amount, BH) ->
     AA = abs(A),
     AA = abs(Amount div 2),
     if
-	A2 > 0 ->
-	    K = channel_block_tx:acc2(OChannel);
+	To2 > 0 ->
+	    K = channel_block_tx:acc1(OChannel);
 	true ->
-	    K = channel_block_tx:acc1(OChannel)
+	    K = channel_block_tx:acc2(OChannel)
     end,
     ChIdGain.
 check_winner(Bet, ChIdLose, Amount) -> 
