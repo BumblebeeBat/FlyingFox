@@ -71,7 +71,8 @@ get(Msg, IP, Port) ->
 	    internal_handler:got_secret(Secret, IP, Port);
 	is_binary(EM) ->
 	    B = << <<"~>">>/binary, EM/binary >>,
-	    get_helper(FromId, B);
+	    get_helper(FromId, B)
+    end.
 
 get_helper(From, Message) -> gen_server:cast(?MODULE, {get, From, Message}).
 peers() -> gen_server:call(?MODULE, peers).
