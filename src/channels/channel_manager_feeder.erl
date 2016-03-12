@@ -62,17 +62,17 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
 		end
 	end,
     io:fwrite("pair is "),
-    io:fwrite(packer:pack({To, Spend})),
+    io:fwrite(packer:pack({To, Spend, ID})),
     io:fwrite("\n"),
     case {To, Spend, ID} of
-	{1, true, Acc1} -> true = (A == (Amount div 2));
+	{1, true, Acc1} -> true = (A == (Amount div 2)); %good
 	{0, false, Acc1} -> true = (-A == (Amount div 2));
 	{0, true, Acc1} -> true = (A == (Amount div 2));
 	{1, false, Acc1} -> true = (-A == (Amount div 2));
 	{1, true, Acc2} -> true = (-A == (Amount div 2));
 	{0, false, Acc2} -> true = (A == (Amount div 2));
 	{0, true, Acc2} -> true = (-A == (Amount div 2));
-	{1, false, Acc2} -> true = (A == (Amount div 2))
+	{1, false, Acc2} -> true = (-A == (Amount div 2)) %good
     end,
     SecretHash = language:extract_sh(channel_block_tx:bet_code(Bet)),
     Script = language:hashlock(SecretHash),
