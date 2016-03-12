@@ -44,8 +44,8 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     %B = A * To -1,
     %true = (-A == (Amount div 2)),
     case To of
-	0 -> true = (-A == (Amount div 2));
-	1 -> true = (A == (Amount div 2))
+	1 -> true = (-A == (Amount div 2));
+	0 -> true = (A == (Amount div 2))
     end,
     ToAmount = 
 	case ID of
