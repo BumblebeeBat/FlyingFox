@@ -1,6 +1,6 @@
 -module(internal_handler).
 
--export([init/3, handle/2, terminate/3, doit/1]).
+-export([init/3, handle/2, terminate/3, doit/1, got_secret/3]).
 %example of talking to this handler:
 %httpc:request(post, {"http://127.0.0.1:3011/", [], "application/octet-stream", packer:pack({pubkey})}, [], []).
 %curl -i -d '[-6,"test"]' http://localhost:3011
@@ -199,10 +199,6 @@ got_secret(Secret, IP, Port) ->
 absorb_msgs([], _, _, _) -> ok;
 absorb_msgs([H|T], IP, Port, ServerId) -> 
     case talker:talk({pop, keys:id(), H}, IP, Port) of
-	{ok, {secret, Secret}} ->
-	    secrets:add(Secret),
-	    SH = hash:doit(Secret),
-	    got_secret(Secret, IP, Port);
 	{ok, {unlock, Payment}} ->
 	    {unlock, Payment2, ChId, Amount, Secret} = Payment,
 	    
@@ -227,7 +223,7 @@ absorb_msgs([H|T], IP, Port, ServerId) ->
 	    ChId = hd(channel_manager:id(ServerId)),
 	    channel_partner:store(ChId, NewCh),
 	    talker:talk({update_channel, Refund, NewCh}, IP, Port),
-	    inbox:get(EMsg);
+	    inbox:get(EMsg, IP, Port);
 	X -> 
 	    io:fwrite("internal handler get msg bad "),
 	    io:fwrite(packer:pack(X)),
