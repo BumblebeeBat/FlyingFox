@@ -38,8 +38,8 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     io:fwrite("\n"),
     Bet = hd(channel_block_tx:bets(NewCh)),
     To = (2 * channel_block_tx:bet_to(Bet)) - 1,
-    B = A * To -1,
-    true = (B == (Amount div 2)),
+    %B = A * To -1,
+    true = (A == (Amount div 2)),
     ToAmount = 
 	case ID of
 	    Acc1 ->
@@ -51,7 +51,7 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
 		end;
 	    Acc2 ->
 		if 
-		    Spend -> 2; 
+		    Spend -> 0; 
 		    true -> 
 			true = B < 0,
 			1 
