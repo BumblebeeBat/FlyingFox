@@ -16,6 +16,9 @@ handle_call({new_channel, ChId, Channel, Accounts}, _From, X) ->
 handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _From, X) ->
     NewCh = sign:data(SignedChannel),
     true = channel_block_tx:is_cb(NewCh),
+    io:fwrite("chid "),
+    io:fwrite(packer:pack(ChId)),
+    io:fwrite("\n"),
     F = channel_manager:read(ChId),
     Ch = sign:data(F#f.channel),
     NewAmount = channel_block_tx:amount(NewCh),
