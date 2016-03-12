@@ -149,6 +149,12 @@ read_channel(Key) ->
 match_n(X, Bets) -> match_n(X, Bets, 0).
 match_n(X, [Bet|Bets], N) ->
     Y = language:extract_sh(channel_block_tx:bet_code(Bet)),
+    io:fwrite("match n "),
+    io:fwrite(packer:pack(Y)),
+    io:fwrite("\n"),
+    io:fwrite("searching for "),
+    io:fwrite(packer:pack(X)),
+    io:fwrite("\n"),
     if
         X == Y -> N;
         true -> match_n(X, Bets, N+1)
