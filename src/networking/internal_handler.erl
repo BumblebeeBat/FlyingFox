@@ -148,15 +148,15 @@ doit({lightning_spend, IP, Port, Partner, Amount}) ->
     io:fwrite(packer:pack(BetHash)),
     io:fwrite("\n"),
     channel_partner:store(ChId, Payment),
-    {ok, SignedCh} = talker:talk({locked_payment, keys:id(), Partner, Payment, Amount, SecretHash, BetHash}, IP, Port),
-    channel_manager_feeder:spend_locked_payment(ChId, SignedCh, Amount, SecretHash),
     Acc = block_tree:account(Partner),
     Secret = secrets:read(SecretHash),
     Msg = encryption:send_msg({secret, Secret}, accounts:pub(Acc)),
-    Seconds = 30,
-    Cost = mail:cost(size(Secret), Seconds),%Msg dosn't have "length"..
-    MsgPayment = channel_manager_feeder:spend(ChId, Cost),
-    talker:talk({send, MsgPayment, keys:id(), Partner, Msg, Seconds}, IP, Port),
+    {ok, SignedCh} = talker:talk({locked_payment, keys:id(), Partner, Payment, Amount, SecretHash, BetHash, Msg}, IP, Port),
+    channel_manager_feeder:spend_locked_payment(ChId, SignedCh, Amount, SecretHash),
+    %Seconds = 30,
+    %Cost = mail:cost(size(Secret), Seconds),%Msg dosn't have "length"..
+    %MsgPayment = channel_manager_feeder:spend(ChId, Cost),
+    %talker:talk({send, MsgPayment, keys:id(), Partner, Msg, Seconds}, IP, Port),
     {ok, SecretHash};
 %doit({unlock_spend, IP, Port, Secret}) ->
 %Ch = channel_manager:create_unlock_hash(ChId, Secret),
@@ -206,15 +206,13 @@ absorb_msgs([H|T], IP, Port, ServerId) ->
 	    channel_partner:store(ChId, Return),
 	    talker:talk({unlock2, Return, ChId, Secret}, IP, Port);
 	{ok, {locked_payment, Payment}} ->
-	    {locked_payment, P, ChIdFrom, Amount, SecretHash, BetHash} = Payment,
+	    {locked_payment, P, ChIdFrom, Amount, SecretHash, BetHash, Emsg} = Payment,
 	    Return = channel_manager_feeder:recieve_locked_payment(ChIdFrom, P, Amount, SecretHash),
 	    channel_partner:store(ChIdFrom, Return),
 	    talker:talk({locked_payment2, Return, Amount, SecretHash, BetHash}, IP, Port),
-	    SC = secrets:check(),
-	    case dict:find(SecretHash, SC) of
-		error -> 0;
-		{ok, Val} -> got_secret(Val, IP, Port)
-	    end;
+	    M = encryption:get_msg(Emsg),
+	    Secret = encryption:msg(M),
+	    got_secret(Secret, IP, Port);
 	{ok, {pop_response, EMsg, Refund}} ->
 	    io:fwrite("internal handler recieved good msg "),
 	    io:fwrite(packer:pack(EMsg)),
@@ -223,7 +221,7 @@ absorb_msgs([H|T], IP, Port, ServerId) ->
 	    ChId = hd(channel_manager:id(ServerId)),
 	    channel_partner:store(ChId, NewCh),
 	    talker:talk({update_channel, Refund, NewCh}, IP, Port),
-	    inbox:get(EMsg, IP, Port);
+	    inbox:get(EMsg);
 	X -> 
 	    io:fwrite("internal handler get msg bad "),
 	    io:fwrite(packer:pack(X)),

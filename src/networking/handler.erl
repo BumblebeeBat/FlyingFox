@@ -54,7 +54,7 @@ doit({channel_recieve, ChId, MinAmount, Ch}) ->
     Response = channel_manager_feeder:recieve(ChId, MinAmount, Ch),
     channel_partner:store(ChId, Response),
     {ok, Response};
-doit({locked_payment, From, To, Payment, Amount, SecretHash, BetHash}) ->
+doit({locked_payment, From, To, Payment, Amount, SecretHash, BetHash, Emsg}) ->
     ChIdFrom = hd(channel_manager:id(From)),
     Return = channel_manager_feeder:recieve_locked_payment(ChIdFrom, Payment, Amount, SecretHash),
     channel_partner:store(ChIdFrom, Return),
@@ -75,7 +75,7 @@ doit({locked_payment, From, To, Payment, Amount, SecretHash, BetHash}) ->
     BetHash2 = BetHash,
     arbitrage:new(Payment, ChIdFrom, ChIdTo, Amount),
     channel_partner:store(ChIdTo, Payment2),
-    M = {locked_payment, Payment2, ChIdTo, Amount, SecretHash, BetHash},
+    M = {locked_payment, Payment2, ChIdTo, Amount, SecretHash, BetHash, Emsg},
     mail:internal_send(To, M, locked_payment),
     {ok, Return};
 %locked_payment2 is the response from a message we sent to their mail box.

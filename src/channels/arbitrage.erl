@@ -125,13 +125,13 @@ agree(Tx, Amount, BH) ->
     if
 	A>0 ->
 	    A = Amount div 2, 
-	    P = channel_block_tx:account1(CB),
+	    P = channel_block_tx:acc1(CB),
 
-	    K = channel_block_tx:account2(CB);
+	    K = channel_block_tx:acc2(CB);
 	true ->
 	    A = -Amount div 2,
-	    K = channel_block_tx:account1(CB),
-	    P = channel_block_tx:account2(CB)
+	    K = channel_block_tx:acc1(CB),
+	    P = channel_block_tx:acc2(CB)
     end,
     ChIdGain = channel_manager:id(P),
     ChIdLoser = check_loser(Bet, ChIdGain, Amount),

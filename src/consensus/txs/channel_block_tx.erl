@@ -103,7 +103,7 @@ creator([SignedTx|T], Id) ->
     end.
 bets_sum(X) -> bets_sum(X, 0).
 bets_sum([], X) -> X;
-bets_sum([Tx|Txs], X) -> bets_sum(Txs, X+Tx#bet.amount).
+bets_sum([Tx|Txs], X) -> bets_sum(Txs, X+abs(Tx#bet.amount)).
 channel_block(Id, Amount, Nonce, Delay, Fee) ->
 channel_block(Id, Amount, Nonce, Delay, Fee, []).
 channel_block(Id, Amount, Nonce, Delay, Fee, Bets) ->
