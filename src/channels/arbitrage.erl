@@ -167,6 +167,9 @@ check_loser(Bet, ChIdLose, Amount) ->
     io:fwrite("L is "),
     io:fwrite(packer:pack(L)),
     io:fwrite("\n"),
+    io:fwrite("Loser is "),
+    io:fwrite(integer_to_list(ChIdLose)),
+    io:fwrite("\n"),
     check_loser2(ChIdLose, Amount, L).
 check_loser2(_, _, []) -> 1=2;
 check_loser2(ChId, Amount, [{ChIdLoser, ChId, Amount}|T]) -> 
