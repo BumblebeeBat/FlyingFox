@@ -189,12 +189,12 @@ common(ChId, Secret) ->
     NewBets = remove_bet(hash:doit(BetCode), Bets),
     NewCh = channel_block_tx:replace_bet(OldCh, NewBets),
     true = channel_block_tx:nonce(OldCh) < channel_block_tx:nonce(NewCh),
-    io:fwrite("with bet "),
-    io:fwrite(packer:pack(NewCh)),
-    io:fwrite("\n"),
-    io:fwrite("without bet "),
-    io:fwrite(packer:pack(OldCh)),
-    io:fwrite("\n"),
+    %io:fwrite("with bet "),
+    %io:fwrite(packer:pack(NewCh)),
+    %io:fwrite("\n"),
+    %io:fwrite("without bet "),
+    %io:fwrite(packer:pack(OldCh)),
+    %io:fwrite("\n"),
     ToFlip = channel_block_tx:bet_to(Bet),
     C = if 
 	    ToFlip == 0 -> fractions:subtract({f, 1, 1}, Amount);

@@ -124,12 +124,12 @@ agree(Tx, Amount, BH) ->
     io:fwrite("\n"),
     if
 	A>0 ->
-	    A = Amount, 
+	    A = Amount div 2, 
 	    P = channel_block_tx:account1(CB),
 
 	    K = channel_block_tx:account2(CB);
 	true ->
-	    A = -Amount,
+	    A = -Amount div 2,
 	    K = channel_block_tx:account1(CB),
 	    P = channel_block_tx:account2(CB)
     end,

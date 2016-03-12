@@ -43,8 +43,8 @@ update(CB, Amount, Nonce, NewBets, Fast, Delay, Expiration, Nlock, Fee) ->
     TCBA = CB#channel_block.amount,
     %StartAmount = CB1C + CB2C,
 
-    true = CB1C - TCBA - BetAmount > -1,
-    true = CB2C + TCBA - BetAmount > -1,
+    true = ((CB1C - TCBA - BetAmount) > -1),
+    true = ((CB2C + TCBA - BetAmount) > -1),
     
     Height = block_tree:height(),
     true = (CB#channel_block.expiration == 0) or (CB#channel_block.expiration > Height),    
