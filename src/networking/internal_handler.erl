@@ -224,7 +224,7 @@ absorb_msgs([H|T], IP, Port, ServerId) ->
 	    io:fwrite(packer:pack(EMsg)),
 	    io:fwrite("\n"),
 	    NewCh = channel_manager_feeder:recieve(hd(channel_manager:id(ServerId)), 0, Refund),
-	    ChId = hd(channel_manger:id(ServerId)),
+	    ChId = hd(channel_manager:id(ServerId)),
 	    channel_partner:store(ChId, NewCh),
 	    talker:talk({update_channel, Refund, NewCh}, IP, Port),
 	    inbox:get(EMsg);
