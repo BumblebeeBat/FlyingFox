@@ -72,7 +72,7 @@ doit({locked_payment, From, To, Payment, Amount, SecretHash, BetHash}) ->
     io:fwrite("hash on server "),
     io:fwrite(packer:pack(BetHash2)),
     io:fwrite("\n"),
-    BetHash2 = base64:decode(BetHash),
+    BetHash2 = BetHash,
     arbitrage:new(Payment, ChIdFrom, ChIdTo, Amount),
     channel_partner:store(ChIdTo, Payment2),
     M = {locked_payment, Payment2, ChIdFrom, Amount, SecretHash, BetHash},
