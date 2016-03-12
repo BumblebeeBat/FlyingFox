@@ -57,8 +57,8 @@ new(Tx, ChIdLose, ChIdGain, Amount) ->
 	    IdLose = ChId2,
 	    IdGain = ChId1
     end,
-    ChIdLose = channel_manager:id(IdLose),
-    ChIdGain = channel_manager:id(IdGain),
+    ChIdLose = hd(channel_manager:id(IdLose)),
+    ChIdGain = hd(channel_manager:id(IdGain)),
     add(Code, ChIdLose, ChIdGain, Amount).
 add(Bet, ChIdLose, ChIdGain, Amount) -> 
     %Make sure we can't add the same triple twice!!
