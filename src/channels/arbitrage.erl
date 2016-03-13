@@ -103,6 +103,9 @@ not_in(Hash, [H|T]) ->
 bet_find(BH, []) -> 1=2;
 bet_find(BH, [H|T]) -> 
     A = hash:doit(channel_block_tx:bet_code(H)),
+    io:fwrite("bet find found "),
+    io:fwrite(packer:pack(A)),
+    io:fwrite("\n"),
     if
 	A == BH -> H;
 	true -> bet_find(BH, T)
@@ -113,6 +116,9 @@ agree(Tx, Amount, BH) ->
     %["signed",["channel_block",0,1,-500,2,[-6,["bet",-500,[-6,0,"/rmUU2AW8ecM6TSQbyIhuc/0GWW9RLzNNSFvx/5NONY=",35,17,["f",0,1],["f",1,1],["integer",2],18,["f",0,1],["f",1,2],["integer",1],19]]],24000,false,259,0,0,0],"TUVVQ0lBR0JnL0RsZTJ1L29LckM3R01KMm9Gemhrc0xSaEpkNm5TV2dTMzdwNkVaQWlFQTNmZG41Y3JYZmw4RnVXWDNINkMyeDlvZkFSQU56bzBRaVpmUDhsZkZ6a0U9",[-6],[-6]]
     K = keys:id(),
     CB = sign:data(Tx),
+    io:fwrite("search for "),
+    io:fwrite(packer:pack(BH)),
+    io:fwrite("\n"),
     io:fwrite("bets are "),
     io:fwrite(packer:pack(channel_block_tx:bets(CB))),
     io:fwrite("\n"),
