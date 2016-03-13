@@ -1,6 +1,6 @@
 -module(channel_manager_feeder).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, recieve/3,recieve_account/3,channel/1,recieve_locked_payment/4,spend_locked_payment/4,spend/2,new_channel/3,create_unlock_hash/2,spend_account/2,read_channel/1,unlock_hash/3]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, recieve/3,recieve_account/3,channel/1,recieve_locked_payment/4,spend_locked_payment/4,spend/2,new_channel/3,create_unlock_hash/2,spend_account/2,read_channel/1,unlock_hash/3,common/2]).
 -record(f, {channel = [], unlock = []}).
 init(ok) -> {ok, []}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).

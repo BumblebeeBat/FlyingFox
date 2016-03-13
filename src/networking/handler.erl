@@ -105,9 +105,12 @@ doit({unlock, ChId, Secret, SignedCh}) ->
     mail:internal_send(To, M, unlock),
     channel_partner:store(ChId, Response),
     {ok, Response};
-doit({unlock2, SignedCh, ChId, Secret, BH}) ->
+doit({unlock2, SignedCh, ChId, Secret}) ->
     %arbitrage:second_unlock(SignedCh),
-    channel_manager_feeder:unlock_hash(ChId, Secret, BH, SignedCh),
+    %channel_block_tx:bets(channel_manager_feeder:read_channel(ChId)),
+    {_, _, BetCode} = channel_manager_feeder:common(ChId, Secret),
+    BH = hash:doit(BetCode),
+    channel_manager_feeder:unlock_hash(ChId, Secret, SignedCh),
     arbitrage:delete(SignedCh, BH),
     {ok, 0};
 doit({register, Payment, Acc}) ->
