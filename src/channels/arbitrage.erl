@@ -165,7 +165,7 @@ check_winner2(ChId, Amount, [{ChId, ChIdGain, Amount}|T]) ->
     ChIdGain;
 check_winner2(ChId, Amount, [{_, _, _}|T]) -> 
     check_winner2(ChId, Amount, T).
-check_loser(Bet, ChIdLose, Amount) -> 
+check_loser(Bet, ChId, Amount) -> 
     io:fwrite("Bet code "),
     io:fwrite(packer:pack(Bet)),
     io:fwrite("\n"),
@@ -175,9 +175,9 @@ check_loser(Bet, ChIdLose, Amount) ->
     io:fwrite(packer:pack(L)),
     io:fwrite("\n"),
     io:fwrite("Loser is "),
-    io:fwrite(integer_to_list(ChIdLose)),
+    io:fwrite(integer_to_list(ChId)),
     io:fwrite("\n"),
-    check_loser2(ChIdLose, Amount, L).
+    check_loser2(ChId, Amount, L).
 check_loser2(_, _, []) -> 1=2;
 check_loser2(ChId, Amount, [{ChIdLoser, ChId, Amount}|T]) -> 
     ChIdLoser;

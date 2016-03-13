@@ -91,12 +91,17 @@ doit({txs, Txs}) ->
     {ok, 0};
 doit({unlock, ChId, Secret, SignedCh}) ->
     %arbitrage:second_unlock(SignedCh),
-    %OldCh = channel_manager:read_channel(ChId),
-    %BetHash = hash:doit(channel_block_tx:bet_code(hd(channel_block_tx:bets(OldCh)))),
+    OldCh = channel_manager:read_channel(ChId),
+    Bets = channel_block_tx:bets(OldCh),
+
     Response = channel_manager_feeder:unlock_hash(ChId, Secret, SignedCh),
-    %io:fwrite(SignedCh),
-    %unpack SignedCh to get To
-    To = 0,
+    SH = hash:doit(Secret),
+    BetCode = language:hashlock(SH),
+    BH = hash:doit(BetCode),
+    Bet = arbitrage:bet_find(BH, Bets),
+    Amount = channel_block_tx:bet_amount(Bet),
+    L = arbitrage:check_hash(BH),%[{ChIdLose, ChIdGain, Amount}...]
+    To = arbitrage:check_loser(Bet, ChId, Amount),
     ChId2 = hd(channel_manager:id(To)),
     Payment2 = channel_manager_feeder:create_unlock_hash(ChId2, Secret),
     channel_partner:store(ChId2, Payment2),
