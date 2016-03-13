@@ -81,7 +81,8 @@ handle_call({unlock_hash, ChId, Secret, SignedCh}, _From, X) ->
     NewCh = sign:data(SignedCh2),
     NewCh = sign:data(SignedCh),
     F = channel_manager:read(ChId),
-    NewUnlock = replace_n(N, Secret, F#f.unlock),
+    %NewUnlock = replace_n(N, Secret, F#f.unlock),
+    NewUnlock = remove_n(N, F#f.unlock),
     %channel_block_tx:add,
     NewF = #f{channel = SignedCh2, unlock = NewUnlock},
     channel_manager:store(ChId, NewF),
@@ -159,11 +160,13 @@ match_n(X, [Bet|Bets], N) ->
         X == Y -> N;
         true -> match_n(X, Bets, N+1)
     end.
-replace_n(N, New, L) -> replace_n(N, New, L, []).
-replace_n(0, New, [_|L], Out) -> 
-    lists:reverse(Out) ++ [New] ++ L;
-replace_n(N, New, [H|L], Out) -> 
-    replace_n(N-1, New, L, [H|Out]).
+remove_n(0, [H|T]) -> T;
+remove_n(N, [H|T]) -> [H|remove_n(N-1, T)].
+%replace_n(N, New, L) -> replace_n(N, New, L, []).
+%replace_n(0, New, [_|L], Out) -> 
+%    lists:reverse(Out) ++ [New] ++ L;
+%replace_n(N, New, [H|L], Out) -> 
+%    replace_n(N-1, New, L, [H|Out]).
 remove_bet(_, []) -> 1=2;
 remove_bet(Hash, [H|T]) -> 
     A = hash:doit(channel_block_tx:bet_code(H)),
