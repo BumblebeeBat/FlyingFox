@@ -73,6 +73,9 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     Out = keys:sign(NewCh),
     {reply, Out, X};
 handle_call({unlock_hash, ChId, Secret, SignedCh}, _From, X) ->
+    io:fwrite("chid "),
+    io:fwrite(integer_to_list(ChId)),
+    io:fwrite("\n"),
     {SignedCh2, N, BetCode} = common(ChId, Secret),
     io:fwrite("Bet "),
     io:fwrite(packer:pack(BetCode)),
