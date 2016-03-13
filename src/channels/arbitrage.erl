@@ -2,7 +2,7 @@
 %Don't remove state from arbitrage until the highest nonced channel state we recieved from our partner doesn't have the bet.
 -module(arbitrage).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, delete/2,add/4,check_hash/1,agree/3,new/4,bet_find/2,test/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, delete/2,add/4,check_hash/1,agree/3,new/4,bet_find/2,check_loser/3,test/0]).
 init(ok) -> {ok, dict:new()}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
