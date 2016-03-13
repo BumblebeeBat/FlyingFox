@@ -168,11 +168,11 @@ check_winner2(ChId, Amount, [{ChId, ChIdGain, Amount}|T]) ->
     ChIdGain;
 check_winner2(ChId, Amount, [{_, _, _}|T]) -> 
     check_winner2(ChId, Amount, T).
-check_loser(Bet, ChId, Amount) -> 
-    io:fwrite("Bet code "),
-    io:fwrite(packer:pack(Bet)),
+check_loser(BetCode, ChId, Amount) -> 
+    io:fwrite("BetCode code "),
+    io:fwrite(packer:pack(BetCode)),
     io:fwrite("\n"),
-    BH = hash:doit(Bet),
+    BH = hash:doit(BetCode),
     L = check_hash(BH),
     io:fwrite("L is "),
     io:fwrite(packer:pack(L)),
