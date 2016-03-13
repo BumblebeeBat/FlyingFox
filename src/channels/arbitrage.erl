@@ -106,6 +106,9 @@ bet_find(BH, [H|T]) ->
     io:fwrite("bet find found "),
     io:fwrite(packer:pack(A)),
     io:fwrite("\n"),
+    io:fwrite("bet find wanted "),
+    io:fwrite(packer:pack(BH)),
+    io:fwrite("\n"),
     if
 	A == BH -> H;
 	true -> bet_find(BH, T)
