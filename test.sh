@@ -28,6 +28,6 @@ curl -i -d '["lightning_spend", [127,0,0,1], 3030, 2, 4]' http://localhost:3011
 sleep 1
 curl -i -d '["get_msg", [127,0,0,1], 3030]' http://localhost:3021
 sleep 1
-#curl -i -d '["get_msg", [127,0,0,1], 3030]' http://localhost:3021
+curl -i -d '["get_msg", [127,0,0,1], 3030]' http://localhost:3011
 sleep 1
 #curl -i -d '["get_msg", [127,0,0,1], 3030]' http://localhost:3011

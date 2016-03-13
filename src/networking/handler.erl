@@ -101,6 +101,7 @@ doit({unlock, ChId, Secret, SignedCh}) ->
     Payment2 = channel_manager_feeder:create_unlock_hash(ChId2, Secret),
     channel_partner:store(ChId2, Payment2),
     M = {unlock, Payment2, ChId, Secret},
+    M = packer:unpack(packer:pack(M)),
     mail:internal_send(To, M, unlock),
     channel_partner:store(ChId, Response),
     {ok, Response};
