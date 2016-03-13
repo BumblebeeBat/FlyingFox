@@ -91,9 +91,9 @@ doit({txs, Txs}) ->
     {ok, 0};
 doit({unlock, ChId, Secret, SignedCh}) ->
     %arbitrage:second_unlock(SignedCh),
-    OldCh = channel_manager:read_channel(ChId),
-    BetHash = hash:doit(channel_block_tx:bet_code(hd(channel_block_tx:bets(OldCh)))),
-    Response = channel_manager_feeder:unlock_hash(ChId, Secret, SignedCh, BetHash),
+    %OldCh = channel_manager:read_channel(ChId),
+    %BetHash = hash:doit(channel_block_tx:bet_code(hd(channel_block_tx:bets(OldCh)))),
+    Response = channel_manager_feeder:unlock_hash(ChId, Secret, SignedCh),
     %io:fwrite(SignedCh),
     %unpack SignedCh to get To
     To = 0,
