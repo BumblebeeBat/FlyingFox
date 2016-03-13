@@ -191,7 +191,7 @@ common(ChId, Secret) ->
     OldCh = read_channel(ChId),
     Bets = channel_block_tx:bets(OldCh),
     io:fwrite("Bets "),
-    io:fwrite(io:fwrite(Bets)),
+    io:fwrite(packer:pack(Bets)),
     io:fwrite("\n"),
     N = match_n(SecretHash, Bets),%if the bets were numbered in order, N is the bet we are unlocking.
     Bet = nth(N, Bets),
