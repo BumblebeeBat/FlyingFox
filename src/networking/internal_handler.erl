@@ -200,7 +200,7 @@ absorb_msgs([], _, _, _) -> ok;
 absorb_msgs([H|T], IP, Port, ServerId) -> 
     case talker:talk({pop, keys:id(), H}, IP, Port) of
 	{ok, {unlock, Payment}} ->
-	    {unlock, Payment2, ChId, Amount, Secret} = Payment,
+	    {unlock, Payment2, ChId, Secret} = Payment,
 	    
 	    Return = channel_manager_feeder:unlock_hash(ChId, Secret, Payment2),
 	    channel_partner:store(ChId, Return),
