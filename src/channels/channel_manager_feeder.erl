@@ -204,7 +204,8 @@ common(ChId, Secret) ->
 	    true -> Amount
 	end,
     D = fractions:multiply_int(C, A),
-    NewNewCh = channel_block_tx:update(NewCh, D, 1),%
+    %NewNewCh = channel_block_tx:update(NewCh, D, 1),%
+    NewNewCh = channel_block_tx:update(NewCh, 0, 1),%
     true = channel_block_tx:nonce(OldCh) < channel_block_tx:nonce(NewNewCh),
     %we need to change amount.
     {keys:sign(NewNewCh), N, BetCode}.
