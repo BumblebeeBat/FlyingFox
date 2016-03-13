@@ -1,8 +1,8 @@
-#Open up 3 terminals. 
-#Copy the Flying Fox install directory so you have 3 copies. 
-#Set all 3 passwords to "abc".
-#Launch one using port 3010, one on 3020, and one on 3030.
-#Then run this script.
+#sh start.sh 3010 &
+#sh ../FlyingFox2/start.sh 3020 &
+#sh ../FlyingFox3/start.sh 3030 &
+#sleep 10
+#pubkey
 curl -i -d '["pubkey"]' http://localhost:3011
 
 
