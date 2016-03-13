@@ -1,10 +1,10 @@
-#sh start.sh 3010 &
-#sh ../FlyingFox2/start.sh 3020 &
-#sh ../FlyingFox3/start.sh 3030 &
-#sleep 10
-#pubkey
-curl -i -d '["pubkey"]' http://localhost:3011
+#Open up 3 terminals. 
+#Copy the Flying Fox install directory so you have 3 copies. 
+#Set all 3 passwords to "abc". Use the command keys:new("abc"), then copy keys.db to keys_backup.
+#Launch one using port 3010, one on 3020, and one on 3030.
+#Then run this script from a fourth terminal.
 
+#It lightning spends 4 coins one way, then spends the same 4 back.
 
 curl -i -d '["key_unlock", "YWJj"]' http://localhost:3011
 curl -i -d '["key_unlock", "YWJj"]' http://localhost:3021
