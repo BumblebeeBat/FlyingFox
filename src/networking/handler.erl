@@ -89,6 +89,8 @@ doit({txs}) -> {ok, tx_pool:txs()};
 doit({txs, Txs}) -> 
     download_blocks:absorb_txs(Txs),
     {ok, 0};
+doit({unlock, ChId, {secret, Secret}, SignedCh}) ->
+    doit({unlock, ChId, Secret, SignedCh});
 doit({unlock, ChId, Secret, SignedCh}) ->
     %arbitrage:second_unlock(SignedCh),
     OldCh = channel_manager:read_channel(ChId),
