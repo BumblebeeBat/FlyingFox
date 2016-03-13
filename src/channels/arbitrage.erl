@@ -75,8 +75,8 @@ delete(OldCh, BetCode) ->
     CB = sign:data(OldCh),
     Bet = bet_find(BH, channel_block_tx:bets(CB)),
     Amount = channel_block_tx:bet_amount(Bet),
-    ChId1 = channel_block_tx:acc1(Tx),
-    ChId2 = channel_block_tx:acc2(Tx),
+    ChId1 = channel_block_tx:acc1(CB),
+    ChId2 = channel_block_tx:acc2(CB),
     if
 	Amount > 0 -> 
 	    IdLose = ChId1,
