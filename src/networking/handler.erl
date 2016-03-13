@@ -109,9 +109,9 @@ doit({unlock2, SignedCh, ChId, Secret}) ->
     %arbitrage:second_unlock(SignedCh),
     %channel_block_tx:bets(channel_manager_feeder:read_channel(ChId)),
     {_, _, BetCode} = channel_manager_feeder:common(ChId, Secret),
-    BH = hash:doit(BetCode),
+    OldCh = channel_manager:read_channel(ChId),
     channel_manager_feeder:unlock_hash(ChId, Secret, SignedCh),
-    arbitrage:delete(SignedCh, BH),
+    arbitrage:delete(OldCh, BetCode),
     {ok, 0};
 doit({register, Payment, Acc}) ->
     {ok, mail:register(Payment, Acc)};
