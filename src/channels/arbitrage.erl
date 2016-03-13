@@ -70,9 +70,8 @@ not_in([_|T], A, B, C) -> not_in(T, A, B, C).
 del(BH, ChIdLose, ChIdGain, Amount) -> 
     %BH = hash:doit(Bet),
     gen_server:cast(?MODULE, {del, BH, ChIdLose, ChIdGain, Amount}).
-delete(OldCh, BetCode) ->
+delete(CB, BetCode) ->
     BH = hash:doit(BetCode),
-    CB = sign:data(OldCh),
     Bet = bet_find(BH, channel_block_tx:bets(CB)),
     Amount = channel_block_tx:bet_amount(Bet),
     ChId1 = channel_block_tx:acc1(CB),
