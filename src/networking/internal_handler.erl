@@ -195,7 +195,7 @@ got_secret(Secret, IP, Port) ->
     UH = channel_manager_feeder:create_unlock_hash(ChId, Secret),
     channel_partner:store(ChId, UH),
     {ok, NewCh} = talker:talk({unlock, ChId, Secret, UH}, IP, Port),
-    channel_manager_feeder:unlock_hash(ChId, Secret, NewCh).    
+    channel_manager_feeder:unlock_hash(ChId, Secret, NewCh).
 absorb_msgs([], _, _, _) -> ok;
 absorb_msgs([H|T], IP, Port, ServerId) -> 
     case talker:talk({pop, keys:id(), H}, IP, Port) of

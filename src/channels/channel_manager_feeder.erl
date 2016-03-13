@@ -1,6 +1,6 @@
 -module(channel_manager_feeder).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, recieve/3,recieve_account/3,channel/1,recieve_locked_payment/4,spend_locked_payment/4,spend/2,new_channel/3,create_unlock_hash/2,spend_account/2,read_channel/1,unlock_hash/4]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, recieve/3,recieve_account/3,channel/1,recieve_locked_payment/4,spend_locked_payment/4,spend/2,new_channel/3,create_unlock_hash/2,spend_account/2,read_channel/1,unlock_hash/3]).
 -record(f, {channel = [], unlock = []}).
 init(ok) -> {ok, []}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
@@ -72,7 +72,7 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     channel_manager:store(ChId, NewF),
     Out = keys:sign(NewCh),
     {reply, Out, X};
-handle_call({unlock_hash, ChId, Secret, SignedCh, BH}, _From, X) ->
+handle_call({unlock_hash, ChId, Secret, SignedCh}, _From, X) ->
     {SignedCh2, N, BetCode} = common(ChId, Secret),
     io:fwrite("Bet "),
     io:fwrite(packer:pack(BetCode)),
@@ -210,8 +210,8 @@ create_unlock_hash(ChId, Secret) ->
     SignedCh.
 nth(0, [X|_]) -> X;
 nth(N, [_|T]) -> nth(N-1, T).
-unlock_hash(ChId, Secret, SignedCh, BH) ->
-    gen_server:call(?MODULE, {unlock_hash, ChId, Secret, SignedCh, BH}).
+unlock_hash(ChId, Secret, SignedCh) ->
+    gen_server:call(?MODULE, {unlock_hash, ChId, Secret, SignedCh}).
 general_locked_payment(ChId, SignedChannel, Amount, SecretHash, Spend) ->
     gen_server:call(?MODULE, {locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}).
 recieve_locked_payment(ChId, SignedChannel, Amount, SH) ->
