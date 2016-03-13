@@ -146,6 +146,9 @@ recieve(ChId, MinAmount, SignedPayment) ->
 channel(X) -> X#f.channel.
 read_channel(Key) ->
     F = channel_manager:read(Key),
+    io:fwrite("F is "),
+    io:fwrite(packer:pack(F)),
+    io:fwrite("\n"),
     sign:data(F#f.channel).
 match_n(X, Bets) -> match_n(X, Bets, 0).
 match_n(X, [Bet|Bets], N) ->
