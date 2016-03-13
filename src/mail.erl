@@ -69,12 +69,12 @@ pop3(From, M) ->
     io:fwrite("pop2 M "),
     io:fwrite(packer:pack(M)),
     io:fwrite("\n"),
-    S = M#msg.start,
+    S = M#msg.lasts,
     if
+	S == unlock ->
+	    {unlock, M#msg.msg};
 	S == locked_payment ->
 	    {locked_payment, M#msg.msg};
-	S == locked_payment ->
-	    {unlock, M#msg.msg};
 	is_integer(M#msg.lasts) ->
 	    Msg = M#msg.msg,
 	    T = ((erlang:monotonic_time() - M#msg.start) div 1000) + 2000000,%2 second fee automatically.
@@ -93,13 +93,11 @@ pop3(From, M) ->
 		    io:fwrite("you needed"),
 		    io:fwrite(integer_to_list(T)),
 		    io:fwrite("\n"),
-		    {ok, ok};
+		    {ok, 0};
 		true -> 
 						%nonce:customer_next(From),
 		    {pop_response, Msg, channel_manager_feeder:spend_account(From, Refund)}
 	    end;
-	M#msg.lasts == locked_payment ->
-	    {locked_payment, M#msg.msg};
 	true ->
 	    io:fwrite(M#msg.lasts)
     end.
