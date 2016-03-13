@@ -84,8 +84,8 @@ delete(CB, BetCode) ->
 	    IdLose = ChId2,
 	    IdGain = ChId1
     end,
-    ChIdLose = channel_manager:id(IdLose),
-    ChIdGain = channel_manager:id(IdGain),
+    ChIdLose = hd(channel_manager:id(IdLose)),
+    ChIdGain = hd(channel_manager:id(IdGain)),
     ChL = channel_manager:read_channel(ChIdLose),
     ChG = channel_manager:read_channel(ChIdGain),
     BetsL = channel_block_tx:bets(ChL),
