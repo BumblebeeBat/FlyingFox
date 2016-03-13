@@ -35,7 +35,7 @@ handle_call({absorb, SignedTx}, _From, X) ->
     end,
     {NewChannels, NewAccounts, NewTotalCoins, NewSecrets} = txs:digest([NewTx], block_tree:read(top), Channels, Accounts, TotalCoins, Secrets, H+1),%Usually blocks are one after the other. Some txs may have to get removed if height increases by more than 1 between adjacent blocks.
     tx_pool:absorb(NewChannels, NewAccounts, NewTotalCoins, NewSecrets, [NewTx|flip(Txs)]),
-    {reply, ok, X};
+    {reply, 0, X};
 handle_call(_, _From, X) -> {reply, X, X}.
 flip(X) -> flip(X, []).
 flip([], X) -> X;
@@ -43,3 +43,4 @@ flip([H|T], L) -> flip(T, [H|L]).
     
 absorb(SignedTx) -> 
     gen_server:call(?MODULE, {absorb, SignedTx}).
+
