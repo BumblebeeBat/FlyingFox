@@ -180,6 +180,9 @@ check_loser(BetCode, ChId, Amount) ->
     io:fwrite("Loser is "),
     io:fwrite(integer_to_list(ChId)),
     io:fwrite("\n"),
+    io:fwrite("Amount is "),
+    io:fwrite(integer_to_list(Amount)),
+    io:fwrite("\n"),
     check_loser2(ChId, Amount, L).
 check_loser2(_, _, []) -> 1=2;
 check_loser2(ChId, Amount, [{ChIdLoser, ChId, Amount}|T]) -> 
