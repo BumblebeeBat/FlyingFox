@@ -112,8 +112,14 @@ doit({unlock, ChId, Secret, SignedCh}) ->
     Bet = arbitrage:bet_find(BH, Bets),
     Amount = channel_block_tx:bet_amount(Bet),
     L = arbitrage:check_hash(BH),%[{ChIdLose, ChIdGain, Amount}...]
-    To = arbitrage:check_loser(BetCode, ChId, Amount*2),
-    ChId2 = hd(channel_manager:id(To)),
+    ChId2 = arbitrage:check_loser(BetCode, ChId, Amount*2),
+    Ch = block_tree:channel(ChId2),
+    Acc1 = channels:acc1(Ch),
+    Acc2 = channels:acc2(Ch),
+    To = case keys:id() of
+	     Acc1 -> Acc2;
+	     Acc2 -> Acc1
+	 end,
     Payment2 = channel_manager_feeder:create_unlock_hash(ChId2, Secret),
     channel_partner:store(ChId2, Payment2),
     M = {unlock, Payment2, ChId2, Secret},
