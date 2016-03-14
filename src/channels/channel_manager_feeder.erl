@@ -16,9 +16,6 @@ handle_call({new_channel, ChId, Channel, Accounts}, _From, X) ->
 handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _From, X) ->
     NewCh = sign:data(SignedChannel),
     true = channel_block_tx:is_cb(NewCh),
-    io:fwrite("chid "),
-    io:fwrite(packer:pack(ChId)),
-    io:fwrite("\n"),
     F = channel_manager:read(ChId),
     Ch = sign:data(F#f.channel),
     NewAmount = channel_block_tx:amount(NewCh),
@@ -33,23 +30,9 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     Acc1 = channels:acc1(Channel),
     Acc2 = channels:acc2(Channel),
     ID = keys:id(),
-    io:fwrite("A is: "),
-    io:fwrite(integer_to_list(A)),
-    io:fwrite("\n"),
-    io:fwrite("Amount is: "),
-    io:fwrite(integer_to_list(Amount)),
-    io:fwrite("\n"),
     Bet = hd(channel_block_tx:bets(NewCh)),
     A = channel_block_tx:bet_amount(Bet),
     BetTo = (2 * channel_block_tx:bet_to(Bet)) - 1,
-    %B = A * To -1,
-    %true = (-A == (Amount div 2)),
-    io:fwrite("pair is "),
-    io:fwrite(packer:pack({Spend, ID, Acc1, BetTo, Amount, A})),
-    io:fwrite("\n"),
-    %[true,0,0,1,-200, -100]
-    %bad [true,0,0,1,4,-2]
-    %bad [false,2,2,-1,4,2]
     AA = abs(A),
     AA = abs(Amount div 2),
     TT = case ID of
@@ -73,13 +56,7 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     Out = keys:sign(NewCh),
     {reply, Out, X};
 handle_call({unlock_hash, ChId, Secret, SignedCh}, _From, X) ->
-    io:fwrite("chid "),
-    io:fwrite(integer_to_list(ChId)),
-    io:fwrite("\n"),
     {SignedCh2, N, BetCode} = common(ChId, Secret),
-    io:fwrite("Bet "),
-    io:fwrite(packer:pack(BetCode)),
-    io:fwrite("\n"),
     BH = hash:doit(BetCode),
     NewCh = sign:data(SignedCh2),
     NewCh = sign:data(SignedCh),
@@ -102,12 +79,6 @@ handle_call({recieve, ID, MinAmount, ChId, SignedPayment}, _From, X) ->
     Channel = block_tree:channel(ChId),
     A = NewAmount - OldAmount,
     N = NewN - OldN,
-    io:fwrite("old channel"),
-    io:fwrite(packer:pack(Ch)),
-    io:fwrite("\n"),
-    io:fwrite("new channel"),
-    io:fwrite(packer:pack(Payment)),
-    io:fwrite("\n"),
     true = N > 0,
     Payment2 = channel_block_tx:update(Ch, A, N),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce.
     Payment = Payment2,
@@ -129,9 +100,6 @@ recieve_account(Acc, MinAmount, SignedPayment) ->
     recieve(hd(channel_manager:id(Acc)), MinAmount, SignedPayment).
 recieve(ChId, MinAmount, SignedPayment) ->
     %we need to verify that the other party signed it.
-    io:fwrite("chid is bad "),
-    io:fwrite(integer_to_list(ChId)),
-    io:fwrite("\n"),
     ID = keys:id(),
     Payment = sign:data(SignedPayment),
     A1 = channel_block_tx:acc1(Payment),
@@ -149,30 +117,16 @@ recieve(ChId, MinAmount, SignedPayment) ->
 channel(X) -> X#f.channel.
 read_channel(Key) ->
     F = channel_manager:read(Key),
-    io:fwrite("F is "),
-    io:fwrite(packer:pack(F)),
-    io:fwrite("\n"),
     sign:data(F#f.channel).
 match_n(X, Bets) -> match_n(X, Bets, 0).
 match_n(X, [Bet|Bets], N) ->
     Y = language:extract_sh(channel_block_tx:bet_code(Bet)),
-    io:fwrite("match n "),
-    io:fwrite(packer:pack(Y)),
-    io:fwrite("\n"),
-    io:fwrite("searching for "),
-    io:fwrite(packer:pack(X)),
-    io:fwrite("\n"),
     if
         X == Y -> N;
         true -> match_n(X, Bets, N+1)
     end.
 remove_n(0, [H|T]) -> T;
 remove_n(N, [H|T]) -> [H|remove_n(N-1, T)].
-%replace_n(N, New, L) -> replace_n(N, New, L, []).
-%replace_n(0, New, [_|L], Out) -> 
-%    lists:reverse(Out) ++ [New] ++ L;
-%replace_n(N, New, [H|L], Out) -> 
-%    replace_n(N-1, New, L, [H|Out]).
 remove_bet(_, []) -> 1=2;
 remove_bet(Hash, [H|T]) -> 
     A = hash:doit(channel_block_tx:bet_code(H)),
@@ -190,9 +144,6 @@ common(ChId, Secret) ->
     SecretHash = hash:doit(Secret),
     OldCh = read_channel(ChId),
     Bets = channel_block_tx:bets(OldCh),
-    io:fwrite("Bets "),
-    io:fwrite(packer:pack(Bets)),
-    io:fwrite("\n"),
     N = match_n(SecretHash, Bets),%if the bets were numbered in order, N is the bet we are unlocking.
     Bet = nth(N, Bets),
     A = channel_block_tx:bet_amount(Bet),
@@ -201,26 +152,10 @@ common(ChId, Secret) ->
     NewBets = remove_nth(N, Bets),
     NewBets = remove_bet(hash:doit(BetCode), Bets),
     NewCh = channel_block_tx:replace_bet(OldCh, NewBets),
-    %io:fwrite("with bet "),
-    %io:fwrite(packer:pack(NewCh)),
-    %io:fwrite("\n"),
-    %io:fwrite("without bet "),
-    %io:fwrite(packer:pack(OldCh)),
-    %io:fwrite("\n"),
-    ToFlip = channel_block_tx:bet_to(Bet),
-    %C = if 
-	    %ToFlip == 0 -> fractions:subtract({f, 1, 1}, Amount);
-	    %true -> Amount
-	%end,
     C = Amount,
     D = fractions:multiply_int(C, A),
-    io:fwrite("before create unlock hash"),
-    io:fwrite(packer:pack(NewCh)),
-    io:fwrite("\n"),
-    NewNewCh = channel_block_tx:update(NewCh, D, 1),%
-    %NewNewCh = channel_block_tx:update(NewCh, 0, 1),%
+    NewNewCh = channel_block_tx:update(NewCh, D, 1),
     true = channel_block_tx:nonce(OldCh) < channel_block_tx:nonce(NewNewCh),
-    %we need to change amount.
     {keys:sign(NewNewCh), N, BetCode}.
 create_unlock_hash(ChId, Secret) ->
     {SignedCh, _, _} = common(ChId, Secret),
