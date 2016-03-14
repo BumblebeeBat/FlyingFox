@@ -193,6 +193,9 @@ got_secret(Secret, IP, Port) ->
     {ok, PeerId} = talker:talk({id}, IP, Port),
     ChId = hd(channel_manager:id(PeerId)), 
     UH = channel_manager_feeder:create_unlock_hash(ChId, Secret),
+    io:fwrite("create unlock hash "),
+    io:fwrite(packer:pack(UH)),
+    io:fwrite("\n"),
     channel_partner:store(ChId, UH),
     {ok, NewCh} = talker:talk({unlock, ChId, Secret, UH}, IP, Port),
     channel_manager_feeder:unlock_hash(ChId, Secret, NewCh).
