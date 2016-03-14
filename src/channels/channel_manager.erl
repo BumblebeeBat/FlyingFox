@@ -137,13 +137,16 @@ test() ->
 
     channel_manager_feeder:spend_locked_payment(S, Tx6, Amount, SH),%we absorb Tx6.
     Tx7 = channel_manager_feeder:create_unlock_hash(S, secrets:read(SH)),
-    BH = hash:doit(channel_block_tx:bet_code(hd(channel_block_tx:bets(sign:data(Tx6))))),
+    %BH = hash:doit(channel_block_tx:bet_code(hd(channel_block_tx:bets(sign:data(Tx6))))),
     Tx8 = sign:sign_tx(Tx7, Pub, Priv, tx_pool:accounts()),%partner runs unlock_hash/3 and returns Tx8
+    io:fwrite("Tx8 is "),
+    io:fwrite(packer:pack(Tx8)),
+    io:fwrite("\n"),
     io:fwrite("E is "),
     io:fwrite(packer:pack(element(2, element(2, read(S))))),
     io:fwrite("\n"),
 
-    channel_manager_feeder:unlock_hash(S, secrets:read(SH), Tx8, BH),
+    channel_manager_feeder:unlock_hash(S, secrets:read(SH), Tx8),
     E = element(2, element(2, read(S))),
     io:fwrite("E is "),
     io:fwrite(packer:pack(element(2, element(2, read(S))))),
