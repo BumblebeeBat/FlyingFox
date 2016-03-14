@@ -8,9 +8,9 @@
 
 handle(Req, State) ->
     {ok, Data, _} = cowboy_req:body(Req),
-    io:fwrite("handler got data "),
-    io:fwrite(Data),
-    io:fwrite("\n"),
+    %io:fwrite("handler got data "),
+    %io:fwrite(Data),
+    %io:fwrite("\n"),
     true = is_binary(Data),
     A = packer:unpack(Data),
     B = doit(A),
@@ -28,14 +28,10 @@ doit({give_block, SignedBlock}) ->
     block_tree:absorb([SignedBlock]),
     {ok, 0};
 doit({block, N}) -> 
-    io:fwrite("handler doit block "),
-    io:fwrite(integer_to_list(N)),
-    io:fwrite("\n"),
     {ok, block_tree:read_int(N)};
 doit({tophash}) -> {ok, hash:doit(block_tree:top())};
 doit({recent_hash, H}) -> {ok, block_tree:is_key(H)};
 doit({accounts_size}) ->
-    %{ok, filelib:file_size("backup/accounts.db") div ?WORD};
     {ok, filelib:file_size(constants:backup_accounts()) div ?WORD};
 doit({tx_absorb, Tx}) -> 
     {ok, tx_pool_feeder:absorb(Tx)};
@@ -62,16 +58,7 @@ doit({locked_payment, From, To, Payment, Amount, SecretHash, BetHash, Emsg}) ->
     Payment2 = channel_manager:new_hashlock(To, Amount, SecretHash),
     Bet = hd(channel_block_tx:bets(sign:data(Payment2))),
     BetCode = channel_block_tx:bet_code(Bet),
-    io:fwrite("bet on server "),
-    io:fwrite(packer:pack(BetCode)),
-    io:fwrite("\n"),
     BetHash2 = hash:doit(BetCode),
-    io:fwrite("hash on client "),
-    io:fwrite(packer:pack(BetHash)),
-    io:fwrite("\n"),
-    io:fwrite("hash on server "),
-    io:fwrite(packer:pack(BetHash2)),
-    io:fwrite("\n"),
     BetHash2 = BetHash,
     arbitrage:new(Payment, ChIdFrom, ChIdTo, Amount),
     channel_partner:store(ChIdTo, Payment2),
@@ -95,20 +82,10 @@ doit({unlock, ChId, Secret, SignedCh}) ->
     %arbitrage:second_unlock(SignedCh),
     OldCh = channel_manager:read_channel(ChId),
     Bets = channel_block_tx:bets(OldCh),
-
     Response = channel_manager_feeder:unlock_hash(ChId, Secret, SignedCh),
-    io:fwrite("Secret "),
-    io:fwrite(packer:pack(Secret)),
-    io:fwrite("\n"),
     SH = hash:doit(Secret),
     BetCode = language:hashlock(SH),
-    io:fwrite("origin code "),
-    io:fwrite(packer:pack(BetCode)),
-    io:fwrite("\n"),
     BH = hash:doit(BetCode),
-    io:fwrite("origin hash "),
-    io:fwrite(packer:pack(BH)),
-    io:fwrite("\n"),
     Bet = arbitrage:bet_find(BH, Bets),
     Amount = channel_block_tx:bet_amount(Bet),
     L = arbitrage:check_hash(BH),%[{ChIdLose, ChIdGain, Amount}...]
@@ -209,9 +186,6 @@ doit({to_channel, SignedTx}) ->
     tx_pool_feeder:absorb(keys:sign(SignedTx)),
     {ok, 0};
 doit({backup_size, File}) ->
-    io:fwrite("backup size handler"),
-    io:fwrite(packer:pack(File)),
-    io:fwrite("\n"),
     {ok, backup:read_size(File)};
 doit({backup_read, File, N}) ->
     {ok, backup:read(File, N)};
