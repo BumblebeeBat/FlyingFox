@@ -208,10 +208,11 @@ common(ChId, Secret) ->
     %io:fwrite(packer:pack(OldCh)),
     %io:fwrite("\n"),
     ToFlip = channel_block_tx:bet_to(Bet),
-    C = if 
-	    ToFlip == 0 -> fractions:subtract({f, 1, 1}, Amount);
-	    true -> Amount
-	end,
+    %C = if 
+	    %ToFlip == 0 -> fractions:subtract({f, 1, 1}, Amount);
+	    %true -> Amount
+	%end,
+    C = Amount,
     D = fractions:multiply_int(C, A),
     io:fwrite("before create unlock hash"),
     io:fwrite(packer:pack(NewCh)),
