@@ -52,24 +52,10 @@ run([38|Code], Functions, Alt, [B|Stack], Gas) ->%call
 	{ok, F} ->
 	    run(F++Code, Functions, Alt, Stack, Gas-cost(37))
     end;
-%run([37|Code], UsedCode, Alt, Stack) -> %counts up how many sections of code we have. Each section is seperated by "seperate" 36.
-%Sections = 1 + count(36, Code ++ UsedCode),
-%run(Code, [37|UsedCode], Alt, [Sections|Stack]);
-%run([38|Code], UsedCode, Alt, [N|Stack]) -> %Takes a section of the code, and computes the hash of those words. This is used to merkelize the scriptpubkey so that you only reveal the minimum amount of script necessary when posting to the blockchain.
-%C = flip(UsedCode) ++ Code,
-%S = nth_section(N, C),
-%H = hash:doit(S),
-%run(Code, [38|UsedCode], Alt, [H|Stack]);
 run([39|Code], Functions, Alt, [N|Stack], Gas) ->%moves the top of the stack to the top of the alt stack.
     run(Code, Functions, [N|Alt], Stack, Gas-cost(39));
 run([40|Code], Functions, [N|Alt], Stack, Gas) ->%moves the top of the alt stack to the top of the stack.
     run(Code, Functions, Alt, [N|Stack], Gas - cost(40));
-%run([41|Code], UsedCode, Alt, [N|Stack]) -> %Takes a section of the code, and computes the amount of those words. 
-%C = flip(UsedCode) ++ Code,
-%S = nth_section(N, C),
-%L = length(S),
-%run(Code, [41|UsedCode], Alt, [L|Stack]);
-
 run([28|_], _, _, _, _) -> %die. Neither person gets money.
     [delete];
 run([Word|Code], Functions, Alt, Stack, Gas) ->
@@ -244,21 +230,6 @@ run_script(Code, Gas) ->
     %{nonce, Amount to transfer, Amount to delete}
     % the highest nonced scriptsig is the only valid scriptsig.
     {hd(Out), hd(tl(Out)), hd(tl(tl(Out)))}.
-%count(X, L) -> count(X, L, 0).
-%count(_, [], N) -> N;
-%count(X, [X|R], N) -> count(X, R, N+1);
-%count(X, [_|R], N) -> count(X, R, N).
-%nth_section(N, C) when N < 0 -> 
-%    Sections = 1 + count(36, C),
-%    M = Sections + N,
-%    nth_section(M, C);
-%nth_section(0, C) -> till_36(C, []);
-%nth_section(N, [36|C]) -> nth_section(N-1, C);
-%nth_section(N, [_|C]) -> nth_section(N, C);
-%nth_section(_, []) -> io:fwrite("error, there aren't enough code seperators.").
-%till_36([], Out) -> flip(Out);
-%till_36([36|_], Out) -> flip(Out);
-%till_36([X|In], Out) -> till_36(In, [X|Out]).
     
 test() ->    
     true = run(assemble([10, 2, plus]), 100) == [12],
@@ -274,23 +245,7 @@ test() ->
     true = run(assemble([Sig] ++ [Data, Pub, verify_sig]), 500) == [true],%3rd party signature
     B = hash:doit(1),
     true = run(assemble([1] ++ [hash, B, eq]), 100) == [true],%normal hashlock
-    %true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus]), 100) == [{f, 65, 11}],
-    %true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus, drop, many_sections]), 100) == [4],
-    %true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus, drop, 1, hash_section]), 100) == [hash:doit([{f, 10, 11}])],
-    %true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus, drop, -3, hash_section]), 100) == [hash:doit([{f, 10, 11}])], %hash_section accepts negative value inputs too.
-    %true = run(assemble([seperate, {f, 10, 11}, seperate, seperate, 5, plus, drop, -3, section_size]), 100) == [1], %hash_section accepts negative value inputs too.
     true = run(assemble([{f, 1, 2}, to_r, from_r]), 100) == [{f, 1, 2}],
-    %(i) merkle tree transform to cut the size of the state, and (ii) lightning networks at the same time
-    %Code = [2, 2, plus],
-    %ScriptHash = hash:doit(assemble(Code)),
-    %true = (run(assemble([27] ++ Code ++ [length(Code),3,scripthash])) == [ScriptHash, 4, 27]),%pay2scripthash
-    %C = [true, 2, drop],
-    %CodeHash = hash:doit(assemble(C)),
-    %ScriptPubkey = [switch, length(C), 4, scripthash, CodeHash, eq, swap, hash, B, eq, both, else, then],
-    %ScriptKey1 = [false],
-    %ScriptKey2 = [1, true, 2, drop],
-    %true = run(assemble(ScriptKey1 ++ ScriptPubkey)) == [],
-    %true = run(assemble(ScriptKey2 ++ ScriptPubkey)) == [true],
     H = [{f, 1, 2}, {integer, 500}, plus],
     HASH = hash:doit(assemble(H)),
     true = [{f,1001,2}] == run(assemble([define, {f, 1, 2}, {integer, 500}, plus, stop, HASH, call]), 100),
