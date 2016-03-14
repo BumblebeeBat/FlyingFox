@@ -1,5 +1,5 @@
 -module(language).
--export([run/1, test/0, remove_till/2, assemble/1, hashlock/2, extract_sh/1, valid_secret/2, run_script/1]).
+-export([run/1, test/0, remove_till/2, assemble/1, hashlock/1, extract_sh/1, valid_secret/2, run_script/1]).
 int_arith(2, X, Y) -> X + Y;
 int_arith(3, X, Y) -> X - Y;
 int_arith(4, X, Y) -> X * Y;
@@ -177,12 +177,11 @@ atom2op(section_size) -> 41; %( Number -- Other )
 atom2op(true) -> true; %( -- true )
 atom2op(false) -> false. %( -- false )
 
-hashlock(ToAmount, SecretHash) ->
-    true = ((ToAmount == 0) or (ToAmount == 1)),
-    assemble([hash, SecretHash, eq, switch, {f, 0, 1}, {f, ToAmount, 1}, 2, else, {f, 0, 1}, {f, 1, 2}, 1, then]).
+hashlock(SecretHash) ->
+    assemble([hash, SecretHash, eq, switch, {f, 0, 1}, {f, 1, 1}, 2, else, {f, 0, 1}, {f, 1, 2}, 1, then]).
 valid_secret(Secret, Script) -> 
-    Amount = hd(tl(run([Secret] ++ Script))),
-    fractions:to_int(Amount).
+    Amount = hd(tl(run([Secret] ++ Script))).
+%fractions:to_int(Amount).
 
 extract_sh(Code) -> hd(tl(Code)).
 run_script(Code) ->

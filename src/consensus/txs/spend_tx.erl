@@ -18,4 +18,3 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     Nonce = Tx#spend.nonce,
     Accounts2 = dict:store(Tx#spend.to, NT, Accounts),
     {Channels, dict:store(Tx#spend.from, NF, Accounts2), TotalCoins, S}.
-

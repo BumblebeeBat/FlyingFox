@@ -2,6 +2,8 @@
 -compile(export_all).
 %-export([export_all]).
 %-define(InitialCoins, round(math:pow(2, 48)) - 1).
+%2^74 bits is 25 bitcoin =~ $10,000
+%2^64 bits is $10
 -define(InitialCoins, round(math:pow(2, 41)) - 1).
 initial_coins() -> ?InitialCoins.
 initial_portion_delegated() -> fractions:new(3, 4).
@@ -9,7 +11,7 @@ finality() -> 26.%/docs/security.py explains why.
 validators_elected_per_block() -> 54.
 minimum_validators_per_block() -> 36.
 chances_per_address() -> 200. %Each address has this many chances to be a validator per block. this makes it possible to be validator more than once on the same block. 
-master_pub() -> <<"BKRFGBFSZ8jIxUzqrxDeWB7tYivzWi+rkm5rdYR2y5BNmX9bfdbU0dxlRQXhFjpagRwyr52uxLwE66z5Td2i8lE=">>.
+master_pub() -> <<"BJb31Voe6kHdXlEmTdK8nxeOxp/UK7zrTtTZ1aVRlE/gxNWj2Rebx+BmHgDnTe80sq1fRMPRXjE5ny7cw9e4rAw=">>.
 max_size() -> 2000000000.%should be 2 gigabytes, does not include old blocks.
 backup() -> fractions:new(19, 20).
 %-define(MBS, max_size() div max_reveal() div 10).%use about 10% of size for blocks.
@@ -69,6 +71,7 @@ root() ->
 database() -> root() ++ "database.db".
 entropy() -> root() ++ "entropy.db".
 channel_manager() -> root() ++ "channel_manager.db".
+channel_partner() -> root() ++ "channel_partner.db".
 accounts() -> root() ++ "accounts.db".
 d_accounts() -> root() ++ "d_accounts.db".
 all_secrets() -> root() ++ "all_secrets.db".

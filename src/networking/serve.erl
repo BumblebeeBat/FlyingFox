@@ -12,6 +12,7 @@ start(Port) ->
 	],
     D = [
 	 {'_', [
+		{"/:file", external_handler, []},
 		{"/", handler, []}
 	       ]}
 	],

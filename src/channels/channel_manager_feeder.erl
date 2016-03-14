@@ -1,6 +1,6 @@
 -module(channel_manager_feeder).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, recieve/3,recieve_account/3,channel/1,recieve_locked_payment/4,spend_locked_payment/4,spend/2,new_channel/3,create_unlock_hash/2,spend_account/2,read_channel/1,unlock_hash/3]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, recieve/3,recieve_account/3,channel/1,recieve_locked_payment/4,spend_locked_payment/4,spend/2,new_channel/3,create_unlock_hash/2,spend_account/2,read_channel/1,unlock_hash/3,common/2]).
 -record(f, {channel = [], unlock = []}).
 init(ok) -> {ok, []}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
@@ -8,16 +8,6 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 terminate(_, _) -> io:format("died!"), ok.
 handle_info(_, X) -> {noreply, X}.
 handle_cast(_, X) -> {noreply, X}.
-handle_call({spend, ChId, Amount}, _From, X) ->
-    Ch = read_channel(ChId),
-    A1 = channel_block_tx:acc1(Ch),
-    A2 = channel_block_tx:acc2(Ch),
-    A = case keys:id() of
-	    A1 -> -Amount;
-	    A2 -> Amount
-	end,
-    Out = keys:sign(channel_block_tx:update(Ch, A, 1)),
-    {reply, Out, X};
 handle_call({new_channel, ChId, Channel, Accounts}, _From, X) ->
     Ch = channel_block_tx:channel_block_from_channel(ChId, Channel, 0, 1, constants:max_reveal()-1, 0, [], Accounts),
     F = #f{channel = Ch, unlock = []},
@@ -40,34 +30,26 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     Acc1 = channels:acc1(Channel),
     Acc2 = channels:acc2(Channel),
     ID = keys:id(),
-    io:fwrite("A is: "),
-    io:fwrite(integer_to_list(A)),
-    io:fwrite("\n"),
-    io:fwrite("Amount is: "),
-    io:fwrite(integer_to_list(Amount)),
-    io:fwrite("\n"),
-    ToAmount = 
-	case ID of
-	    Acc1 ->
-		true = (A == (Amount div 2)),
-		if 
-		    Spend -> 1; 
-		    true -> 
-			true = A > 0,
-			0 
-		end;
-	    Acc2 ->
-		true = (-A == (Amount div 2)),
-		if 
-		    Spend -> 2; 
-		    true -> 
-			true = A < 0,
-			1 
-		end
-	end,
-    SecretHash = language:extract_sh(channel_block_tx:bet_code(hd(channel_block_tx:bets(NewCh)))),
-    Script = language:hashlock(ToAmount, SecretHash),
-    NewCha = channel_block_tx:add_bet(Ch2, A, Script),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce and bet.
+    Bet = hd(channel_block_tx:bets(NewCh)),
+    A = channel_block_tx:bet_amount(Bet),
+    BetTo = (2 * channel_block_tx:bet_to(Bet)) - 1,
+    AA = abs(A),
+    AA = abs(Amount div 2),
+    TT = case ID of
+	     Acc1 -> 1;
+	     Acc2 -> -1
+	 end,
+    To = if
+	     Spend -> 
+		 true = (A * TT) < 0,
+		 (TT+1) div 2;
+	     true -> 
+		 true = (A * TT) > 0,
+		 -((TT-1) div 2)
+	 end,
+    SecretHash = language:extract_sh(channel_block_tx:bet_code(Bet)),
+    Script = language:hashlock(SecretHash),
+    NewCha = channel_block_tx:add_bet(Ch2, A, Script, To),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce and bet.
     NewCh = NewCha,
     NewF = #f{channel = SignedChannel, unlock = [[28]|F#f.unlock]},
     channel_manager:store(ChId, NewF),
@@ -75,17 +57,19 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     {reply, Out, X};
 handle_call({unlock_hash, ChId, Secret, SignedCh}, _From, X) ->
     {SignedCh2, N, BetCode} = common(ChId, Secret),
+    BH = hash:doit(BetCode),
     NewCh = sign:data(SignedCh2),
     NewCh = sign:data(SignedCh),
     F = channel_manager:read(ChId),
-    NewUnlock = replace_n(N, Secret, F#f.unlock),
+    %NewUnlock = replace_n(N, Secret, F#f.unlock),
+    NewUnlock = remove_n(N, F#f.unlock),
     %channel_block_tx:add,
-    NewF = #f{channel = SignedCh, unlock = NewUnlock},
+    NewF = #f{channel = SignedCh2, unlock = NewUnlock},
     channel_manager:store(ChId, NewF),
-    arbitrage:del(BetCode, ChId),
     Out = keys:sign(NewCh),
     {reply, Out, X};
-handle_call({recieve, ID, Payment, MinAmount, ChId, SignedPayment}, _From, X) -> 
+handle_call({recieve, ID, MinAmount, ChId, SignedPayment}, _From, X) -> 
+    Payment = sign:data(SignedPayment),
     F = channel_manager:read(ChId),
     Ch = sign:data(F#f.channel),
     NewAmount = channel_block_tx:amount(Payment),
@@ -129,7 +113,7 @@ recieve(ChId, MinAmount, SignedPayment) ->
                A2 -> sign:verify_1(SignedPayment, Pub1)
     end,
     true = channel_block_tx:is_cb(Payment),
-    gen_server:call(?MODULE, {recieve, ID, Payment, MinAmount, ChId, SignedPayment}).
+    gen_server:call(?MODULE, {recieve, ID, MinAmount, ChId, SignedPayment}).
 channel(X) -> X#f.channel.
 read_channel(Key) ->
     F = channel_manager:read(Key),
@@ -141,15 +125,21 @@ match_n(X, [Bet|Bets], N) ->
         X == Y -> N;
         true -> match_n(X, Bets, N+1)
     end.
-replace_n(N, New, L) -> replace_n(N, New, L, []).
-replace_n(0, New, [_|L], Out) -> 
-    lists:reverse(Out) ++ [New] ++ L;
-replace_n(N, New, [H|L], Out) -> 
-    replace_n(N-1, New, L, [H|Out]).
+remove_n(0, [H|T]) -> T;
+remove_n(N, [H|T]) -> [H|remove_n(N-1, T)].
+remove_bet(_, []) -> 1=2;
+remove_bet(Hash, [H|T]) -> 
+    A = hash:doit(channel_block_tx:bet_code(H)),
+    if
+	A == Hash -> T;
+	true -> [H|remove_bet(Hash, T)]
+    end.
+	    
 remove_nth(N, Bets) -> remove_nth(N, Bets, []).
 remove_nth(0, [_|Bets], Out) -> lists:reverse(Out) ++ Bets;
 remove_nth(N, [B|Bets], Out) -> remove_nth(N, Bets, [B|Out]).
 
+common(ChId, {secret, Secret}) -> common(ChId, Secret);
 common(ChId, Secret) ->
     SecretHash = hash:doit(Secret),
     OldCh = read_channel(ChId),
@@ -160,9 +150,12 @@ common(ChId, Secret) ->
     BetCode = channel_block_tx:bet_code(Bet),
     Amount = language:valid_secret(Secret, BetCode),
     NewBets = remove_nth(N, Bets),
+    NewBets = remove_bet(hash:doit(BetCode), Bets),
     NewCh = channel_block_tx:replace_bet(OldCh, NewBets),
-    NewNewCh = channel_block_tx:update(NewCh, Amount * A, 1),%
-    %we need to change amount.
+    C = Amount,
+    D = fractions:multiply_int(C, A),
+    NewNewCh = channel_block_tx:update(NewCh, D, 1),
+    true = channel_block_tx:nonce(OldCh) < channel_block_tx:nonce(NewNewCh),
     {keys:sign(NewNewCh), N, BetCode}.
 create_unlock_hash(ChId, Secret) ->
     {SignedCh, _, _} = common(ChId, Secret),
@@ -183,4 +176,12 @@ new_channel(ChId, Channel, Accounts) ->
 spend_account(Acc, Amount) ->
     spend(hd(channel_manager:id(Acc)), Amount).
 spend(ChId, Amount) ->
-    gen_server:call(?MODULE, {spend, ChId, Amount}).
+    Ch = read_channel(ChId),
+    A1 = channel_block_tx:acc1(Ch),
+    A2 = channel_block_tx:acc2(Ch),
+    A = case keys:id() of
+	    A1 -> -Amount;
+	    A2 -> Amount
+	end,
+    keys:sign(channel_block_tx:update(Ch, A, 1)).
+

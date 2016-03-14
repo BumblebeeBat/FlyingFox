@@ -1,10 +1,9 @@
 %this module needs to keep track of the highest-nonced transaction recieved in each channel.
-
 %We need the ability to spend and receive money, and to spend and receive hashlocked money.
 
 -module(channel_manager).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, hashlock/3,new_hashlock/3,read/1,delete/1,id/1,keys/0,read_channel/1,bet_amounts/1,test/0,store/2]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, new_hashlock/3,read/1,delete/1,id/1,keys/0,read_channel/1,bet_amounts/1,test/0,store/2]).
 -define(LOC, constants:channel_manager()).
 init(ok) -> 
     process_flag(trap_exit, true),
@@ -23,6 +22,7 @@ terminate(_, K) ->
     io:format("channel_manager died!"), ok.
 handle_info(_, X) -> {noreply, X}.
 handle_cast({store, N, Ch}, X) -> 
+    %It would be nice to add a rule that we can only increase the nonce.
     {noreply, dict:store(N, Ch, X)};
 handle_cast({delete, N}, X) -> 
     {noreply, dict:erase(N, X)}.
@@ -57,7 +57,6 @@ is_in(X, [_|T]) -> is_in(X, T).
 
 read(ChId) -> 
     K = keys(),
-    %true = is_in(ChId, K),
     case is_in(ChId, K) of
 	true ->
 	    {ok, Out} = gen_server:call(?MODULE, {read, ChId}),
@@ -71,18 +70,7 @@ bet_amounts(CB) ->
     sum_amounts(Bets, 0).
 sum_amounts([], X) -> X;
 sum_amounts([H|T], X) -> sum_amounts(T, X + abs(channel_block_tx:bet_amount(H))).
-hashlock(ChId, Amount, SecretHash) ->
-    Ch = read_channel(ChId),
-    Ch2 = channel_block_tx:update(Ch, Amount div 2, 1),
-    Channel = block_tree:channel(ChId),
-    Acc1 = channels:acc1(Channel),
-    Acc2 = channels:acc2(Channel),
-    MyAccount = case keys:id() of
-            Acc1 -> 1;
-            Acc2 -> 0
-        end,
-    Script = language:hashlock(MyAccount, SecretHash),
-    keys:sign(channel_block_tx:add_bet(Ch2, Amount div 2, Script)).
+
 new_hashlock(Partner, A, SecretHash) ->
     ChId = hd(channel_manager:id(Partner)),
     Channel = block_tree:channel(ChId),
@@ -93,6 +81,19 @@ new_hashlock(Partner, A, SecretHash) ->
 	A1 -> -A
     end,
     hashlock(ChId, Amount, SecretHash).
+hashlock(ChId, Amount, SecretHash) ->
+    Ch = read_channel(ChId),
+    Ch2 = channel_block_tx:update(Ch, Amount div 2, 1),
+    Channel = block_tree:channel(ChId),
+    Acc1 = channels:acc1(Channel),
+    Acc2 = channels:acc2(Channel),
+    MyAccount = case keys:id() of
+            Acc1 -> 1;
+            Acc2 -> 0
+        end,
+    Script = language:hashlock(SecretHash),
+    keys:sign(channel_block_tx:add_bet(Ch2, Amount div 2, Script, MyAccount)).
+
 
 test() ->    
     {Pub, Priv} = sign:new_key(),
@@ -130,8 +131,8 @@ test() ->
     Tx5 = hashlock(S, Amount, SH),
     Tx6 = sign:sign_tx(Tx5, Pub, Priv, tx_pool:accounts()),%partner runs recieve_locked_payment/3, and returns Tx6
     channel_manager_feeder:spend_locked_payment(S, Tx6, Amount, SH),%we absorb Tx6.
-
     Tx7 = channel_manager_feeder:create_unlock_hash(S, secrets:read(SH)),
+    %BH = hash:doit(channel_block_tx:bet_code(hd(channel_block_tx:bets(sign:data(Tx6))))),
     Tx8 = sign:sign_tx(Tx7, Pub, Priv, tx_pool:accounts()),%partner runs unlock_hash/3 and returns Tx8
     channel_manager_feeder:unlock_hash(S, secrets:read(SH), Tx8),
     E = element(2, element(2, read(S))),

@@ -69,14 +69,19 @@ pop3(From, M) ->
     io:fwrite("pop2 M "),
     io:fwrite(packer:pack(M)),
     io:fwrite("\n"),
-    S = M#msg.start,
+    S = M#msg.lasts,
     if
-	S == no_refund ->
+	S == unlock ->
+	    {unlock, M#msg.msg};
+	S == locked_payment ->
 	    {locked_payment, M#msg.msg};
-	true ->
+	is_integer(M#msg.lasts) ->
 	    Msg = M#msg.msg,
 	    T = ((erlang:monotonic_time() - M#msg.start) div 1000) + 2000000,%2 second fee automatically.
 						%T = timer:now_diff(erlang:monotonic_time(), M#msg.start) + 2000000,%2 second fee automatically.
+	    io:fwrite("M is "),
+	    io:fwrite(packer:pack(M)),
+	    io:fwrite("\n"),
 	    Cost = cost(size(Msg), M#msg.lasts),
 	    R = (M#msg.lasts * 1000000),
 	    Refund = ((R - T) * Cost) div R,
@@ -88,11 +93,13 @@ pop3(From, M) ->
 		    io:fwrite("you needed"),
 		    io:fwrite(integer_to_list(T)),
 		    io:fwrite("\n"),
-		    {ok, ok};
+		    {ok, 0};
 		true -> 
 						%nonce:customer_next(From),
 		    {pop_response, Msg, channel_manager_feeder:spend_account(From, Refund)}
-	    end
+	    end;
+	true ->
+	    io:fwrite(M#msg.lasts)
     end.
 cost(MsgSize, Time) -> 10000 * MsgSize * Time. %time in seconds
 -define(REGISTER, 100000).

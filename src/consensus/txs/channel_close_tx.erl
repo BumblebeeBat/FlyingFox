@@ -14,7 +14,7 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     OriginTx = sign:data(SignedOriginTx),
     T = block_tree:read(top),
     Top = block_tree:height(T),
-    true = channels:timeout_height(Channel) < Top - channel_block_tx:delay(OriginTx) + 1,
+    true = channels:timeout_height(Channel) < (Top - channel_block_tx:delay(OriginTx) + 1),
     Acc = block_tree:account(Tx#channel_close.acc, ParentKey, Accounts),
     NAcc = accounts:update(Acc, NewHeight, -Tx#channel_close.fee, 0, 1, TotalCoins),
     NewAccounts = dict:store(Tx#channel_close.acc, NAcc, Accounts),

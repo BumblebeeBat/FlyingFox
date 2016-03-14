@@ -8,9 +8,9 @@
 
 handle(Req, State) ->
     {ok, Data, _} = cowboy_req:body(Req),
-    io:fwrite("handler got data "),
-    io:fwrite(Data),
-    io:fwrite("\n"),
+    %io:fwrite("handler got data "),
+    %io:fwrite(Data),
+    %io:fwrite("\n"),
     true = is_binary(Data),
     A = packer:unpack(Data),
     B = doit(A),
@@ -28,14 +28,10 @@ doit({give_block, SignedBlock}) ->
     block_tree:absorb([SignedBlock]),
     {ok, 0};
 doit({block, N}) -> 
-    io:fwrite("handler doit block "),
-    io:fwrite(integer_to_list(N)),
-    io:fwrite("\n"),
     {ok, block_tree:read_int(N)};
 doit({tophash}) -> {ok, hash:doit(block_tree:top())};
 doit({recent_hash, H}) -> {ok, block_tree:is_key(H)};
 doit({accounts_size}) ->
-    %{ok, filelib:file_size("backup/accounts.db") div ?WORD};
     {ok, filelib:file_size(constants:backup_accounts()) div ?WORD};
 doit({tx_absorb, Tx}) -> 
     {ok, tx_pool_feeder:absorb(Tx)};
@@ -51,36 +47,85 @@ doit({accounts, N}) ->
     file:close(File),
     {ok, O};
 doit({channel_recieve, ChId, MinAmount, Ch}) ->
-    {ok, channel_manager_feeder:recieve(ChId, MinAmount, Ch)};
-doit({locked_payment, From, To, Payment, Amount, SecretHash}) ->
-    %ChIdTo = hd(channel_manager:id(To)),
+    Response = channel_manager_feeder:recieve(ChId, MinAmount, Ch),
+    channel_partner:store(ChId, Response),
+    {ok, Response};
+doit({locked_payment, From, To, Payment, Amount, SecretHash, BetHash, Emsg}) ->
     ChIdFrom = hd(channel_manager:id(From)),
     Return = channel_manager_feeder:recieve_locked_payment(ChIdFrom, Payment, Amount, SecretHash),
-
+    channel_partner:store(ChIdFrom, Return),
+    ChIdTo = hd(channel_manager:id(To)),
     Payment2 = channel_manager:new_hashlock(To, Amount, SecretHash),
-    
-    %Payment2 = channel_manager:hashlock(ChIdTo, Amount, SecretHash),
-    M = {locked_payment, Payment2, ChIdFrom, Amount, SecretHash},
-    mail:internal_send(To, M, no_refund),
+    Bet = hd(channel_block_tx:bets(sign:data(Payment2))),
+    BetCode = channel_block_tx:bet_code(Bet),
+    BetHash2 = hash:doit(BetCode),
+    BetHash2 = BetHash,
+    arbitrage:new(Payment, ChIdFrom, ChIdTo, Amount),
+    channel_partner:store(ChIdTo, Payment2),
+    M = {locked_payment, Payment2, ChIdTo, Amount, SecretHash, BetHash, Emsg},
+    mail:internal_send(To, M, locked_payment),
     {ok, Return};
-doit({locked_payment2, Payment, ChId, Amount, SecretHash}) ->
-    channel_manager_feeder:spend_locked_payment(ChId, Payment, Amount, SecretHash),
+%locked_payment2 is the response from a message we sent to their mail box.
+doit({locked_payment2, Payment, Amount, SecretHash, BetHash}) ->
+    %OldChannel = channel_manager:read_channel(ChId),
+    ChIdGain = arbitrage:agree(Payment, Amount, BetHash),
+    channel_manager_feeder:spend_locked_payment(ChIdGain, Payment, Amount, SecretHash),
+    channel_partner:store(ChIdGain, Payment),
     {ok, 0};
 doit({txs}) -> {ok, tx_pool:txs()};
 doit({txs, Txs}) -> 
     download_blocks:absorb_txs(Txs),
     {ok, 0};
+doit({unlock, ChId, {secret, Secret}, SignedCh}) ->
+    doit({unlock, ChId, Secret, SignedCh});
 doit({unlock, ChId, Secret, SignedCh}) ->
-    {ok, channel_manager_feeder:unlock_hash(ChId, Secret, SignedCh)};
+    %arbitrage:second_unlock(SignedCh),
+    OldCh = channel_manager:read_channel(ChId),
+    Bets = channel_block_tx:bets(OldCh),
+    Response = channel_manager_feeder:unlock_hash(ChId, Secret, SignedCh),
+    SH = hash:doit(Secret),
+    BetCode = language:hashlock(SH),
+    BH = hash:doit(BetCode),
+    Bet = arbitrage:bet_find(BH, Bets),
+    Amount = channel_block_tx:bet_amount(Bet),
+    L = arbitrage:check_hash(BH),%[{ChIdLose, ChIdGain, Amount}...]
+    ChId2 = arbitrage:check_loser(BetCode, ChId, Amount*2),
+    Ch = block_tree:channel(ChId2),
+    Acc1 = channels:acc1(Ch),
+    Acc2 = channels:acc2(Ch),
+    To = case keys:id() of
+	     Acc1 -> Acc2;
+	     Acc2 -> Acc1
+	 end,
+    Payment2 = channel_manager_feeder:create_unlock_hash(ChId2, Secret),
+    channel_partner:store(ChId2, Payment2),
+    M = {unlock, Payment2, ChId2, Secret},
+    M = packer:unpack(packer:pack(M)),
+    mail:internal_send(To, M, unlock),
+    channel_partner:store(ChId, Response),
+    {ok, Response};
+doit({unlock2, SignedCh, ChId, Secret}) ->
+    %arbitrage:second_unlock(SignedCh),
+    %channel_block_tx:bets(channel_manager_feeder:read_channel(ChId)),
+    {_, _, BetCode} = channel_manager_feeder:common(ChId, Secret),
+    OldCh = channel_manager:read_channel(ChId),
+    channel_manager_feeder:unlock_hash(ChId, Secret, SignedCh),
+    arbitrage:delete(OldCh, BetCode),
+    {ok, 0};
 doit({register, Payment, Acc}) ->
     {ok, mail:register(Payment, Acc)};
 doit({channel_spend, Payment, Partner}) ->
-    {ok, channel_manager_feeder:recieve_account(Partner, 0, Payment)};
+    Response = channel_manager_feeder:recieve_account(Partner, 0, Payment),
+    ChId = hd(channel_manager:id(Partner)),
+    channel_partner:store(ChId, Response),
+    {ok, Response};
 doit({mail_cost, Space, Time}) ->
     {ok, mail:cost(Space, Time)};
 doit({send, Payment, From, To, Msg, Seconds}) ->
     C = mail:cost(size(Msg), Seconds),
-    R = channel_manager_feeder:recieve_account(From, C, Payment),
+    ChId = hd(channel_manager:id(From)),
+    R = channel_manager_feeder:recieve(ChId, C, Payment),
+    channel_partner:store(ChId, R),
     mail:send(To, Msg, Seconds),
     {ok, R};
 doit({id}) -> {ok, keys:id()};
@@ -111,6 +156,8 @@ doit({new_channel, SignedTx}) ->
     tx_pool_feeder:absorb(NTx),
     {ok, NTx};
 doit({update_channel, ISigned, TheySigned}) ->%The contents of this message NEED to be encrypted. ideally we should encypt every message to this module.
+    %update_channel is a response when someone reads a message from their inbox and gets a refund for some of the money
+    
     Data = sign:data(ISigned),
     Data = sign:data(TheySigned),
     true = sign:verify(keys:sign(TheySigned), tx_pool:accounts()),
@@ -127,6 +174,7 @@ doit({update_channel, ISigned, TheySigned}) ->%The contents of this message NEED
 	end,
     NewNonce = channel_block_tx:nonce(Data),
     ChId = hd(channel_manager:id(TheirId)),
+    %Data = sign:data(hd(channel_partner:read(ChId))),
     OldCh = channel_manager:read_channel(ChId),
     OldNonce = channel_block_tx:nonce(OldCh),
     true = NewNonce > OldNonce,
@@ -138,9 +186,6 @@ doit({to_channel, SignedTx}) ->
     tx_pool_feeder:absorb(keys:sign(SignedTx)),
     {ok, 0};
 doit({backup_size, File}) ->
-    io:fwrite("backup size handler"),
-    io:fwrite(packer:pack(File)),
-    io:fwrite("\n"),
     {ok, backup:read_size(File)};
 doit({backup_read, File, N}) ->
     {ok, backup:read(File, N)};
