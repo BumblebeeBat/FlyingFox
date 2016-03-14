@@ -27,7 +27,7 @@ flip(X) -> flip(X, []).
 flip([], O) -> O;
 flip([H|T], O) -> flip(T, [H|O]).
 run(Code, Gas) -> run(Code, dict:new(), [], [], Gas).
-run([], _, _, _, Gas) when Gas < 0 -> 
+run(_, _, _, _, Gas) when Gas < 0 -> 
     io:fwrite("out of gas"),
     1=2;
 run([], _, _, Stack, _) -> Stack;
@@ -46,11 +46,20 @@ run([36|Code], Functions, Alt, Stack, Gas) ->%define
     B = hash:doit(H),
     run(T, dict:store(B, H, Functions), Alt, Stack, Gas-cost(36)-length(H));
 run([38|Code], Functions, Alt, [B|Stack], Gas) ->%call
+    %Nice for writing scripts.
+    %io:fwrite("stack is "),
+    %io:fwrite(packer:pack(Stack)),
+    %io:fwrite("\n"),
     case dict:find(B, Functions) of
 	error -> 
+	    io:fwrite("known functions: "),
+	    io:fwrite(packer:pack(dict:fetch_keys(Functions))),
+	    io:fwrite("\n"),
 	    io:fwrite("undefined function");
 	{ok, F} ->
-	    run(F++Code, Functions, Alt, Stack, Gas-cost(37))
+	    %replace 41 with B, call
+	    G = replace(41, B, F),
+	    run(G++Code, Functions, Alt, Stack, Gas-cost(37))
     end;
 run([39|Code], Functions, Alt, [N|Stack], Gas) ->%moves the top of the stack to the top of the alt stack.
     run(Code, Functions, [N|Alt], Stack, Gas-cost(39));
@@ -219,7 +228,12 @@ cost(B) when is_binary(B) -> size(B)*1;
 cost({integer, _}) -> 1;
 cost(true) -> 1;
 cost(false) -> 1.
-    
+replace(A, B, C) -> replace(A, B, C, []).
+replace(_, _, [], Out) -> flip(Out);
+replace(A, B, [A|T], Out) -> 
+    replace(A, B, T, [B|Out]);
+replace(A, B, [H|T], Out) -> 
+    replace(A, B, T, [H|Out]).
 hashlock(SecretHash) ->
     assemble([hash, SecretHash, eq, switch, {f, 0, 1}, {f, 1, 1}, 2, else, {f, 0, 1}, {f, 1, 2}, 1, then]).
 valid_secret(Secret, Script) -> 
@@ -248,5 +262,14 @@ test() ->
     true = run(assemble([{f, 1, 2}, to_r, from_r]), 100) == [{f, 1, 2}],
     H = [{f, 1, 2}, {integer, 500}, plus],
     HASH = hash:doit(assemble(H)),
-    true = [{f,1001,2}] == run(assemble([define, {f, 1, 2}, {integer, 500}, plus, stop, HASH, call]), 100),
+    Code = [define]++H++[stop, HASH, call],
+    true = [{f,1001,2}] == run(assemble(Code), 100),
+    H20 = [dup, rot, plus],
+    Hash20 = hash:doit(assemble(H20)),
+    H2 = [tor, dup, {integer, 0}, gt, switch, {integer, 1}, minus, rot, Hash20, call, recurse, call, else, then],
+    Hash2 = hash:doit(assemble(H2)),
+    Code1 = [define] ++ H20 ++ [stop, 
+	     define] ++ H2 ++ [stop, 
+	     {integer, 5}, {integer, 0}, {integer, 1}, Hash2, call],
+    true = [0, 8, 5] == run(assemble(Code1), 1000),
     success.
