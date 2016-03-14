@@ -199,7 +199,7 @@ bet_results([B|Bets], [Y|Revealed], BetAmount, {Win1, Win2, Loss}) when not is_l
     X = {Win1, Win2, Loss+B#bet.amount},
     bet_results(Bets, Revealed, BetAmount, X);
 bet_results([B|Bets], [R|Revealed], BA, {Win1, Win2, Loss}) ->
-    {Del, X, _} = language:run_script(R++B#bet.code),
+    {Del, X, _} = language:run_script(R++B#bet.code, 1000),
     %X = hd(tl(language:run(R++B#bet.code))),
     Y = fractions:subtract(fractions:subtract(fractions:new(1, 1), X), Del),
     TooSmall1 = fractions:less_than(X, fractions:new(0, 1)),
@@ -237,7 +237,7 @@ bet_nonces([_|Bets], [], Out) -> bet_nonces(Bets, [], [0|Out]);
 bet_nonces([_|Bets], [R|Reveal], Out) when not is_list(R) ->
     bet_nonces(Bets, Reveal, [0|Out]);
 bet_nonces([B|Bets], [R|Reveal], Out) ->
-    {X, _, _} = language:run_script(R++B),
+    {X, _, _} = language:run_script(R++B, 1000),
     %X = hd(language:run(R++B)),
     bet_nonces(Bets, Reveal, [X|Out]).
 %slash(CB) -> slash(CB#channel_block.bets, []).
