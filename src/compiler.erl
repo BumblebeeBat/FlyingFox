@@ -175,9 +175,9 @@ test() ->
 ">>),
     true = [16] == language:run(B, 1000),
     C = compile(<<"
-: main dup {i 0 > if {i 1 - {i 0 swap recurse call else then ;
+: main dup {i 0 > if {i 1 - {i 0 swap recurse call else drop then ;
 {i 5 main call
 ">>),
-    true = [0,0,0,0,0,0] == language:run(C, 1000),
+    true = [0,0,0,0,0] == language:run(C, 1000),
     success.
     

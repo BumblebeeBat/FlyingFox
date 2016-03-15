@@ -3,16 +3,11 @@ Need to add some transaction types for the new type of mining.
 80 bytes total, {4:version, 32:hashPrevBlock, 32:MerkleRoot, 4:time, 4:difficulty, 4:nonce}
 Maybe I should start out owning $1,000,000 of coins or so, otherwise it will be too cheap for a whale to print a bunch of coins and refuse to take part in consensus. The $1,000,000 of coins could be unspendable, only for consensus purposes.
 
-We should change the way flying fox scripts get merkelized. Maybe it should be like an case-opcode, where the code that gets executed needs to match a hash.
-Maybe we should be able to call a "function" by the hash of the list of opcodes. add define to the language. We only have to define the functions that get used. If we add "define" then we also need to add gas, and it would be turing complete.
-
-
 https://blog.ethereum.org/2016/02/17/smart-contracts-courts-not-smart-judges/
 Maybe upgrade the off-chain code so that it is computed by binary search.
 
 It would be nice if we have a javascript interface to send spam-less messages. The recipient has the option of deleting the sender's funds.
 
-hashlock lightning payments javascript
 close_channel javascript multiple steps
 *Look in channel_partner. Make sure our partner has = or < nonce than channel_manager.
 change server javascript
@@ -32,8 +27,6 @@ Block tree needs to hold many more blocks. Lets try to keep it below 200 megabyt
 
 the idea was introduced here: https://blog.ethereum.org/2014/11/25/proof-stake-learned-love-weak-subjectivity/
 Weak subjectivity is necessary for security reasons. It stops long range attacks.
+POW solves the same problem, so long as people are still mining.
 
 Add onion routing to messaging
-
-Maybe instead of sending channel messages to their mail box, we should give them an api where they can look up if the channel was updated?
-
