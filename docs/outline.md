@@ -24,6 +24,7 @@ Every address has a nonce that updates on each tx. To be valid, the tx must incl
 - delete_account
 - sign
 - slasher
+- fork_slash
 - reveal
 - to_channel
 - channel_block
@@ -55,6 +56,11 @@ If a channel is participating in the validation process, then one of the partici
 
 #### slasher:
 If you can prove that the same address signed on 2 different blocks at the same height, then you can take 1/3rd of the deposit, and destroy the rest.
+
+#### fork_slash:
+The scenario we are trying to prevent looks something like this-
+for all the even blocks validators sign on fork A, and for all the odd blocks they sign on fork B.
+This transaction makes the sign transaction act like a commitment. Each validator is commiting to only sign on decendents of the 26th ancestor of the block they sign on. 26th cousin is ok, but 27th cousin is invalid.
 
 #### reveal:
 After you sign, you wait a while, and eventually are able to make this tx. This tx reveals the random `entropy_bit` and `salt` from the `sign` tx, and it reclaims the safety deposit given in the `sign` tx. (upgrade? If your bit is in the minority, then your prize is bigger.)
