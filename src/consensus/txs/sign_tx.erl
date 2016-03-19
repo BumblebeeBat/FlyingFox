@@ -1,9 +1,10 @@
 -module(sign_tx).
--export([test/0, doit/8, htoi/1, itoh/1, winner/5, sign/0, winners/1, acc/1, secret_hash/1, winners_length/1, number/1, prev_hash/1, repeat/2]).
--record(sign_tx, {acc = 0, nonce = 0, secret_hash = [], winners = [], prev_hash = "", number = 0}).
+-export([test/0, doit/8, htoi/1, itoh/1, winner/5, sign/0, winners/1, acc/1, secret_hash/1, winners_length/1, number/1, prev_hash/1, repeat/2, finality_ancestor/1]).
+-record(sign_tx, {acc = 0, nonce = 0, secret_hash = [], winners = [], prev_hash = "", number = 0, finality_ancestor = ""}).
 number(T) -> T#sign_tx.number.
 prev_hash(T) -> T#sign_tx.prev_hash.
 secret_hash(T) -> T#sign_tx.secret_hash.
+finality_ancestor(T) -> T#sign_tx.finality_ancestor.
 winners_length(Tx) -> length(Tx#sign_tx.winners).
 acc(Tx) -> Tx#sign_tx.acc.
 winners(MyPower, TotalPower, Entropy, Pubkey) ->
@@ -27,10 +28,14 @@ sign() ->
     TotalPower = block_tree:block_power(PBlock),
     W = winners(MyPower, TotalPower, Entropy, accounts:pub(Acc)),
     R = repeat(Id, tx_pool:txs()),
+    Height = block_tree:block_number(PBlock),
+    HF = Height - constants:finality(),
+    ABlock = sign:data(block_tree:read_int(max(0, HF))),
+    AHash = hash:doit(ABlock),
     if 
 	R -> 0;
         length(W) > 0 ->
-	    Tx = #sign_tx{acc = Id, nonce = accounts:nonce(Acc) + 1, secret_hash = secrets:new(), winners = W, prev_hash = ParentKey, number = block_tree:block_number(PBlock)},
+	    Tx = #sign_tx{acc = Id, nonce = accounts:nonce(Acc) + 1, secret_hash = secrets:new(), winners = W, prev_hash = ParentKey, number = block_tree:block_number(PBlock), finality_ancestor = AHash},
             tx_pool_feeder:absorb(keys:sign(Tx));
         true ->
             io:fwrite("cannot sign, did not win this round\n")
@@ -70,6 +75,12 @@ doit(Tx, Txs, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight
     %SHstate = block_tree:secret(NewHeight, SH, ParentKey, SecretHashes),
     %SHstate = false,
     NewSecretHash = dict:store({Pnum, SH}, true, SecretHashes),%newheight should instead be the height of the previous block.
+    PBlock = sign:data(block_tree:block(ParentKey)),
+    Height = block_tree:block_number(PBlock),
+    HF = Height - constants:finality(),
+    ABlock = sign:data(block_tree:read_int(max(0, HF))),
+    AHash = hash:doit(ABlock),
+    AHash = Tx#sign_tx.finality_ancestor,
     {Channels, NewAccounts, TotalCoins - Lose, NewSecretHash}.
 repeat(_, []) -> false;
 repeat(Accn, [SignedTx|Txs]) ->

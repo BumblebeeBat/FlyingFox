@@ -27,14 +27,17 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 terminate(_, _) -> io:format("block tree died!"), ok.
 handle_info(_, X) -> {noreply, X}.
 read_int_internal(Height, BlockPointer, D) ->
-    BlockX = dict:fetch(BlockPointer, D),
-    F = constants:finality(),
-    if
-        %BlockX == finality -> block_finality:read(Height);
-        BlockX#x.height - Height > F -> block_finality:read(Height);
-        BlockX#x.height == Height -> BlockX#x.block;
-	BlockX#x.parent == finality -> block_finality:read(Height);
-        true -> read_int_internal(Height, BlockX#x.parent, D)
+    case dict:find(BlockPointer, D) of
+	error -> error;
+	{ok, BlockX} ->
+	    F = constants:finality(),
+	    if
+						%BlockX == finality -> block_finality:read(Height);
+		BlockX#x.height - Height > F -> block_finality:read(Height);
+		BlockX#x.height == Height -> BlockX#x.block;
+		BlockX#x.parent == finality -> block_finality:read(Height);
+		true -> read_int_internal(Height, BlockX#x.parent, D)
+	    end
     end.
 handle_cast(reset, _) -> 
     {ok, DB} = init(ok),
@@ -91,11 +94,11 @@ handle_call({write, K, V}, _From, D) ->
 			      P = dict:fetch(Child, D),
 			      NewP = #x{block = P#x.block, height = P#x.height, parent = finality, accounts = P#x.accounts, channels = P#x.channels, secrets = P#x.secrets},
 			      dict:store(Child, NewP, dict:erase(OldKey, D));
-		     true  -> D
-		 end,
+			  true  -> D
+		      end,
                  txs:dump(),
                  dict:store(top, hash:doit(NewBlock), DD);
-        true -> D
+	     true -> D
     end,
     {reply, 0, dict:store(K, V, ND)}.
 absorb_accounts([], _) -> ok;
@@ -315,7 +318,7 @@ test() ->
     reveal:reveal(),
     io:fwrite("block tree test 1"),
     buy_block(),
-    A3 = sign_tx(slasher_tx:slasher(1, keys:sign({sign_tx, 0, 0, 0, 0, 0, 0})), Pub, Priv),
+    A3 = sign_tx(slasher_tx:slasher(1, keys:sign({sign_tx, 0, 0, 0, 0, 0, 0, 0})), Pub, Priv),
     io:fwrite("block tree test 103"),
     tx_pool_feeder:absorb(A3),
     io:fwrite("block tree test 11"),
@@ -335,6 +338,11 @@ test() ->
     io:fwrite("block tree test 3"),
     reveal:reveal(),
     buy_block(),
+    %If we use the first A4, it should fail.
+    %TTT = hd(tl(tl(tl(tl(element(5, sign:data(block_tree:read_int(2)))))))),
+    %A4 = sign_tx(fork_slash_tx:slasher(1, TTT, 2), Pub, Priv),
+    A4 = sign_tx(fork_slash_tx:slasher(1, keys:sign({sign_tx, 0, 0, 0, 0, 0, 1, 0}), 2), Pub, Priv),
+    tx_pool_feeder:absorb(A4),
     ToChannel = to_channel_tx:to_channel(24000, 0, 10, 0),
     SignedToChannel = sign_tx(ToChannel, Pub, Priv),
     tx_pool_feeder:absorb(SignedToChannel),
