@@ -1,6 +1,6 @@
-we need to charge the block creator constants:block_creation_fee() in block_tree:write().
+remove fee from record channel_block. It does nothing.
 
-It is inefficient to store things in base64 mode. keep it decoded as much as possible.
+We need to add a fee to sign_tx. This fee can possibly be negative.
 
 Having an auction for the block creator only makes it possible to move the price down.
 We need a way to push the price up too.
@@ -21,12 +21,9 @@ They should have maybe 30 or 100 blocks of time to complete the work in.
 
 During the first tx take a safety deposit to incentivize them to only sign up if there is a greater than 50% chance they will be able to mine on time.
 
-Need to add some transaction types for the new type of mining.
-80 bytes total, {4:version, 32:hashPrevBlock, 32:MerkleRoot, 4:time, 4:difficulty, 4:nonce}
-Maybe I should start out owning $1,000,000 of coins or so, otherwise it will be too cheap for a whale to print a bunch of coins and refuse to take part in consensus. The $1,000,000 of coins could be unspendable, only for consensus purposes.
+It is inefficient to store things in base64 mode. keep it decoded as much as possible.
 
-https://blog.ethereum.org/2016/02/17/smart-contracts-courts-not-smart-judges/
-Maybe upgrade the off-chain code so that it is computed by binary search.
+Maybe I should start out owning $1,000,000 of coins or so, otherwise it will be too cheap for a whale to print a bunch of coins and refuse to take part in consensus. The $1,000,000 of coins could be unspendable, only for consensus purposes.
 
 It would be nice if we have a javascript interface to send spam-less messages. The recipient has the option of deleting the sender's funds.
 
@@ -40,7 +37,7 @@ Make an OTP erts package so that it is easier to install.
 
 handler should have every input and output be encrypted. Otherwise eavesdroppers will publish our channel before we want it published.
 
-We need tests to make sure that skipping a height works. It should cost more for the block creator.
+We need tests to make sure that skipping a height works. It shouldcost more for the block creator.
 
 constants:security_bonds_per_winner() should be tuned. The random number generator should be seeded from a long enough time ago.
 We want it to be impossible to cause a fork by bribing validators to double-sign. There shouldn't be enough money in the blockchain to maintain the fork long enough to have different randomness on each side.
@@ -52,3 +49,6 @@ Weak subjectivity is necessary for security reasons. It stops long range attacks
 POW solves the same problem, so long as people are still mining.
 
 Add onion routing to messaging
+
+https://blog.ethereum.org/2016/02/17/smart-contracts-courts-not-smart-judges/
+Maybe upgrade the off-chain code so that it is computed by binary search.

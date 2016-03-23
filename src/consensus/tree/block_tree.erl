@@ -398,6 +398,7 @@ test() ->
     false = EmptyChannel == channel(24000),
     reveal:reveal(),
     sign_tx:sign(),
+    buy_block(),
     success.
 long_test() -> 
     {Pub, Priv} = sign:new_key(),
