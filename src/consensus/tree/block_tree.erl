@@ -245,7 +245,7 @@ write2(false, SignedBlock) ->
     NewAccountsDict = dict:store(CreatorId, NewCreator, AccountsDict),
     V = #x{accounts = NewAccountsDict, channels = ChannelsDict, block = SignedBlock, parent = ParentKey, height = NewHeight, secrets = Secrets},
     %possibly change top block, and prune one or more blocks, and merge a block with the finality databases.
-    NTC = total_coins(Block),%remove this line for speed
+    %NTC = total_coins(Block),%remove this line for speed, add it back for sanity checking.
     Key = hash:doit(sign:data(SignedBlock)),
     gen_server:call(?MODULE, {write, Key, V}),
     tx_pool:dump(NTC).
