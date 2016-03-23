@@ -1,8 +1,9 @@
 -module(block_tree).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, long_test/0,test/0,write/1,top/0,read/1,read_int/2,read_int/1,secret/4,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/2, block_power/1,block_entropy/1,empty_block/0,total_coins/0, buy_block/0, block_number/1, block2txs/1, block_root/1,backup/1,x_to_block/1,check/0,reset/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, long_test/0,test/0,write/1,top/0,read/1,read_int/2,read_int/1,secret/4,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/2, block_power/1,block_entropy/1,empty_block/0,total_coins/0,total_coins/1, buy_block/0, block_number/1, block2txs/1, block_root/1,backup/1,x_to_block/1,check/0,reset/0]).
 -record(block, {acc = 0, number = 0, hash = "", txs = [], power = fractions:multiply_int(constants:initial_portion_delegated(), constants:initial_coins()), entropy = 0, total_coins = constants:initial_coins(), db_root = <<>>}).
 %power is how many coin are in channels. it is for consensus.
+%total coins is a little high. It doesn't include the block creation fee from creating the current block
 block_root(B) -> B#block.db_root.
 block_number(B) -> B#block.number.
 block_power(B) -> B#block.power.
@@ -142,9 +143,18 @@ reset() -> gen_server:cast(?MODULE, reset).
 top() -> gen_server:call(?MODULE, top).
 is_key(X) -> gen_server:call(?MODULE, {key, X}).
 read(K) -> gen_server:call(?MODULE, {read, K}).
+creation_cost(Block) ->
+    case Block#block.number of
+	0 -> 0;
+	N ->
+	    X = read(Block#block.hash),
+	    PH = (sign:data(X#x.block))#block.number,
+	    BlockGap = N - PH - 1,
+	    fractions:multiply_int(constants:block_creation_fee(), Block#block.total_coins * round(math:pow(2, BlockGap)))
+    end.
 total_coins() -> total_coins(sign:data(block(read(read(top))))).
-total_coins(X) -> 
-    X#block.total_coins.
+total_coins(Block) -> 
+    Block#block.total_coins - creation_cost(Block).
 block() -> block(read(read(top))).
 block(X) when is_record(X, x) -> 
     X#x.block;
@@ -206,7 +216,7 @@ write2(false, SignedBlock) ->
     Entropy = entropy:doit(NewNumber),
     Entropy = Block#block.entropy, 
     {ChannelsDict, AccountsDict, NewTotalCoins, Secrets} = txs:digest(Block#block.txs, ParentKey, dict:new(), dict:new(), Parent#block.total_coins, dict:new(), NewNumber),
-    NewTotalCoins = Block#block.total_coins,
+    %NewTotalCoins = Block#block.total_coins,
 %take fee from block creator in the digest.
     %TCIncreases and CCLosses this way is no good.
     %Instead, look at tc increases in the most recent block, and cc_losses in the most recent block. The estimate is less precise, but more accurate. The estimate has a bigger bell curve, but at least the bell curve's center can't be adjusted by an adversary. 
@@ -216,11 +226,19 @@ write2(false, SignedBlock) ->
     CFLLosses = channel_funds_limit_tx:losses(Block#block.txs, dict:new(), ParentKey),
     NewPower = power(Parentx#x.block) + TcIncreases - CCLosses - RepoLosses - CFLLosses,%increases from to_channel tx fed into finality (when the channel is still open) - decreases from channel closures in this block (for channels that have been open since finality).
     NewPower = power(SignedBlock),
-    V = #x{accounts = AccountsDict, channels = ChannelsDict, block = SignedBlock, parent = ParentKey, height = Parentx#x.height + 1, secrets = Secrets},
+    NewHeight = Parentx#x.height + BlockGap,
+    CreationCost = creation_cost(Block),
+    %CreationCost = fractions:multiply_int(constants:block_creation_fee(), NewTotalCoins * round(math:pow(2, BlockGap - 1))),
+    CreatorId = Block#block.acc,
+    NewCreator = accounts:update(account(CreatorId), NewHeight, -CreationCost, 0, 0, NewTotalCoins),
+    NewAccountsDict = dict:store(CreatorId, NewCreator, AccountsDict),
+    V = #x{accounts = NewAccountsDict, channels = ChannelsDict, block = SignedBlock, parent = ParentKey, height = NewHeight, secrets = Secrets},
     %possibly change top block, and prune one or more blocks, and merge a block with the finality databases.
+    NTC = Block#block.total_coins - CreationCost,
+    NTC = total_coins(Block),
     Key = hash:doit(sign:data(SignedBlock)),
     gen_server:call(?MODULE, {write, Key, V}),
-    tx_pool:dump(Block#block.total_coins).
+    tx_pool:dump(NTC).
 absorb([]) -> ok;
 absorb([Block|T]) -> write(Block), absorb(T).
 %secret(N, SH) -> secret(N, SH, tx_pool:secrets()).

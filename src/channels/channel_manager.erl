@@ -109,8 +109,11 @@ test() ->
     sign_tx:sign(),
     reveal:reveal(),
     block_tree:buy_block(),
-    S = 24005,
+    S = 24004,
     C = read(S),
+    io:fwrite("C "),
+    io:fwrite(packer:pack(C)),
+    io:fwrite("\n"),
     D = element(2, element(2, C)),
     D = {channel_block,0,Partner,0,1,[],S,false,259,0,0,0},
     %Example of spending money through a channel.
