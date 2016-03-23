@@ -1,6 +1,6 @@
 -module(block_tree).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, long_test/0,test/0,write/1,top/0,read/1,read_int/2,read_int/1,secret/4,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/2, block_power/1,block_entropy/1,empty_block/0,total_coins/0,total_coins/1, buy_block/0, block_number/1, block2txs/1, block_root/1,backup/1,x_to_block/1,check/0,reset/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, long_test/0,test/0,write/1,top/0,read/1,read_int/2,read_int/1,secret/4,account/1,account/2,account/3,channel/2,channel/3,channel/1,absorb/1,is_key/1,height/1,height/0,txs/1,txs/0,power/0,power/1,block/0,block/1,buy_block/2, block_power/1,block_entropy/1,empty_block/0,total_coins/0,total_coins/1, buy_block/0, block_number/1, block2txs/1, block_root/1,backup/1,x_to_block/1,check/0,reset/0,creation_cost/1]).
 -record(block, {acc = 0, number = 0, hash = "", txs = [], power = fractions:multiply_int(constants:initial_portion_delegated(), constants:initial_coins()), entropy = 0, total_coins = constants:initial_coins(), db_root = <<>>}).
 %power is how many coin are in channels. it is for consensus.
 %total coins is a little high. It doesn't include the block creation fee from creating the current block
@@ -152,9 +152,19 @@ creation_cost(Block) ->
 	    BlockGap = N - PH - 1,
 	    fractions:multiply_int(constants:block_creation_fee(), Block#block.total_coins * round(math:pow(2, BlockGap)))
     end.
+tx_cost(Block) ->
+    NewTotalCoins = 
+	case Block#block.number of
+	    0 -> Block#block.total_coins;
+	    N ->
+		Parent = (sign:data((read(Block#block.hash))#x.block)),
+		{_, _, NTC, _} = txs:digest(Block#block.txs, Block#block.hash, dict:new(), dict:new(), Parent#block.total_coins, dict:new(), N),
+		NTC
+	end,
+    Block#block.total_coins - NewTotalCoins.
 total_coins() -> total_coins(sign:data(block(read(read(top))))).
 total_coins(Block) -> 
-    Block#block.total_coins - creation_cost(Block).
+    Block#block.total_coins - creation_cost(Block) - tx_cost(Block).
 block() -> block(read(read(top))).
 block(X) when is_record(X, x) -> 
     X#x.block;
@@ -230,12 +240,12 @@ write2(false, SignedBlock) ->
     CreationCost = creation_cost(Block),
     %CreationCost = fractions:multiply_int(constants:block_creation_fee(), NewTotalCoins * round(math:pow(2, BlockGap - 1))),
     CreatorId = Block#block.acc,
-    NewCreator = accounts:update(account(CreatorId), NewHeight, -CreationCost, 0, 0, NewTotalCoins),
+    NTC = NewTotalCoins - CreationCost,
+    NewCreator = accounts:update(account(CreatorId), NewHeight, -CreationCost, 0, 0, NTC),
     NewAccountsDict = dict:store(CreatorId, NewCreator, AccountsDict),
     V = #x{accounts = NewAccountsDict, channels = ChannelsDict, block = SignedBlock, parent = ParentKey, height = NewHeight, secrets = Secrets},
     %possibly change top block, and prune one or more blocks, and merge a block with the finality databases.
-    NTC = Block#block.total_coins - CreationCost,
-    NTC = total_coins(Block),
+    NTC = total_coins(Block),%remove this line for speed
     Key = hash:doit(sign:data(SignedBlock)),
     gen_server:call(?MODULE, {write, Key, V}),
     tx_pool:dump(NTC).
