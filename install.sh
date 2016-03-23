@@ -22,3 +22,5 @@ PATH=$PATH:./rel/flying_fox/erts-6.4/bin
 ./rebar compile
 
 sh clean.sh #this deletes the database so every time we re-start, we have 0 blocks again. only needed during testing.
+
+echo "successfully installed"
