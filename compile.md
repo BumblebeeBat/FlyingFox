@@ -6,7 +6,8 @@ For ubuntu, I needed to install dependencies:
 sudo apt-get install libncurses5-dev
 sudo apt-get install libssl-dev
 sudo apt-get install unixodbc-dev
-sudo apt-get install g++ #only sometimes need this.
+sudo apt-get install g++
+sudo apt-get install git
 ```
 Next, download Flying Fox.
 

@@ -238,7 +238,6 @@ write2(false, SignedBlock) ->
     NewPower = power(SignedBlock),
     NewHeight = Parentx#x.height + BlockGap,
     CreationCost = creation_cost(Block),
-    %CreationCost = fractions:multiply_int(constants:block_creation_fee(), NewTotalCoins * round(math:pow(2, BlockGap - 1))),
     CreatorId = Block#block.acc,
     NTC = NewTotalCoins - CreationCost,
     NewCreator = accounts:update(account(CreatorId), NewHeight, -CreationCost, 0, 0, NTC),
