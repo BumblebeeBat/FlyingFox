@@ -9,4 +9,7 @@ else
     mkdir backup
 fi
 
-cp keys_backup keys.db
+if [ -e "keys_backup" ]
+then
+    cp keys_backup keys.db
+fi
