@@ -7,15 +7,17 @@ pow(Goal, TimeLimit, Difficulty, RecentHash) ->
     Tx = #pow{id = Id, nonce = accounts:nonce(Acc) + 1, amount = Goal, fee = 0, mining_nonce = crypto:rand_bytes(8), recent_hash = RecentHash, difficulty = Difficulty},
     S = size(RecentHash),
     S = 32,
-    case work(Tx, TimeLimit, now(), 0) of
-	{ok, T, N} -> {T, N};
+    %case work(Tx, TimeLimit, now(), 0) of
+    %{ok, T, N} -> {T, N};
 	    %tx_pool_feeder:absorb(keys:sign(T));
-	{error, R} -> R
-    end.
+    %{error, R} -> R
+    %end.
+    ok.
 	    
 work(Tx, TimeLimit, Start, N) ->
     %Calculating all those slow square roots in this function is slow.
-    X = timer:now_diff(now(), Start),
+    %X = timer:now_diff(now(), Start),
+    X = 9,
     W = enough_work(Tx),
     if 
 	W -> {ok, Tx, N};
@@ -25,6 +27,7 @@ work(Tx, TimeLimit, Start, N) ->
 	    work(NTx, TimeLimit, Start, N+1)
     end.
 make_header(Difficulty, Amount, Id, PrevHeaderHash, Hash, Nonce) ->
+    Amount = 0,
     <<Nonce1:32, Nonce2:32>> = Nonce,
     D = sqrt(sqrt(Difficulty)),
     256 = size(Hash),

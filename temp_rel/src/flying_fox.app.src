@@ -1,0 +1,14 @@
+{application, flying_fox,
+ [
+  {description, "blockchain"},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib,
+		  cowboy,
+                  jiffy
+                 ]},
+  {mod, { flying_fox_app, []}},
+  {env, []}
+ ]}.

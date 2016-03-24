@@ -1,6 +1,14 @@
-remove fee from record channel_block. It does nothing.
+Building an executable of the software for windows is very important. It needs to include logging, for easy error reporting.
+
+http://stackoverflow.com/questions/11796941/how-do-you-compile-an-erlang-program-into-a-standalone-windows-executable
+
+
+
+channel_block_tx:fee needs to be used. If someone closes the channel early, the person who didn't close the channel pays this fee to the person who did. Unless there isn't enough money left, in which case the person who closes the channel gets all the non-deleted money.
 
 We need to add a fee to sign_tx. This fee can possibly be negative.
+
+Consider updating sign_tx to the bet based system used in Casper. Validators can sign on conflicting branches, as long as their total bets add to something <= 1. 
 
 Having an auction for the block creator only makes it possible to move the price down.
 We need a way to push the price up too.
@@ -46,7 +54,7 @@ Block tree needs to hold many more blocks. Lets try to keep it below 200 megabyt
 
 the idea was introduced here: https://blog.ethereum.org/2014/11/25/proof-stake-learned-love-weak-subjectivity/
 Weak subjectivity is necessary for security reasons. It stops long range attacks.
-POW solves the same problem, so long as people are still mining.
+POW solves the same problem too, so long as people are still mining.
 
 Add onion routing to messaging
 
