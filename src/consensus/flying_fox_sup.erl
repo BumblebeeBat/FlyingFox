@@ -12,7 +12,8 @@ child_killer([H|T]) ->
     supervisor:terminate_child(flying_fox_sup, H),
     child_killer(T).
 stop() -> 
-    child_killer(?keys).
+    child_killer(?keys),
+    halt().
 %exit(keys, kill).
 %supervisor:terminate_child(flying_fox_sup, keys).
 init([]) ->
