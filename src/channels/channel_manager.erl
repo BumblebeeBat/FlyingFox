@@ -3,7 +3,7 @@
 
 -module(channel_manager).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, new_hashlock/3,read/1,delete/1,id/1,keys/0,read_channel/1,bet_amounts/1,test/0,store/2]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, new_hashlock/3,hashlock/5,read/1,delete/1,id/1,keys/0,read_channel/1,bet_amounts/1,test/0,store/2]).
 -define(LOC, constants:channel_manager()).
 init(ok) -> 
     process_flag(trap_exit, true),
@@ -84,16 +84,18 @@ new_hashlock(Partner, A, SecretHash) ->
     hashlock(ChId, Amount, SecretHash).
 hashlock(ChId, Amount, SecretHash) ->
     Ch = read_channel(ChId),
-    Ch2 = channel_block_tx:update(Ch, Amount div 2, 1),
+    keys:sign(hashlock(ChId, Ch, Amount, SecretHash, keys:id())).
+hashlock(ChId, Ch, Amount, SecretHash, Id) ->
+    Ch2 = channel_block_tx:update(Ch, 0, 1),
     Channel = block_tree:channel(ChId),
     Acc1 = channels:acc1(Channel),
     Acc2 = channels:acc2(Channel),
-    MyAccount = case keys:id() of
+    MyAccount = case Id of
             Acc1 -> 1;
-            Acc2 -> 0
+            Acc2 -> -1
         end,
     Script = language:hashlock(SecretHash),
-    keys:sign(channel_block_tx:add_bet(Ch2, Amount div 2, Script, MyAccount)).
+    channel_block_tx:add_bet(Ch2, Amount, Script, MyAccount).
 
 
 test() ->    

@@ -179,5 +179,8 @@ test() ->
 {i 5 main call
 ">>),
     true = [0,0,0,0,0] == language:run(C, 1000),
+    D = compile(<<"
+hash 5 == if {f 0 1 {f 1 1 {i 2 else {f 0 1 {f 1 2 1 then
+">>),
     success.
     

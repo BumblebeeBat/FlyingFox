@@ -6,7 +6,7 @@
 %#signed{data = #signed_channel_block{channel_block = SignedCB, fee = 100}, sig1 = signature}.
 
 -module(channel_block_tx).
--export([doit/7, origin_tx/3, channel/7, channel_block/5, channel_block/6, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1, publish_channel_block/3, make_signed_cb/4, reveal_union/4, slash_bet/1, make_bet/2, acc1/1, acc2/1, amount/1, bets/1, fast/1, expiration/1, nlock/1, fee/1, add_bet/4, bet_code/1, bet_amount/1, bet_to/1, update/3, is_cb/1, channel_block_from_channel/8, replace_bet/2, test/0]).
+-export([doit/7, origin_tx/3, channel/7, channel_block/5, channel_block/6, cc_losses/1, close_channel/4, id/1, delay/1, nonce/1, publish_channel_block/3, make_signed_cb/4, reveal_union/4, slash_bet/1, make_bet/2, acc1/1, acc2/1, amount/1, bets/1, fast/1, expiration/1, nlock/1, fee/1, add_bet/4, bet_code/1, bet_amount/1, bet_to/1, update/3, is_cb/1, channel_block_from_channel/7, replace_bet/3, test/0]).
 -record(channel_block, {acc1 = 0, acc2 = 0, amount = 0, nonce = 0, bets = [], id = 0, fast = false, delay = 10, expiration = 0, nlock = 0, fee = 0}).
 is_cb(CB) -> is_record(CB, channel_block).
 acc1(CB) -> CB#channel_block.acc1.
@@ -27,11 +27,12 @@ bet_amount(Bet) -> Bet#bet.amount.
 bet_to(Bet) -> Bet#bet.to.
 -record(tc, {acc1 = 0, acc2 = 0, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
 add_bet(CB, Amount, Code, To) ->
+    0 = Amount rem 2,
     Bets = CB#channel_block.bets,
-    NewBets = [#bet{amount = Amount, code = Code, to = To}|Bets],
-    replace_bet(CB, NewBets).
-replace_bet(CB, NewBets) ->
-    update(CB, 0, 0, NewBets, CB#channel_block.fast, CB#channel_block.delay, CB#channel_block.expiration, CB#channel_block.nlock, CB#channel_block.fee).
+    NewBets = [#bet{amount = Amount div 2, code = Code, to = -To}|Bets],
+    replace_bet(CB, NewBets, (To * Amount) div 2).
+replace_bet(CB, NewBets, Amount) ->
+    update(CB, Amount, 0, NewBets, CB#channel_block.fast, CB#channel_block.delay, CB#channel_block.expiration, CB#channel_block.nlock, CB#channel_block.fee).
     
 update(CB, Amount, Nonce) ->
     update(CB, Amount, Nonce, CB#channel_block.bets, CB#channel_block.fast, CB#channel_block.delay, CB#channel_block.expiration, CB#channel_block.nlock, CB#channel_block.fee).
@@ -57,7 +58,7 @@ make_signed_cb(Acc, CB, Fee, Evidence) ->
     A = block_tree:account(Acc),
     Nonce = accounts:nonce(A),
     NewCB = #signed_cb{acc = Acc, nonce = Nonce + 1, channel_block = CB, fee = Fee},
-    sign:set_revealed(keys:sign(NewCB), Evidence).
+    sign:set_revealed(sign:empty(NewCB), Evidence).
 close_channel(Id, Amount, Nonce, Fee) ->
     Channel = block_tree:channel(Id),
     keys:sign(#channel_block{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), amount = Amount, nonce = Nonce, id = Id, fast = true, fee = Fee}).
@@ -108,10 +109,10 @@ channel_block(Id, Amount, Nonce, Delay, Fee) ->
 channel_block(Id, Amount, Nonce, Delay, Fee, []).
 channel_block(Id, Amount, Nonce, Delay, Fee, Bets) ->
     Channel = block_tree:channel(Id),
-    channel_block_from_channel(Id, Channel, Amount, Nonce, Delay, Fee, Bets, tx_pool:accounts()).
-channel_block_from_channel(Id, Channel, Amount, Nonce, Delay, Fee, Bets, Accounts) ->
+    channel_block_from_channel(Id, Channel, Amount, Nonce, Delay, Fee, Bets).
+channel_block_from_channel(Id, Channel, Amount, Nonce, Delay, Fee, Bets) ->
     true = Delay < constants:max_reveal(),
-    keys:sign(#channel_block{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), amount = Amount, nonce = Nonce, id = Id, fast = false, delay = Delay, fee = Fee, bets=Bets}, Accounts).
+    #channel_block{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), amount = Amount, nonce = Nonce, id = Id, fast = false, delay = Delay, fee = Fee, bets=Bets}.
 
 
 publish_channel_block(CB, Fee, Evidence) ->
@@ -168,18 +169,8 @@ channel(SignedCB, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
 		{0, StartAmount}
     end,
     {Win1, Win2, Loss} = bet_results(CB#channel_block.bets, sign:revealed(SignedCB), BetAmount),
-    N1 = accounts:update(Acc1, NewHeight, channels:bal1(Channel) + CB#channel_block.amount + Win1, -D1, 0, TotalCoins),
-    N2 = accounts:update(Acc2, NewHeight, channels:bal2(Channel) - CB#channel_block.amount + Win2, -D2, 0, TotalCoins),
-    %MyKey = keys:pubkey(),
-    %APub1 = accounts:pub(Acc1),
-    %APub2 = accounts:pub(Acc2),
-    %if
-    %(APub1 == MyKey) or (APub2 == MyKey) -> 
-    %1=2,%
-    %channel_manager:delete(CB#channel_block.id);
-	%my_channels:remove(CB#channel_block.id);
-    %true -> 1=1
-						%end,
+    N1 = accounts:update(Acc1, NewHeight, channels:bal1(Channel) + CB#channel_block.amount + Win1 - Win2, -D1, 0, TotalCoins),
+    N2 = accounts:update(Acc2, NewHeight, channels:bal2(Channel) - CB#channel_block.amount + Win2 - Win1, -D2, 0, TotalCoins),
     NewChannels = dict:store(CB#channel_block.id, channels:empty(),Channels),
     NewAccounts1 = dict:store(CB#channel_block.acc1, N1, Accounts),
     NewAccounts2 = dict:store(CB#channel_block.acc2, N2, NewAccounts1),
@@ -194,20 +185,27 @@ bet_results([B|Bets], [Y|Revealed], BetAmount, {Win1, Win2, Loss}) when not is_l
     X = {Win1, Win2, Loss+B#bet.amount},
     bet_results(Bets, Revealed, BetAmount, X);
 bet_results([B|Bets], [R|Revealed], BA, {Win1, Win2, Loss}) ->
-    {Del, X, _} = language:run_script(R++B#bet.code, 1000),
+    io:fwrite("bet results r is "),
+    io:fwrite(packer:pack(R)),
+    io:fwrite("\n"),
+    {_, X, Del} = language:run_script(R++B#bet.code, 1000),
+    io:fwrite("X is "),
+    io:fwrite(packer:pack(X)),
+    io:fwrite("\n"),
+
     %X = hd(tl(language:run(R++B#bet.code))),
     Y = fractions:subtract(fractions:subtract(fractions:new(1, 1), X), Del),
     TooSmall1 = fractions:less_than(X, fractions:new(0, 1)),
     TooSmall2 = fractions:less_than(Del, fractions:new(0, 1)),
     TooSmall3 = fractions:less_than(Y, fractions:new(0, 1)),
-    TooBig = fractions:less_than(fractions:new(1, 1), X + Del),
+    TooBig = fractions:less_than(fractions:new(1, 1), fractions:add(X, Del)),
     D = fractions:multiply_int(Del, B#bet.amount),
     More1 = fractions:multiply_int(X, B#bet.amount),
     More2 = fractions:multiply_int(Y, B#bet.amount),
     Out = if
 	      ((TooSmall1 or TooSmall2) or (TooSmall3 or TooBig)) -> 
 		  {Win1, Win2, Loss + B#bet.amount};
-	      B#bet.to == 0 ->
+	      B#bet.to == -1 ->
 		  {Win1 + More1, Win2 + More2, Loss + D};
 	      true ->
 		  {Win1 + More2, Win2 + More1, Loss + D}

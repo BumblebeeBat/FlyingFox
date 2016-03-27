@@ -1,5 +1,5 @@
 -module(to_channel_tx).%used to create a channel, or increase the amount of money in it.
--export([next_top/2,doit/7,tc_increases/1,to_channel/4,create_channel/5,my_side/1,min_ratio/2,test/0,grow_ratio/2,is_tc/1,id/1]).
+-export([next_top/2,doit/7,tc_increases/1,to_channel/4,create_channel/5,create_channel2/6,my_side/1,min_ratio/2,test/0,grow_ratio/2,is_tc/1,id/1]).
 -record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = <<"delegated_1">>, fee = 0, id = -1, increment = 0}).
 is_tc(X) -> is_record(X, tc).
 id(X) -> X#tc.id.
@@ -25,14 +25,16 @@ good_key(S) -> ((S == <<"delegated_1">>) or (S == <<"delegated_2">>)).
 create_channel(To, MyBalance, TheirBalance, ConsensusFlag, Fee) ->
 %When creating a new channel, you don't choose your own ID for the new channel. It will be selected for you by next available.    
     Id = keys:id(),
+    Tx = create_channel2(Id, To, MyBalance, TheirBalance, ConsensusFlag, Fee),
+    keys:sign(Tx).
+create_channel2(Id, To, MyBalance, TheirBalance, ConsensusFlag, Fee) ->
     Acc = block_tree:account(Id),
     ToAcc = block_tree:account(To),
     true = accounts:balance(Acc) > MyBalance,
     true = accounts:balance(ToAcc) > TheirBalance,
     S = ConsensusFlag,
     true = good_key(S),
-    Tx = #tc{acc1 = Id, acc2 = To, nonce = accounts:nonce(Acc) + 1, bal1 = MyBalance, bal2 = TheirBalance, consensus_flag = ConsensusFlag, fee = Fee, increment = MyBalance + TheirBalance},
-    keys:sign(Tx).
+    #tc{acc1 = Id, acc2 = To, nonce = accounts:nonce(Acc) + 1, bal1 = MyBalance, bal2 = TheirBalance, consensus_flag = ConsensusFlag, fee = Fee, increment = MyBalance + TheirBalance}.
     
 to_channel(ChannelId, Inc1, Inc2, Fee) ->
     Id = keys:id(),
@@ -78,7 +80,7 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
 		B2 =  - Tx#tc.bal2 - Tx#tc.fee,
 		I = Tx#tc.bal1 + Tx#tc.bal2,
 		I = Tx#tc.increment,
-		true = I > (TotalCoins div constants:max_channel()),
+		true = I > (TotalCoins div constants:max_channel()),%The channel has a minimum possible balance.
 		T = Tx#tc.consensus_flag,
 		true = good_key(T),
 						%check if one of the pubkeys is keys:pubkey().

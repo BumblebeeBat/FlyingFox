@@ -56,7 +56,7 @@ read(ChId) ->
     end.
 delete(ChId) -> gen_server:call(?MODULE, {delete, ChId}).
 new_channel(ChId, Channel, Accounts) ->
-    Ch = channel_block_tx:channel_block_from_channel(ChId, Channel, 0, 1, constants:max_reveal()-1, 0, [], Accounts),
+    Ch = keys:sign(channel_block_tx:channel_block_from_channel(ChId, Channel, 0, 1, constants:max_reveal()-1, 0, []), Accounts),
     store(ChId, Ch).
 
     

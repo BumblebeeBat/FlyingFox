@@ -9,7 +9,7 @@ terminate(_, _) -> io:format("died!"), ok.
 handle_info(_, X) -> {noreply, X}.
 handle_cast(_, X) -> {noreply, X}.
 handle_call({new_channel, ChId, Channel, Accounts}, _From, X) ->
-    Ch = channel_block_tx:channel_block_from_channel(ChId, Channel, 0, 1, constants:max_reveal()-1, 0, [], Accounts),
+    Ch = keys:sign(channel_block_tx:channel_block_from_channel(ChId, Channel, 0, 1, constants:max_reveal()-1, 0, []), Accounts),
     F = #f{channel = Ch, unlock = []},
     Out = channel_manager:store(ChId, F),
     {reply, Out, X};
@@ -23,15 +23,24 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     NewN = channel_block_tx:nonce(NewCh),
     OldN = channel_block_tx:nonce(Ch),
     Channel = block_tree:channel(ChId),
-    A = NewAmount - OldAmount,
+    %Am = NewAmount - OldAmount,
     N = NewN - OldN,
     true = N > 0,%error here.
-    Ch2 = channel_block_tx:update(Ch, A, N),
+    Ch2 = channel_block_tx:update(Ch, 0, N),
     Acc1 = channels:acc1(Channel),
     Acc2 = channels:acc2(Channel),
     ID = keys:id(),
     Bet = hd(channel_block_tx:bets(NewCh)),
     A = channel_block_tx:bet_amount(Bet),
+    io:fwrite("bet is "),
+    io:fwrite(packer:pack(Bet)),
+    io:fwrite("\n"),
+    io:fwrite("A is "),
+    io:fwrite(integer_to_list(A)),
+    io:fwrite("\n"),
+    io:fwrite("wants to be "),
+    io:fwrite(integer_to_list(channel_block_tx:bet_amount(Bet))),
+    io:fwrite("\n"),
     %BetTo = (2 * channel_block_tx:bet_to(Bet)) - 1,
     AA = abs(A),
     AA = abs(Amount div 2),
@@ -49,7 +58,16 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
 	 end,
     SecretHash = language:extract_sh(channel_block_tx:bet_code(Bet)),
     Script = language:hashlock(SecretHash),
-    NewCha = channel_block_tx:add_bet(Ch2, A, Script, To),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce and bet.
+    NewCha = channel_block_tx:add_bet(Ch2, A*2, Script, To),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce and bet.
+    io:fwrite("Ch2 is "),
+    io:fwrite(packer:pack(Ch2)),
+    io:fwrite("\n"),
+    io:fwrite("NewCh is "),
+    io:fwrite(packer:pack(NewCh)),
+    io:fwrite("\n"),
+    io:fwrite("NewCha is "),
+    io:fwrite(packer:pack(NewCha)),
+    io:fwrite("\n"),
     NewCh = NewCha,
     NewF = #f{channel = SignedChannel, unlock = [[28]|F#f.unlock]},
     channel_manager:store(ChId, NewF),
@@ -150,10 +168,9 @@ common(ChId, Secret) ->
     Amount = language:valid_secret(Secret, BetCode),
     NewBets = remove_nth(N, Bets),
     NewBets = remove_bet(hash:doit(BetCode), Bets),
-    NewCh = channel_block_tx:replace_bet(OldCh, NewBets),
-    C = Amount,
-    D = fractions:multiply_int(C, A),
-    NewNewCh = channel_block_tx:update(NewCh, D, 1),
+    D = fractions:multiply_int(Amount, A),
+    NewCh = channel_block_tx:replace_bet(OldCh, NewBets, D),
+    NewNewCh = channel_block_tx:update(NewCh, 0, 1),
     true = channel_block_tx:nonce(OldCh) < channel_block_tx:nonce(NewNewCh),
     {keys:sign(NewNewCh), N, BetCode}.
 create_unlock_hash(ChId, Secret) ->

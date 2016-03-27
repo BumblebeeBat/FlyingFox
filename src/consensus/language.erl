@@ -235,15 +235,20 @@ replace(A, B, [A|T], Out) ->
 replace(A, B, [H|T], Out) -> 
     replace(A, B, T, [H|Out]).
 hashlock(SecretHash) ->
-    assemble([hash, SecretHash, eq, switch, {f, 0, 1}, {f, 1, 1}, 2, else, {f, 0, 1}, {f, 1, 2}, 1, then]).
+    assemble([hash, SecretHash, eq, switch, {f, 0, 1}, {f, 1, 1}, 2, else, {f, 0, 1}, {f, 0, 1}, 1, then]).
 valid_secret(Secret, Script) -> 
-    hd(tl(run([Secret] ++ Script, 100))).
+   hd(tl(run([Secret] ++ Script, 100))).
 extract_sh(Code) -> hd(tl(Code)).
 run_script(Code, Gas) ->
-    Out = run(Code, Gas),
-    %{nonce, Amount to transfer, Amount to delete}
-    % the highest nonced scriptsig is the only valid scriptsig.
-    {hd(Out), hd(tl(Out)), hd(tl(tl(Out)))}.
+    case run(Code, Gas) of
+	[delete] ->
+	    {0,{f,0,1},{f,1,1}};
+	Out ->
+   %{nonce, Amount to transfer, Amount to delete}
+   % the highest nonced scriptsig is the only valid scriptsig.
+	    {hd(Out), hd(tl(Out)), hd(tl(tl(Out)))}
+    end.
+    
     
 test() ->    
     true = run(assemble([10, 2, plus]), 100) == [12],
@@ -272,4 +277,12 @@ test() ->
 	     define] ++ H2 ++ [stop, 
 	     {integer, 5}, {integer, 0}, {integer, 1}, Hash2, call],
     true = [0, 8, 5] == run(assemble(Code1), 1000),
+    Two = hash:doit(2),
+    HTwo = hash:doit(Two),
+    io:fwrite(packer:pack([Two] ++ hashlock(HTwo))),
+    io:fwrite("\n"),
+    [2,{f,1,1},{f,0,1}] = run([Two] ++ hashlock(HTwo), 1000),
+    [1,{f,0,1},{f,0,1}] = run([hash:doit(3)] ++ hashlock(HTwo), 1000),
     success.
+%assemble([H]) ++ hashlock(HASH),
+ %   success.
