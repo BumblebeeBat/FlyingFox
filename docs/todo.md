@@ -1,14 +1,6 @@
-Right now payment is on the range -1 1. we need range 0 1, very close.
-
-
-I rememeber how channel_block bets work. You want the range of possible balances at the end to be as small as possible, because this range has tight bounds that we don't want to hit.
-
-blocktree:test() needs more. I put notes in comments.
-
 Building an executable of the software for windows is very important. It needs to include logging, for easy error reporting.
 
 http://stackoverflow.com/questions/11796941/how-do-you-compile-an-erlang-program-into-a-standalone-windows-executable
-
 
 
 channel_block_tx:fee needs to be used. If someone closes the channel early, the person who didn't close the channel pays this fee to the person who did. Unless there isn't enough money left, in which case the person who closes the channel gets all the non-deleted money.
