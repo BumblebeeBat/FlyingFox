@@ -438,6 +438,9 @@ test() ->
     %Two problems here. 
     %First off, the bet is only changing the balance by 15, not 30. Probably language:hashlock needs to change a fraction from 1/2 to 1/1.
     %Money is being printed from no where.
+    io:fwrite("signed channel hashlock 22"),
+    io:fwrite(packer:pack(SignedChannelHashlock22)),
+    io:fwrite("\n"),
     tx_pool_feeder:absorb(SignedChannelHashlock22),
     sign_tx:sign(),
     buy_block(),
