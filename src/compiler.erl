@@ -35,9 +35,11 @@ rnf([H|T], Functions, Out) ->
 	{ok, Val} -> rnf(T, Functions, [Val|Out])
     end.
 b2i(X) -> list_to_integer(binary_to_list(X)).
-to_opcodes([<<"{i">>|[I|R]], Functions, Out) ->
+to_opcodes([<<":b">>|[B|R]], Functions, Out) ->
+    to_opcodes(R, Functions, [base64:decode(B)|Out]);
+to_opcodes([<<":i">>|[I|R]], Functions, Out) ->
     to_opcodes(R, Functions, [{integer, b2i(I)}|Out]);
-to_opcodes([<<"{f">>|[T|[B|R]]], Functions, Out) ->
+to_opcodes([<<":f">>|[T|[B|R]]], Functions, Out) ->
     to_opcodes(R, Functions, [{f, b2i(T), b2i(B)}|Out]);
 to_opcodes([<<"false">>|R], Functions, Out) ->
     to_opcodes(R, Functions, [false|Out]);
@@ -144,6 +146,8 @@ to_opcodes([Name|R], Functions, Out) ->
     end.
 to_words(<<>>, <<>>, Out) -> flip(Out);
 to_words(<<>>, N, Out) -> flip([flip_bin(N)|Out]);
+to_words(<<"\t", B/binary>>, X, Out) ->
+    to_words(B, X, Out);
 to_words(<<" ", B/binary>>, <<"">>, Out) ->
     to_words(B, <<>>, Out);
 to_words(<<"\n", B/binary>>, <<"">>, Out) ->
@@ -165,22 +169,93 @@ flip([H|T], Out) -> flip(T, [H|Out]).
 test() ->
     A = compile(<<"
 : square dup * ; 
-{i 2 square call
+:i 2 square call
 ">>),
     true = [4] == language:run(A, 1000),
     B = compile(<<"
 : square dup * ; 
 : quad square call square call ; 
-{i 2 quad call
+:i 2 quad call
 ">>),
     true = [16] == language:run(B, 1000),
     C = compile(<<"
-: main dup {i 0 > if {i 1 - {i 0 swap recurse call else drop then ;
-{i 5 main call
+: main dup :i 0 > if :i 1 - :i 0 swap recurse call else drop then ;
+:i 5 main call
 ">>),
     true = [0,0,0,0,0] == language:run(C, 1000),
     D = compile(<<"
-hash 5 == if {f 0 1 {f 1 1 {i 2 else {f 0 1 {f 1 2 1 then
-">>),
-    success.
+hash 5 == if :f 0 1 :f 1 1 :i 2 else :f 0 1 
+	     :f 1 2 1 then
+	     ">>),
+    E = compile(<<"
+	     :b qfPbi+pbLu+SN+VICd2kPwwhj4DQ0yijP1tM//8zSOY= hash :b 6DIFJeegWoFCARdzPWKgFaMGniG5vD8Qh+WgPZBb5HQ=  ==
+	     ">>),
+    [true] = language:run(E, 1000),
+%top < pub data sig
+{Pub, Priv} = {<<"BDDCYHyNP54PuhacHPyuZiMuXNWys0jVgY00zb5i51StymNpPgxIDQ/T13/KZPgZ+YH/gzsIQTqPoMYmwZfOlU0=">>, <<"otDf5SVKc6z1BWFSe9Bmvfs5eGCN059FpSZeHlj4wBw=">>},
+    EPub = base64:encode(Pub),
+    Sig0 = base64:encode(sign:sign(<<"abc">>, Priv)),
+    F = compile(<< <<" :b ">>/binary, Sig0/binary,
+      <<"    :b YWJj
+	     :b ">>/binary,  EPub/binary, <<"
+	     verify_sig
+	     ">>/binary >>),
+    [true] = language:run(F, 1000),
+test2(Priv, EPub).
+test2(Priv, EPub) ->
+    Acode = << <<"
+	 :b YWJj
+	 :b ">>/binary, EPub/binary,
+		   <<" verify_sig
+">>/binary >>,
+    A = compile(Acode),
+    Sig = sign:sign(<<"abc">>, Priv),
+    [true] = language:run([Sig|A], 1000),
+    B = compile(<< Acode/binary, <<" rot ">>/binary, Acode/binary, <<" rot ">>/binary, Acode/binary, <<"
+rot if :i 3 else :i 0 then 
+rot if :i 3 else :i 0 then 
+rot if :i 2 else :i 0 then 
++ + :i 6 >
+       ">>/binary >>),
+    [true] = language:run([Sig|[Sig|[Sig|B]]], 1000),
+%This is for commit reveal. The nonce for they are required to include, which is custom for this round. it is a very big random number, to avoid collisions, is 1337
+%The number they committed to in secret is 1.
+%Calling the function with an input of 0 must result in the secret. Callint it with a 1 must result in the big random number.
+    Func = <<" :i 0 == if :i 55 else :i 1337 then ">>,
+    DFunc = << <<" : func " >>/binary, Func/binary, <<" ; 
+		 :b ">>/binary >>,
+    C = hash:doit(compile(Func)),
+    CC = base64:encode(C),
+    Sig2 = base64:encode(sign:sign(C, Priv)),
+    D = compile(<< DFunc/binary,  Sig2/binary,  
+ <<" func dup tuck :b ">>/binary, EPub/binary,
+      <<" verify_sig 
+      if
+	  :i 1 swap dup tuck call :i 1337 == 
+	  if
+	      :i 0 swap call 
+	  else
+	      :i 234
+	  then
+      else
+	  :i 123
+      then
+	      ">>/binary >>),
+   io:fwrite(packer:pack(D)),
+   io:fwrite("\n"),
+   language:run(D, 1000).
+
+%2 of 3 multisig over data <<"abc">> using same pubkey 3 times.
+% this is a weighted multisig. The first 2 signatures are worth 3, and the last is worth 2. you need 6 total to pass.
+
+% weighted multisig with merkle identifier. and the ability to punish someone who signs on non-identical hashes with identical merkle identifiers.
+% the ability to punish people who sign against the majority.
+% commit reveal, so we reveal tons at the same time.
+% ability to punish participants who fail to reveal.
+% ability to punish participants who reveal early.
+
+%success.
+
     
+%We want a script that uses verify_sig on a hash, and if it verifies, then it calls it. A script like this can be easily modified to do anything else that person wants.
+%the function should put a random nonce into the stack and immediately drop it, that way the hash we called wont every be reused, so the signature can't be reused.

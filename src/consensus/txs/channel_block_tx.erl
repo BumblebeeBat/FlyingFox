@@ -189,6 +189,8 @@ bet_results([B|Bets], [R|Revealed], BA, {Win1, Win2, Loss}) ->
     io:fwrite(packer:pack(R)),
     io:fwrite("\n"),
     {_, X, Del} = language:run_script(R++B#bet.code, 1000),
+    true = fractions:is_fraction(X),
+    true = fractions:is_fraction(Del),
     io:fwrite("X is "),
     io:fwrite(packer:pack(X)),
     io:fwrite("\n"),
@@ -231,6 +233,7 @@ bet_nonces([_|Bets], [R|Reveal], Out) when not is_list(R) ->
     bet_nonces(Bets, Reveal, [0|Out]);
 bet_nonces([B|Bets], [R|Reveal], Out) ->
     {X, _, _} = language:run_script(R++B, 1000),
+    true = is_integer(X),
     %X = hd(language:run(R++B)),
     bet_nonces(Bets, Reveal, [X|Out]).
 %slash(CB) -> slash(CB#channel_block.bets, []).
