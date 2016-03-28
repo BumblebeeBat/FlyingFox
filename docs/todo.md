@@ -1,3 +1,6 @@
+Using {integer, -1} as a wildcard for match in the language is no good. We should dedicate a few opcodes to this purpose, like how recurse works.
+One opcode can be replaced by anything, the other can be replaced by anything other than call, one can be any integer, one can be any fraction, one can be any binary.
+
 Building an executable of the software for windows is very important. It needs to include logging, for easy error reporting.
 
 http://stackoverflow.com/questions/11796941/how-do-you-compile-an-erlang-program-into-a-standalone-windows-executable

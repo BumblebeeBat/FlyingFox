@@ -43,6 +43,8 @@ to_opcodes([<<"false">>|R], Functions, Out) ->
     to_opcodes(R, Functions, [false|Out]);
 to_opcodes([<<"true">>|R], Functions, Out) ->
     to_opcodes(R, Functions, [true|Out]);
+to_opcodes([<<"match">>|R], F, Out) ->
+    to_opcodes(R, F, [42|Out]);
 to_opcodes([<<"recurse">>|R], F, Out) ->
     to_opcodes(R, F, [41|Out]);
 to_opcodes([<<"from_r">>|R], F, Out) ->
@@ -230,16 +232,13 @@ if :i 2 else :i 0 then
     D = compile(<< DFunc/binary,  Sig2/binary,  
  <<" func dup tuck :b ">>/binary, EPub/binary,
       <<" verify_sig 
-      if
+	  not if crash else
 	  :i 1 swap dup tuck call :i 1337 == 
-	  if
-	      :i 0 swap call 
-	  else
-	      crash
-	  then
-      else
-	  crash
-      then
+	  not if crash else
+	  dup :i 7 match :i 0 == if :i -1 else :i 1337 then 
+	  not if crash else
+          :i 0 swap call 
+	  then then then
 	      ">>/binary >>),
    language:run(D, 1000),
    % here is a contract to punish people for signing contrary results. This contract would be used to stop oracles from outputing 2 contrary results.
@@ -262,22 +261,11 @@ if :i 2 else :i 0 then
 	  <<" verify_sig not if crash else
 	  swap drop tuck 2dup :b ">>/binary, EPub/binary, 
           <<" verify_sig not if crash else
-          swap drop 2dup :i 1 swap call 
-               swap :i 1 swap call 
-          :i 1337 == swap :i 1337 == and not if crash else
-     2dup :i 0 swap call
-     swap :i 0 swap call == if crash else
-     swap :i 0 swap call
+          swap drop 
+     :i 0 swap call
      swap :i 0 swap call == if crash else
 	  :i 12345
-then then then then then then ">>/binary >>),
-%We have to do that last step twice, otherwise the 2nd function called could simply look in the stack for what it's answer is supposed to be.
-%still insecure. the first function can call the second function to learn what it's output should be.
-
-%we need a new opcode.
-%As input it should accept a function name and the stack should have as many things as there are words in the function. One by one words in the function are compared to the stack. it expects {integer 0} on the stack to match with `hash` in the definition.
-%{integer -1} is a wildcard that can match with any single item on the stack.
-% We should be able to check if a definition includes a particular word, especially call.
+ then then then then then ">>/binary >>),
      language:run(E, 1000),
 % commit reveal, so we reveal ton of bets at the same time, so SVD is possible.
     F = compile(<< <<" :b ">>/binary, (base64:encode(C1))/binary, <<" :b ">>/binary, Sign1/binary, 

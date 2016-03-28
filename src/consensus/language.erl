@@ -65,7 +65,7 @@ run([38|Code], Functions, Alt, [B|Stack], Gas) ->%call
 	    G = replace(41, B, F),%recursion
 	    run(G++Code, Functions, Alt, Stack, Gas-cost(37))
     end;
-run([42|Code], Functions, Alt, [B|Stack], Gas) ->%match
+run([42|Code], Functions, Alt, [N|[B|Stack]], Gas) ->%match
     case dict:find(B, Functions) of
 	error -> 
 	    io:fwrite("known functions: "),
@@ -74,7 +74,8 @@ run([42|Code], Functions, Alt, [B|Stack], Gas) ->%match
 	    io:fwrite("undefined function");
 	{ok, F} ->
 	    NewCode = match(length(F), F, Code),
-	    run(NewCode, Functions, Alt, Stack, Gas-cost(37))
+	    N = length(Code) - length(NewCode),
+	    run(NewCode, Functions, Alt, [true|Stack], Gas-cost(42))
     end;
 run([39|Code], Functions, Alt, [N|Stack], Gas) ->%moves the top of the stack to the top of the alt stack.
     run(Code, Functions, [N|Alt], Stack, Gas-cost(39));
@@ -139,9 +140,9 @@ run_helper(35, [X |[Y |Stack]]) -> [(X == Y)|Stack];%check if 2 non-numerical va
 %run_helper(36, Stack) -> Stack;
 run_helper({f, T, B}, Stack) -> [{f, T, B}|Stack];%load fraction into stack.
 run_helper(B, Stack) when is_binary(B)-> [B|Stack];%load binary into stack.
-run_helper({integer, I}, Stack) -> [I|Stack];%load integer into stack
-run_helper(true, Stack) -> [true|Stack];%load binary into stack
-run_helper(false, Stack) -> [false|Stack].%load binary into stack
+run_helper({integer, I}, Stack) -> [I|Stack];
+run_helper(true, Stack) -> [true|Stack];
+run_helper(false, Stack) -> [false|Stack].
 assemble(Code) -> assemble(Code, []).
 assemble([], Out) -> flip(Out);
 assemble([Word|C], Out) ->
@@ -303,8 +304,8 @@ test() ->
     H30 = [dup, dup, {integer, 5}, plus, plus, plus],
     Hash3 = hash:doit(assemble(H30)),
     Code3 = [define] ++ H30 ++ [stop,
-     Hash3, match, dup, dup, {integer, 5}, plus, plus, plus], 
-    [] = language:run(assemble(Code3), 1000),
-    success.
+     Hash3, {integer, 6}, match, dup, dup, {integer, 5}, plus, {integer, -1}, plus], 
+    [true] = language:run(assemble(Code3), 1000).
+%success.
 %assemble([H]) ++ hashlock(HASH),
  %   success.
