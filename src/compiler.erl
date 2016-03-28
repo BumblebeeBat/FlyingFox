@@ -2,8 +2,6 @@
 -export([compile/1, test/0]).
 
 compile(B) ->
-    %seperate into list of words.
-    %change words to opcode atoms.
     Words = to_words(<<B/binary, " ">>, <<>>, []),
     Functions = get_functions(Words),
     AWords = remove_after_define(Words),
@@ -206,18 +204,21 @@ test2(Priv, EPub) ->
     Acode = << <<"
 	 :b YWJj
 	 :b ">>/binary, EPub/binary,
-		   <<" verify_sig
-">>/binary >>,
+		   <<" verify_sig ">>/binary >>,
+    Bcode = << Acode/binary, <<" rot ">>/binary >>,
     A = compile(Acode),
     Sig = sign:sign(<<"abc">>, Priv),
     [true] = language:run([Sig|A], 1000),
-    B = compile(<< Acode/binary, <<" rot ">>/binary, Acode/binary, <<" rot ">>/binary, Acode/binary, <<"
-rot if :i 3 else :i 0 then 
-rot if :i 3 else :i 0 then 
-rot if :i 2 else :i 0 then 
+    B = compile(<< Bcode/binary, Bcode/binary, Bcode/binary, <<"
+if :i 3 else :i 0 then rot 
+if :i 3 else :i 0 then rot 
+if :i 2 else :i 0 then 
 + + :i 6 >
        ">>/binary >>),
     [true] = language:run([Sig|[Sig|[Sig|B]]], 1000),
+%2 of 3 multisig over data <<"abc">> using same pubkey 3 times.
+% this is a weighted multisig. The first 2 signatures are worth 3, and the last is worth 2. you need 6 total to pass.
+
 %This is for commit reveal. The nonce for they are required to include, which is custom for this round. it is a very big random number, to avoid collisions, is 1337
 %The number they committed to in secret is 1.
 %Calling the function with an input of 0 must result in the secret. Callint it with a 1 must result in the big random number.
@@ -225,7 +226,6 @@ rot if :i 2 else :i 0 then
     DFunc = << <<" : func " >>/binary, Func/binary, <<" ; 
 		 :b ">>/binary >>,
     C = hash:doit(compile(Func)),
-    CC = base64:encode(C),
     Sig2 = base64:encode(sign:sign(C, Priv)),
     D = compile(<< DFunc/binary,  Sig2/binary,  
  <<" func dup tuck :b ">>/binary, EPub/binary,
@@ -235,18 +235,41 @@ rot if :i 2 else :i 0 then
 	  if
 	      :i 0 swap call 
 	  else
-	      :i 234
+	      crash
 	  then
       else
-	  :i 123
+	  crash
       then
 	      ">>/binary >>),
-   io:fwrite(packer:pack(D)),
-   io:fwrite("\n"),
-   language:run(D, 1000).
-
-%2 of 3 multisig over data <<"abc">> using same pubkey 3 times.
-% this is a weighted multisig. The first 2 signatures are worth 3, and the last is worth 2. you need 6 total to pass.
+   language:run(D, 1000),
+   % here is a contract to punish people for signing contrary results. This contract would be used to stop oracles from outputing 2 contrary results.
+% we can use this contract to remove power in the weighted multisig from any validators who double-sign.
+   % Sig1, Sig2, func1, func2. <--input top ->
+   % func1 != func2
+   % Verify that internal pub signed over each func.
+   % func1(1) == func2(1) == internal constant.
+   % func1(0) != func2(0)
+   Func1 = <<" :i 0 == if :i 55 else :i 1337 then ">>,
+   Func2 = <<" :i 0 == if :i 54 else :i 1337 then ">>,
+   DFunc1 = << <<" : func1 " >>/binary, Func1/binary, <<" ; ">>/binary >>,
+   DFunc2 = << <<" : func2 " >>/binary, Func2/binary, <<" ; ">>/binary >>,
+   C1 = hash:doit(compile(Func1)),
+   C2 = hash:doit(compile(Func2)),
+   Sign1 = base64:encode(sign:sign(C1, Priv)),
+   Sign2 = base64:encode(sign:sign(C2, Priv)),
+   E = compile(<< DFunc1/binary, DFunc2/binary, <<" :b ">>/binary, Sign1/binary, <<" :b ">>/binary, Sign2/binary, <<" func1 func2 2dup == if crash else
+	  swap tuck 2dup :b ">>/binary, EPub/binary,
+	  <<" verify_sig not if crash else
+	  swap drop tuck 2dup :b ">>/binary, EPub/binary, 
+          <<" verify_sig not if crash else
+          swap drop 2dup :i 1 swap call 
+               swap :i 1 swap call 
+          :i 1337 == swap :i 1337 == and not if crash else
+	  :i 0 swap call
+     swap :i 0 swap call == if crash else
+	  :i 12345
+then then then then then ">>/binary >>),
+     language:run(E, 1000).
 
 % weighted multisig with merkle identifier. and the ability to punish someone who signs on non-identical hashes with identical merkle identifiers.
 % the ability to punish people who sign against the majority.
