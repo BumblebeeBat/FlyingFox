@@ -265,15 +265,27 @@ if :i 2 else :i 0 then
           swap drop 2dup :i 1 swap call 
                swap :i 1 swap call 
           :i 1337 == swap :i 1337 == and not if crash else
-	  :i 0 swap call
+     2dup :i 0 swap call
+     swap :i 0 swap call == if crash else
+     swap :i 0 swap call
      swap :i 0 swap call == if crash else
 	  :i 12345
-then then then then then ">>/binary >>),
-     language:run(E, 1000).
+then then then then then then ">>/binary >>),
+%We have to do that last step twice, otherwise the 2nd function called could simply look in the stack for what it's answer is supposed to be.
+%still insecure. the first function can call the second function to learn what it's output should be.
 
-% weighted multisig with merkle identifier. and the ability to punish someone who signs on non-identical hashes with identical merkle identifiers.
+%we need a new opcode.
+%As input it should accept a function name and the stack should have as many things as there are words in the function. One by one words in the function are compared to the stack. it expects {integer 0} on the stack to match with `hash` in the definition.
+%{integer -1} is a wildcard that can match with any single item on the stack.
+% We should be able to check if a definition includes a particular word, especially call.
+     language:run(E, 1000),
+% commit reveal, so we reveal ton of bets at the same time, so SVD is possible.
+    F = compile(<< <<" :b ">>/binary, (base64:encode(C1))/binary, <<" :b ">>/binary, Sign1/binary, 
+<<" swap :b ">>/binary, EPub/binary, <<" verify_sig ">>/binary >>),
+    [true] = language:run(F, 1000).
+
+% weighted multisig with merkle identifier. and the ability to ignore anyone who signs on non-identical hashes with identical merkle identifiers.
 % the ability to punish people who sign against the majority.
-% commit reveal, so we reveal tons at the same time.
 % ability to punish participants who fail to reveal.
 % ability to punish participants who reveal early.
 

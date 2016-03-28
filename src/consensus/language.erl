@@ -23,6 +23,11 @@ remove_till(X, H, [A|T], N) -> remove_till(X, [A|H], T, N);
 remove_till(_, _, X, _) -> 
     io:fwrite("error, you forgot to include 'and' 'else' or 'then' somewhere."),
     X = [0].
+match(0, _, Code) -> Code;
+match(N, [_|F], [{integer, -1}|Code]) -> 
+    match(N - 1, F, Code);
+match(N, [C|Function], [C|Code]) -> 
+    match(N-1, Function, Code).
 flip(X) -> flip(X, []).
 flip([], O) -> O;
 flip([H|T], O) -> flip(T, [H|O]).
@@ -57,9 +62,19 @@ run([38|Code], Functions, Alt, [B|Stack], Gas) ->%call
 	    io:fwrite("\n"),
 	    io:fwrite("undefined function");
 	{ok, F} ->
-	    %replace 41 with B, call
-	    G = replace(41, B, F),
+	    G = replace(41, B, F),%recursion
 	    run(G++Code, Functions, Alt, Stack, Gas-cost(37))
+    end;
+run([42|Code], Functions, Alt, [B|Stack], Gas) ->%match
+    case dict:find(B, Functions) of
+	error -> 
+	    io:fwrite("known functions: "),
+	    io:fwrite(packer:pack(dict:fetch_keys(Functions))),
+	    io:fwrite("\n"),
+	    io:fwrite("undefined function");
+	{ok, F} ->
+	    NewCode = match(length(F), F, Code),
+	    run(NewCode, Functions, Alt, Stack, Gas-cost(37))
     end;
 run([39|Code], Functions, Alt, [N|Stack], Gas) ->%moves the top of the stack to the top of the alt stack.
     run(Code, Functions, [N|Alt], Stack, Gas-cost(39));
@@ -181,6 +196,7 @@ atom2op(call) -> 38; %Use the binary at the top of the stack to look in our hash
 atom2op(to_r) -> 39; %( V -- )
 atom2op(from_r) -> 40; %( -- V )
 atom2op(recurse) -> 41; %crash. this word should only be used in the definition of a word.
+atom2op(match) -> 42; % Use the binary to look up a defined word. Make sure the word matches the code that follows 'match', otherwise crash.
 atom2op(true) -> true; %( -- true )
 atom2op(false) -> false. %( -- false )
 cost(0) -> 1;
@@ -223,6 +239,7 @@ cost(37) -> 1;
 cost(38) -> 1;
 cost(39) -> 1;
 cost(40) -> 1;
+cost(42) -> 1;
 cost({f, _, _}) -> 1;
 cost(B) when is_binary(B) -> size(B)*1;
 cost({integer, _}) -> 1;
@@ -283,6 +300,11 @@ test() ->
     io:fwrite("\n"),
     [2,{f,1,1},{f,0,1}] = run([Two] ++ hashlock(HTwo), 1000),
     [1,{f,0,1},{f,0,1}] = run([hash:doit(3)] ++ hashlock(HTwo), 1000),
+    H30 = [dup, dup, {integer, 5}, plus, plus, plus],
+    Hash3 = hash:doit(assemble(H30)),
+    Code3 = [define] ++ H30 ++ [stop,
+     Hash3, match, dup, dup, {integer, 5}, plus, plus, plus], 
+    [] = language:run(assemble(Code3), 1000),
     success.
 %assemble([H]) ++ hashlock(HASH),
  %   success.
