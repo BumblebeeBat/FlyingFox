@@ -53,11 +53,13 @@ run([36|Code], Functions, Alt, Stack, Gas) ->%define
 run([38|Code], Functions, Alt, [B|Stack], Gas) ->%call
     %Nice for writing scripts.
     %io:fwrite("stack is "),
-    %io:fwrite(packer:pack(Stack)),
+    %io:fwrite(packer:pack([B|Stack])),
     %io:fwrite("\n"),
     case dict:find(B, Functions) of
 	error -> 
-	    io:fwrite("known functions: "),
+	    io:fwrite("is not a function: "),
+	    io:fwrite(packer:pack(B)),
+	    io:fwrite("\n error in call, known functions: "),
 	    io:fwrite(packer:pack(dict:fetch_keys(Functions))),
 	    io:fwrite("\n"),
 	    io:fwrite("undefined function");
@@ -68,7 +70,7 @@ run([38|Code], Functions, Alt, [B|Stack], Gas) ->%call
 run([42|Code], Functions, Alt, [N|[B|Stack]], Gas) ->%match
     case dict:find(B, Functions) of
 	error -> 
-	    io:fwrite("known functions: "),
+	    io:fwrite("error in match, known functions: "),
 	    io:fwrite(packer:pack(dict:fetch_keys(Functions))),
 	    io:fwrite("\n"),
 	    io:fwrite("undefined function");
@@ -200,49 +202,13 @@ atom2op(recurse) -> 41; %crash. this word should only be used in the definition 
 atom2op(match) -> 42; % Use the binary to look up a defined word. Make sure the word matches the code that follows 'match', otherwise crash.
 atom2op(true) -> true; %( -- true )
 atom2op(false) -> false. %( -- false )
-cost(0) -> 1;
-cost(1) -> 1;
-cost(2) -> 1;
-cost(3) -> 1;
-cost(4) -> 1;
-cost(5) -> 1;
-cost(6) -> 1;
-cost(7) -> 1;
-cost(8) -> 1;
-cost(9) -> 1;
-cost(10) -> 1;
-cost(11) -> 1;
-cost(12) -> 1;
-cost(13) -> 1;
-cost(14) -> 1;
-cost(15) -> 1;
-cost(16) -> 1;
-cost(17) -> 1;
-cost(18) -> 1;
-cost(19) -> 1;
-cost(20) -> 1;
-cost(21) -> 1;
-cost(22) -> 1;
-cost(23) -> 1;
-cost(24) -> 1;
-cost(25) -> 1;
-cost(26) -> 1;
-cost(27) -> 1;
-cost(29) -> 1;
-cost(30) -> 1;
-cost(31) -> 1;
-cost(32) -> 1;
-cost(33) -> 1;
-cost(34) -> 1;
-cost(35) -> 1;
-cost(36) -> 1;
-cost(37) -> 1;
-cost(38) -> 1;
-cost(39) -> 1;
-cost(40) -> 1;
-cost(42) -> 1;
+cost(0) -> 20;
+cost(1) -> 20;
+cost(36) -> 40;
+cost(38) -> 20;
+cost(X) when is_integer(X) -> 1;
 cost({f, _, _}) -> 1;
-cost(B) when is_binary(B) -> size(B)*1;
+cost(B) when is_binary(B) -> (size(B) div 2);
 cost({integer, _}) -> 1;
 cost(true) -> 1;
 cost(false) -> 1.

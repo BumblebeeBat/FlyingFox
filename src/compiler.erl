@@ -165,44 +165,40 @@ flip_bin(<<C:8, B/binary>>, Out) ->
 flip(X) -> flip(X, []).
 flip([], Out) -> Out;
 flip([H|T], Out) -> flip(T, [H|Out]).
-
-test() ->
+testA() ->
     A = compile(<<"
 : square dup * ; 
 :i 2 square call
 ">>),
-    true = [4] == language:run(A, 1000),
+    true = [4] == language:run(A, 1000).
+testB() ->
     B = compile(<<"
 : square dup * ; 
 : quad square call square call ; 
 :i 2 quad call
 ">>),
-    true = [16] == language:run(B, 1000),
+    true = [16] == language:run(B, 1000).
+testC() ->
     C = compile(<<"
 : main dup :i 0 > if :i 1 - :i 0 swap recurse call else drop then ;
 :i 5 main call
 ">>),
-    true = [0,0,0,0,0] == language:run(C, 1000),
-    D = compile(<<"
-hash 5 == if :f 0 1 :f 1 1 :i 2 else :f 0 1 
-	     :f 1 2 1 then
-	     ">>),
+    true = [0,0,0,0,0] == language:run(C, 1000).
+testD() ->
     E = compile(<<"
 	     :b qfPbi+pbLu+SN+VICd2kPwwhj4DQ0yijP1tM//8zSOY= hash :b 6DIFJeegWoFCARdzPWKgFaMGniG5vD8Qh+WgPZBb5HQ=  ==
 	     ">>),
-    [true] = language:run(E, 1000),
-%top < pub data sig
-{Pub, Priv} = {<<"BDDCYHyNP54PuhacHPyuZiMuXNWys0jVgY00zb5i51StymNpPgxIDQ/T13/KZPgZ+YH/gzsIQTqPoMYmwZfOlU0=">>, <<"otDf5SVKc6z1BWFSe9Bmvfs5eGCN059FpSZeHlj4wBw=">>},
-    EPub = base64:encode(Pub),
+    [true] = language:run(E, 1000).
+testF(EPub, Priv) ->
     Sig0 = base64:encode(sign:sign(<<"abc">>, Priv)),
     F = compile(<< <<" :b ">>/binary, Sig0/binary,
       <<"    :b YWJj
 	     :b ">>/binary,  EPub/binary, <<"
 	     verify_sig
 	     ">>/binary >>),
-    [true] = language:run(F, 1000),
-test2(Priv, EPub).
-test2(Priv, EPub) ->
+    [true] = language:run(F, 1000).
+testG(EPub, Priv) ->
+% this is a weighted multisig. The first 2 signatures are worth 3, and the last is worth 2. you need 6 total to pass.
     Acode = << <<"
 	 :b YWJj
 	 :b ">>/binary, EPub/binary,
@@ -217,60 +213,78 @@ if :i 3 else :i 0 then rot
 if :i 2 else :i 0 then 
 + + :i 6 >
        ">>/binary >>),
-    [true] = language:run([Sig|[Sig|[Sig|B]]], 1000),
-%2 of 3 multisig over data <<"abc">> using same pubkey 3 times.
-% this is a weighted multisig. The first 2 signatures are worth 3, and the last is worth 2. you need 6 total to pass.
-
+    [true] = language:run([Sig|[Sig|[Sig|B]]], 1000).
+verify_sig() -> <<" verify_sig not if crash else then ">>.
+commit_reveal(B) ->
+    C = list_to_binary(integer_to_list(B)),
+    << <<" :i 3 match :i ">>/binary, C/binary, <<" drop :i -1 not if crash else then ">>/binary >>.
+testH(EPub, Priv) -> 
 %This is for commit reveal. The nonce for they are required to include, which is custom for this round. it is a very big random number, to avoid collisions, is 1337
-%The number they committed to in secret is 1.
-%Calling the function with an input of 0 must result in the secret. Callint it with a 1 must result in the big random number.
-    Func = <<" :i 0 == if :i 55 else :i 1337 then ">>,
+%The number they committed to in secret is 55.
+    Func = <<" :i 1337 drop :i 55">>,
+    %Func = <<" :i 0 == if :i 55 else :i 1337 then ">>,%Calling the function with an input of 0 must result in the secret. Callint it with a 1 must result in the big number that identifies this round of validating.
     DFunc = << <<" : func " >>/binary, Func/binary, <<" ; 
 		 :b ">>/binary >>,
     C = hash:doit(compile(Func)),
     Sig2 = base64:encode(sign:sign(C, Priv)),
+    Match = commit_reveal(1337),
+    %Match = <<" :i 3 match :i 1337 drop :i -1 ">>,
     D = compile(<< DFunc/binary,  Sig2/binary,  
- <<" func dup tuck :b ">>/binary, EPub/binary,
-      <<" verify_sig 
-	  not if crash else
-	  :i 1 swap dup tuck call :i 1337 == 
-	  not if crash else
-	  dup :i 7 match :i 0 == if :i -1 else :i 1337 then 
-	  not if crash else
-          :i 0 swap call 
-	  then then then
-	      ">>/binary >>),
-   language:run(D, 1000),
-   % here is a contract to punish people for signing contrary results. This contract would be used to stop oracles from outputing 2 contrary results.
-% we can use this contract to remove power in the weighted multisig from any validators who double-sign.
+ <<" func dup tuck :b ">>/binary, EPub/binary, (verify_sig())/binary,
+      <<" dup ">>/binary, Match/binary, <<"
+          call ">>/binary >>),
+    [55] = language:run(D, 1000).
+testI(EPub, Priv) ->
+       % here is a contract to punish people for signing contrary results. This contract would be used to stop oracles from outputing 2 contrary results.
    % Sig1, Sig2, func1, func2. <--input top ->
    % func1 != func2
    % Verify that internal pub signed over each func.
-   % func1(1) == func2(1) == internal constant.
+   % make sure func1 and func2 are of the correct form.
    % func1(0) != func2(0)
-   Func1 = <<" :i 0 == if :i 55 else :i 1337 then ">>,
-   Func2 = <<" :i 0 == if :i 54 else :i 1337 then ">>,
+    %Func1 = <<" :i 0 == if :i 55 else :i 1337 then ">>,
+   %Func2 = <<" :i 0 == if :i 54 else :i 1337 then ">>,
+   Func1 = <<" :i 1337 drop :i 55 ">>,
+   Func2 = <<" :i 1337 drop :i 54 ">>,
    DFunc1 = << <<" : func1 " >>/binary, Func1/binary, <<" ; ">>/binary >>,
    DFunc2 = << <<" : func2 " >>/binary, Func2/binary, <<" ; ">>/binary >>,
    C1 = hash:doit(compile(Func1)),
    C2 = hash:doit(compile(Func2)),
    Sign1 = base64:encode(sign:sign(C1, Priv)),
    Sign2 = base64:encode(sign:sign(C2, Priv)),
-   E = compile(<< DFunc1/binary, DFunc2/binary, <<" :b ">>/binary, Sign1/binary, <<" :b ">>/binary, Sign2/binary, <<" func1 func2 2dup == if crash else
-	  swap tuck 2dup :b ">>/binary, EPub/binary,
-	  <<" verify_sig not if crash else
-	  swap drop tuck 2dup :b ">>/binary, EPub/binary, 
-          <<" verify_sig not if crash else
-          swap drop 
-     :i 0 swap call
-     swap :i 0 swap call == if crash else
-	  :i 12345
- then then then then then ">>/binary >>),
-     language:run(E, 1000),
+   E = compile(<< DFunc1/binary, DFunc2/binary, <<" :b ">>/binary, Sign1/binary, <<" :b ">>/binary, Sign2/binary, <<" func1 func2 2dup == if crash else then
+          2dup ">>/binary, 
+		  (commit_reveal(1337))/binary,
+		  (commit_reveal(1337))/binary, <<"
+	  swap tuck 2dup :b ">>/binary, EPub/binary, 
+		  (verify_sig())/binary,
+	  <<" swap drop tuck 2dup :b ">>/binary, EPub/binary, 
+		  (verify_sig())/binary,
+          <<" swap drop call
+          swap call == if crash else then
+	  :i 12345 ">>/binary >>),
+    [12345] = language:run(E, 1000).
+testE(EPub, Priv) ->
 % commit reveal, so we reveal ton of bets at the same time, so SVD is possible.
+    C1 = hash:doit(1),
+    Sign1 = base64:encode(sign:sign(C1, Priv)),
     F = compile(<< <<" :b ">>/binary, (base64:encode(C1))/binary, <<" :b ">>/binary, Sign1/binary, 
 <<" swap :b ">>/binary, EPub/binary, <<" verify_sig ">>/binary >>),
     [true] = language:run(F, 1000).
+test() ->
+    testA(),
+    testB(),
+    testC(),
+    testD(),
+    {Pub, Priv} = sign:new_key(),
+    EPub = base64:encode(Pub),
+    testE(EPub, Priv),
+    testF(EPub, Priv),
+    testG(EPub, Priv),
+    testH(EPub, Priv),
+    testI(EPub, Priv),
+    success.
+
+% we can use testI contract to remove power in the weighted multisig from any validators who double-sign.
 
 % weighted multisig with merkle identifier. and the ability to ignore anyone who signs on non-identical hashes with identical merkle identifiers.
 % the ability to punish people who sign against the majority.

@@ -188,7 +188,7 @@ bet_results([B|Bets], [R|Revealed], BA, {Win1, Win2, Loss}) ->
     io:fwrite("bet results r is "),
     io:fwrite(packer:pack(R)),
     io:fwrite("\n"),
-    {_, X, Del} = language:run_script(R++B#bet.code, 1000),
+    {_, X, Del} = language:run_script(R++B#bet.code, 10000),
     true = fractions:is_fraction(X),
     true = fractions:is_fraction(Del),
     io:fwrite("X is "),
