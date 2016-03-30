@@ -3,13 +3,43 @@
 
 compile(B) ->
     Words = to_words(<<B/binary, " ">>, <<>>, []),
-    Functions = get_functions(Words),
-    AWords = remove_after_define(Words),
+    Macros = get_macros(Words),
+    YWords = remove_macros(Words),
+    ZWords = apply_macros(Macros, YWords),
+    Functions = get_functions(ZWords),
+    AWords = remove_after_define(ZWords),
     BWords = replace_name_function(AWords, Functions),
     to_opcodes(BWords, Functions, []).
+remove_macros(Words) -> remove_macros(Words, []).
+remove_macros([], Out) -> Out;
+remove_macros([<<":m">>|Words], Out) ->
+    {_, B} = split(<<";">>, Words),
+    remove_macros(B, Out);
+remove_macros([W|Words], Out) ->
+    remove_macros(Words, Out ++ [W]).
+apply_macros(Macros, Words) -> apply_macros(Macros, Words, []).
+apply_macros(_, [], Out) -> Out;
+apply_macros(Macros, [W|Words], Out) -> 
+    NOut = case dict:find(W, Macros) of
+	       error -> Out ++ [W];
+	       {ok, Val} -> Out ++ Val
+	   end,
+    apply_macros(Macros, Words, NOut).
+get_macros(Words) ->
+    get_macros(Words, dict:new()).
+get_macros([<<":m">>|[Name|R]], Functions) ->
+    %Make sure Name isn't on the restricted list.
+    {Code, T} = split(<<";">>, R),
+    Code2 = apply_macros(Functions, Code),
+    %Opcodes = to_opcodes(Code, Functions, []),
+    NewFunctions = dict:store(Name, Code2, Functions),
+    get_macros(T, NewFunctions);
+get_macros([], Functions) -> Functions;
+get_macros([_|T], Functions) -> get_macros(T, Functions).
 get_functions(Words) ->
     get_functions(Words, dict:new()).
 get_functions([<<":">>|[Name|R]], Functions) ->
+    %Make sure Name isn't on the restricted list.
     {Code, T} = split(<<";">>, R),
     Opcodes = to_opcodes(Code, Functions, []),
     NewFunctions = dict:store(Name, hash:doit(Opcodes),Functions),
@@ -33,11 +63,11 @@ rnf([H|T], Functions, Out) ->
 	{ok, Val} -> rnf(T, Functions, [Val|Out])
     end.
 b2i(X) -> list_to_integer(binary_to_list(X)).
-to_opcodes([<<":b">>|[B|R]], Functions, Out) ->
+to_opcodes([<<"binary">>|[B|R]], Functions, Out) ->
     to_opcodes(R, Functions, [base64:decode(B)|Out]);
-to_opcodes([<<":i">>|[I|R]], Functions, Out) ->
+to_opcodes([<<"integer">>|[I|R]], Functions, Out) ->
     to_opcodes(R, Functions, [{integer, b2i(I)}|Out]);
-to_opcodes([<<":f">>|[T|[B|R]]], Functions, Out) ->
+to_opcodes([<<"fraction">>|[T|[B|R]]], Functions, Out) ->
     to_opcodes(R, Functions, [{f, b2i(T), b2i(B)}|Out]);
 to_opcodes([<<"false">>|R], Functions, Out) ->
     to_opcodes(R, Functions, [false|Out]);
@@ -47,10 +77,12 @@ to_opcodes([<<"match">>|R], F, Out) ->
     to_opcodes(R, F, [42|Out]);
 to_opcodes([<<"recurse">>|R], F, Out) ->
     to_opcodes(R, F, [41|Out]);
-to_opcodes([<<"from_r">>|R], F, Out) ->
+to_opcodes([<<"r>">>|R], F, Out) ->
     to_opcodes(R, F, [40|Out]);
-to_opcodes([<<"to_r">>|R], F, Out) ->
+to_opcodes([<<">r">>|R], F, Out) ->
     to_opcodes(R, F, [39|Out]);
+to_opcodes([<<"r@">>|R], F, Out) ->
+    to_opcodes(R, F, [3|[11|[40|Out]]]);%out is all reverse.
 to_opcodes([<<"call">>|R], F, Out) ->
     to_opcodes(R, F, [38|Out]);
 to_opcodes([<<";">>|R], F, Out) ->
@@ -129,6 +161,15 @@ to_opcodes([<<"verify_sig">>|R], F, Out) ->
     to_opcodes(R, F, [1|Out]);
 to_opcodes([<<"hash">>|R], F, Out) ->
     to_opcodes(R, F, [0|Out]);
+to_opcodes([<<"verify_sig_or_die">>|R], F, Out) ->
+    X = [19, 18, 28, 17, 23, 1],%in reverse order because Out is all reverse.
+    to_opcodes(R, F, X ++ Out);
+to_opcodes([<<"commit_reveal">>|[C|[A|R]]], F, Out) ->
+    %" integer 3 match D drop integer -1 not if crash else then "
+    %This opcode verifies that a hash references a function of the commit-reveal variety. If not, it crashes.
+    D  = flip(to_opcodes([C, A], F, [])),%C, A could be a binary, or an integer.
+    X = [19, 18, 28, 17, 23, {integer, -1}, 10] ++ D ++ [42, {integer, 3}],
+    to_opcodes(R, F, X ++ Out);
 to_opcodes([], _, Out) -> flip(Out);
 to_opcodes([Name|R], Functions, Out) ->
     case dict:find(Name, Functions) of
@@ -165,73 +206,71 @@ flip_bin(<<C:8, B/binary>>, Out) ->
 flip(X) -> flip(X, []).
 flip([], Out) -> Out;
 flip([H|T], Out) -> flip(T, [H|Out]).
-testA() ->
+testA0() ->
+    %Example of a macro.
     A = compile(<<"
-: square dup * ; 
-:i 2 square call
+ :m square dup * ; 
+ integer 2 square
+">>),
+    true = [4] == language:run(A, 1000).
+testA() ->
+    %Example of a function call.
+    A = compile(<<"
+ : square dup * ; 
+ integer 2 square call
 ">>),
     true = [4] == language:run(A, 1000).
 testB() ->
+    %Example of a function using another function, this is how merkle trees work.
     B = compile(<<"
 : square dup * ; 
 : quad square call square call ; 
-:i 2 quad call
+integer 2 quad call
 ">>),
     true = [16] == language:run(B, 1000).
 testC() ->
+    %Example of a recursive function.
     C = compile(<<"
-: main dup :i 0 > if :i 1 - :i 0 swap recurse call else drop then ;
-:i 5 main call
+: main dup integer 0 > if integer 1 - integer 0 swap recurse call else drop then ;
+integer 5 main call
 ">>),
     true = [0,0,0,0,0] == language:run(C, 1000).
 testD() ->
+    %Example of hashlock code.
     E = compile(<<"
-	     :b qfPbi+pbLu+SN+VICd2kPwwhj4DQ0yijP1tM//8zSOY= hash :b 6DIFJeegWoFCARdzPWKgFaMGniG5vD8Qh+WgPZBb5HQ=  ==
+	     binary qfPbi+pbLu+SN+VICd2kPwwhj4DQ0yijP1tM//8zSOY= hash binary 6DIFJeegWoFCARdzPWKgFaMGniG5vD8Qh+WgPZBb5HQ=  ==
 	     ">>),
     [true] = language:run(E, 1000).
 testF(EPub, Priv) ->
+    %Example of 2 of 3 multisig 
+    %The 2 channel owners are the first 2 participants, the pubkey embedded in the script is the third.
     Sig0 = base64:encode(sign:sign(<<"abc">>, Priv)),
-    F = compile(<< <<" :b ">>/binary, Sig0/binary,
-      <<"    :b YWJj
-	     :b ">>/binary,  EPub/binary, <<"
+    F = compile(<< <<" binary ">>/binary, Sig0/binary,
+      <<"    binary YWJj
+	     binary ">>/binary,  EPub/binary, <<"
 	     verify_sig
 	     ">>/binary >>),
     [true] = language:run(F, 1000).
 testG(EPub, Priv) ->
 % this is a weighted multisig. The first 2 signatures are worth 3, and the last is worth 2. you need 6 total to pass.
-    Acode = << <<"
-	 :b YWJj
-	 :b ">>/binary, EPub/binary,
-		   <<" verify_sig ">>/binary >>,
-    Bcode = << Acode/binary, <<" rot ">>/binary >>,
-    A = compile(Acode),
     Sig = sign:sign(<<"abc">>, Priv),
-    [true] = language:run([Sig|A], 1000),
-    B = compile(<< Bcode/binary, Bcode/binary, Bcode/binary, <<"
-if :i 3 else :i 0 then rot 
-if :i 3 else :i 0 then rot 
-if :i 2 else :i 0 then 
-+ + :i 6 >
+    B = compile(<< <<":m b binary YWJj binary ">>/binary, EPub/binary, <<" verify_sig rot ;  b b b
+if integer 3 else integer 0 then rot 
+if integer 3 else integer 0 then rot 
+if integer 2 else integer 0 then 
++ + integer 6 >
        ">>/binary >>),
     [true] = language:run([Sig|[Sig|[Sig|B]]], 1000).
-verify_sig() -> <<" verify_sig not if crash else then ">>.
-commit_reveal(B) ->
-    C = list_to_binary(integer_to_list(B)),
-    << <<" :i 3 match :i ">>/binary, C/binary, <<" drop :i -1 not if crash else then ">>/binary >>.
 testH(EPub, Priv) -> 
 %This is for commit reveal. The nonce for they are required to include, which is custom for this round. it is a very big random number, to avoid collisions, is 1337
 %The number they committed to in secret is 55.
-    Func = <<" :i 1337 drop :i 55">>,
-    %Func = <<" :i 0 == if :i 55 else :i 1337 then ">>,%Calling the function with an input of 0 must result in the secret. Callint it with a 1 must result in the big number that identifies this round of validating.
-    DFunc = << <<" : func " >>/binary, Func/binary, <<" ; 
-		 :b ">>/binary >>,
+    Func = <<" integer 1337 drop integer 55">>,
     C = hash:doit(compile(Func)),
     Sig2 = base64:encode(sign:sign(C, Priv)),
-    Match = commit_reveal(1337),
-    %Match = <<" :i 3 match :i 1337 drop :i -1 ">>,
-    D = compile(<< DFunc/binary,  Sig2/binary,  
- <<" func dup tuck :b ">>/binary, EPub/binary, (verify_sig())/binary,
-      <<" dup ">>/binary, Match/binary, <<"
+    D = compile(<< <<" : func " >>/binary, Func/binary, <<" ; 
+     binary ">>/binary, Sig2/binary,  
+ <<" func dup tuck binary ">>/binary, EPub/binary,
+      <<" verify_sig_or_die dup commit_reveal integer 1337 
           call ">>/binary >>),
     [55] = language:run(D, 1000).
 testI(EPub, Priv) ->
@@ -241,47 +280,40 @@ testI(EPub, Priv) ->
    % Verify that internal pub signed over each func.
    % make sure func1 and func2 are of the correct form.
    % func1(0) != func2(0)
-    %Func1 = <<" :i 0 == if :i 55 else :i 1337 then ">>,
-   %Func2 = <<" :i 0 == if :i 54 else :i 1337 then ">>,
-   Func1 = <<" :i 1337 drop :i 55 ">>,
-   Func2 = <<" :i 1337 drop :i 54 ">>,
+   Func1 = <<" integer 1337 drop integer 55 ">>,
+   Func2 = <<" integer 1337 drop integer 54 ">>,
    DFunc1 = << <<" : func1 " >>/binary, Func1/binary, <<" ; ">>/binary >>,
    DFunc2 = << <<" : func2 " >>/binary, Func2/binary, <<" ; ">>/binary >>,
    C1 = hash:doit(compile(Func1)),
    C2 = hash:doit(compile(Func2)),
    Sign1 = base64:encode(sign:sign(C1, Priv)),
    Sign2 = base64:encode(sign:sign(C2, Priv)),
-   E = compile(<< DFunc1/binary, DFunc2/binary, <<" :b ">>/binary, Sign1/binary, <<" :b ">>/binary, Sign2/binary, <<" func1 func2 2dup == if crash else then
-          2dup ">>/binary, 
-		  (commit_reveal(1337))/binary,
-		  (commit_reveal(1337))/binary, <<"
-	  swap tuck 2dup :b ">>/binary, EPub/binary, 
-		  (verify_sig())/binary,
-	  <<" swap drop tuck 2dup :b ">>/binary, EPub/binary, 
-		  (verify_sig())/binary,
-          <<" swap drop call
+   E = compile(<< DFunc1/binary, DFunc2/binary, <<" binary ">>/binary, Sign1/binary, <<" binary ">>/binary, Sign2/binary, <<" func1 func2 2dup == if crash else then
+          2dup commit_reveal integer 1337 
+               commit_reveal integer 1337 
+	  swap tuck 2dup binary ">>/binary, EPub/binary, 
+	  <<" verify_sig_or_die swap drop tuck 2dup binary ">>/binary, EPub/binary, 
+          <<" verify_sig_or_die swap drop call
           swap call == if crash else then
-	  :i 12345 ">>/binary >>),
+	  integer 12345 ">>/binary >>),
     [12345] = language:run(E, 1000).
-testE(EPub, Priv) ->
-% commit reveal, so we reveal ton of bets at the same time, so SVD is possible.
-    C1 = hash:doit(1),
-    Sign1 = base64:encode(sign:sign(C1, Priv)),
-    F = compile(<< <<" :b ">>/binary, (base64:encode(C1))/binary, <<" :b ">>/binary, Sign1/binary, 
-<<" swap :b ">>/binary, EPub/binary, <<" verify_sig ">>/binary >>),
-    [true] = language:run(F, 1000).
+testJ(EPub, Priv) ->
+%This is a weighted multisig that uses the commit-reveal data structure, so that the participants can reveal simultaniously.
+%First I should update testG to have like 5 or 6 pubkeys instead of 3. Using rot is too easy. I should probably use to_r, and from_r
+    ok.
 test() ->
     testA(),
+    testA0(),
     testB(),
     testC(),
     testD(),
     {Pub, Priv} = sign:new_key(),
     EPub = base64:encode(Pub),
-    testE(EPub, Priv),
     testF(EPub, Priv),
     testG(EPub, Priv),
     testH(EPub, Priv),
     testI(EPub, Priv),
+    testJ(EPub, Priv),
     success.
 
 % we can use testI contract to remove power in the weighted multisig from any validators who double-sign.
