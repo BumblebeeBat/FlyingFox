@@ -155,6 +155,10 @@ run_helper(34, Stack) -> [false|Stack];%this returns true if called from a chann
 run_helper(35, [X |[Y |Stack]]) -> [(X == Y)|Stack];%check if 2 non-numerical values are equal. like binary.
 run_helper(43, [X |[Y |Stack]]) -> [(Y rem X)|Stack];%check remainder after division of 2 values.
 %run_helper(36, Stack) -> Stack;
+run_helper(46, Stack) -> 
+    io:fwrite(packer:pack(Stack)),
+    io:fwrite("\n"),
+    Stack;
 run_helper({f, T, B}, Stack) -> 
     [{f, T, B}|Stack];%load fraction into stack.
 run_helper(B, Stack) when is_binary(B)-> 
@@ -223,14 +227,15 @@ atom2op(match) -> 42; % Use the binary to look up a defined word. Make sure the 
 atom2op(remainder) -> 43; % (A B -- C) only works for integers.
 atom2op(store) -> 44; % ( X Y -- )
 atom2op(fetch) -> 45; % ( Y -- X )
+atom2op(print) -> 46; % ( Y -- X )
 atom2op(true) -> true; %( -- true )
 atom2op(false) -> false. %( -- false )
 cost(0) -> 20;
 cost(1) -> 20;
 cost(36) -> 40;
 cost(38) -> 20;
-cost(44) -> 10;
-cost(45) -> 5;
+cost(44) -> 20;
+cost(45) -> 10;
 cost(X) when is_integer(X) -> 1;
 cost({f, _, _}) -> 3;
 cost(B) when is_binary(B) -> size(B);

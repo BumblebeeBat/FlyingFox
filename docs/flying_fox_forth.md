@@ -49,4 +49,14 @@ binary 6DIFJeegWoFCARdzPWKgFaMGniG5vD8Qh+WgPZBb5HQ=  ==
 
 notice that binary values are encoded in base64, and that they have to be introduced with the word 'binary'.
 
+Here is an example of how variables work. It results with this stack `[11, 10, 12, 12]`.
+
+```
+integer 12 x !
+integer 11 y !
+x @ x @
+integer 10 x !
+x @ y @
+```
+
 The first several euler problems are solved in Flying Fox Forth in the /FlyingFox/euler/ folder.

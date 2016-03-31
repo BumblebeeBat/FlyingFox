@@ -75,6 +75,8 @@ rnf([H|T], Functions, Out) ->
 	{ok, Val} -> rnf(T, Functions, [Val|Out])
     end.
 b2i(X) -> list_to_integer(binary_to_list(X)).
+to_opcodes([<<"print">>|R], F, Out) ->
+    to_opcodes(R, F, [46|Out]);
 to_opcodes([<<"binary">>|[B|R]], Functions, Out) ->
     to_opcodes(R, Functions, [base64:decode(B)|Out]);
 to_opcodes([<<"integer">>|[I|R]], Functions, Out) ->
@@ -233,18 +235,14 @@ testA0() ->
     true = [4] == language:run(A, 1000).
 testA1() ->
     %Example of variables
-% variable x
     A = compile(<<"
 integer 12 x !
 integer 11 y !
 x @ x @
 integer 10 x !
-x @
-y @
+x @ y @
+print
 ">>),
-io:fwrite("A is "),
-io:fwrite(packer:pack(A)),
-io:fwrite("\n"),
     true = [11, 10, 12, 12] == language:run(A, 1000).
 testA() ->
     %Example of a function call.
@@ -347,7 +345,10 @@ integer 2 c
 testK(EPub, Priv) ->
 %This is a weighted multisig that uses the commit-reveal data structure, so that the participants can reveal simultaniously.
 %only include signatures from participants who are in the same direction. 
-    % input def1 def2 def4 Sig1 Func1 Sig2 Func2 0 Sig4 Func4
+    % input def1 def2 def4 2 Sig1 Func1 1 Sig2a Sig2b Func2a Func2b 0 2 Sig4 Func4
+    %option 2 is for reading in a signature, adds to top and bottom.
+    %option 0 is for a validator who did not sign, adds to bottom.
+    %option 1 is for a validator who double-signed, increases N. Look at testI for this one.
     Func = <<" integer 1337 drop integer 1">>,
    DFunc = << <<" : func " >>/binary, Func/binary, <<" ; ">>/binary >>,
     C = hash:doit(compile(Func)),
@@ -372,7 +373,7 @@ r> + swap r> + swap r> + swap r> + swap
 %Concerning the bet nonce. 
 %If a lot of validators double-sign, it is important.
 %If your partner closes without providing evidence of double-signing, he can make it look like he won when he lost.
-%If you provide more information, it should be possible to result in a higher bet-nonce, so you can slash him.
+%If you provide more information, it should result in a higher bet-nonce, so you can slash him.
 
 test() ->
     testA(),
