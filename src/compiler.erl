@@ -2,7 +2,8 @@
 -export([compile/1, test/0]).
 
 compile(B) ->
-    Words = to_words(<<B/binary, " ">>, <<>>, []),
+    C = remove_comments(B),
+    Words = to_words(<< <<" ">>/binary, C/binary, <<" ">>/binary>>, <<>>, []),
     Macros = get_macros(Words),
     YWords = remove_macros(Words),
     ZWords = apply_macros(Macros, YWords),
@@ -10,6 +11,17 @@ compile(B) ->
     AWords = remove_after_define(ZWords),
     BWords = replace_name_function(AWords, Functions),
     to_opcodes(BWords, Functions, []).
+remove_comments(B) -> remove_comments(B, <<"">>).
+remove_comments(<<"">>, Out) -> Out;
+remove_comments(<<37:8, B/binary >>, Out) -> 
+    C = remove_till(10, B),
+    remove_comments(C, Out);
+remove_comments(<<X:8, B/binary>>, Out) -> 
+    remove_comments(B, <<Out/binary, X:8>>).
+remove_till(N, <<N:8, B/binary>>) -> B;
+remove_till(N, <<_:8, B/binary>>) -> 
+    remove_till(N, B).
+    
 remove_macros(Words) -> remove_macros(Words, []).
 remove_macros([], Out) -> Out;
 remove_macros([<<":m">>|Words], Out) ->
@@ -73,6 +85,8 @@ to_opcodes([<<"false">>|R], Functions, Out) ->
     to_opcodes(R, Functions, [false|Out]);
 to_opcodes([<<"true">>|R], Functions, Out) ->
     to_opcodes(R, Functions, [true|Out]);
+to_opcodes([<<"rem">>|R], F, Out) ->
+    to_opcodes(R, F, [43|Out]);
 to_opcodes([<<"match">>|R], F, Out) ->
     to_opcodes(R, F, [42|Out]);
 to_opcodes([<<"recurse">>|R], F, Out) ->
@@ -82,7 +96,7 @@ to_opcodes([<<"r>">>|R], F, Out) ->
 to_opcodes([<<">r">>|R], F, Out) ->
     to_opcodes(R, F, [39|Out]);
 to_opcodes([<<"r@">>|R], F, Out) ->
-    to_opcodes(R, F, [3|[11|[40|Out]]]);%out is all reverse.
+    to_opcodes(R, F, [39|[11|[40|Out]]]);%out is all reverse.
 to_opcodes([<<"call">>|R], F, Out) ->
     to_opcodes(R, F, [38|Out]);
 to_opcodes([<<";">>|R], F, Out) ->
@@ -216,7 +230,7 @@ testA0() ->
 testA() ->
     %Example of a function call.
     A = compile(<<"
- : square dup * ; 
+ : square dup * ; % multiplies a number by itelf
  integer 2 square call
 ">>),
     true = [4] == language:run(A, 1000).
@@ -266,9 +280,9 @@ testH(EPub, Priv) ->
 %The number they committed to in secret is 55.
     Func = <<" integer 1337 drop integer 55">>,
     C = hash:doit(compile(Func)),
-    Sig2 = base64:encode(sign:sign(C, Priv)),
+    Sig = base64:encode(sign:sign(C, Priv)),
     D = compile(<< <<" : func " >>/binary, Func/binary, <<" ; 
-     binary ">>/binary, Sig2/binary,  
+     binary ">>/binary, Sig/binary,  
  <<" func dup tuck binary ">>/binary, EPub/binary,
       <<" verify_sig_or_die dup commit_reveal integer 1337 
           call ">>/binary >>),
@@ -298,9 +312,49 @@ testI(EPub, Priv) ->
 	  integer 12345 ">>/binary >>),
     [12345] = language:run(E, 1000).
 testJ(EPub, Priv) ->
+%This is a weighted multisig with 5 keys.
+    Sig = sign:sign(<<"abc">>, Priv),
+    B = compile(<< <<":m b binary YWJj binary ">>/binary, EPub/binary, <<" verify_sig >r ;  
+:m c r> if else drop integer 0 then ;
+b b b b b
+integer 3 c
+integer 3 c
+integer 2 c
+integer 2 c
+integer 2 c
++ + + + integer 9 >
+       ">>/binary >>),
+    [true] = language:run([Sig|[Sig|[Sig|[Sig|[Sig|B]]]]], 1000).
+testK(EPub, Priv) ->
 %This is a weighted multisig that uses the commit-reveal data structure, so that the participants can reveal simultaniously.
-%First I should update testG to have like 5 or 6 pubkeys instead of 3. Using rot is too easy. I should probably use to_r, and from_r
+%only include signatures from participants who are in the same direction. 
+    % input def1 def2 def4 Sig1 Func1 Sig2 Func2 0 Sig4 Func4
+    Func = <<" integer 1337 drop integer 1">>,
+   DFunc = << <<" : func " >>/binary, Func/binary, <<" ; ">>/binary >>,
+    C = hash:doit(compile(Func)),
+    Sig = base64:encode(sign:sign(C, Priv)),
+    A = compile(<< DFunc/binary, <<" integer 0 ">>/binary, 
+      <<" binary ">>/binary, Sig/binary, <<" binary ">>/binary, (base64:encode(C))/binary, 
+<<" :m A >r dup integer 0 == if integer 0 >r else dup tuck binary ;
+:m B verify_sig_or_die dup commit_reveal integer 1337
+  call integer 1 == not if crash else then dup r@ >r then drop ;
+integer 3 A ">>/binary, EPub/binary, <<" B 
+integer 2 A ">>/binary, EPub/binary, <<" B
+integer 0 integer 0
+r> + swap r> + swap r> + swap r> + swap 
+">>/binary >>),
+    [3, 5] = language:run(A, 1000),
+    % verify_sig
+    % commit_reveal integer 1337
+    % function call integer 1 = not if crash else then
+    % > 2/3
     ok.
+
+%Concerning the bet nonce. 
+%If a lot of validators double-sign, it is important.
+%If your partner closes without providing evidence of double-signing, he can make it look like he won when he lost.
+%If you provide more information, it should be possible to result in a higher bet-nonce, so you can slash him.
+
 test() ->
     testA(),
     testA0(),
@@ -314,6 +368,7 @@ test() ->
     testH(EPub, Priv),
     testI(EPub, Priv),
     testJ(EPub, Priv),
+    testK(EPub, Priv),
     success.
 
 % we can use testI contract to remove power in the weighted multisig from any validators who double-sign.

@@ -139,10 +139,12 @@ run_helper(32, Stack) -> [block_tree:height()|Stack];%height
 run_helper(33, Stack) -> [length(Stack)|Stack];%stack size
 run_helper(34, Stack) -> [false|Stack];%this returns true if called from a channel_slash tx.
 run_helper(35, [X |[Y |Stack]]) -> [(X == Y)|Stack];%check if 2 non-numerical values are equal. like binary.
+run_helper(43, [X |[Y |Stack]]) -> [(Y rem X)|Stack];%check remainder after division of 2 values.
 %run_helper(36, Stack) -> Stack;
 run_helper({f, T, B}, Stack) -> [{f, T, B}|Stack];%load fraction into stack.
 run_helper(B, Stack) when is_binary(B)-> [B|Stack];%load binary into stack.
-run_helper({integer, I}, Stack) -> [I|Stack];
+run_helper({integer, I}, Stack) -> 
+    [I|Stack];
 run_helper(true, Stack) -> [true|Stack];
 run_helper(false, Stack) -> [false|Stack].
 assemble(Code) -> assemble(Code, []).
@@ -200,6 +202,7 @@ atom2op(to_r) -> 39; %( V -- )
 atom2op(from_r) -> 40; %( -- V )
 atom2op(recurse) -> 41; %crash. this word should only be used in the definition of a word.
 atom2op(match) -> 42; % Use the binary to look up a defined word. Make sure the word matches the code that follows 'match', otherwise crash.
+atom2op(remainder) -> 43; % (A B -- C) only works for integers.
 atom2op(true) -> true; %( -- true )
 atom2op(false) -> false. %( -- false )
 cost(0) -> 20;
