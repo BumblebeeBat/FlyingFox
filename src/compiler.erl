@@ -85,6 +85,10 @@ to_opcodes([<<"false">>|R], Functions, Out) ->
     to_opcodes(R, Functions, [false|Out]);
 to_opcodes([<<"true">>|R], Functions, Out) ->
     to_opcodes(R, Functions, [true|Out]);
+to_opcodes([<<"@">>|R], F, Out) ->
+    to_opcodes(R, F, [45|Out]);
+to_opcodes([<<"!">>|R], F, Out) ->
+    to_opcodes(R, F, [44|Out]);
 to_opcodes([<<"rem">>|R], F, Out) ->
     to_opcodes(R, F, [43|Out]);
 to_opcodes([<<"match">>|R], F, Out) ->
@@ -227,6 +231,21 @@ testA0() ->
  integer 2 square
 ">>),
     true = [4] == language:run(A, 1000).
+testA1() ->
+    %Example of variables
+% variable x
+    A = compile(<<"
+integer 12 x !
+integer 11 y !
+x @ x @
+integer 10 x !
+x @
+y @
+">>),
+io:fwrite("A is "),
+io:fwrite(packer:pack(A)),
+io:fwrite("\n"),
+    true = [11, 10, 12, 12] == language:run(A, 1000).
 testA() ->
     %Example of a function call.
     A = compile(<<"
@@ -324,7 +343,7 @@ integer 2 c
 integer 2 c
 + + + + integer 9 >
        ">>/binary >>),
-    [true] = language:run([Sig|[Sig|[Sig|[Sig|[Sig|B]]]]], 1000).
+    [true] = language:run([Sig|[Sig|[Sig|[Sig|[Sig|B]]]]], 3000).
 testK(EPub, Priv) ->
 %This is a weighted multisig that uses the commit-reveal data structure, so that the participants can reveal simultaniously.
 %only include signatures from participants who are in the same direction. 
@@ -358,6 +377,7 @@ r> + swap r> + swap r> + swap r> + swap
 test() ->
     testA(),
     testA0(),
+    testA1(),
     testB(),
     testC(),
     testD(),

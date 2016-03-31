@@ -1,5 +1,9 @@
 -module(language).
 -export([run/2, test/0, remove_till/2, assemble/1, hashlock/1, extract_sh/1, valid_secret/2, run_script/2, cost/1]).
+power(A, B) when B == 1 -> A;
+power(A, B) when (B rem 2) == 0 -> power(A*A, B div 2);
+power(A, B) -> A*power(A, B-1).
+-define(max_integer, power(2, 256)).
 int_arith(2, X, Y) -> X + Y;
 int_arith(3, X, Y) -> X - Y;
 int_arith(4, X, Y) -> X * Y;
@@ -31,26 +35,27 @@ match(N, [C|Function], [C|Code]) ->
 flip(X) -> flip(X, []).
 flip([], O) -> O;
 flip([H|T], O) -> flip(T, [H|O]).
-run(Code, Gas) -> run(Code, dict:new(), [], [], Gas).
-run(_, _, _, _, Gas) when Gas < 0 -> 
+run(Code, Gas) -> run(Code, dict:new(), dict:new(), [], [], Gas).
+run(_, _, _, _, _, Gas) when Gas < 0 -> 
     io:fwrite("out of gas"),
     Gas = 0;
-run([], _, _, Stack, _) -> Stack;
-run([17|Code], Functions, Alt, [Bool|Stack], Gas) -> %if (case)
-    if
-	Bool -> run(Code, Functions, Alt, Stack, Gas-cost(17));
-	true -> 
-	    {_, T} = remove_till(18, Code),
-	    run(T, Functions, Alt, Stack, Gas-cost(17))
-    end;
-run([18|Code], Functions, Alt, Stack, Gas) -> %else
+run([], _, _, _, Stack, _) -> Stack;
+run([17|Code], Functions, Variables, Alt, [Bool|Stack], Gas) -> %if (case)
+    X = if
+	    Bool -> Code;
+	    true -> 
+		{_, T} = remove_till(18, Code),
+		T
+    end,
+    run(X, Functions, Variables, Alt, Stack, Gas-cost(17));
+run([18|Code], Functions, Variables, Alt, Stack, Gas) -> %else
     {_, T} = remove_till(19, Code),
-    run(T, Functions, Alt, Stack, Gas-cost(18));
-run([36|Code], Functions, Alt, Stack, Gas) ->%define
+    run(T, Functions, Variables, Alt, Stack, Gas-cost(18));
+run([36|Code], Functions, Variables, Alt, Stack, Gas) ->%define
     {H, T} = remove_till(37, Code),
     B = hash:doit(H),
-    run(T, dict:store(B, H, Functions), Alt, Stack, Gas-cost(36)-length(H));
-run([38|Code], Functions, Alt, [B|Stack], Gas) ->%call
+    run(T, dict:store(B, H, Functions), Variables, Alt, Stack, Gas-cost(36)-length(H));
+run([38|Code], Functions, Variables, Alt, [B|Stack], Gas) ->%call
     %Nice for writing scripts.
     %io:fwrite("stack is "),
     %io:fwrite(packer:pack([B|Stack])),
@@ -65,9 +70,9 @@ run([38|Code], Functions, Alt, [B|Stack], Gas) ->%call
 	    io:fwrite("undefined function");
 	{ok, F} ->
 	    G = replace(41, B, F),%recursion
-	    run(G++Code, Functions, Alt, Stack, Gas-cost(37))
+	    run(G++Code, Functions, Variables, Alt, Stack, Gas-cost(37))
     end;
-run([42|Code], Functions, Alt, [N|[B|Stack]], Gas) ->%match
+run([42|Code], Functions, Variables, Alt, [N|[B|Stack]], Gas) ->%match
     case dict:find(B, Functions) of
 	error -> 
 	    io:fwrite("error in match, known functions: "),
@@ -77,16 +82,25 @@ run([42|Code], Functions, Alt, [N|[B|Stack]], Gas) ->%match
 	{ok, F} ->
 	    NewCode = match(length(F), F, Code),
 	    N = length(Code) - length(NewCode),
-	    run(NewCode, Functions, Alt, [true|Stack], Gas-cost(42))
+	    run(NewCode, Functions, Variables, Alt, [true|Stack], Gas-cost(42))
     end;
-run([39|Code], Functions, Alt, [N|Stack], Gas) ->%moves the top of the stack to the top of the alt stack.
-    run(Code, Functions, [N|Alt], Stack, Gas-cost(39));
-run([40|Code], Functions, [N|Alt], Stack, Gas) ->%moves the top of the alt stack to the top of the stack.
-    run(Code, Functions, Alt, [N|Stack], Gas - cost(40));
-run([28|_], _, _, _, _) -> %die. Neither person gets money.
+run([39|Code], Functions, Variables, Alt, [N|Stack], Gas) ->%moves the top of the stack to the top of the alt stack.
+    run(Code, Functions, Variables, [N|Alt], Stack, Gas-cost(39));
+run([40|Code], Functions, Vars, [N|Alt], Stack, Gas) ->%moves the top of the alt stack to the top of the stack.
+    run(Code, Functions, Vars, Alt, [N|Stack], Gas - cost(40));
+run([28|_], _, _, _, _, _) -> %die. Neither person gets money.
     [delete];
-run([Word|Code], Functions, Alt, Stack, Gas) ->
-    run(Code, Functions, Alt, run_helper(Word, Stack), Gas-cost(Word)).
+run([44|Code], Functions, Vars, Alt, [Name|[Value|Stack]], Gas) -> %store
+    NVars = dict:store(Name, Value, Vars),
+    run(Code, Functions, NVars, Alt, Stack, Gas);
+run([45|Code], Functions, Vars, Alt, [Name|Stack], Gas) -> %fetch
+    X = case dict:find(Name, Vars) of
+	error -> 0;
+	{ok, Val} -> Val
+    end,
+    run(Code, Functions, Vars, Alt, [X|Stack], Gas);
+run([Word|Code], Functions, Vars, Alt, Stack, Gas) ->
+    run(Code, Functions, Vars, Alt, run_helper(Word, Stack), Gas-cost(Word)).
 run_helper(0, [H|Stack]) -> 
     [hash:doit(H)|Stack];%hash
 run_helper(1, [Pub|[Data|[Sig|Stack]]]) ->%verify_sig
@@ -141,10 +155,14 @@ run_helper(34, Stack) -> [false|Stack];%this returns true if called from a chann
 run_helper(35, [X |[Y |Stack]]) -> [(X == Y)|Stack];%check if 2 non-numerical values are equal. like binary.
 run_helper(43, [X |[Y |Stack]]) -> [(Y rem X)|Stack];%check remainder after division of 2 values.
 %run_helper(36, Stack) -> Stack;
-run_helper({f, T, B}, Stack) -> [{f, T, B}|Stack];%load fraction into stack.
-run_helper(B, Stack) when is_binary(B)-> [B|Stack];%load binary into stack.
+run_helper({f, T, B}, Stack) -> 
+    [{f, T, B}|Stack];%load fraction into stack.
+run_helper(B, Stack) when is_binary(B)-> 
+    true = size(B) < 300,
+    [B|Stack];%load binary into stack.
 run_helper({integer, I}, Stack) -> 
-    [I|Stack];
+    %we should probably have a maximum size.
+    [(I rem ?max_integer)|Stack];
 run_helper(true, Stack) -> [true|Stack];
 run_helper(false, Stack) -> [false|Stack].
 assemble(Code) -> assemble(Code, []).
@@ -203,16 +221,20 @@ atom2op(from_r) -> 40; %( -- V )
 atom2op(recurse) -> 41; %crash. this word should only be used in the definition of a word.
 atom2op(match) -> 42; % Use the binary to look up a defined word. Make sure the word matches the code that follows 'match', otherwise crash.
 atom2op(remainder) -> 43; % (A B -- C) only works for integers.
+atom2op(store) -> 44; % ( X Y -- )
+atom2op(fetch) -> 45; % ( Y -- X )
 atom2op(true) -> true; %( -- true )
 atom2op(false) -> false. %( -- false )
 cost(0) -> 20;
 cost(1) -> 20;
 cost(36) -> 40;
 cost(38) -> 20;
+cost(44) -> 10;
+cost(45) -> 5;
 cost(X) when is_integer(X) -> 1;
-cost({f, _, _}) -> 1;
-cost(B) when is_binary(B) -> (size(B) div 2);
-cost({integer, _}) -> 1;
+cost({f, _, _}) -> 3;
+cost(B) when is_binary(B) -> size(B);
+cost({integer, _}) -> 3;
 cost(true) -> 1;
 cost(false) -> 1.
 replace(A, B, C) -> replace(A, B, C, []).

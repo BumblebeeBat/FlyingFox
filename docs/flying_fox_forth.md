@@ -49,3 +49,4 @@ binary 6DIFJeegWoFCARdzPWKgFaMGniG5vD8Qh+WgPZBb5HQ=  ==
 
 notice that binary values are encoded in base64, and that they have to be introduced with the word 'binary'.
 
+The first several euler problems are solved in Flying Fox Forth in the /FlyingFox/euler/ folder.

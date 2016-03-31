@@ -43,9 +43,21 @@ problem003(Gas) ->
     B = compiler:compile(A),
     C = language:run(B, Gas),
     C = [problem003s(3, 600851475143)].
+%A palindromic number reads the same both ways. The largest palindrome made from the product of two 2-digit numbers is 9009 = 91 × 99.
+%Find the largest palindrome made from the product of two 3-digit numbers.
+palindrone_p(X) ->
+    ((X rem 10) == (X rem 1000000)),
+    ok.
     
+problem004(Gas) ->
+    %{ok, A} = file:read_file("euler/004.fs"),
+    %B = compiler:compile(A),
+    %C = language:run(B, Gas),
+    %C = [problem004s()].
+    ok.
 
 test() ->
     problem001(50000),
     problem002(2000),
     problem003(30000).
+
