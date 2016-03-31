@@ -13,7 +13,7 @@ compile(B) ->
     to_opcodes(BWords, Functions, []).
 remove_comments(B) -> remove_comments(B, <<"">>).
 remove_comments(<<"">>, Out) -> Out;
-remove_comments(<<37:8, B/binary >>, Out) -> 
+remove_comments(<<37:8, B/binary >>, Out) -> % [37] == "%".
     C = remove_till(10, B),
     remove_comments(C, Out);
 remove_comments(<<X:8, B/binary>>, Out) -> 
@@ -181,14 +181,18 @@ to_opcodes([<<"verify_sig">>|R], F, Out) ->
     to_opcodes(R, F, [1|Out]);
 to_opcodes([<<"hash">>|R], F, Out) ->
     to_opcodes(R, F, [0|Out]);
-to_opcodes([<<"verify_sig_or_die">>|R], F, Out) ->
-    X = [19, 18, 28, 17, 23, 1],%in reverse order because Out is all reverse.
+to_opcodes([<<"or_die">>|R], F, Out) ->
+    %( bool -- )
+    %if bool is true, ignore. if bool is false, then crash.
+    X = [19, 18, 28, 17, 23],%in reverse order because Out is all reverse.
+    %X = [not, if, crash, else, then] %in correct order
     to_opcodes(R, F, X ++ Out);
 to_opcodes([<<"commit_reveal">>|[C|[A|R]]], F, Out) ->
+    %( Function -- )
     %" integer 3 match D drop integer -1 not if crash else then "
     %This opcode verifies that a hash references a function of the commit-reveal variety. If not, it crashes.
     D  = flip(to_opcodes([C, A], F, [])),%C, A could be a binary, or an integer.
-    X = [19, 18, 28, 17, 23, {integer, -1}, 10] ++ D ++ [42, {integer, 3}],
+    X = [{integer, -10}, 10] ++ D ++ [42, {integer, 3}],% -10 is the code for any integer.
     to_opcodes(R, F, X ++ Out);
 to_opcodes([], _, Out) -> flip(Out);
 to_opcodes([Name|R], Functions, Out) ->
@@ -241,7 +245,7 @@ integer 11 y !
 x @ x @
 integer 10 x !
 x @ y @
-print
+print  %this prints out the contents of the stack.
 ">>),
     true = [11, 10, 12, 12] == language:run(A, 1000).
 testA() ->
@@ -301,7 +305,7 @@ testH(EPub, Priv) ->
     D = compile(<< <<" : func " >>/binary, Func/binary, <<" ; 
      binary ">>/binary, Sig/binary,  
  <<" func dup tuck binary ">>/binary, EPub/binary,
-      <<" verify_sig_or_die dup commit_reveal integer 1337 
+      <<" verify_sig or_die dup commit_reveal integer 1337 or_die
           call ">>/binary >>),
     [55] = language:run(D, 1000).
 testI(EPub, Priv) ->
@@ -320,11 +324,11 @@ testI(EPub, Priv) ->
    Sign1 = base64:encode(sign:sign(C1, Priv)),
    Sign2 = base64:encode(sign:sign(C2, Priv)),
    E = compile(<< DFunc1/binary, DFunc2/binary, <<" binary ">>/binary, Sign1/binary, <<" binary ">>/binary, Sign2/binary, <<" func1 func2 2dup == if crash else then
-          2dup commit_reveal integer 1337 
-               commit_reveal integer 1337 
+          2dup commit_reveal integer 1337 or_die
+               commit_reveal integer 1337 or_die 
 	  swap tuck 2dup binary ">>/binary, EPub/binary, 
-	  <<" verify_sig_or_die swap drop tuck 2dup binary ">>/binary, EPub/binary, 
-          <<" verify_sig_or_die swap drop call
+	  <<" verify_sig or_die swap drop tuck 2dup binary ">>/binary, EPub/binary, 
+          <<" verify_sig or_die swap drop call
           swap call == if crash else then
 	  integer 12345 ">>/binary >>),
     [12345] = language:run(E, 1000).
@@ -345,6 +349,7 @@ integer 2 c
 testK(EPub, Priv) ->
 %This is a weighted multisig that uses the commit-reveal data structure, so that the participants can reveal simultaniously.
 %only include signatures from participants who are in the same direction. 
+    %Needs updates.
     % input def1 def2 def4 2 Sig1 Func1 1 Sig2a Sig2b Func2a Func2b 0 2 Sig4 Func4
     %option 2 is for reading in a signature, adds to top and bottom.
     %option 0 is for a validator who did not sign, adds to bottom.
@@ -356,7 +361,7 @@ testK(EPub, Priv) ->
     A = compile(<< DFunc/binary, <<" integer 0 ">>/binary, 
       <<" binary ">>/binary, Sig/binary, <<" binary ">>/binary, (base64:encode(C))/binary, 
 <<" :m A >r dup integer 0 == if integer 0 >r else dup tuck binary ;
-:m B verify_sig_or_die dup commit_reveal integer 1337
+:m B verify_sig or_die dup commit_reveal integer 1337 or_die
   call integer 1 == not if crash else then dup r@ >r then drop ;
 integer 3 A ">>/binary, EPub/binary, <<" B 
 integer 2 A ">>/binary, EPub/binary, <<" B

@@ -28,7 +28,21 @@ remove_till(_, _, X, _) ->
     io:fwrite("error, you forgot to include 'and' 'else' or 'then' somewhere."),
     X = [0].
 match(0, _, Code) -> Code;
-match(N, [_|F], [{integer, -1}|Code]) -> 
+match(N, [{integer, _}|F], [{integer, -10}|Code]) -> 
+    % -10 is the code for integers.
+    match(N - 1, F, Code);
+match(N, [{f, A, B}|F], [{integer, -13}|Code]) -> 
+    % -13 is the code for fractions.
+    true = is_integer(A),
+    true = is_integer(B),
+    false = (B == 0),
+    match(N - 1, F, Code);
+match(N, [M|F], [{integer, -12}|Code]) -> 
+    % -12 is the code for anything other than call.
+    false = M == 38, %can't use call
+    match(N - 1, F, Code);
+match(N, [_|F], [{integer, -11}|Code]) -> 
+    % -11 is the code for anything.
     match(N - 1, F, Code);
 match(N, [C|Function], [C|Code]) -> 
     match(N-1, Function, Code).
@@ -300,7 +314,7 @@ test() ->
     H30 = [dup, dup, {integer, 5}, plus, plus, plus],
     Hash3 = hash:doit(assemble(H30)),
     Code3 = [define] ++ H30 ++ [stop,
-     Hash3, {integer, 6}, match, dup, dup, {integer, 5}, plus, {integer, -1}, plus], 
+     Hash3, {integer, 6}, match, dup, dup, {integer, 5}, plus, {integer, -10}, plus], 
     [true] = language:run(assemble(Code3), 1000).
 %success.
 %assemble([H]) ++ hashlock(HASH),
