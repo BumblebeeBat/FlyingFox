@@ -13,13 +13,12 @@ else
   if
     drop integer 1 - end 
   else
-    2dup * Foo @ < 
+    2dup * dup Foo @ <
     if
+      drop
     else
-      2dup * palindrone 
-      if
-	2dup * Foo ! 
-      else
+      dup palindrone
+      if Foo ! else drop
   then then then
   integer 1 - recurse call
 then ;

@@ -58,11 +58,12 @@ problem004s() -> problem004s(999, 999, 0).
 problem004s(0, 0, Out) -> Out;
 problem004s(X, 0, Out) -> problem004s(X-1, 999, Out);
 problem004s(X, Y, Out) -> 
+    Z = X*Y,
     NOut = if
-	       ((X*Y) > Out) ->
-		   B = palindrone(X*Y),
+	       (Z > Out) ->
+		   B = palindrone(Z),
 		   if
-		       B -> X*Y;
+		       B -> Z;
 		       true -> Out
 		   end;
 	       true -> Out
