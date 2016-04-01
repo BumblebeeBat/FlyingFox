@@ -113,6 +113,8 @@ run([45|Code], Functions, Vars, Alt, [Name|Stack], Gas) -> %fetch
 	{ok, Val} -> Val
     end,
     run(Code, Functions, Vars, Alt, [X|Stack], Gas);
+run([47|Code], Functions, Vars, Alt, Stack, Gas) -> %gas
+    run(Code, Functions, Vars, Alt, [Gas|Stack], Gas);
 run([Word|Code], Functions, Vars, Alt, Stack, Gas) ->
     run(Code, Functions, Vars, Alt, run_helper(Word, Stack), Gas-cost(Word)).
 run_helper(0, [H|Stack]) -> 
@@ -208,7 +210,7 @@ atom2op(rot) -> 12;%( a b c -- c a b )
 atom2op(tor) -> 13;%( a b c -- b c a )
 atom2op(ddup) -> 14;%( a b -- a b a b )
 atom2op(tuckn) -> 15;%( X N -- ) inserts X N-deeper into stack.
-atom2op(pickn) -> 16;%( Stack N -- Stack Nth-item )
+atom2op(pickn) -> 16;%( N -- X )
 % true switch <<"executed">> else <<"ignored">> then 
 % false switch <<"ignored">> else <<"executed">> then 
 atom2op(switch) -> 17;% conditional statement
@@ -242,6 +244,7 @@ atom2op(remainder) -> 43; % (A B -- C) only works for integers.
 atom2op(store) -> 44; % ( X Y -- )
 atom2op(fetch) -> 45; % ( Y -- X )
 atom2op(print) -> 46; % ( Y -- X )
+atom2op(gas) -> 47; % ( Y -- X )
 atom2op(true) -> true; %( -- true )
 atom2op(false) -> false. %( -- false )
 cost(0) -> 20;

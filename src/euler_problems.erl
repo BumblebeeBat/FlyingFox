@@ -45,19 +45,68 @@ problem003(Gas) ->
     C = [problem003s(3, 600851475143)].
 %A palindromic number reads the same both ways. The largest palindrome made from the product of two 2-digit numbers is 9009 = 91 × 99.
 %Find the largest palindrome made from the product of two 3-digit numbers.
-palindrone_p(X) ->
-    ((X rem 10) == (X rem 1000000)),
-    ok.
-    
+flip3(X) ->
+    A = X div 100,
+    C = X rem 10,
+    ((C - A)*99)+X.
+palindrone(X) ->
+    A = X div 1000,
+    B = X rem 1000,
+    C = flip3(B),
+    C == A.
+problem004s() -> problem004s(999, 999, 0).
+problem004s(0, 0, Out) -> Out;
+problem004s(X, 0, Out) -> problem004s(X-1, 999, Out);
+problem004s(X, Y, Out) -> 
+    NOut = if
+	       ((X*Y) > Out) ->
+		   B = palindrone(X*Y),
+		   if
+		       B -> X*Y;
+		       true -> Out
+		   end;
+	       true -> Out
+	   end,
+    problem004s(X, Y-1, NOut).
 problem004(Gas) ->
-    %{ok, A} = file:read_file("euler/004.fs"),
-    %B = compiler:compile(A),
-    %C = language:run(B, Gas),
-    %C = [problem004s()].
-    ok.
+    {ok, A} = file:read_file("euler/004.fs"),
+    B = compiler:compile(A),
+    C = language:run(B, Gas),
+    C = [problem004s()].
+%2520 is the smallest number that can be divided by each of the numbers from 1 to 10 without any remainder.
+%What is the smallest positive number that is evenly divisible by all of the numbers from 1 to 20?
+gcd(0, X) -> X;
+gcd(Y, X) -> gcd(X rem Y, Y).
+problem005s(1, X) -> X;
+problem005s(X, Y) -> 
+    problem005s(X - 1, Y * X div gcd(X, Y)).
+problem005(Gas) ->
+    {ok, A} = file:read_file("euler/005.fs"),
+    B = compiler:compile(A),
+    C = language:run(B, Gas),
+    C = [problem005s(20, 1)].
+%Hence the difference between the sum of the squares of the first ten natural numbers and the square of the sum is 3025 − 385 = 2640
+%Find the difference between the sum of the squares of the first one hundred natural numbers and the square of the sum.    
+sum_squares(Limit, Limit, Total) -> Total;
+sum_squares(X, Limit, Total) ->
+    sum_squares(X+1, Limit, Total + (X*X)).
+problem006s() ->
+    5050*5050 - sum_squares(0, 101, 0).
+problem006(Gas) ->
+    {ok, A} = file:read_file("euler/006.fs"),
+    B = compiler:compile(A),
+    C = language:run(B, Gas),
+    %io:fwrite("C is "),
+    %io:fwrite(packer:pack(C)),
+    %io:fwrite("\n"),
+    C = [problem006s()].
 
 test() ->
-    problem001(50000),
+    problem001(100000),
     problem002(2000),
-    problem003(30000).
+    problem003(60000),
+    problem004(60000000), % 640000 function calls. takes like 12 seconds.
+    problem005(4000),
+    problem006(8000),
+    success.
 

@@ -1,9 +1,10 @@
 -module(compiler).
 -export([compile/1, test/0]).
 
-compile(B) ->
+compile(A) ->
+    B = << <<" ">>/binary, A/binary, <<" \n">>/binary>>,
     C = remove_comments(B),
-    Words = to_words(<< <<" ">>/binary, C/binary, <<" ">>/binary>>, <<>>, []),
+    Words = to_words(C, <<>>, []),
     Macros = get_macros(Words),
     YWords = remove_macros(Words),
     ZWords = apply_macros(Macros, YWords),
@@ -13,6 +14,9 @@ compile(B) ->
     to_opcodes(BWords, Functions, []).
 remove_comments(B) -> remove_comments(B, <<"">>).
 remove_comments(<<"">>, Out) -> Out;
+remove_comments(<<40:8, B/binary >>, Out) -> % [40] == ")".
+    C = remove_till(41, B), % [41] == ")".
+    remove_comments(C, Out);
 remove_comments(<<37:8, B/binary >>, Out) -> % [37] == "%".
     C = remove_till(10, B),
     remove_comments(C, Out);
@@ -75,6 +79,8 @@ rnf([H|T], Functions, Out) ->
 	{ok, Val} -> rnf(T, Functions, [Val|Out])
     end.
 b2i(X) -> list_to_integer(binary_to_list(X)).
+to_opcodes([<<"gas">>|R], F, Out) ->
+    to_opcodes(R, F, [47|Out]);
 to_opcodes([<<"print">>|R], F, Out) ->
     to_opcodes(R, F, [46|Out]);
 to_opcodes([<<"binary">>|[B|R]], Functions, Out) ->
