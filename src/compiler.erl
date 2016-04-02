@@ -1,6 +1,24 @@
 -module(compiler).
 -export([compile/1, test/0]).
 
+%-define(or_die, [19, 18, 28, 17, 23]).%in reverse order because Out is all reverse. 
+-define(or_die, compile(<<" not if crash else then ">>)).
+-define(commit_reveal, compile(<<" swap dup integer 2 match integer -10 integer -10 or_die call rot == or_die ">>)).% -10 is the code for any integer.
+   % here is code to punish people for signing contrary results. This contract would be used to stop oracles from outputing 2 contrary results.
+   % func1 != func2
+   % Verify that internal pub signed over each func.
+   % make sure func1 and func2 are of the correct form.
+   % func1(0) != func2(0)
+-define(double_signed_slash, compile(<<"
+          N !
+          >r 
+          2dup N @ commit_reveal >r
+               N @ commit_reveal r> 
+          == not or_die
+	  swap tuck r@ 
+	  verify_sig or_die r>
+          verify_sig or_die
+">>)).
 compile(A) ->
     B = << <<" ">>/binary, A/binary, <<" \n">>/binary>>,
     C = remove_comments(B),
@@ -190,16 +208,15 @@ to_opcodes([<<"hash">>|R], F, Out) ->
 to_opcodes([<<"or_die">>|R], F, Out) ->
     %( bool -- )
     %if bool is true, ignore. if bool is false, then crash.
-    X = [19, 18, 28, 17, 23],%in reverse order because Out is all reverse.
-    %X = [not, if, crash, else, then] %in correct order
-    to_opcodes(R, F, X ++ Out);
-to_opcodes([<<"commit_reveal">>|[C|[A|R]]], F, Out) ->
+    to_opcodes(R, F, flip(?or_die) ++ Out);
+to_opcodes([<<"commit_reveal">>|R], F, Out) ->
     %( Function -- )
-    %" integer 3 match D drop integer -1 not if crash else then "
     %This opcode verifies that a hash references a function of the commit-reveal variety. If not, it crashes.
-    D  = flip(to_opcodes([C, A], F, [])),%C, A could be a binary, or an integer.
-    X = [{integer, -10}, 10] ++ D ++ [42, {integer, 3}],% -10 is the code for any integer.
-    to_opcodes(R, F, X ++ Out);
+    to_opcodes(R, F, flip(?commit_reveal) ++ Out);
+to_opcodes([<<"double_signed_slash">>|R], F, Out) ->
+    %( Sig1 Sig1 Func1 Func2 Pub identifier_constant -- )
+    %This opcode verifies that a hash references a function of the commit-reveal variety. If not, it crashes.
+    to_opcodes(R, F, flip(?double_signed_slash) ++ Out);
 to_opcodes([], _, Out) -> flip(Out);
 to_opcodes([Name|R], Functions, Out) ->
     case dict:find(Name, Functions) of
@@ -305,39 +322,36 @@ if integer 2 else integer 0 then
 testH(EPub, Priv) -> 
 %This is for commit reveal. The nonce for they are required to include, which is custom for this round. it is a very big random number, to avoid collisions, is 1337
 %The number they committed to in secret is 55.
-    Func = <<" integer 1337 drop integer 55">>,
+    Func = <<" integer 55 integer 1337">>,
     C = hash:doit(compile(Func)),
     Sig = base64:encode(sign:sign(C, Priv)),
     D = compile(<< <<" : func " >>/binary, Func/binary, <<" ; 
      binary ">>/binary, Sig/binary,  
  <<" func dup tuck binary ">>/binary, EPub/binary,
-      <<" verify_sig or_die dup commit_reveal integer 1337 or_die
-          call ">>/binary >>),
+     % <<" verify_sig or_die dup integer 2 match integer -10 integer -10 or_die
+     <<" verify_sig or_die integer 1337 commit_reveal ">>/binary >>),
     [55] = language:run(D, 1000).
 testI(EPub, Priv) ->
        % here is a contract to punish people for signing contrary results. This contract would be used to stop oracles from outputing 2 contrary results.
-   % Sig1, Sig2, func1, func2. <--input top ->
-   % func1 != func2
-   % Verify that internal pub signed over each func.
-   % make sure func1 and func2 are of the correct form.
-   % func1(0) != func2(0)
-   Func1 = <<" integer 1337 drop integer 55 ">>,
-   Func2 = <<" integer 1337 drop integer 54 ">>,
+   % Sig1, Sig2, func1, func2, Pub1, constant. <--input top ->
+   Func1 = <<" integer 55 integer 1337 ">>,
+   Func2 = <<" integer 54 integer 1337 ">>,
    DFunc1 = << <<" : func1 " >>/binary, Func1/binary, <<" ; ">>/binary >>,
    DFunc2 = << <<" : func2 " >>/binary, Func2/binary, <<" ; ">>/binary >>,
    C1 = hash:doit(compile(Func1)),
    C2 = hash:doit(compile(Func2)),
    Sign1 = base64:encode(sign:sign(C1, Priv)),
    Sign2 = base64:encode(sign:sign(C2, Priv)),
-   E = compile(<< DFunc1/binary, DFunc2/binary, <<" binary ">>/binary, Sign1/binary, <<" binary ">>/binary, Sign2/binary, <<" func1 func2 2dup == if crash else then
-          2dup commit_reveal integer 1337 or_die
-               commit_reveal integer 1337 or_die 
-	  swap tuck 2dup binary ">>/binary, EPub/binary, 
-	  <<" verify_sig or_die swap drop tuck 2dup binary ">>/binary, EPub/binary, 
-          <<" verify_sig or_die swap drop call
-          swap call == if crash else then
-	  integer 12345 ">>/binary >>),
-    [12345] = language:run(E, 1000).
+   E = compile(<< DFunc1/binary, DFunc2/binary, 
+	       <<" binary ">>/binary, Sign1/binary, 
+	       <<" binary ">>/binary, Sign2/binary, 
+	       <<" binary ">>/binary, (base64:encode(C1))/binary,
+	       <<" binary ">>/binary, (base64:encode(C2))/binary,
+	       <<" binary ">>/binary, EPub/binary, 
+               <<" integer 1337 
+          double_signed_slash 
+    ">>/binary >>),
+    [] = language:run(E, 1000).
 testJ(EPub, Priv) ->
 %This is a weighted multisig with 5 keys.
     Sig = sign:sign(<<"abc">>, Priv),
@@ -354,9 +368,33 @@ integer 2 c
     [true] = language:run([Sig|[Sig|[Sig|[Sig|[Sig|B]]]]], 3000).
 testK(EPub, Priv) ->
 %This is a weighted multisig that uses the commit-reveal data structure, so that the participants can reveal simultaniously.
-%only include signatures from participants who are in the same direction. 
-    %Needs updates.
-    % input def1 def2 def4 2 Sig1 Func1 1 Sig2a Sig2b Func2a Func2b 0 2 Sig4 Func4
+%only include signatures from participants who are in the same direction. Use a 0 to replace people who didn't participate.
+    % input def2 0 Sig2 Func2
+    %option 0 is for a validator who did not sign, adds to bottom.
+    Func = <<" integer 1 integer 1337 ">>,
+   DFunc = << <<" : func " >>/binary, Func/binary, <<" ; ">>/binary >>,
+    C = hash:doit(compile(Func)),
+    Sig = base64:encode(sign:sign(C, Priv)),
+    A = compile(<< DFunc/binary, <<" integer 0 ">>/binary, 
+      <<" binary ">>/binary, Sig/binary, <<" binary ">>/binary, (base64:encode(C))/binary, <<" :m A >r dup integer 0 == if integer 0 >r else dup tuck binary ;
+:m B verify_sig or_die integer 1337 commit_reveal 
+  integer 1 == not if crash else then dup r@ >r then drop ;
+integer 3 A ">>/binary, EPub/binary, <<" B 
+integer 2 A ">>/binary, EPub/binary, <<" B
+integer 0 integer 0
+r> + swap r> + swap r> + swap r> + swap 
+">>/binary >>),
+    [3, 5] = language:run(A, 1000),
+    % verify_sig
+    % commit_reveal integer 1337
+    % function call integer 1 = not if crash else then
+    % > 2/3
+    ok.
+testL(EPub, Priv) ->
+%This is a weighted multisig that uses the commit-reveal data structure, so that the participants can reveal simultaniously.
+%only include signatures from participants who are in the same direction.
+    %Needs updates
+    % input def1 def2 def4 Sig1 Func1 2 Sig2a Sig2b Func2a Func2b 1 0 Sig4 Func4 2
     %option 2 is for reading in a signature, adds to top and bottom.
     %option 0 is for a validator who did not sign, adds to bottom.
     %option 1 is for a validator who double-signed, increases N. Look at testI for this one.
