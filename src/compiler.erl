@@ -369,22 +369,36 @@ integer 2 c
 testK(EPub, Priv) ->
 %This is a weighted multisig that uses the commit-reveal data structure, so that the participants can reveal simultaniously.
 %only include signatures from participants who are in the same direction. Use a 0 to replace people who didn't participate.
-    % input def2 0 Sig2 Func2
+    % input def2 0 Sig2 Func2 2 Sig1 Sig2 Func1 Func2 Pub identifier 1
     %option 0 is for a validator who did not sign, adds to bottom.
     Func = <<" integer 1 integer 1337 ">>,
    DFunc = << <<" : func " >>/binary, Func/binary, <<" ; ">>/binary >>,
     C = hash:doit(compile(Func)),
     Sig = base64:encode(sign:sign(C, Priv)),
-    A = compile(<< DFunc/binary, <<" integer 0 ">>/binary, 
-      <<" binary ">>/binary, Sig/binary, <<" binary ">>/binary, (base64:encode(C))/binary, <<" :m A >r dup integer 0 == if integer 0 >r else dup tuck binary ;
-:m B verify_sig or_die integer 1337 commit_reveal 
-  integer 1 == not if crash else then dup r@ >r then drop ;
-integer 3 A ">>/binary, EPub/binary, <<" B 
-integer 2 A ">>/binary, EPub/binary, <<" B
+    A = compile(<< DFunc/binary, <<" integer 0 ">>/binary, <<" integer 0 ">>/binary, 
+      <<" binary ">>/binary, Sig/binary, <<" binary ">>/binary, (base64:encode(C))/binary, <<" integer 2
+   :m A >r Pub ! dup integer 0 == if 
+   integer 0 >r 
+else
+   dup integer 2 == if drop
+     dup tuck Pub @ verify_sig or_die 
+     integer 1337 commit_reveal
+     integer 1 == or_die ( only counting votes in same direction )
+     dup r@ >r 
+   else
+      integer 1 == or_die
+      double_signed_slash
+   then
+then drop ;
+:m B r> + swap r> + swap ;
+:m EPub binary ">>/binary, EPub/binary, <<" ;
+EPub integer 3 A
+EPub integer 2 A
+EPub integer 2 A
 integer 0 integer 0
-r> + swap r> + swap r> + swap r> + swap 
+B B B
 ">>/binary >>),
-    [3, 5] = language:run(A, 1000),
+    [3, 7] = language:run(A, 1000),
     % verify_sig
     % commit_reveal integer 1337
     % function call integer 1 = not if crash else then
