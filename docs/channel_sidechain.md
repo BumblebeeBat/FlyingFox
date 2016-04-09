@@ -4,8 +4,8 @@ A signature could work the same way. A branch of code in the contract could be l
 
 The key that unlocks the new branch of code could be a 2/3 multisig.
 
-The branch of code they unlock could recursively create the same contract, with a slightly updated list of pubkeys/balances. So this new branch of the contract is like a "next block". Since the channel nonce always gets higher as we go deeper, we can garbage collect all the parts of the contract that we know will never be used (the "old blocks").
-So depending on consensus type, it could be 0 blocks of history, or a fixed amount, or all of them.
+The branch of code they unlock could recursively create the same contract, with a slightly updated list of pubkeys/balances. So this new branch of the contract is like a "next block". Since the channel nonce always gets higher as we tack on new branches of code, we can garbage collect all the parts of the contract that we know will never be used, the "old blocks".
+So depending on consensus type, it could be 0 blocks of history, or a fixed amount, or all of them. Probably we will start with 2/3 consensus, because it is simple, and we already require everyone to come online multiple times per block.
 
 The block can have a merkle root of a data structure, and have rules about how the root can be updated when we go to the next-block.
 Probably all the pubkeys and balances should be stored in this datastructure. 
