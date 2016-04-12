@@ -15,3 +15,18 @@ Eventually, we should have a rules about judging on the outcomes of prediction m
 
 Once we make the prediction market, we can use a seperate contract for each phase, so a lot of variables can be hard-coded, which should make it easier to program.
 propose -> bet -> commit -> reveal
+
+
+if the database gets too deep, it can cost a lot of gas to access things, and take up unnecessary space.
+We need to re-add everything to the database in a pretty balanced tree. 
+So one rules should be, if something is already in the database, we should be able to add it again.
+If 2 databases are valid transformations, then the database made by joining those two is also valid.
+
+It is way too hard to program SVD in flying fox script.
+Instead, we should use the C++ version written for truthcoin project, or an erlang version I could re-write.
+Each node will run the SVD, and only sign on new blocks that correctly reallocate reputation.
+
+If the nodes were to sign over an invalid state transition, it would be easy to make a proof to show they did. So users would refuse to use it.
+
+Similarly spending rep doesn't get computed in flying fox script. The participants look at the spend tx, and if it is valid, they are willing to sign over a state transition that moves the rep appropriately.
+

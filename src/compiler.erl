@@ -19,6 +19,7 @@
 	  verify_sig or_die r>
           verify_sig or_die
 ">>)).
+-define(plus_store, compile(<<" dup @ rot + swap ! ">>)).
 compile(A) ->
     B = << <<" ">>/binary, A/binary, <<" \n">>/binary>>,
     C = remove_comments(B),
@@ -213,6 +214,9 @@ to_opcodes([<<"commit_reveal">>|R], F, Out) ->
     %( Function -- )
     %This opcode verifies that a hash references a function of the commit-reveal variety. If not, it crashes.
     to_opcodes(R, F, flip(?commit_reveal) ++ Out);
+to_opcodes([<<"+!">>|R], F, Out) ->
+    %( 5 N -- ) This increments N by 5.
+    to_opcodes(R, F, flip(?plus_store) ++ Out);
 to_opcodes([<<"double_signed_slash">>|R], F, Out) ->
     %( Sig1 Sig1 Func1 Func2 Pub identifier_constant -- )
     %This opcode verifies that a hash references a function of the commit-reveal variety. If not, it crashes.
@@ -369,64 +373,53 @@ integer 2 c
 testK(EPub, Priv) ->
 %This is a weighted multisig that uses the commit-reveal data structure, so that the participants can reveal simultaniously.
 %only include signatures from participants who are in the same direction. Use a 0 to replace people who didn't participate.
-    % input def2 0 Sig2 Func2 2 Sig1 Sig2 Func1 Func2 Pub identifier 1
+    % input def2 0 Sig2 Func2 2 Sig1 Sig2 Func1 Func2 1
     %option 0 is for a validator who did not sign, adds to bottom.
     Func = <<" integer 1 integer 1337 ">>,
+    Func2 = <<" integer 2 integer 1337 ">>,
    DFunc = << <<" : func " >>/binary, Func/binary, <<" ; ">>/binary >>,
+   DFunc2 = << <<" : func2 " >>/binary, Func2/binary, <<" ; ">>/binary >>,
     C = hash:doit(compile(Func)),
+    C2 = hash:doit(compile(Func2)),
     Sig = base64:encode(sign:sign(C, Priv)),
-    A = compile(<< DFunc/binary, <<" integer 0 ">>/binary, <<" integer 0 ">>/binary, 
-      <<" binary ">>/binary, Sig/binary, <<" binary ">>/binary, (base64:encode(C))/binary, <<" integer 2
-   :m A >r Pub ! dup integer 0 == if 
-   integer 0 >r 
+    Sig2 = base64:encode(sign:sign(C2, Priv)),
+    A = compile(<< DFunc/binary, DFunc2/binary, 
+	       <<" integer 0 ">>/binary, 
+		   <<" binary ">>/binary, Sig/binary, 
+		   <<" binary ">>/binary, (base64:encode(C))/binary, 
+               <<" integer 2 ">>/binary, 
+		   <<" binary ">>/binary, Sig/binary, 
+		   <<" binary ">>/binary, Sig2/binary, 
+		   <<" binary ">>/binary, (base64:encode(C))/binary, 
+		   <<" binary ">>/binary, (base64:encode(C2))/binary, 
+               <<" integer 1 ">>/binary, 
+
+<<"
+   : a B ! Pub ! 
+dup integer 0 == if 
+   integer 0 T ! drop
 else
    dup integer 2 == if drop
      dup tuck Pub @ verify_sig or_die 
      integer 1337 commit_reveal
      integer 1 == or_die ( only counting votes in same direction )
-     dup r@ >r 
+     B @ T ! 
    else
       integer 1 == or_die
-      double_signed_slash
+      Pub @ integer 1337 double_signed_slash
+      integer 0 T !
+      integer 0 B !
+      integer 1 Nonce +! 
    then
-then drop ;
-:m B r> + swap r> + swap ;
+then B @ Bottom +! T @ Top +! ;
 :m EPub binary ">>/binary, EPub/binary, <<" ;
-EPub integer 3 A
-EPub integer 2 A
-EPub integer 2 A
-integer 0 integer 0
-B B B
+integer 0 Nonce !
+EPub integer 2 a call
+EPub integer 2 a call
+EPub integer 3 a call
+Bottom @ Top @ Nonce @
 ">>/binary >>),
-    [3, 7] = language:run(A, 1000),
-    % verify_sig
-    % commit_reveal integer 1337
-    % function call integer 1 = not if crash else then
-    % > 2/3
-    ok.
-testL(EPub, Priv) ->
-%This is a weighted multisig that uses the commit-reveal data structure, so that the participants can reveal simultaniously.
-%only include signatures from participants who are in the same direction.
-    %Needs updates
-    % input def1 def2 def4 Sig1 Func1 2 Sig2a Sig2b Func2a Func2b 1 0 Sig4 Func4 2
-    %option 2 is for reading in a signature, adds to top and bottom.
-    %option 0 is for a validator who did not sign, adds to bottom.
-    %option 1 is for a validator who double-signed, increases N. Look at testI for this one.
-    Func = <<" integer 1337 drop integer 1">>,
-   DFunc = << <<" : func " >>/binary, Func/binary, <<" ; ">>/binary >>,
-    C = hash:doit(compile(Func)),
-    Sig = base64:encode(sign:sign(C, Priv)),
-    A = compile(<< DFunc/binary, <<" integer 0 ">>/binary, 
-      <<" binary ">>/binary, Sig/binary, <<" binary ">>/binary, (base64:encode(C))/binary, 
-<<" :m A >r dup integer 0 == if integer 0 >r else dup tuck binary ;
-:m B verify_sig or_die dup commit_reveal integer 1337 or_die
-  call integer 1 == not if crash else then dup r@ >r then drop ;
-integer 3 A ">>/binary, EPub/binary, <<" B 
-integer 2 A ">>/binary, EPub/binary, <<" B
-integer 0 integer 0
-r> + swap r> + swap r> + swap r> + swap 
-">>/binary >>),
-    [3, 5] = language:run(A, 1000),
+    [1, 2, 5] = language:run(A, 10000),
     % verify_sig
     % commit_reveal integer 1337
     % function call integer 1 = not if crash else then
@@ -437,6 +430,20 @@ r> + swap r> + swap r> + swap r> + swap
 %If a lot of validators double-sign, it is important.
 %If your partner closes without providing evidence of double-signing, he can make it look like he won when he lost.
 %If you provide more information, it should result in a higher bet-nonce, so you can slash him.
+
+%Everyone commits to how they reported.
+%Everyone reveals how they reported.
+
+testL() ->
+    A = compile(<<"
+:m db_root crash ;
+: db_1 dup integer 5  == if drop integer 1 
+    else db_root then ;
+: db_2 dup integer 10 == if drop integer 2 
+    else db_1 call then ;
+integer 5 db_2 call
+">>),
+    language:run(A, 1000).
 
 test() ->
     testA(),
@@ -453,7 +460,8 @@ test() ->
     testI(EPub, Priv),
     testJ(EPub, Priv),
     testK(EPub, Priv),
-    success.
+    testL().
+%success.
 
 % we can use testI contract to remove power in the weighted multisig from any validators who double-sign.
 

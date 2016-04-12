@@ -317,8 +317,8 @@ test() ->
     H30 = [dup, dup, {integer, 5}, plus, plus, plus],
     Hash3 = hash:doit(assemble(H30)),
     Code3 = [define] ++ H30 ++ [stop,
-     Hash3, {integer, 6}, match, dup, dup, {integer, 5}, plus, {integer, -10}, plus], 
-    [true] = language:run(assemble(Code3), 1000).
-%success.
+     Hash3, {integer, 6}, match, dup, dup, {integer, 5}, plus, {integer, -12}, plus], 
+    [true] = language:run(assemble(Code3), 1000),
+    success.
 %assemble([H]) ++ hashlock(HASH),
  %   success.
