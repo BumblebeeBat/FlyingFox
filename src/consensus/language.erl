@@ -27,7 +27,7 @@ remove_till(X, H, [17|T], N) -> remove_till(X, [17|H], T, N+1);
 remove_till(X, H, [19|T], N) -> remove_till(X, [19|H], T, N-1);
 remove_till(X, H, [A|T], N) -> remove_till(X, [A|H], T, N);
 remove_till(_, _, X, _) -> 
-    io:fwrite("error, you forgot to include 'and' 'else' or 'then' somewhere."),
+    io:fwrite("error, you forgot to include 'else' or 'then' somewhere."),
     X = [0].
 match(0, _, Code) -> Code;
 match(N, [{integer, _}|F], [{integer, -10}|Code]) -> 

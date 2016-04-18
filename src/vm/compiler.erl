@@ -21,6 +21,7 @@
 ">>)).
 -define(plus_store, compile(<<" dup @ rot + swap ! ">>)).
 compile(A) ->
+    %Test to make sure : and ; are alternating the whole way, or give an intelligent error.
     B = << <<" ">>/binary, A/binary, <<" \n">>/binary>>,
     C = remove_comments(B),
     D = add_spaces(C),

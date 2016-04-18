@@ -11,16 +11,22 @@
     %discount the opinions of people who were wrong.
     % make a new list of outcomes using the discounted weightings
     % punish/reward people based off how closely they match this new list.
-doit(Matrix, Weights) ->
-    %each row of Matrix is a single participant's report.
+doit2(Matrix, Weights, F) ->
     Outcomes = outcomes(Matrix, Weights),%on order of oracle participants * decisions. call it O(X^2)
     Wrong = wrong_m(Matrix, Outcomes),% O(X^2)
-    NewWeights = normalize(new_weights(fractions:new(3, 5), Weights, Wrong)),% O(X)
-    Outcomes2 = outcomes(Matrix, NewWeights),
-    Wrong2 = wrong_m(Matrix, Outcomes2),
-    FinalWeights = normalize(new_weights(fractions:new(5, 7), Wrong2, Weights)),
-    {FinalWeights, Outcomes2}.
+    NewWeights = normalize(new_weights(F, Weights, Wrong)),% O(X)
+    {Outcomes, NewWeights}.
+doit(Matrix, Weights) ->
+    %each row of Matrix is a single participant's report.
+    {Outcomes, NewWeights} = doit2(Matrix, Weights, fractions:new(3, 5)),
+    {_, FinalWeights} = doit2(Matrix, NewWeights, fractions:new(5, 7)),
+    %Outcomes2 = outcomes(Matrix, NewWeights),
+    %Wrong2 = wrong_m(Matrix, Outcomes2),
+    %FinalWeights = normalize(new_weights(fractions:new(5, 7), Wrong2, Weights)),
 
+    %FinalWeights is better than NewWeights because it can punish attackers who were successful.
+    %Outcomes is better than _ because it is easier for attackers to double-cross each other. With _, it is more like either all the attackers succeed, or they all fail.
+    {FinalWeights, Outcomes}.
 normalize(L) -> normalize(L, sum(L)).
 normalize([], _) -> [];
 normalize([H|T], A) -> 
