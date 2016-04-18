@@ -10,14 +10,16 @@ int_arith(4, X, Y) -> X * Y;
 int_arith(5, X, Y) -> X div Y;
 int_arith(6, X, Y) -> X > Y;
 int_arith(7, X, Y) -> X < Y;
-int_arith(8, X, Y) -> X == Y.
+int_arith(8, X, Y) -> X == Y;
+int_arith(9, X, Y) -> round(math:pow(X, Y)).
 frac_arith(2, X, Y) -> fractions:add(X, Y);
 frac_arith(3, X, Y) -> fractions:subtract(X, Y);
 frac_arith(4, X, Y) -> fractions:multiply(X, Y);
 frac_arith(5, X, Y) -> fractions:divide(X, Y);
 frac_arith(6, X, Y) -> fractions:less_than(Y, X);
 frac_arith(7, X, Y) -> fractions:less_than(X, Y);
-frac_arith(8, X, Y) -> fractions:equal(X, Y).
+frac_arith(8, X, Y) -> fractions:equal(X, Y);
+frac_arith(9, X, Y) -> fractions:exponent(X, Y).
 remove_till(X, T) -> remove_till(X, [], T, 0).
 remove_till(X, H, [X|T], 0) -> {flip(H), T};
 remove_till(_, _, _, N) when N < 0 -> N = 0;%N is how many if-statements deep we are.
@@ -121,6 +123,7 @@ run_helper(0, [H|Stack]) ->
     [hash:doit(H)|Stack];%hash
 run_helper(1, [Pub|[Data|[Sig|Stack]]]) ->%verify_sig
     [sign:verify_sig(Data, Sig, Pub)|Stack];
+
 run_helper(Word, [Y|[X|Stack]]) when (is_integer(Word) and ((Word > 1) and (Word < 9))) ->
     Z = if
 	(is_integer(X) and is_integer(Y)) ->
@@ -133,8 +136,14 @@ run_helper(Word, [Y|[X|Stack]]) when (is_integer(Word) and ((Word > 1) and (Word
 	    frac_arith(Word, X, Y)
 	end,
     [Z|Stack];
-run_helper(9, [X|[Y|Stack]]) -> [Y|[X|Stack]];%swap
-run_helper(10, [_|Stack]) -> Stack;%drop
+run_helper(9, [X|[Y|Stack]]) -> %[Y|[X|Stack]];%pow
+    true = is_integer(Y),
+    A = if
+	is_integer(X) -> round(math:pow(X, Y));
+	true -> fractions:exponent(X, Y)
+	end,
+    [A|Stack];
+run_helper(10, [_|Stack]) -> Stack;
 run_helper(11, [X|Stack]) -> [X|[X|Stack]];%dup
 run_helper(12, [X|[Y|[Z|Stack]]]) -> [Y|[Z|[X|Stack]]];%rot
 run_helper(13, [X|[Y|[Z|Stack]]]) -> [Z|[X|[Y|Stack]]];%-rot (tor)
@@ -175,6 +184,16 @@ run_helper(46, Stack) ->
     io:fwrite(packer:pack(Stack)),
     io:fwrite("\n"),
     Stack;
+%47 is gas.
+run_helper(48, [A|[B|Stack]]) -> 
+    true = is_list(A),
+    [[B|A]|Stack];%cons
+run_helper(49, [A|Stack]) -> [hd(A)|Stack];%car
+run_helper(50, [A|Stack]) -> [tl(A)|Stack];%cdr
+run_helper(51, Stack) -> [[]|Stack];% '()
+run_helper(52, [L|Stack]) -> [lists:reverse(L)|Stack];
+run_helper(53, [X|[Y|Stack]]) -> [Y|[X|Stack]];%swap
+run_helper(54, [X|[Y|Stack]]) -> [(X++Y)|Stack];%append lists
 run_helper({f, T, B}, Stack) -> 
     [{f, T, B}|Stack];%load fraction into stack.
 run_helper(B, Stack) when is_binary(B)-> 
@@ -203,7 +222,8 @@ atom2op(divide) -> 5;%( X Y -- Z )
 atom2op(gt) -> 6;%( X Y -- true/false )
 atom2op(lt) -> 7;%( X Y -- true/false )
 atom2op(eq_num) -> 8;%( X Y -- true/false )
-atom2op(swap) -> 9; %( A B -- B A )
+atom2op(pow) -> 9;%( X Y -- true/false )
+atom2op(swap) -> 53; %( A B -- B A )
 atom2op(drop) -> 10;%( X -- )
 atom2op(dup) -> 11;%( X -- X X )
 atom2op(rot) -> 12;%( a b c -- c a b ) 
@@ -225,7 +245,6 @@ atom2op(stripr) -> 25;%( <<Binary/binary>> -- <<ShorterBinary/binary>> )
 atom2op(stripl) -> 26;%( <<Binary/binary>> -- <<ShorterBinary/binary>> )
 atom2op(flip) -> 27;%entire stack is flipped.
 atom2op(crash) -> 28;%code stops execution here. Neither person gets the money.
-
 atom2op(f2i) -> 29; %( F -- I ) fraction to integer
 atom2op(i2f) -> 30; %( I -- F ) integer to fraction
 atom2op(total_coins) -> 31; %( -- TotalCoins )
@@ -245,6 +264,7 @@ atom2op(store) -> 44; % ( X Y -- )
 atom2op(fetch) -> 45; % ( Y -- X )
 atom2op(print) -> 46; % ( Y -- X )
 atom2op(gas) -> 47; % ( Y -- X )
+atom2op(append_list) -> 54;
 atom2op(true) -> true; %( -- true )
 atom2op(false) -> false. %( -- false )
 cost(0) -> 20;

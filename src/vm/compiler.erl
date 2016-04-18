@@ -23,7 +23,8 @@
 compile(A) ->
     B = << <<" ">>/binary, A/binary, <<" \n">>/binary>>,
     C = remove_comments(B),
-    Words = to_words(C, <<>>, []),
+    D = add_spaces(C),
+    Words = to_words(D, <<>>, []),
     Macros = get_macros(Words),
     YWords = remove_macros(Words),
     ZWords = apply_macros(Macros, YWords),
@@ -31,6 +32,21 @@ compile(A) ->
     AWords = remove_after_define(ZWords),
     BWords = replace_name_function(AWords, Functions),
     to_opcodes(BWords, Functions, []).
+add_spaces(B) -> add_spaces(B, <<"">>).
+add_spaces(<<"">>, B) -> B;
+add_spaces(<<91:8, B/binary >>, Out) ->  % "["
+    add_spaces(B, <<Out/binary, 32:8, 91:8, 32:8>>);
+add_spaces(<<93:8, B/binary >>, Out) ->  % "]"
+    add_spaces(B, <<Out/binary, 32:8, 93:8, 32:8>>);
+add_spaces(<<58:8, B/binary >>, Out) ->  % ":"
+    add_spaces(B, <<Out/binary, 32:8, 58:8, 32:8>>);
+add_spaces(<<59:8, B/binary >>, Out) ->  % ";"
+    add_spaces(B, <<Out/binary, 32:8, 59:8, 32:8>>);
+add_spaces(<<44:8, B/binary >>, Out) ->  % ","
+    add_spaces(B, <<Out/binary, 32:8, 44:8, 32:8>>);
+add_spaces(<<X:8, B/binary >>, Out) -> 
+    add_spaces(B, <<Out/binary, X:8>>).
+
 remove_comments(B) -> remove_comments(B, <<"">>).
 remove_comments(<<"">>, Out) -> Out;
 remove_comments(<<40:8, B/binary >>, Out) -> % [40] == ")".
@@ -47,7 +63,7 @@ remove_till(N, <<_:8, B/binary>>) ->
     
 remove_macros(Words) -> remove_macros(Words, []).
 remove_macros([], Out) -> Out;
-remove_macros([<<":m">>|Words], Out) ->
+remove_macros([<<"macro">>|Words], Out) ->
     {_, B} = split(<<";">>, Words),
     remove_macros(B, Out);
 remove_macros([W|Words], Out) ->
@@ -62,7 +78,7 @@ apply_macros(Macros, [W|Words], Out) ->
     apply_macros(Macros, Words, NOut).
 get_macros(Words) ->
     get_macros(Words, dict:new()).
-get_macros([<<":m">>|[Name|R]], Functions) ->
+get_macros([<<"macro">>|[Name|R]], Functions) ->
     %Make sure Name isn't on the restricted list.
     {Code, T} = split(<<";">>, R),
     Code2 = apply_macros(Functions, Code),
@@ -98,6 +114,26 @@ rnf([H|T], Functions, Out) ->
 	{ok, Val} -> rnf(T, Functions, [Val|Out])
     end.
 b2i(X) -> list_to_integer(binary_to_list(X)).
+to_opcodes([<<"++">>|R], F, Out) ->
+    to_opcodes(R, F, [54|Out]);
+to_opcodes([<<"swap">>|R], F, Out) ->
+    to_opcodes(R, F, [53|Out]);
+to_opcodes([<<"[">>|R], F, Out) ->
+    to_opcodes(R, F, [51|Out]);
+to_opcodes([<<"nil">>|R], F, Out) ->
+    to_opcodes(R, F, [51|Out]);
+to_opcodes([<<"cdr">>|R], F, Out) ->
+    to_opcodes(R, F, [50|Out]);
+to_opcodes([<<"car">>|R], F, Out) ->
+    to_opcodes(R, F, [49|Out]);
+to_opcodes([<<"cons">>|R], F, Out) ->
+    to_opcodes(R, F, [48|Out]);
+to_opcodes([<<",">>|R], F, Out) ->
+    to_opcodes(R, F, [48|[53|Out]]);
+to_opcodes([<<"]">>|R], F, Out) ->
+    to_opcodes(R, F, [52|[48|[53|Out]]]);
+to_opcodes([<<"reverse">>|R], F, Out) ->
+    to_opcodes(R, F, [52|Out]);
 to_opcodes([<<"gas">>|R], F, Out) ->
     to_opcodes(R, F, [47|Out]);
 to_opcodes([<<"print">>|R], F, Out) ->
@@ -186,7 +222,7 @@ to_opcodes([<<"dup">>|R], F, Out) ->
     to_opcodes(R, F, [11|Out]);
 to_opcodes([<<"drop">>|R], F, Out) ->
     to_opcodes(R, F, [10|Out]);
-to_opcodes([<<"swap">>|R], F, Out) ->
+to_opcodes([<<"^">>|R], F, Out) ->
     to_opcodes(R, F, [9|Out]);
 to_opcodes([<<"=">>|R], F, Out) ->
     to_opcodes(R, F, [8|Out]);
@@ -219,7 +255,7 @@ to_opcodes([<<"+!">>|R], F, Out) ->
     to_opcodes(R, F, flip(?plus_store) ++ Out);
 to_opcodes([<<"double_signed_slash">>|R], F, Out) ->
     %( Sig1 Sig1 Func1 Func2 Pub identifier_constant -- )
-    %This opcode verifies that a hash references a function of the commit-reveal variety. If not, it crashes.
+    %This macro can tell if someone double-signed
     to_opcodes(R, F, flip(?double_signed_slash) ++ Out);
 to_opcodes([], _, Out) -> flip(Out);
 to_opcodes([Name|R], Functions, Out) ->
@@ -260,7 +296,7 @@ flip([H|T], Out) -> flip(T, [H|Out]).
 testA0() ->
     %Example of a macro.
     A = compile(<<"
- :m square dup * ; 
+ macro square dup * ; 
  integer 2 square
 ">>),
     true = [4] == language:run(A, 1000).
@@ -316,7 +352,7 @@ testF(EPub, Priv) ->
 testG(EPub, Priv) ->
 % this is a weighted multisig. The first 2 signatures are worth 3, and the last is worth 2. you need 6 total to pass.
     Sig = sign:sign(<<"abc">>, Priv),
-    B = compile(<< <<":m b binary YWJj binary ">>/binary, EPub/binary, <<" verify_sig rot ;  b b b
+    B = compile(<< <<"macro b binary YWJj binary ">>/binary, EPub/binary, <<" verify_sig rot ;  b b b
 if integer 3 else integer 0 then rot 
 if integer 3 else integer 0 then rot 
 if integer 2 else integer 0 then 
@@ -359,8 +395,8 @@ testI(EPub, Priv) ->
 testJ(EPub, Priv) ->
 %This is a weighted multisig with 5 keys.
     Sig = sign:sign(<<"abc">>, Priv),
-    B = compile(<< <<":m b binary YWJj binary ">>/binary, EPub/binary, <<" verify_sig >r ;  
-:m c r> if else drop integer 0 then ;
+    B = compile(<< <<"macro b binary YWJj binary ">>/binary, EPub/binary, <<" verify_sig >r ;  
+macro c r> if else drop integer 0 then ;
 b b b b b
 integer 3 c
 integer 3 c
@@ -412,7 +448,7 @@ else
       integer 1 Nonce +! 
    then
 then B @ Bottom +! T @ Top +! ;
-:m EPub binary ">>/binary, EPub/binary, <<" ;
+macro EPub binary ">>/binary, EPub/binary, <<" ;
 integer 0 Nonce !
 EPub integer 2 a call
 EPub integer 2 a call
@@ -436,7 +472,7 @@ Bottom @ Top @ Nonce @
 
 testL() ->
     A = compile(<<"
-:m db_root crash ;
+macro db_root crash ;
 : db_1 dup integer 5  == if drop integer 1 
     else db_root then ;
 : db_2 dup integer 10 == if drop integer 2 
@@ -444,8 +480,27 @@ testL() ->
 integer 5 db_2 call
 ">>),
     language:run(A, 1000).
+testM() ->
+    A = compile(<<"
+: square dup * ;
+: map2 dup nil == if drop r> drop else 
+       dup cdr swap car r@ call >r swap r> swap cons swap recurse call then ;
+: map >r nil swap map2 call reverse ; ( List Function -- List )
+[ integer 5 , integer 6 , integer 7 ] print square map call 
+">>),
+    true = [[25, 36, 49]] == language:run(A, 1000),
+    B = compile(<<"
+:add +; 
+:reduce2 dup nil == if drop r> drop else 
+  dup cdr swap car >r swap r> r@ call swap recurse call then;
+:reduce >r reduce2 call; ( Y List Function -- X )
+integer 0 [integer 1, integer 2, integer 3, integer 4] add reduce call
+">>),
+    true = [10] == language:run(B, 1000).
 
+    
 test() ->
+
     testA(),
     testA0(),
     testA1(),
@@ -460,7 +515,9 @@ test() ->
     testI(EPub, Priv),
     testJ(EPub, Priv),
     testK(EPub, Priv),
-    testL().
+    testL(),
+    testM().
+    
 %success.
 
 % we can use testI contract to remove power in the weighted multisig from any validators who double-sign.

@@ -1,5 +1,4 @@
-Using {integer, -1} as a wildcard for match in the language is no good. We should dedicate a few opcodes to this purpose, like how recurse works.
-One opcode can be replaced by anything, the other can be replaced by anything other than call, one can be any integer, one can be any fraction, one can be any binary.
+We need a way to access /pc/simple:doit from the language. Maybe we should add lists to the language so that the matrix imput can be a list of lists.
 
 Building an executable of the software for windows is very important. It needs to include logging, for easy error reporting.
 
