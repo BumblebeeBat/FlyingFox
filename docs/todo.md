@@ -1,4 +1,6 @@
-We need a way to access /pc/simple:doit from the language. Maybe we should add lists to the language so that the matrix imput can be a list of lists.
+We need to change how match works. It needs to be possible for functions to call themselves with a slight update, for sidechains.
+The problem is that the thing that is matched against is written in words. If we used a list of numbers that coorispond to opcodes, it will work better. 
+We may need a keyword similar to recurse, to mark where the function is stored inside of itself.
 
 Building an executable of the software for windows is very important. It needs to include logging, for easy error reporting.
 
