@@ -1,4 +1,4 @@
--module(simple).
+-module(oracle).
 -export([doit/2, test/0]).
 %4 ways you can vote.
 %1) True 1
@@ -95,6 +95,7 @@ test() ->
 	 [-1,-1,-1, 1, 1, 2],
 	 [-1, 1,-1, 1, 1, 2]],
     W = [{f, 1, 5},{f, 1, 5},{f, 1, 5},{f, 1, 5},{f, 1, 5}],
-    doit(M, W).
+    {A, B} = doit(M, W),
+    [B, A].
 %OC = outcomes(M, W),
 %wrong_m(M, OC).

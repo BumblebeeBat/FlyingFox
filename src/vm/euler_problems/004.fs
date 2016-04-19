@@ -1,8 +1,8 @@
-:m end integer 1000 ;
-:m start integer 100 ;
-:m flip3 dup integer 100 / swap ( N -- M )
+macro end integer 1000 ;
+macro start integer 100 ;
+macro flip3 dup integer 100 / swap ( N -- M )
     dup integer 10 rem rot - integer 99 * + ;
-:m palindrone dup end / swap ( N -- true/false )
+macro palindrone dup end / swap ( N -- true/false )
     end rem flip3 == ;
 : main 2dup start == swap ( N M --  )
             start == swap and

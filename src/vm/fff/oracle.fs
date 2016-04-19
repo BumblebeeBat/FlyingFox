@@ -48,7 +48,6 @@ wrong call )
   [integer  0, integer 2],
   [integer -1, integer 1] ]
 wrong_m call  )
-
 : outcomes30 A @ B @ < if integer -1 else integer 1 then ;
 : outcomes3 A @ B @ + C @ < if integer 0 else outcomes30 call then ;
 : outcomes21 A @ B @ C @ + + D @ < if integer 2 else outcomes3 call then ;
@@ -71,15 +70,20 @@ then ;
 outcomes0 call Outcomes !
 Outcomes @ swap wrong_m call swap F @ newWeights call 
 Outcomes @ ;
-[fraction 1 1,fraction 1 1,fraction 1 1,fraction 1 1,fraction 1 1] normalize call
-[
-[integer  1,integer  1,integer  1,integer  1,integer 1,integer 2],
-[integer  1,integer  1,integer  1,integer  1,integer 1,integer 2],
-[integer -1,integer -1,integer  1,integer -1,integer 1,integer 2],
-[integer -1,integer -1,integer -1,integer  1,integer 1,integer 2],
-[integer -1,integer  1,integer -1,integer  1,integer 1,integer 2] ]
+:doit 
 dup tuck
 fraction 3 5
 doit2 call >r swap
 fraction 5 7
-doit2 call drop r>
+doit2 call drop r>;
+
+macro test 
+  [fraction 1 1,fraction 1 1,fraction 1 1,fraction 1 1,fraction 1 1] normalize call
+[
+  [integer  1,integer  1,integer  1,integer  1,integer 1,integer 2],
+  [integer  1,integer  1,integer  1,integer  1,integer 1,integer 2],
+  [integer -1,integer -1,integer  1,integer -1,integer 1,integer 2],
+  [integer -1,integer -1,integer -1,integer  1,integer 1,integer 2],
+  [integer -1,integer  1,integer -1,integer  1,integer 1,integer 2] ]
+  doit call
+;

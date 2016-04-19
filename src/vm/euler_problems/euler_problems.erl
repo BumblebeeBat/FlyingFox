@@ -1,6 +1,6 @@
 -module(euler_problems).
 -export([test/0]).
-
+-define(loc, "src/vm/euler_problems/").
 %If we list all the natural numbers below 10 that are multiples of 3 or 5, we get 3, 5, 6 and 9. The sum of these multiples is 23.
 %Find the sum of all the multiples of 3 or 5 below 1000.
 problem001s(1000, Out) -> Out;
@@ -14,7 +14,7 @@ problem001s(X, Out) ->
 	end,
     problem001s(X+1, Out + Y).
 problem001(Gas) ->
-    {ok, A} = file:read_file("euler/001.fs"),
+    {ok, A} = file:read_file(?loc ++ "001.fs"),
     B = compiler:compile(A),
     C = language:run(B, Gas),
     C = [problem001s(0, 0)].
@@ -27,7 +27,7 @@ problem002s(X, Y, Out) when (X rem 2) == 0 ->
 problem002s(X, Y, Out) -> 
     problem002s(X+Y, X, Out).
 problem002(Gas) ->
-    {ok, A} = file:read_file("euler/002.fs"),
+    {ok, A} = file:read_file(?loc ++ "002.fs"),
     B = compiler:compile(A),
     C = language:run(B, Gas),
     C = [problem002s(1, 1, 0)].
@@ -39,7 +39,7 @@ problem003s(A, B) when ((B rem A) == 0) ->
 problem003s(A, B) when (A * A) > B -> B;
 problem003s(A, B) -> problem003s(A+2, B).
 problem003(Gas) ->
-    {ok, A} = file:read_file("euler/003.fs"),
+    {ok, A} = file:read_file(?loc ++ "003.fs"),
     B = compiler:compile(A),
     C = language:run(B, Gas),
     C = [problem003s(3, 600851475143)].
@@ -70,7 +70,7 @@ problem004s(X, Y, Out) ->
 	   end,
     problem004s(X, Y-1, NOut).
 problem004(Gas) ->
-    {ok, A} = file:read_file("euler/004.fs"),
+    {ok, A} = file:read_file(?loc ++ "004.fs"),
     B = compiler:compile(A),
     C = language:run(B, Gas),
     C = [problem004s()].
@@ -82,7 +82,7 @@ problem005s(1, X) -> X;
 problem005s(X, Y) -> 
     problem005s(X - 1, Y * X div gcd(X, Y)).
 problem005(Gas) ->
-    {ok, A} = file:read_file("euler/005.fs"),
+    {ok, A} = file:read_file(?loc ++ "005.fs"),
     B = compiler:compile(A),
     C = language:run(B, Gas),
     C = [problem005s(20, 1)].
@@ -94,7 +94,7 @@ sum_squares(X, Limit, Total) ->
 problem006s() ->
     5050*5050 - sum_squares(0, 101, 0).
 problem006(Gas) ->
-    {ok, A} = file:read_file("euler/006.fs"),
+    {ok, A} = file:read_file(?loc ++ "006.fs"),
     B = compiler:compile(A),
     C = language:run(B, Gas),
     %io:fwrite("C is "),

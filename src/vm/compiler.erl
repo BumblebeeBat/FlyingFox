@@ -294,52 +294,6 @@ flip_bin(<<C:8, B/binary>>, Out) ->
 flip(X) -> flip(X, []).
 flip([], Out) -> Out;
 flip([H|T], Out) -> flip(T, [H|Out]).
-testA0() ->
-    %Example of a macro.
-    A = compile(<<"
- macro square dup * ; 
- integer 2 square
-">>),
-    true = [4] == language:run(A, 1000).
-testA1() ->
-    %Example of variables
-    A = compile(<<"
-integer 12 x !
-integer 11 y !
-x @ x @
-integer 10 x !
-x @ y @
-print  %this prints out the contents of the stack.
-">>),
-    true = [11, 10, 12, 12] == language:run(A, 1000).
-testA() ->
-    %Example of a function call.
-    A = compile(<<"
- : square dup * ; % multiplies a number by itelf
- integer 2 square call
-">>),
-    true = [4] == language:run(A, 1000).
-testB() ->
-    %Example of a function using another function, this is how merkle trees work.
-    B = compile(<<"
-: square dup * ; 
-: quad square call square call ; 
-integer 2 quad call
-">>),
-    true = [16] == language:run(B, 1000).
-testC() ->
-    %Example of a recursive function.
-    C = compile(<<"
-: main dup integer 0 > if integer 1 - integer 0 swap recurse call else drop then ;
-integer 5 main call
-">>),
-    true = [0,0,0,0,0] == language:run(C, 1000).
-testD() ->
-    %Example of hashlock code.
-    E = compile(<<"
-	     binary qfPbi+pbLu+SN+VICd2kPwwhj4DQ0yijP1tM//8zSOY= hash binary 6DIFJeegWoFCARdzPWKgFaMGniG5vD8Qh+WgPZBb5HQ=  ==
-	     ">>),
-    [true] = language:run(E, 1000).
 testF(EPub, Priv) ->
     %Example of 2 of 3 multisig 
     %The 2 channel owners are the first 2 participants, the pubkey embedded in the script is the third.
@@ -470,44 +424,7 @@ Bottom @ Top @ Nonce @
 
 %Everyone commits to how they reported.
 %Everyone reveals how they reported.
-
-testL() ->
-    A = compile(<<"
-macro db_root crash ;
-: db_1 dup integer 5  == if drop integer 1 
-    else db_root then ;
-: db_2 dup integer 10 == if drop integer 2 
-    else db_1 call then ;
-integer 5 db_2 call
-">>),
-    language:run(A, 1000).
-testM() ->
-    A = compile(<<"
-: square dup * ;
-: map2 dup nil == if drop r> drop else 
-       dup cdr swap car r@ call >r swap r> swap cons swap recurse call then ;
-: map >r nil swap map2 call reverse ; ( List Function -- List )
-[ integer 5 , integer 6 , integer 7 ] print square map call 
-">>),
-    true = [[25, 36, 49]] == language:run(A, 1000),
-    B = compile(<<"
-:add +; 
-:reduce2 dup nil == if drop r> drop else 
-  dup cdr swap car >r swap r> r@ call swap recurse call then;
-:reduce >r reduce2 call; ( Y List Function -- X )
-integer 0 [integer 1, integer 2, integer 3, integer 4] add reduce call
-">>),
-    true = [10] == language:run(B, 1000).
-
-    
 test() ->
-
-    testA(),
-    testA0(),
-    testA1(),
-    testB(),
-    testC(),
-    testD(),
     {Pub, Priv} = sign:new_key(),
     EPub = base64:encode(Pub),
     testF(EPub, Priv),
@@ -515,10 +432,7 @@ test() ->
     testH(EPub, Priv),
     testI(EPub, Priv),
     testJ(EPub, Priv),
-    testK(EPub, Priv),
-    testL(),
-    testM().
-    
+    testK(EPub, Priv).
 %success.
 
 % we can use testI contract to remove power in the weighted multisig from any validators who double-sign.
