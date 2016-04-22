@@ -28,6 +28,8 @@ testH(EPub, Priv) ->
     C = hash:doit(compiler:compile(Func)),
     Sig = base64:encode(sign:sign(C, Priv)),
     D = compiler:compile(<< <<" : func " >>/binary, Func/binary, <<" ; 
+: crf integer -10 integer -10 ;
+macro commit_reveal swap dup crf match or_die call rot == or_die ;
      binary ">>/binary, Sig/binary,  
  <<" func dup tuck binary ">>/binary, EPub/binary,
      % <<" verify_sig or_die dup integer 2 match integer -10 integer -10 or_die
@@ -45,7 +47,19 @@ testI(EPub, Priv) ->
    Sign1 = base64:encode(sign:sign(C1, Priv)),
    Sign2 = base64:encode(sign:sign(C2, Priv)),
    E = compiler:compile(<< DFunc1/binary, DFunc2/binary, 
-	       <<" binary ">>/binary, Sign1/binary, 
+	       <<" :crf integer -10 integer -10; 
+macro commit_reveal swap dup crf match or_die call rot == or_die ;
+macro double_signed_slash           
+          N !
+          >r 
+          2dup N @ commit_reveal >r
+               N @ commit_reveal r> 
+          == not or_die
+	  swap tuck r@ 
+	  verify_sig or_die r>
+          verify_sig or_die;
+
+binary ">>/binary, Sign1/binary, 
 	       <<" binary ">>/binary, Sign2/binary, 
 	       <<" binary ">>/binary, (base64:encode(C1))/binary,
 	       <<" binary ">>/binary, (base64:encode(C2))/binary,
@@ -93,6 +107,18 @@ testK(EPub, Priv) ->
                <<" integer 1 ">>/binary, 
 
 <<"
+   :crf integer -10 integer -10;
+macro commit_reveal swap dup crf match or_die call rot == or_die ;
+macro double_signed_slash           
+          N !
+          >r 
+          2dup N @ commit_reveal >r
+               N @ commit_reveal r> 
+          == not or_die
+	  swap tuck r@ 
+	  verify_sig or_die r>
+          verify_sig or_die;
+
    : a B ! Pub ! 
 dup integer 0 == if 
    integer 0 T ! drop

@@ -3,22 +3,6 @@
 
 %-define(or_die, [19, 18, 28, 17, 23]).%in reverse order because Out is all reverse. 
 -define(or_die, compile(<<" not if crash else then ">>)).
--define(commit_reveal, compile(<<" swap dup integer 2 match integer -10 integer -10 or_die call rot == or_die ">>)).% -10 is the code for any integer.
-   % here is code to punish people for signing contrary results. This contract would be used to stop oracles from outputing 2 contrary results.
-   % func1 != func2
-   % Verify that internal pub signed over each func.
-   % make sure func1 and func2 are of the correct form.
-   % func1(0) != func2(0)
--define(double_signed_slash, compile(<<"
-          N !
-          >r 
-          2dup N @ commit_reveal >r
-               N @ commit_reveal r> 
-          == not or_die
-	  swap tuck r@ 
-	  verify_sig or_die r>
-          verify_sig or_die
-">>)).
 -define(plus_store, compile(<<" dup @ rot + swap ! ">>)).
 compile(A) ->
     %Test to make sure : and ; are alternating the whole way, or give an intelligent error.
@@ -115,6 +99,8 @@ rnf([H|T], Functions, Out) ->
 	{ok, Val} -> rnf(T, Functions, [Val|Out])
     end.
 b2i(X) -> list_to_integer(binary_to_list(X)).
+to_opcodes([<<"check">>|R], F, Out) ->
+    to_opcodes(R, F, [55|Out]);
 to_opcodes([<<"++">>|R], F, Out) ->
     to_opcodes(R, F, [54|Out]);
 to_opcodes([<<"swap">>|R], F, Out) ->
@@ -247,17 +233,9 @@ to_opcodes([<<"or_die">>|R], F, Out) ->
     %( bool -- )
     %if bool is true, ignore. if bool is false, then crash.
     to_opcodes(R, F, flip(?or_die) ++ Out);
-to_opcodes([<<"commit_reveal">>|R], F, Out) ->
-    %( Function -- )
-    %This opcode verifies that a hash references a function of the commit-reveal variety. If not, it crashes.
-    to_opcodes(R, F, flip(?commit_reveal) ++ Out);
 to_opcodes([<<"+!">>|R], F, Out) ->
-    %( 5 N -- ) This increments N by 5.
+    %( 5 N -- ) in this exampe N increments by 5.
     to_opcodes(R, F, flip(?plus_store) ++ Out);
-to_opcodes([<<"double_signed_slash">>|R], F, Out) ->
-    %( Sig1 Sig1 Func1 Func2 Pub identifier_constant -- )
-    %This macro can tell if someone double-signed
-    to_opcodes(R, F, flip(?double_signed_slash) ++ Out);
 to_opcodes([], _, Out) -> flip(Out);
 to_opcodes([Name|R], Functions, Out) ->
     case dict:find(Name, Functions) of

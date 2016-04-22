@@ -29,25 +29,35 @@ remove_till(X, H, [A|T], N) -> remove_till(X, [A|H], T, N);
 remove_till(_, _, X, _) -> 
     io:fwrite("error, you forgot to include 'else' or 'then' somewhere."),
     X = [0].
-match(0, _, Code) -> Code;
-match(N, [{integer, _}|F], [{integer, -10}|Code]) -> 
+match([], [], _) -> true;
+match([L|F], [{integer, -9}|Code], L) -> 
+    % -9 is the code for recursively using the same list.
+    match(F, Code, L);
+match([{integer, _}|F], [{integer, -10}|Code], L) -> 
     % -10 is the code for integers.
-    match(N - 1, F, Code);
-match(N, [{f, A, B}|F], [{integer, -13}|Code]) -> 
+    match(F, Code, L);
+match([{f, A, B}|F], [{integer, -13}|Code], L) -> 
     % -13 is the code for fractions.
     true = is_integer(A),
     true = is_integer(B),
     false = (B == 0),
-    match(N - 1, F, Code);
-match(N, [M|F], [{integer, -12}|Code]) -> 
+    match(F, Code, L);
+match([M|F], [{integer, -12}|Code], L) -> 
     % -12 is the code for anything other than call.
     false = M == 38, %can't use call
-    match(N - 1, F, Code);
-match(N, [_|F], [{integer, -11}|Code]) -> 
+    match(F, Code, L);
+match([_|F], [{integer, -11}|Code], L) -> 
     % -11 is the code for anything.
-    match(N - 1, F, Code);
-match(N, [C|Function], [C|Code]) -> 
-    match(N-1, Function, Code).
+    match(F, Code, L);
+match([C|Function], [C|Code], L) -> 
+    match(Function, Code, L).
+match_check([{integer, Fu}|_], [{integer, MatchCode}|_], 0, MatchCode) -> Fu;
+match_check([Fu|_], [{integer, MatchCode}|_], 0, MatchCode) -> Fu;
+match_check([_|Function], [MatchCode|Format], I, MatchCode) ->
+    match_check(Function, Format, I-1, MatchCode);
+match_check([_|Function], [_|Format], I, MatchCode) ->
+    match_check(Function, Format, I, MatchCode).
+
 flip(X) -> flip(X, []).
 flip([], O) -> O;
 flip([H|T], O) -> flip(T, [H|O]).
@@ -56,6 +66,22 @@ run(_, _, _, _, _, Gas) when Gas < 0 ->
     io:fwrite("out of gas"),
     Gas = 0;
 run([], _, _, _, Stack, _) -> Stack;
+run([11|Code], Functions, Variables, Alt, [X|Stack], Gas) when is_list(X)-> %dup
+    run(Code, Functions, Variables, Alt, [X|[X|Stack]], Gas-(length(X) * cost(11)));
+run([11|Code], Functions, Variables, Alt, [X|Stack], Gas) -> %dup
+    run(Code, Functions, Variables, Alt, [X|[X|Stack]], Gas-cost(11));
+run([14|Code], Functions, Variables, Alt, [X|[Y|Stack]], Gas) -> %2dup
+    run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-cost(11));
+run([14|Code], Functions, Variables, Alt, [X|[Y|Stack]], Gas) -> %2dup
+    run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-cost(11));
+run([14|Code], Functions, Variables, Alt, [X|[Y|Stack]], Gas) when (is_list(Y) and is_list(X))-> %2dup
+    run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-((length(X)+length(Y))*cost(11)));
+run([14|Code], Functions, Variables, Alt, [X|[Y|Stack]], Gas) when is_list(Y)-> %2dup
+    run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-((1+length(Y))*cost(11)));
+run([14|Code], Functions, Variables, Alt, [X|[Y|Stack]], Gas) when is_list(X)-> %2dup
+    run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-((1+length(X))*cost(11)));
+run([14|Code], Functions, Variables, Alt, [X|[Y|Stack]], Gas) -> %2dup
+    run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-cost(11));
 run([17|Code], Functions, Variables, Alt, [Bool|Stack], Gas) -> %if (case)
     X = if
 	    Bool -> Code;
@@ -88,18 +114,29 @@ run([38|Code], Functions, Variables, Alt, [B|Stack], Gas) ->%call
 	    G = replace(41, B, F),%recursion
 	    run(G++Code, Functions, Variables, Alt, Stack, Gas-cost(37))
     end;
-run([42|Code], Functions, Variables, Alt, [N|[B|Stack]], Gas) ->%match
-    case dict:find(B, Functions) of
-	error -> 
-	    io:fwrite("error in match, known functions: "),
-	    io:fwrite(packer:pack(dict:fetch_keys(Functions))),
-	    io:fwrite("\n"),
-	    io:fwrite("undefined function");
-	{ok, F} ->
-	    NewCode = match(length(F), F, Code),
-	    N = length(Code) - length(NewCode),
-	    run(NewCode, Functions, Variables, Alt, [true|Stack], Gas-cost(42))
-    end;
+run([55|Code], Functions, Variables, Alt, [Function|[Format|[I|[MatchCode|Stack]]]], Gas) ->%check
+    Fu = dict:fetch(Function, Functions),
+    Fo = dict:fetch(Format, Functions),
+    X = match_check(Fu, Fo, I, MatchCode),
+    L = length(Fo),
+    run(Code, Functions, Variables, Alt, [X|Stack], Gas - (L*cost(55)));
+
+run([42|Code], Functions, Variables, Alt, [L|[B|Stack]], Gas) ->%match
+    {A, N} = case dict:find(B, Functions) of
+	    error -> 
+		io:fwrite("error in match, undefined function "),
+		{false, 10};
+	    {ok, F} ->
+		case dict:find(L, Functions) of
+		    error ->
+			io:fwrite("error in match, undefined function2 "),
+			{false, 10};
+		    {ok, G} ->
+			%G is the format, F is the function, L is the name of the format.
+			{match(F, G, L), length(F)}
+		end
+	end,
+    run(Code, Functions, Variables, Alt, [A|Stack], Gas-(cost(42)*N));
 run([39|Code], Functions, Variables, Alt, [N|Stack], Gas) ->%moves the top of the stack to the top of the alt stack.
     run(Code, Functions, Variables, [N|Alt], Stack, Gas-cost(39));
 run([40|Code], Functions, Vars, [N|Alt], Stack, Gas) ->%moves the top of the alt stack to the top of the stack.
@@ -144,7 +181,7 @@ run_helper(9, [X|[Y|Stack]]) -> %[Y|[X|Stack]];%pow
 	end,
     [A|Stack];
 run_helper(10, [_|Stack]) -> Stack;
-run_helper(11, [X|Stack]) -> [X|[X|Stack]];%dup
+%run_helper(11, [X|Stack]) -> [X|[X|Stack]];%dup
 run_helper(12, [X|[Y|[Z|Stack]]]) -> [Y|[Z|[X|Stack]]];%rot
 run_helper(13, [X|[Y|[Z|Stack]]]) -> [Z|[X|[Y|Stack]]];%-rot (tor)
 run_helper(14, [X|[Y|Stack]]) -> [X|[Y|[X|[Y|Stack]]]];%2dup (ddup)
@@ -185,9 +222,9 @@ run_helper(46, Stack) ->
     io:fwrite("\n"),
     Stack;
 %47 is gas.
-run_helper(48, [A|[B|Stack]]) -> 
+run_helper(48, [A|[B|Stack]]) -> %cons
     true = is_list(A),
-    [[B|A]|Stack];%cons
+    [[B|A]|Stack];
 run_helper(49, [A|Stack]) -> [hd(A)|Stack];%car
 run_helper(50, [A|Stack]) -> [tl(A)|Stack];%cdr
 run_helper(51, Stack) -> [[]|Stack];% '()
@@ -264,7 +301,13 @@ atom2op(store) -> 44; % ( X Y -- )
 atom2op(fetch) -> 45; % ( Y -- X )
 atom2op(print) -> 46; % ( Y -- X )
 atom2op(gas) -> 47; % ( Y -- X )
+atom2op(cons) -> 48; % ( X Y -- [X|Y] )
+atom2op(car) -> 49; % ( [X|Y] --  X )
+atom2op(cdr) -> 50; % ( [X|Y] --  Y )
+atom2op(nil) -> 51; % ( -- [] )
+atom2op(flip_list) -> 52; % ( F -- G )
 atom2op(append_list) -> 54;
+atom2op(check_match) -> 55;
 atom2op(true) -> true; %( -- true )
 atom2op(false) -> false. %( -- false )
 cost(0) -> 20;
@@ -272,13 +315,36 @@ cost(1) -> 20;
 cost(36) -> 40;
 cost(38) -> 20;
 cost(44) -> 20;
-cost(45) -> 10;
+cost(45) -> 16;%fetch
+cost(10) -> -15; %drop
+cost(11) -> 16; %dup
+cost(14) -> 31; %2dup
+cost(16) -> 16; %pickn (it increase stack size by 1)
+cost(31) -> 16; %total_coins
+cost(32) -> 16; %height
+cost(33) -> 16; %stack_size
+cost(34) -> 16; %stack_size
+cost(47) -> 16; %gas
+cost(51) -> 16; %nil, list root.
+cost(43) -> -14; %remainder 
+cost(35) -> -14; %eq
+cost(22) -> -14; %xor
+cost(21) -> -14; %or
+cost(20) -> -14; %and
+cost(9) -> -14; %pow
+cost(8) -> -14; %eq num
+cost(7) -> -14; %less than
+cost(6) -> -14; %greater than
+cost(5) -> -14; %divide
+cost(4) -> -14; %multiply
+cost(3) -> -14; %subtract
+cost(2) -> -14; %add
 cost(X) when is_integer(X) -> 1;
-cost({f, _, _}) -> 3;
-cost(B) when is_binary(B) -> size(B);
-cost({integer, _}) -> 3;
-cost(true) -> 1;
-cost(false) -> 1.
+cost({f, _, _}) -> 16;
+cost(B) when is_binary(B) -> size(B) + 15;
+cost({integer, _}) -> 16;
+cost(true) -> 16;
+cost(false) -> 16.
 replace(A, B, C) -> replace(A, B, C, []).
 replace(_, _, [], Out) -> flip(Out);
 replace(A, B, [A|T], Out) -> 
@@ -334,11 +400,11 @@ test() ->
     io:fwrite("\n"),
     [2,{f,1,1},{f,0,1}] = run([Two] ++ hashlock(HTwo), 1000),
     [1,{f,0,1},{f,0,1}] = run([hash:doit(3)] ++ hashlock(HTwo), 1000),
-    H30 = [dup, dup, {integer, 5}, plus, plus, plus],
-    Hash3 = hash:doit(assemble(H30)),
-    Code3 = [define] ++ H30 ++ [stop,
-     Hash3, {integer, 6}, match, dup, dup, {integer, 5}, plus, {integer, -12}, plus], 
-    [true] = language:run(assemble(Code3), 1000),
+    %H30 = [dup, dup, {integer, 5}, plus, plus, plus],
+    %Hash3 = hash:doit(assemble(H30)),
+    %Code3 = [define] ++ H30 ++ [stop,
+    %Hash3, {integer, 6}, match, dup, dup, {integer, 5}, plus, {integer, -12}, plus], 
+    %[true] = language:run(assemble(Code3), 1000),
     success.
 %assemble([H]) ++ hashlock(HASH),
  %   success.
