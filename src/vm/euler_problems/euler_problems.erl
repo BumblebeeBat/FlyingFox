@@ -103,11 +103,11 @@ problem006(Gas) ->
     C = [problem006s()].
 
 test() ->
-    problem001(100000),
-    problem002(2000),
+    problem001(200000),
+    problem002(4000),
     problem003(60000),
-    problem004(60000000), % 640000 function calls. takes like 12 seconds.
-    problem005(4000),
+    problem004(90000000), % 640000 function calls. takes like 12 seconds.
+    problem005(8000),
     problem006(8000),
     success.
 

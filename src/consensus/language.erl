@@ -66,20 +66,18 @@ run(_, _, _, _, _, Gas) when Gas < 0 ->
     io:fwrite("out of gas"),
     Gas = 0;
 run([], _, _, _, Stack, _) -> Stack;
+run([10|Code], Functions, Variables, Alt, [X|Stack], Gas) when is_list(X)-> %drop
+    run(Code, Functions, Variables, Alt, Stack, Gas-(list_length(X) * cost(10)));
 run([11|Code], Functions, Variables, Alt, [X|Stack], Gas) when is_list(X)-> %dup
-    run(Code, Functions, Variables, Alt, [X|[X|Stack]], Gas-(length(X) * cost(11)));
+    run(Code, Functions, Variables, Alt, [X|[X|Stack]], Gas-(list_length(X) * cost(11)));
 run([11|Code], Functions, Variables, Alt, [X|Stack], Gas) -> %dup
     run(Code, Functions, Variables, Alt, [X|[X|Stack]], Gas-cost(11));
-run([14|Code], Functions, Variables, Alt, [X|[Y|Stack]], Gas) -> %2dup
-    run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-cost(11));
-run([14|Code], Functions, Variables, Alt, [X|[Y|Stack]], Gas) -> %2dup
-    run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-cost(11));
 run([14|Code], Functions, Variables, Alt, [X|[Y|Stack]], Gas) when (is_list(Y) and is_list(X))-> %2dup
-    run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-((length(X)+length(Y))*cost(11)));
+    run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-((list_length(X)+list_length(Y))*cost(11)));
 run([14|Code], Functions, Variables, Alt, [X|[Y|Stack]], Gas) when is_list(Y)-> %2dup
-    run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-((1+length(Y))*cost(11)));
+    run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-((1+list_length(Y))*cost(11)));
 run([14|Code], Functions, Variables, Alt, [X|[Y|Stack]], Gas) when is_list(X)-> %2dup
-    run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-((1+length(X))*cost(11)));
+    run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-((1+list_length(X))*cost(11)));
 run([14|Code], Functions, Variables, Alt, [X|[Y|Stack]], Gas) -> %2dup
     run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-cost(11));
 run([17|Code], Functions, Variables, Alt, [Bool|Stack], Gas) -> %if (case)
@@ -98,10 +96,6 @@ run([36|Code], Functions, Variables, Alt, Stack, Gas) ->%define
     B = hash:doit(H),
     run(T, dict:store(B, H, Functions), Variables, Alt, Stack, Gas-cost(36)-length(H));
 run([38|Code], Functions, Variables, Alt, [B|Stack], Gas) ->%call
-    %Nice for writing scripts.
-    %io:fwrite("stack is "),
-    %io:fwrite(packer:pack([B|Stack])),
-    %io:fwrite("\n"),
     case dict:find(B, Functions) of
 	error -> 
 	    io:fwrite("is not a function: "),
@@ -351,6 +345,13 @@ replace(A, B, [A|T], Out) ->
     replace(A, B, T, [B|Out]);
 replace(A, B, [H|T], Out) -> 
     replace(A, B, T, [H|Out]).
+list_length(X) -> list_length(X, 0).
+list_length([], N) -> N;
+list_length([H|T], N) when is_list(H) -> 
+    M = list_length(H, 0),
+    list_length(T, M+N);
+list_length([_|T], N) -> 
+    list_length(T, N+1).
 hashlock(SecretHash) ->
     assemble([hash, SecretHash, eq, switch, {f, 0, 1}, {f, 1, 1}, 2, else, {f, 0, 1}, {f, 0, 1}, 1, then]).
 valid_secret(Secret, Script) -> 
