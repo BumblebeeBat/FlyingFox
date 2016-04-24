@@ -170,7 +170,7 @@ channel(SignedCB, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
 	    Type == <<"delegated_2">> ->
 		{0, StartAmount}
     end,
-    {Win1, Win2, Loss} = bet_results(CB#channel_block.bets, sign:revealed(SignedCB), BetAmount),
+    {Win2, Win1, Loss} = bet_results(CB#channel_block.bets, sign:revealed(SignedCB), BetAmount),
     N1 = accounts:update(Acc1, NewHeight, channels:bal1(Channel) + CB#channel_block.amount + Win1 - Win2, -D1, 0, TotalCoins),
     N2 = accounts:update(Acc2, NewHeight, channels:bal2(Channel) - CB#channel_block.amount + Win2 - Win1, -D2, 0, TotalCoins),
     NewChannels = dict:store(CB#channel_block.id, channels:empty(),Channels),

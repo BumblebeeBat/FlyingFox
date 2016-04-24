@@ -370,7 +370,7 @@ test() ->
     true = run(assemble([{f, 10, 11}, 5, plus]), 100) == [{f, 65, 11}],
     true = run(assemble([false, switch, 100, else, 27, then, 3]), 100) == [3, 27],%if
     true = run(assemble([true, switch, 100, else, 27, then, 2]), 50) == [2, 100],%if
-    true = run(assemble([true, switch, 100, false, switch, else, then, else, 27, then, 2]), 40) == [2, 100],%if %err
+    true = run(assemble([true, switch, 100, false, switch, else, then, else, 27, then, 2]), 100) == [2, 100],%if %err
     true = run(assemble([true, switch, 100, else, 27, true, switch, else, then, then, 2]), 100) == [2, 100],%if
     {Pub, Priv} = sign:new_key(),
     Data = <<"example">>,
@@ -383,7 +383,7 @@ test() ->
     H = [{f, 1, 2}, {integer, 500}, plus],
     HASH = hash:doit(assemble(H)),
     Code = [define]++H++[stop, HASH, call],
-    true = [{f,1001,2}] == run(assemble(Code), 100),
+    true = [{f,1001,2}] == run(assemble(Code), 200),
     H20 = [dup, rot, plus],
     Hash20 = hash:doit(assemble(H20)),
     H2 = [tor, dup, {integer, 0}, gt, switch, {integer, 1}, minus, rot, Hash20, call, recurse, call, else, then],

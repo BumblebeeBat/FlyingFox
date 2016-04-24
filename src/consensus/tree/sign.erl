@@ -57,7 +57,7 @@ sign_tx(SignedTx, Pub, Priv, ID, Accounts) when element(1, SignedTx) == signed -
 	    Acc2 = block_tree:account(N2, Accounts),
 	    BPub = accounts:pub(Acc2),
 	    if
-		(Pub == BPub) and (N2 == ID)->
+		((Pub == BPub) and (N2 == ID)) ->
 		    Sig = sign(Tx, Priv),
 		    #signed{data=Tx, sig=SignedTx#signed.sig, sig2=Sig, revealed=R};
 		true -> {error, <<"cannot sign">>}
@@ -69,7 +69,8 @@ sign_tx(Tx, Pub, Priv, ID, Accounts) ->
     Acc = block_tree:account(N, Accounts),
     APub = accounts:pub(Acc),
     if
-	APub == Pub -> #signed{data=Tx, sig=Sig};
+	((APub == Pub) and (N == ID)) -> 
+	    #signed{data=Tx, sig=Sig};
 	true ->
 	    N2 = element(3, Tx),
 	    Acc2 = block_tree:account(N2, Accounts),
@@ -84,7 +85,7 @@ test() ->
     Acc2 = accounts:empty(Pub2),
     Accounts = dict:store(1, Acc2, dict:store(0, Acc, dict:new())),
     Tx = {channel_block, 0, 1},
-    Signed = sign_tx(sign_tx(Tx, Pub, Priv, Accounts), Pub2, Priv2, Accounts),
+    Signed = sign_tx(sign_tx(Tx, Pub, Priv, 0, Accounts), Pub2, Priv2, 1, Accounts),
     Signed2 = sign_tx({spend, 0}, Pub, Priv, Accounts),
     true = verify(Signed2, Accounts),
     true = verify(Signed, Accounts),

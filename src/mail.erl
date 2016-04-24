@@ -129,7 +129,19 @@ test() ->
     reveal:reveal(),
     block_tree:buy_block(),
     CreateTx1 = to_channel_tx:create_channel(3, 110000, 1000, <<"delegated_1">>, 0),
-    SignedCreateTx1 = sign:sign_tx(CreateTx1, Pub, Priv, tx_pool:accounts()),
+    P5 = accounts:pub(block_tree:account(5)),
+    P4 = accounts:pub(block_tree:account(4)),
+    P3 = accounts:pub(block_tree:account(3)),
+    P2 = accounts:pub(block_tree:account(2)),
+    P1 = accounts:pub(block_tree:account(1)),
+    ID = case Pub of 
+	P1 -> 1;
+	P2 -> 2;
+	P3 -> 3;
+	P4 -> 4;
+	P5 -> 5
+    end,
+    SignedCreateTx1 = sign:sign_tx(CreateTx1, Pub, Priv, ID, tx_pool:accounts()),
     tx_pool_feeder:absorb(SignedCreateTx1),
     sign_tx:sign(),
     reveal:reveal(),
