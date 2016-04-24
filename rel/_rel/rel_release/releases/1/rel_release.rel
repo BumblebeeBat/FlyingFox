@@ -1,3 +1,0 @@
-{release,{"rel_release","1"},
-         {erts,"7.1"},
-         [{kernel,"4.1"},{stdlib,"2.6"},{rel,"0.0.1"}]}. 
