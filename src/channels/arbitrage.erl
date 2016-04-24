@@ -44,17 +44,28 @@ new(Tx, ChIdLose, ChIdGain, Amount) ->
     io:fwrite("is "), % -1
     io:fwrite(integer_to_list(channel_block_tx:bet_amount(Bet))),
     io:fwrite("\n"),
-    To = (channel_block_tx:bet_to(Bet) * 2) - 1,
-    Amount = (To * channel_block_tx:bet_amount(Bet) * -2),
+    %To = (channel_block_tx:bet_to(Bet) * 2) - 1,
+    To = channel_block_tx:bet_to(Bet),
+    AA = abs(Amount),
+    AA = abs(To * channel_block_tx:bet_amount(Bet) * -2),
     Code = channel_block_tx:bet_code(Bet),
     ChId1 = channel_block_tx:acc1(CB),
     ChId2 = channel_block_tx:acc2(CB),
     IdLose = if
-	Amount > 0 -> ChId1;
-	Amount < 0 -> ChId2
+		 Amount > 0 -> ChId1;
+		 Amount < 0 -> ChId2
     end,
     ChIdLose = hd(channel_manager:id(IdLose)),
     add(Code, ChIdLose, ChIdGain, Amount).
+
+%io:fwrite("To "),
+%io:fwrite(integer_to_list(To)),
+%io:fwrite("\n"),
+%io:fwrite("bet amount "),
+%io:fwrite(integer_to_list(channel_block_tx:bet_amount(Bet))),
+%io:fwrite("\n"),
+%AA = abs(Amount),
+%AA = abs(To * channel_block_tx:bet_amount(Bet) * -2),
 add(Bet, ChIdLose, ChIdGain, Amount) -> 
     %Make sure we can't add the same triple twice!!
     io:fwrite("Bet code "),
@@ -113,18 +124,18 @@ bet_find(BH, [H|T]) ->
 agree(Tx, Amount, BH) ->
     %Make sure that money is being sent to us on the other side of the bet first. Look in channel_manager to see if they gave it.
     %Make sure it is the same amount as before.
-    %["signed",["channel_block",0,1,-500,2,[-6,["bet",-500,[-6,0,"/rmUU2AW8ecM6TSQbyIhuc/0GWW9RLzNNSFvx/5NONY=",35,17,["f",0,1],["f",1,1],["integer",2],18,["f",0,1],["f",1,2],["integer",1],19]]],24000,false,259,0,0,0],"TUVVQ0lBR0JnL0RsZTJ1L29LckM3R01KMm9Gemhrc0xSaEpkNm5TV2dTMzdwNkVaQWlFQTNmZG41Y3JYZmw4RnVXWDNINkMyeDlvZkFSQU56bzBRaVpmUDhsZkZ6a0U9",[-6],[-6]]
     K = keys:id(),
     CB = sign:data(Tx),
     Bet = bet_find(BH, channel_block_tx:bets(CB)),
-    To = (channel_block_tx:bet_to(Bet) * 2) - 1,
+    %To = (channel_block_tx:bet_to(Bet) * 2) - 1,
+    To = channel_block_tx:bet_to(Bet),
     A = channel_block_tx:bet_amount(Bet) * To * -1,
-    io:fwrite("Amount "),
-    io:fwrite(integer_to_list(Amount)),
+    io:fwrite("To"),
+    io:fwrite(integer_to_list(To)),
     io:fwrite("\n"),
-    io:fwrite("A "),
-    io:fwrite(integer_to_list(A)),
-    io:fwrite("\n"),
+    %io:fwrite("A "),
+    %io:fwrite(integer_to_list(A)),
+    %io:fwrite("\n"),
     Acc1 = channel_block_tx:acc1(CB),
     Acc2 = channel_block_tx:acc2(CB),
     P = case K of
@@ -135,22 +146,27 @@ agree(Tx, Amount, BH) ->
     ChIdLoser = check_loser(channel_block_tx:bet_code(Bet), ChIdGain, Amount),
     OChannel = channel_manager:read_channel(ChIdLoser),
     Bet2 = bet_find(BH, channel_block_tx:bets(OChannel)),
-    To2 = (channel_block_tx:bet_to(Bet2) * 2) - 1,
+    To2 = channel_block_tx:bet_to(Bet2),% * 2) - 1,
     BetAmount = channel_block_tx:bet_amount(Bet2),
-    A2 = (To2 * BetAmount),
+    %A2 = (To2 * BetAmount),
+    A2 = (To * BetAmount),
     
     %A2 = channel_block_tx:amount(OChannel),
-    io:fwrite("A2 "),
-    io:fwrite(integer_to_list(A2)),
-    io:fwrite("\n"),
-    io:fwrite("Amount "),
-    io:fwrite(integer_to_list(Amount)),
-    io:fwrite("\n"),
+    %io:fwrite("A2 "),
+    %io:fwrite(integer_to_list(A2)),
+    %io:fwrite("\n"),
+    %io:fwrite("Amount "),
+    %io:fwrite(integer_to_list(Amount)),
+    %io:fwrite("\n"),
+    %io:fwrite("A "),
+    %io:fwrite(integer_to_list(A)),
+    %io:fwrite("\n"),
     AA = abs(A2),
     AA = abs(A),
     AA = abs(Amount div 2),
     if
-	A2 < 0 ->
+	%A2 < 0 ->
+	To2 == -1 ->
 	    K = channel_block_tx:acc2(OChannel);
 	true ->
 	    K = channel_block_tx:acc1(OChannel)

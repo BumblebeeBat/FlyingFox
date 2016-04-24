@@ -80,14 +80,11 @@ run([14|Code], Functions, Variables, Alt, [X|[Y|Stack]], Gas) when is_list(X)-> 
     run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-((1+list_length(X))*cost(11)));
 run([14|Code], Functions, Variables, Alt, [X|[Y|Stack]], Gas) -> %2dup
     run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-cost(11));
-run([17|Code], Functions, Variables, Alt, [Bool|Stack], Gas) -> %if (case)
-    X = if
-	    Bool -> Code;
-	    true -> 
-		{_, T} = remove_till(18, Code),
-		T
-    end,
-    run(X, Functions, Variables, Alt, Stack, Gas-cost(17));
+run([17|Code], Functions, Variables, Alt, [true|Stack], Gas) -> %if (case)
+    run(Code, Functions, Variables, Alt, Stack, Gas-cost(17));
+run([17|Code], Functions, Variables, Alt, [false|Stack], Gas) -> %if (case)
+    {_, T} = remove_till(18, Code),
+    run(T, Functions, Variables, Alt, Stack, Gas-cost(17));
 run([18|Code], Functions, Variables, Alt, Stack, Gas) -> %else
     {_, T} = remove_till(19, Code),
     run(T, Functions, Variables, Alt, Stack, Gas-cost(18));
@@ -355,7 +352,7 @@ list_length([_|T], N) ->
 hashlock(SecretHash) ->
     assemble([hash, SecretHash, eq, switch, {f, 0, 1}, {f, 1, 1}, 2, else, {f, 0, 1}, {f, 0, 1}, 1, then]).
 valid_secret(Secret, Script) -> 
-   hd(tl(run([Secret] ++ Script, 100))).
+   hd(tl(run([Secret] ++ Script, constants:gas_limit()))).
 extract_sh(Code) -> hd(tl(Code)).
 run_script(Code, Gas) ->
     case run(Code, Gas) of

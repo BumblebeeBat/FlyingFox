@@ -81,6 +81,7 @@ new_hashlock(Partner, A, SecretHash) ->
 	A2 -> A;
 	A1 -> -A
     end,
+    %Amount = A,
     hashlock(ChId, Amount, SecretHash).
 hashlock(ChId, Amount, SecretHash) ->
     Ch = read_channel(ChId),
@@ -90,12 +91,12 @@ hashlock(ChId, Ch, Amount, SecretHash, Id) ->
     Channel = block_tree:channel(ChId),
     Acc1 = channels:acc1(Channel),
     Acc2 = channels:acc2(Channel),
-    MyAccount = case Id of
-            Acc1 -> 1;
-            Acc2 -> -1
+    OtherAccount = case Id of
+            Acc1 -> -1;
+            Acc2 -> 1
         end,
     Script = language:hashlock(SecretHash),
-    channel_block_tx:add_bet(Ch2, Amount, Script, MyAccount).
+    channel_block_tx:add_bet(Ch2, Amount, Script, OtherAccount).
 
 
 test() ->    

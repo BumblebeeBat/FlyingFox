@@ -1,5 +1,5 @@
 -module(sign).
--export([test/0,new_key/0,sign_tx/4,sign/2,verify_sig/3,shared_secret/2,verify/2,data/1,revealed/1,empty/1,empty/0,set_revealed/2,verify_1/2,verify_2/2]).
+-export([test/0,new_key/0,sign_tx/4,sign_tx/5,sign/2,verify_sig/3,shared_secret/2,verify/2,data/1,revealed/1,empty/1,empty/0,set_revealed/2,verify_1/2,verify_2/2]).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
 empty() -> #signed{}.
 empty(X) -> #signed{data=X}.
@@ -40,14 +40,16 @@ verify(SignedTx, Accounts) ->
 	    verify_both(SignedTx, accounts:pub(Acc1), accounts:pub(Acc2));
 	true -> verify_1(SignedTx, accounts:pub(Acc1))
     end.
-sign_tx(SignedTx, Pub, Priv, Accounts) when element(1, SignedTx) == signed ->
+sign_tx(SignedTx, Pub, Priv, Accounts) ->
+    sign_tx(SignedTx, Pub, Priv, keys:id(), Accounts).
+sign_tx(SignedTx, Pub, Priv, ID, Accounts) when element(1, SignedTx) == signed ->
     Tx = SignedTx#signed.data,
     R = SignedTx#signed.revealed,
     N = element(2, Tx),
     Acc = block_tree:account(N, Accounts),
     APub = accounts:pub(Acc),
     if
-	APub == Pub -> 
+	(APub == Pub) and (N == ID) -> 
 	    Sig = sign(Tx, Priv),
 	    #signed{data=Tx, sig=Sig, sig2=SignedTx#signed.sig2, revealed=R};
 	true ->
@@ -55,13 +57,13 @@ sign_tx(SignedTx, Pub, Priv, Accounts) when element(1, SignedTx) == signed ->
 	    Acc2 = block_tree:account(N2, Accounts),
 	    BPub = accounts:pub(Acc2),
 	    if
-		Pub == BPub ->
+		(Pub == BPub) and (N2 == ID)->
 		    Sig = sign(Tx, Priv),
 		    #signed{data=Tx, sig=SignedTx#signed.sig, sig2=Sig, revealed=R};
 		true -> {error, <<"cannot sign">>}
 	    end
     end;
-sign_tx(Tx, Pub, Priv, Accounts) ->
+sign_tx(Tx, Pub, Priv, ID, Accounts) ->
     Sig = sign(Tx, Priv),
     N = element(2, Tx),
     Acc = block_tree:account(N, Accounts),

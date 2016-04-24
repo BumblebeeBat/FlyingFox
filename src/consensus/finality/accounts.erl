@@ -50,7 +50,7 @@ update(Acc, H, Dbal, Ddelegated, N, TotalCoins, Tag) ->
     Balance = Acc#acc.balance + Dbal,
     MaxC = UCost * constants:max_reveal(),
     _ = case Tag of
-	normal -> true = Balance - MaxC > 0, 0;%You need enough money to stay open at least this long, so that your partner has time to close the channel before your account gets deleted.
+	normal -> true = ((Balance - MaxC) > 0), 0;%You need enough money to stay open at least this long, so that your partner has time to close the channel before your account gets deleted.
 	nocheck -> 0
     end,
     #acc{

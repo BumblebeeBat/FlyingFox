@@ -8,9 +8,9 @@
 
 handle(Req, State) ->
     {ok, Data, _} = cowboy_req:body(Req),
-    %io:fwrite("handler got data "),
-    %io:fwrite(Data),
-    %io:fwrite("\n"),
+    io:fwrite("handler got data "),
+    io:fwrite(Data),
+    io:fwrite("\n"),
     true = is_binary(Data),
     A = packer:unpack(Data),
     B = doit(A),
@@ -145,8 +145,8 @@ doit({new_channel, SignedTx}) ->
     %make sure the Tx is more than 1/2 funded by the other person.
     %make sure the amount of money is below some limit.
     Tx = sign:data(SignedTx),
-    io:fwrite("min ratio tx "),
-    io:fwrite(packer:pack(Tx)),
+    io:fwrite("making a new channel, should be signed once "),
+    io:fwrite(packer:pack(SignedTx)),
     io:fwrite("\n"),
     true = to_channel_tx:min_ratio(free_constants:liquidity_ratio(), Tx),
     %true = to_channel_tx:half_them(Tx),
@@ -154,6 +154,9 @@ doit({new_channel, SignedTx}) ->
     MS = to_channel_tx:my_side(Tx),
     true = MC > MS,
     NTx = keys:sign(SignedTx),
+    io:fwrite("making a new channel, should be signed twice "),
+    io:fwrite(packer:pack(NTx)),
+    io:fwrite("\n"),
     tx_pool_feeder:absorb(NTx),
     {ok, NTx};
 doit({update_channel, ISigned, TheySigned}) ->%The contents of this message NEED to be encrypted. ideally we should encypt every message to this module.

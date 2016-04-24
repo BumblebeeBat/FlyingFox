@@ -34,7 +34,7 @@ handle_call({raw_sign, M}, _From, X) when not is_binary(M) ->
 handle_call({raw_sign, M}, _From, R) ->
     {reply, sign:sign(M, R#f.priv), R};
 handle_call({sign, M, Accounts}, _From, R) -> 
-    {reply, sign:sign_tx(M, R#f.pub, R#f.priv, Accounts), R};
+    {reply, sign:sign_tx(M, R#f.pub, R#f.priv, R#f.id, Accounts), R};
 handle_call(status, _From, R) ->
     Y = db:read(?LOC()),
     Out = if

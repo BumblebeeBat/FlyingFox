@@ -21,16 +21,18 @@ fee(Ch) -> Ch#channel_block.fee.
 nonce(X) -> X#channel_block.nonce.
 delay(X) -> X#channel_block.delay.
 -record(signed_cb, {acc = 0, nonce = 0, channel_block = #channel_block{}, fee = 0}).
--record(bet, {amount = 0, code = language:assemble([crash]), to = 0}).%code is like scriptpubkey from bitcoin.
+-record(bet, {amount = 0, code = language:assemble([crash]), to = 1}).%code is like scriptpubkey from bitcoin.
 bet_code(Bet) -> Bet#bet.code.
 bet_amount(Bet) -> Bet#bet.amount.
 bet_to(Bet) -> Bet#bet.to.
 -record(tc, {acc1 = 0, acc2 = 0, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = false, fee = 0, id = -1, increment = 0}).
 add_bet(CB, Amount, Code, To) ->
     0 = Amount rem 2,
+    A = abs(Amount div 2),
     Bets = CB#channel_block.bets,
-    NewBets = [#bet{amount = Amount div 2, code = Code, to = -To}|Bets],
-    replace_bet(CB, NewBets, (To * Amount) div 2).
+    NewBets = [#bet{amount = abs(A), code = Code, to = To}|Bets],
+    replace_bet(CB, NewBets, To * A).
+%replace_bet(CB, NewBets, (To * Amount) div 2).
 replace_bet(CB, NewBets, Amount) ->
     update(CB, Amount, 0, NewBets, CB#channel_block.fast, CB#channel_block.delay, CB#channel_block.expiration, CB#channel_block.nlock, CB#channel_block.fee).
     

@@ -114,13 +114,14 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     N1 = accounts:update(Acc1, NewHeight, Balance1, D1, 1, TotalCoins),
     N2 = accounts:update(Acc2, NewHeight, Balance2, D2, 0, TotalCoins),
     true = NewId2 < constants:max_channel(),
-    MyKey = keys:pubkey(),
-    APub1 = accounts:pub(Acc1),
-    APub2 = accounts:pub(Acc2),
+    MyKey = keys:id(),
+    %APub1 = accounts:pub(Acc1),
+    %APub2 = accounts:pub(Acc2),
     Ch = channels:new(Tx#tc.acc1, Tx#tc.acc2, Tx#tc.bal1, Tx#tc.bal2, Type),
     CM_current = channel_manager:read(NewId2),
     if
-	((CM_current == empty) and ((Channel == EmptyChannel) and ((APub1 == MyKey) or (APub2 == MyKey)))) -> 
+	%channel == emptychannel means that we are creating a new channel, rather than increasing the amount of money in an existing one.
+	((CM_current == empty) and ((Channel == EmptyChannel) and ((Tx#tc.acc1 == MyKey) or (Tx#tc.acc2 == MyKey)))) -> 
 	    channel_partner:new_channel(NewId2, Ch, Accounts),
 	    channel_manager_feeder:new_channel(NewId2, Ch, Accounts);
 	true -> 1=1

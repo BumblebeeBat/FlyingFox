@@ -12,6 +12,7 @@ handle_call({absorb, SignedTx}, _From, X) ->
     Accounts = tx_pool:accounts(),
     Channels = tx_pool:channels(),
     Secrets = tx_pool:secrets(),
+    io:fwrite(packer:pack(SignedTx)),
     true = sign:verify(SignedTx, Accounts),
     Txs = tx_pool:txs(),
     Tx = sign:data(SignedTx),
