@@ -3,5 +3,5 @@
 
 
 macro test
-integer 2 quad call
+integer 2 quad call integer 16 ==
 ;

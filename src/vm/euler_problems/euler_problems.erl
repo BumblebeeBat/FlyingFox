@@ -97,9 +97,6 @@ problem006(Gas) ->
     {ok, A} = file:read_file(?loc ++ "006.fs"),
     B = compiler:compile(A),
     C = language:run(B, Gas),
-    %io:fwrite("C is "),
-    %io:fwrite(packer:pack(C)),
-    %io:fwrite("\n"),
     C = [problem006s()].
 
 test() ->

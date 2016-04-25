@@ -22,4 +22,6 @@ then then then;
 
 ( [integer 3, integer 2, integer 1] [integer 5, integer 2, integer 1] merge call )
 macro test 
-[integer 10, integer 2, integer 13, integer 4, integer 5] doit call ;
+[integer 10, integer 2, integer 13, integer 4, integer 5] doit call 
+[integer 13, integer 10, integer 5, integer 4, integer 2] ==
+;

@@ -5,5 +5,5 @@ macro db_root crash ;
     else db_1 call then ;
 
 macro test 
-integer 5 db_2 call
+integer 5 db_2 call integer 1 ==
 ;
