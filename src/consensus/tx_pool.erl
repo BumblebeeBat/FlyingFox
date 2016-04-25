@@ -32,7 +32,7 @@ absorb(A, B, C, D, E) -> gen_server:cast(?MODULE, {absorb, A, B, C, D, E}).
 %-record(spend, {from = 0, nonce = 0, to = 0, amount = 0}).
 %-record(ca, {from = 0, nonce = 0, pub = <<"">>, amount = 0}).
 test() ->
-    {Pub, _Priv} = sign:new_key(),
+    %{_Pub, _Priv} = sign:new_key(),
     %CreateAccount = keys:sign(#ca{from = 0, nonce = 1, pub=Pub, amount=12020}),
     %Spend = keys:sign(#spend{from = 0, nonce = 2, to = 1, amount=122}),
     %absorb(CreateAccount),

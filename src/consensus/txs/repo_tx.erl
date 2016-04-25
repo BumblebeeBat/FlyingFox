@@ -24,11 +24,12 @@ un_delegate([ID|T], Channels) ->
     %Ch = block_tree:channel(ID, ParentKey, Channels),
     NewChannels = dict:store(ID, channels:empty(), Channels),
     un_delegate(T, NewChannels).
-all_channels(Amount, _, _, _, _) when Amount < 0 -> 0 = 1;
+%all_channels(Amount, _, _, _, _) when Amount < 0 -> 0 = 1;
 all_channels(0, _, _, _, []) -> true;
 all_channels(0, _, _, _, _) -> false;
-all_channels(_, _, _, _, []) -> false;
+all_channels(Amount, _, _, _, []) when Amount > 0 -> false;
 all_channels(Amount, Accn, Channels, ParentKey, [Chn|Chs]) -> 
+    true = Amount > 0,
     Channel = block_tree:channel(Chn, ParentKey, Channels),
     N = channels:bal1(Channel) + channels:bal2(Channel),
     Accn = case channels:type(Channel) of

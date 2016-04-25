@@ -20,9 +20,9 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
     CB = sign:data(SignedCB),
     Id = channel_block_tx:id(CB),
     Channel = block_tree:channel(Id, ParentKey, Channels),
-    case channels:called_timeout(Channel) of
-	0 -> A = Tx#channel_slash.acc, A = channels:acc2(Channel);
-	1 -> A = Tx#channel_slash.acc, A = channels:acc1(Channel)
+    A = case channels:called_timeout(Channel) of
+	    0 -> B = Tx#channel_slash.acc, B = channels:acc2(Channel), B;
+	    1 -> B = Tx#channel_slash.acc, B = channels:acc1(Channel), B
     end,
     OriginTimeout = channel_block_tx:origin_tx(channels:timeout_height(Channel), ParentKey, Id),
     SignedOriginTx = channel_timeout_tx:channel_block(sign:data(OriginTimeout)),

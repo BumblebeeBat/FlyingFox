@@ -1,6 +1,23 @@
 -module(fractions).
--export([new/2,negate/1,add/2,subtract/2,multiply/2,divide/2,to_int/1,test/0, multiply_int/2, exponent/2, less_than/2, equal/2]).
+-export([new/2,negate/1,add/2,subtract/2,multiply/2,divide/2,to_int/1,test/0, multiply_int/2, exponent/2, less_than/2, equal/2, is_fraction/1,sqrt/1]).
 -record(f, {top = 0, bottom = 0}).
+is_fraction(X) when not is_record(X, f) -> false;
+is_fraction({f, _, Y}) when not is_integer(Y) -> false;
+is_fraction({f, Y, _}) when not is_integer(Y) -> false;
+is_fraction({f, _, Y}) when Y == 0 -> false;
+is_fraction(_) -> true.
+sqrt({f, A, B}) ->
+    sqrt_helper({f, A, B}, {f, 1, 2}).
+sqrt_helper(A, Guess) ->
+    B = subtract(A, multiply(Guess, Guess)),
+    Bool = (less_than(B, {f, 1, 1000}) and (not less_than(B, {f, -1, 1000}))), %correct to 8 decimal places.
+    if
+	Bool -> Guess;
+	true -> 
+	    Sum = add(Guess, divide(A, Guess)),
+	    Improved = divide(Sum, {f, 2, 1}),
+	    sqrt_helper(A, Improved)
+    end.
 equal(A, B) ->
     A#f.top * B#f.bottom == B#f.top * A#f.bottom.
 less_than(A, B) ->
@@ -19,10 +36,10 @@ simplify_lcd(F) ->
     #f{top = F#f.top div L, bottom = F#f.bottom div L}.
 simplify_size(F) ->
     IC = 281474976710656,
-    X = F#f.bottom div IC,
-    Y = F#f.top div IC,
+    %X = F#f.bottom div IC,
+    %Y = F#f.top div IC,
     Z = if 
-	((X > IC) and (Y > IC)) -> IC; 
+	((F#f.bottom > IC) and (F#f.top > IC)) -> IC; 
 	true -> 1 
     end,
     #f{top = F#f.top div Z, bottom = F#f.bottom div Z}.

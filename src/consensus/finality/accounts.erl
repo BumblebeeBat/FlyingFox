@@ -13,20 +13,23 @@
 -record(acc, {balance = 0, nonce = 0, pub = "", delegated = 0, height = 0}).%the height when delegation fees were last payed. 
 init(ok) -> 
 
-    case file:read_file(?empty) of
-        {error, enoent} -> 
+    {T, D} = 
+	case file:read_file(?empty) of
+	    {error, enoent} -> 
             P = base64:decode(constants:master_pub()),
-	    IC = constants:initial_coins(),
-	    Delegated = fractions:multiply_int(constants:initial_portion_delegated(), IC),
-	    Balance = IC - Delegated,
-            write_helper(0, <<Balance:48, 0:32, Delegated:48, 0:32, P/binary>>, ?file),
-            Top = 1,
-            DeletedArray = << 1:1 , 0:7 >>,
-            write_helper(0, DeletedArray, ?empty);
-        {ok, DeletedArray} ->
-            Top = walk(0, DeletedArray)
-    end,
-    {ok, {Top, DeletedArray}}.
+		IC = constants:initial_coins(),
+		Delegated = fractions:multiply_int(constants:initial_portion_delegated(), IC),
+		Balance = IC - Delegated,
+		write_helper(0, <<Balance:48, 0:32, Delegated:48, 0:32, P/binary>>, ?file),
+		Top = 1,
+		DeletedArray = << 1:1 , 0:7 >>,
+		write_helper(0, DeletedArray, ?empty),
+		{Top, DeletedArray};
+	    {ok, DeletedArray} ->
+		Top = walk(0, DeletedArray),
+		{Top, DeletedArray}
+	end,
+    {ok, {T, D}}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 terminate(_, _) -> io:format("died!"), ok.
@@ -46,8 +49,8 @@ update(Acc, H, Dbal, Ddelegated, N, TotalCoins, Tag) ->
     Cost = UCost * Gap,
     Balance = Acc#acc.balance + Dbal,
     MaxC = UCost * constants:max_reveal(),
-    case Tag of
-	normal -> true = Balance - MaxC > 0;%You need enough money to stay open at least this long, so that your partner has time to close the channel before your account gets deleted.
+    _ = case Tag of
+	normal -> true = ((Balance - MaxC) > 0), 0;%You need enough money to stay open at least this long, so that your partner has time to close the channel before your account gets deleted.
 	nocheck -> 0
     end,
     #acc{

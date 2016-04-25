@@ -177,7 +177,7 @@ absorb_msgs([H|T], IP, Port, ServerId) ->
 	    channel_partner:store(ChIdFrom, Return),
 	    talker:talk({locked_payment2, Return, Amount, SecretHash, BetHash}, IP, Port),
 	    M = encryption:get_msg(Emsg),
-	    Secret = encryption:msg(M),
+	    {secret, Secret} = encryption:msg(M),
 	    got_secret(Secret, IP, Port);
 	{ok, {pop_response, EMsg, Refund}} ->
 	    NewCh = channel_manager_feeder:recieve(hd(channel_manager:id(ServerId)), 0, Refund),

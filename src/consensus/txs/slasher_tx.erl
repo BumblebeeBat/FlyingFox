@@ -9,7 +9,9 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
     %check that the sign_tx was actually signed by the right person...
     %prove that a validator double-signed.
     %take some of their deposit, delete the rest of deposit.
-    ST = sign:data(Tx#slasher_tx.sign_tx),
+    SignedST = Tx#slasher_tx.sign_tx,
+    true = sign:verify(SignedST, Accounts),
+    ST = sign:data(SignedST),
     H = sign_tx:number(ST)+1,
     A = sign_tx:acc(ST),
     true = H > -1,
@@ -35,4 +37,3 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->
     NewAccounts = dict:store(Tx#slasher_tx.acc, NN, Accounts),
     NewSecrets = dict:store({N, SH}, false, Secrets),
     {Channels, NewAccounts, TotalCoins - TReward, NewSecrets}.
-

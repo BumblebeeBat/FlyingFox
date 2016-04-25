@@ -45,28 +45,24 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     Type = channels:type(Channel),
     CAC1 = channels:acc1(Channel),
     CAC2 = channels:acc2(Channel),
-    if
-	(CAC1 == A) -> Part = CAC2;
-	(CAC2 == A) -> Part = CAC1
+    Part = if
+	(CAC1 == A) -> CAC2;
+	(CAC2 == A) -> CAC1
     end,
     Partner = block_tree:account(Part, ParentKey, Accounts),
     true = low_balance(Partner, TotalCoins, NewHeight),
-    if
+    {D2, D} = 
+	if
 	(Type == <<"delegated_1">>) and (CAC1 == A) ->
-	    D2 = 0,
-	    D = B;
+	    {0, B};
 	(Type == <<"delegated_1">>) and (CAC2 == A) ->
-	    D2 = B,
-	    D = 0;
+	    {B, 0};
 	(Type == <<"delegated_2">>) and (CAC1 == A) ->
-	    D2 = B,
-	    D = 0;
+	    {B, 0};
 	(Type == <<"delegated_2">>) and (CAC2 == A) ->
-	    D2 = 0,
-	    D = B;
+	    {0, B};
 	true -> 
-	    D2 = 0, 
-	    D = 0
+	    {0, 0}
     end,
     N = accounts:update(Acc, NewHeight, B - Tx#channel_funds_limit.fee, -D, 1, TotalCoins),
     N2 = accounts:update(Partner, NewHeight, 0, -D2, 0, TotalCoins, nocheck),

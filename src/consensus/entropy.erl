@@ -8,13 +8,14 @@
 init(ok) -> 
     process_flag(trap_exit, true),
     X = db:read(?LOC),
-    if
-        X == "" -> 
-            K = #x{},
-            db:save(?LOC,K);
-        true -> K = X
-    end,
-    {ok, K}.
+    Ka = if
+	     X == "" -> 
+		 K = #x{},
+		 db:save(?LOC,K),
+		 K;
+	     true -> X
+	 end,
+    {ok, Ka}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 terminate(_, K) -> 

@@ -30,7 +30,6 @@ function refresh_helper(x, callback) {
 };
 
 my_status = "nil";
-//var x = local_get(["sync", [127,0,0,1], 3020]);
 var x = local_get(["test"]);
 
 refresh_helper(x, function(){ 

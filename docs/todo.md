@@ -1,18 +1,19 @@
+Building an executable of the software for windows is very important. It needs to include logging, for easy error reporting. That way if a user experiences an error, it is easy for them to show us what went wrong.
 
-Need to add some transaction types for the new type of mining.
-80 bytes total, {4:version, 32:hashPrevBlock, 32:MerkleRoot, 4:time, 4:difficulty, 4:nonce}
-Maybe I should start out owning $1,000,000 of coins or so, otherwise it will be too cheap for a whale to print a bunch of coins and refuse to take part in consensus. The $1,000,000 of coins could be unspendable, only for consensus purposes.
-
-We should change the way flying fox scripts get merkelized. Maybe it should be like an case-opcode, where the code that gets executed needs to match a hash.
-Maybe we should be able to call a "function" by the hash of the list of opcodes. add define to the language. We only have to define the functions that get used. If we add "define" then we also need to add gas, and it would be turing complete.
+http://stackoverflow.com/questions/11796941/how-do-you-compile-an-erlang-program-into-a-standalone-windows-executable
 
 
-https://blog.ethereum.org/2016/02/17/smart-contracts-courts-not-smart-judges/
-Maybe upgrade the off-chain code so that it is computed by binary search.
+channel_block_tx:fee needs to be used. If someone closes the channel early, the person who didn't close the channel pays this fee to the person who did. Unless there isn't enough money left, in which case the person who closes the channel gets all the non-deleted money.
+
+We need to add a fee to sign_tx. This fee can possibly be negative.
+
+Consider updating sign_tx to the bet based system used in Casper. Validators can sign on conflicting branches, as long as their total bets add to something <= 1. 
+
+It is inefficient to store things in base64 mode. keep it decoded as much as possible.
+
 
 It would be nice if we have a javascript interface to send spam-less messages. The recipient has the option of deleting the sender's funds.
 
-hashlock lightning payments javascript
 close_channel javascript multiple steps
 *Look in channel_partner. Make sure our partner has = or < nonce than channel_manager.
 change server javascript
@@ -23,7 +24,7 @@ Make an OTP erts package so that it is easier to install.
 
 handler should have every input and output be encrypted. Otherwise eavesdroppers will publish our channel before we want it published.
 
-We need tests to make sure that skipping a height works. It should cost more for the block creator.
+We need tests to make sure that skipping a height works. It shouldcost more for the block creator.
 
 constants:security_bonds_per_winner() should be tuned. The random number generator should be seeded from a long enough time ago.
 We want it to be impossible to cause a fork by bribing validators to double-sign. There shouldn't be enough money in the blockchain to maintain the fork long enough to have different randomness on each side.
@@ -32,8 +33,9 @@ Block tree needs to hold many more blocks. Lets try to keep it below 200 megabyt
 
 the idea was introduced here: https://blog.ethereum.org/2014/11/25/proof-stake-learned-love-weak-subjectivity/
 Weak subjectivity is necessary for security reasons. It stops long range attacks.
+POW solves the same problem too, so long as people are still mining.
 
 Add onion routing to messaging
 
-Maybe instead of sending channel messages to their mail box, we should give them an api where they can look up if the channel was updated?
-
+https://blog.ethereum.org/2016/02/17/smart-contracts-courts-not-smart-judges/
+Maybe upgrade the off-chain code so that it is computed by binary search.

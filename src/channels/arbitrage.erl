@@ -2,7 +2,7 @@
 %Don't remove state from arbitrage until the highest nonced channel state we recieved from our partner doesn't have the bet.
 -module(arbitrage).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, delete/2,add/4,check_hash/1,agree/3,new/4,bet_find/2,check_loser/3,test/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, delete/2,add/4,check_hash/1,agree/3,new/4,bet_find/2,check_loser/3,check_winner/3,test/0]).
 init(ok) -> {ok, dict:new()}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
@@ -38,34 +38,27 @@ new(Tx, ChIdLose, ChIdGain, Amount) ->
     %["signed",["channel_block",0,1,-500,2,[-6,["bet",-500,[-6,0,"/rmUU2AW8ecM6TSQbyIhuc/0GWW9RLzNNSFvx/5NONY=",35,17,["f",0,1],["f",1,1],["integer",2],18,["f",0,1],["f",1,2],["integer",1],19]]],24000,false,259,0,0,0],"TUVVQ0lBR0JnL0RsZTJ1L29LckM3R01KMm9Gemhrc0xSaEpkNm5TV2dTMzdwNkVaQWlFQTNmZG41Y3JYZmw4RnVXWDNINkMyeDlvZkFSQU56bzBRaVpmUDhsZkZ6a0U9",[-6],[-6]]
     CB = sign:data(Tx),
     Bet = hd(channel_block_tx:bets(CB)),
-    io:fwrite("should be "), % 2
-    io:fwrite(integer_to_list(Amount)),
-    io:fwrite("\n"),
-    io:fwrite("is "), % -1
-    io:fwrite(integer_to_list(channel_block_tx:bet_amount(Bet))),
-    io:fwrite("\n"),
-    To = (channel_block_tx:bet_to(Bet) * 2) - 1,
-    Amount = (To * channel_block_tx:bet_amount(Bet) * -2),
+    To = channel_block_tx:bet_to(Bet),
+    AA = abs(Amount),
+    AA = abs(To * channel_block_tx:bet_amount(Bet) * -2),
     Code = channel_block_tx:bet_code(Bet),
     ChId1 = channel_block_tx:acc1(CB),
     ChId2 = channel_block_tx:acc2(CB),
     IdLose = if
-	Amount > 0 -> ChId1;
-	Amount < 0 -> ChId2
+		 Amount > 0 -> ChId1;
+		 Amount < 0 -> ChId2
     end,
     ChIdLose = hd(channel_manager:id(IdLose)),
     add(Code, ChIdLose, ChIdGain, Amount).
+
 add(Bet, ChIdLose, ChIdGain, Amount) -> 
     %Make sure we can't add the same triple twice!!
-    io:fwrite("Bet code "),
-    io:fwrite(packer:pack(Bet)),
-    io:fwrite("\n"),
     BH = hash:doit(Bet),
     L = check_hash(BH),
     true = not_in(L, ChIdLose, ChIdGain, Amount),
     gen_server:cast(?MODULE, {add, BH, ChIdLose, ChIdGain, Amount}).
 not_in([], _, _, _) -> true;
-not_in([{LoseId, GainId, Amount}|T], LoseId, GainId, Amount) -> false;
+not_in([{LoseId, GainId, Amount}|_], LoseId, GainId, Amount) -> false;
 not_in([_|T], A, B, C) -> not_in(T, A, B, C).
 del(BH, ChIdLose, ChIdGain, Amount) -> 
     %BH = hash:doit(Bet),
@@ -76,13 +69,11 @@ delete(CB, BetCode) ->
     Amount = channel_block_tx:bet_amount(Bet),
     ChId1 = channel_block_tx:acc1(CB),
     ChId2 = channel_block_tx:acc2(CB),
-    if
+    {IdLose, IdGain} = if
 	Amount > 0 -> 
-	    IdLose = ChId1,
-	    IdGain = ChId2;
+	    {ChId1, ChId2};
 	Amount < 0 -> 
-	    IdLose = ChId2,
-	    IdGain = ChId1
+	    {ChId2, ChId1}
     end,
     ChIdLose = hd(channel_manager:id(IdLose)),
     ChIdGain = hd(channel_manager:id(IdGain)),
@@ -93,22 +84,15 @@ delete(CB, BetCode) ->
     true = not_in(BH, BetsL),
     true = not_in(BH, BetsG),
     del(Bet, ChIdLose, ChIdGain, Amount).
-not_in(H, []) -> true;
+not_in(_, []) -> true;
 not_in(Hash, [H|T]) -> 
     A = hash:doit(channel_block_tx:bet_code(H)),
     if
 	A == H -> false;
 	true -> not_in(Hash, T)
     end.
-bet_find(BH, []) -> 1=2;
 bet_find(BH, [H|T]) -> 
     A = hash:doit(channel_block_tx:bet_code(H)),
-    io:fwrite("bet find found "),
-    io:fwrite(packer:pack(A)),
-    io:fwrite("\n"),
-    io:fwrite("make from "),
-    io:fwrite(packer:pack(H)),
-    io:fwrite("\n"),
     if
 	A == BH -> H;
 	true -> bet_find(BH, T)
@@ -116,18 +100,11 @@ bet_find(BH, [H|T]) ->
 agree(Tx, Amount, BH) ->
     %Make sure that money is being sent to us on the other side of the bet first. Look in channel_manager to see if they gave it.
     %Make sure it is the same amount as before.
-    %["signed",["channel_block",0,1,-500,2,[-6,["bet",-500,[-6,0,"/rmUU2AW8ecM6TSQbyIhuc/0GWW9RLzNNSFvx/5NONY=",35,17,["f",0,1],["f",1,1],["integer",2],18,["f",0,1],["f",1,2],["integer",1],19]]],24000,false,259,0,0,0],"TUVVQ0lBR0JnL0RsZTJ1L29LckM3R01KMm9Gemhrc0xSaEpkNm5TV2dTMzdwNkVaQWlFQTNmZG41Y3JYZmw4RnVXWDNINkMyeDlvZkFSQU56bzBRaVpmUDhsZkZ6a0U9",[-6],[-6]]
     K = keys:id(),
     CB = sign:data(Tx),
     Bet = bet_find(BH, channel_block_tx:bets(CB)),
-    To = (channel_block_tx:bet_to(Bet) * 2) - 1,
+    To = channel_block_tx:bet_to(Bet),
     A = channel_block_tx:bet_amount(Bet) * To * -1,
-    io:fwrite("Amount "),
-    io:fwrite(integer_to_list(Amount)),
-    io:fwrite("\n"),
-    io:fwrite("A "),
-    io:fwrite(integer_to_list(A)),
-    io:fwrite("\n"),
     Acc1 = channel_block_tx:acc1(CB),
     Acc2 = channel_block_tx:acc2(CB),
     P = case K of
@@ -138,22 +115,15 @@ agree(Tx, Amount, BH) ->
     ChIdLoser = check_loser(channel_block_tx:bet_code(Bet), ChIdGain, Amount),
     OChannel = channel_manager:read_channel(ChIdLoser),
     Bet2 = bet_find(BH, channel_block_tx:bets(OChannel)),
-    To2 = (channel_block_tx:bet_to(Bet2) * 2) - 1,
+    To2 = channel_block_tx:bet_to(Bet2),
     BetAmount = channel_block_tx:bet_amount(Bet2),
-    A2 = (To2 * BetAmount),
-    
-    %A2 = channel_block_tx:amount(OChannel),
-    io:fwrite("A2 "),
-    io:fwrite(integer_to_list(A2)),
-    io:fwrite("\n"),
-    io:fwrite("Amount "),
-    io:fwrite(integer_to_list(Amount)),
-    io:fwrite("\n"),
+    A2 = (To * BetAmount),
     AA = abs(A2),
     AA = abs(A),
     AA = abs(Amount div 2),
     if
-	A2 < 0 ->
+	%A2 < 0 ->
+	To2 == -1 ->
 	    K = channel_block_tx:acc2(OChannel);
 	true ->
 	    K = channel_block_tx:acc1(OChannel)
@@ -163,29 +133,15 @@ check_winner(Bet, ChIdLose, Amount) ->
     BH = hash:doit(Bet),
     L = check_hash(BH),
     check_winner2(ChIdLose, Amount, L).
-check_winner2(_, _, []) -> 1=2;
-check_winner2(ChId, Amount, [{ChId, ChIdGain, Amount}|T]) -> 
+check_winner2(ChId, Amount, [{ChId, ChIdGain, Amount}|_]) -> 
     ChIdGain;
 check_winner2(ChId, Amount, [{_, _, _}|T]) -> 
     check_winner2(ChId, Amount, T).
 check_loser(BetCode, ChId, Amount) -> 
-    io:fwrite("BetCode code "),
-    io:fwrite(packer:pack(BetCode)),
-    io:fwrite("\n"),
     BH = hash:doit(BetCode),
     L = check_hash(BH),
-    io:fwrite("L is "),
-    io:fwrite(packer:pack(L)),
-    io:fwrite("\n"),
-    io:fwrite("Loser is "),
-    io:fwrite(integer_to_list(ChId)),
-    io:fwrite("\n"),
-    io:fwrite("Amount is "),
-    io:fwrite(integer_to_list(Amount)),
-    io:fwrite("\n"),
     check_loser2(ChId, Amount, L).
-check_loser2(_, _, []) -> 1=2;
-check_loser2(ChId, Amount, [{ChIdLoser, ChId, Amount}|T]) -> 
+check_loser2(ChId, Amount, [{ChIdLoser, ChId, Amount}|_]) -> 
     ChIdLoser;
 check_loser2(ChId, Amount, [{_, _, _}|T]) -> 
     check_loser2(ChId, Amount, T).

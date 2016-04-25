@@ -3,18 +3,19 @@
 
 -module(channel_manager).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, new_hashlock/3,read/1,delete/1,id/1,keys/0,read_channel/1,bet_amounts/1,test/0,store/2]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, new_hashlock/3,hashlock/5,read/1,delete/1,id/1,keys/0,read_channel/1,bet_amounts/1,test/0,store/2]).
 -define(LOC, constants:channel_manager()).
 init(ok) -> 
     process_flag(trap_exit, true),
     X = db:read(?LOC),
-    if
+    Ka = if
         X == "" -> 
             K = dict:new(),
-            db:save(?LOC,K);
-        true -> K = X
+            db:save(?LOC,K),
+	    K;
+        true -> X
     end,
-    {ok, K}.
+    {ok, Ka}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 terminate(_, K) -> 
@@ -80,19 +81,22 @@ new_hashlock(Partner, A, SecretHash) ->
 	A2 -> A;
 	A1 -> -A
     end,
+    %Amount = A,
     hashlock(ChId, Amount, SecretHash).
 hashlock(ChId, Amount, SecretHash) ->
     Ch = read_channel(ChId),
-    Ch2 = channel_block_tx:update(Ch, Amount div 2, 1),
+    keys:sign(hashlock(ChId, Ch, Amount, SecretHash, keys:id())).
+hashlock(ChId, Ch, Amount, SecretHash, Id) ->
+    Ch2 = channel_block_tx:update(Ch, 0, 1),
     Channel = block_tree:channel(ChId),
     Acc1 = channels:acc1(Channel),
     Acc2 = channels:acc2(Channel),
-    MyAccount = case keys:id() of
-            Acc1 -> 1;
-            Acc2 -> 0
+    OtherAccount = case Id of
+            Acc1 -> -1;
+            Acc2 -> 1
         end,
     Script = language:hashlock(SecretHash),
-    keys:sign(channel_block_tx:add_bet(Ch2, Amount div 2, Script, MyAccount)).
+    channel_block_tx:add_bet(Ch2, Amount, Script, OtherAccount).
 
 
 test() ->    
@@ -103,37 +107,49 @@ test() ->
     sign_tx:sign(),
     reveal:reveal(),
     block_tree:buy_block(),
+    P5 = accounts:pub(block_tree:account(5)),
+    P4 = accounts:pub(block_tree:account(4)),
+    P3 = accounts:pub(block_tree:account(3)),
+    P2 = accounts:pub(block_tree:account(2)),
+    P1 = accounts:pub(block_tree:account(1)),
+    ID = case Pub of 
+	P1 -> 1;
+	P2 -> 2;
+	P3 -> 3;
+	P4 -> 4;
+	P5 -> 5
+    end,
     CreateTx1 = to_channel_tx:create_channel(Partner, 110000, 10000, <<"delegated_1">>, 0),
-    SignedCreateTx1 = sign:sign_tx(CreateTx1, Pub, Priv, tx_pool:accounts()),
+    SignedCreateTx1 = sign:sign_tx(CreateTx1, Pub, Priv, ID, tx_pool:accounts()),
     tx_pool_feeder:absorb(SignedCreateTx1),
     sign_tx:sign(),
     reveal:reveal(),
     block_tree:buy_block(),
-    S = 24005,
+    S = 24004,
     C = read(S),
     D = element(2, element(2, C)),
     D = {channel_block,0,Partner,0,1,[],S,false,259,0,0,0},
     %Example of spending money through a channel.
     A = 1000,
     Tx = channel_manager_feeder:spend(S, A - 1),%send Tx to partner
-    Tx2 = sign:sign_tx(Tx, Pub, Priv, tx_pool:accounts()),%partner runs recieve/3 with 2nd option set to 0, returns Tx2.
+    Tx2 = sign:sign_tx(Tx, Pub, Priv, ID, tx_pool:accounts()),%partner runs recieve/3 with 2nd option set to 0, returns Tx2.
     channel_manager_feeder:recieve(S, -A, Tx2),
 
     %Example of spending to ID rather than ChId.
     B = 2000,
     Tx3 = channel_manager_feeder:spend_account(Partner, B - 1),
-    Tx4 = sign:sign_tx(Tx3, Pub, Priv, tx_pool:accounts()),
+    Tx4 = sign:sign_tx(Tx3, Pub, Priv, ID, tx_pool:accounts()),
     channel_manager_feeder:recieve_account(Partner, -B, Tx4),
 
     %example of hashlocked transaction.
     SH = secrets:new(),
     Amount = -200,
     Tx5 = hashlock(S, Amount, SH),
-    Tx6 = sign:sign_tx(Tx5, Pub, Priv, tx_pool:accounts()),%partner runs recieve_locked_payment/3, and returns Tx6
+    Tx6 = sign:sign_tx(Tx5, Pub, Priv, ID, tx_pool:accounts()),%partner runs recieve_locked_payment/3, and returns Tx6
     channel_manager_feeder:spend_locked_payment(S, Tx6, Amount, SH),%we absorb Tx6.
     Tx7 = channel_manager_feeder:create_unlock_hash(S, secrets:read(SH)),
     %BH = hash:doit(channel_block_tx:bet_code(hd(channel_block_tx:bets(sign:data(Tx6))))),
-    Tx8 = sign:sign_tx(Tx7, Pub, Priv, tx_pool:accounts()),%partner runs unlock_hash/3 and returns Tx8
+    Tx8 = sign:sign_tx(Tx7, Pub, Priv, ID, tx_pool:accounts()),%partner runs unlock_hash/3 and returns Tx8
     channel_manager_feeder:unlock_hash(S, secrets:read(SH), Tx8),
     E = element(2, element(2, read(S))),
     E = {channel_block,0,Partner,-3198,5,[],S,false,259,0,0,0},

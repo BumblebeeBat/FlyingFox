@@ -1,5 +1,5 @@
 -module(to_channel_tx).%used to create a channel, or increase the amount of money in it.
--export([next_top/2,doit/7,tc_increases/1,to_channel/4,create_channel/5,my_side/1,min_ratio/2,test/0,grow_ratio/2,is_tc/1,id/1]).
+-export([next_top/2,doit/7,tc_increases/1,to_channel/4,create_channel/5,create_channel2/6,my_side/1,min_ratio/2,test/0,grow_ratio/2,is_tc/1,id/1]).
 -record(tc, {acc1 = 0, acc2 = 1, nonce = 0, bal1 = 0, bal2 = 0, consensus_flag = <<"delegated_1">>, fee = 0, id = -1, increment = 0}).
 is_tc(X) -> is_record(X, tc).
 id(X) -> X#tc.id.
@@ -25,14 +25,16 @@ good_key(S) -> ((S == <<"delegated_1">>) or (S == <<"delegated_2">>)).
 create_channel(To, MyBalance, TheirBalance, ConsensusFlag, Fee) ->
 %When creating a new channel, you don't choose your own ID for the new channel. It will be selected for you by next available.    
     Id = keys:id(),
+    Tx = create_channel2(Id, To, MyBalance, TheirBalance, ConsensusFlag, Fee),
+    keys:sign(Tx).
+create_channel2(Id, To, MyBalance, TheirBalance, ConsensusFlag, Fee) ->
     Acc = block_tree:account(Id),
     ToAcc = block_tree:account(To),
     true = accounts:balance(Acc) > MyBalance,
     true = accounts:balance(ToAcc) > TheirBalance,
     S = ConsensusFlag,
     true = good_key(S),
-    Tx = #tc{acc1 = Id, acc2 = To, nonce = accounts:nonce(Acc) + 1, bal1 = MyBalance, bal2 = TheirBalance, consensus_flag = ConsensusFlag, fee = Fee, increment = MyBalance + TheirBalance},
-    keys:sign(Tx).
+    #tc{acc1 = Id, acc2 = To, nonce = accounts:nonce(Acc) + 1, bal1 = MyBalance, bal2 = TheirBalance, consensus_flag = ConsensusFlag, fee = Fee, increment = MyBalance + TheirBalance}.
     
 to_channel(ChannelId, Inc1, Inc2, Fee) ->
     Id = keys:id(),
@@ -56,9 +58,9 @@ next_top_helper(Array, Top, DBroot, Channels) ->
     end.
 doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     Tx = sign:data(SignedTx),
-    if
-	Tx#tc.id == -1 -> NewId = sign:revealed(SignedTx);
-	true -> NewId = Tx#tc.id
+    NewId = if
+	Tx#tc.id == -1 -> sign:revealed(SignedTx);
+	true -> Tx#tc.id
     end,
     From = Tx#tc.acc1,
     false = From == Tx#tc.acc2,
@@ -70,54 +72,56 @@ doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     true = Tx#tc.bal2 > -1,
     true = is_integer(Tx#tc.bal1),
     true = is_integer(Tx#tc.bal2),
-    if
-        Channel == EmptyChannel ->
-            NewId2 = next_top(ParentKey, Channels),
-            Balance1 =  - Tx#tc.bal1 - Tx#tc.fee,
-            Balance2 =  - Tx#tc.bal2 - Tx#tc.fee,
-            Increment = Tx#tc.bal1 + Tx#tc.bal2,
-            Increment = Tx#tc.increment,
-            true = Increment > (TotalCoins div constants:max_channel()),
-            Type = Tx#tc.consensus_flag,
-            true = good_key(Type),
-            %check if one of the pubkeys is keys:pubkey().
-            %If so, then add it to the mychannels module.
-            1=1;
-        true ->
-	    Type = channels:type(Channel),
-	    NewId2 = Tx#tc.id,
-	    AccN1 = channels:acc1(Channel),
-	    AccN1 = Tx#tc.acc1,
-	    AccN2 = channels:acc2(Channel),
-	    AccN2 = Tx#tc.acc2,
-	    OldVol = channels:bal1(Channel) + channels:bal2(Channel),
-	    NewVol = Tx#tc.bal1 + Tx#tc.bal2,
-	    Increment = NewVol - OldVol,
-	    Increment = Tx#tc.increment,
-            true = (-1 < Increment),%to_channel can only be used to increase the amount of money in a channel, for consensus reasons. 
-            Balance1 = - Tx#tc.bal1 + channels:bal1(Channel) - Tx#tc.fee,
-            Balance2 = - Tx#tc.bal2 + channels:bal2(Channel) - Tx#tc.fee
-    end,
+    {Increment, Balance1, Balance2, Type, NewId2} = 
+	if
+	    Channel == EmptyChannel ->
+		NI2 = next_top(ParentKey, Channels),
+		B1 =  - Tx#tc.bal1 - Tx#tc.fee,
+		B2 =  - Tx#tc.bal2 - Tx#tc.fee,
+		I = Tx#tc.bal1 + Tx#tc.bal2,
+		I = Tx#tc.increment,
+		true = I > (TotalCoins div constants:max_channel()),%The channel has a minimum possible balance.
+		T = Tx#tc.consensus_flag,
+		true = good_key(T),
+						%check if one of the pubkeys is keys:pubkey().
+						%If so, then add it to the mychannels module.
+		{I, B1, B2, T, NI2};
+	    true ->
+		T = channels:type(Channel),
+		NI2 = Tx#tc.id,
+		AccN1 = channels:acc1(Channel),
+		AccN1 = Tx#tc.acc1,
+		AccN2 = channels:acc2(Channel),
+		AccN2 = Tx#tc.acc2,
+		OldVol = channels:bal1(Channel) + channels:bal2(Channel),
+		NewVol = Tx#tc.bal1 + Tx#tc.bal2,
+		I = NewVol - OldVol,
+		I = Tx#tc.increment,
+		true = (-1 < I),%to_channel can only be used to increase the amount of money in a channel, for consensus reasons. 
+		B1 = - Tx#tc.bal1 + channels:bal1(Channel) - Tx#tc.fee,
+		B2 = - Tx#tc.bal2 + channels:bal2(Channel) - Tx#tc.fee,
+		{I, B1, B2, T, NI2}
+	end,
     Nonce = accounts:nonce(Acc1),
     Nonce = Tx#tc.nonce - 1,
-    case Tx#tc.consensus_flag of
-	<<"delegated_1">> -> 
-	    D1 = Increment,
-	    D2 = 0;
+    {D1, D2} =
+	case Tx#tc.consensus_flag of
+	    <<"delegated_1">> -> 
+	    {Increment, 0};
 	<<"delegated_2">> -> 
-	    D1 = 0,
-	    D2 = Increment
+	    {0, Increment}
     end,
     N1 = accounts:update(Acc1, NewHeight, Balance1, D1, 1, TotalCoins),
     N2 = accounts:update(Acc2, NewHeight, Balance2, D2, 0, TotalCoins),
     true = NewId2 < constants:max_channel(),
-    MyKey = keys:pubkey(),
-    APub1 = accounts:pub(Acc1),
-    APub2 = accounts:pub(Acc2),
+    MyKey = keys:id(),
+    %APub1 = accounts:pub(Acc1),
+    %APub2 = accounts:pub(Acc2),
     Ch = channels:new(Tx#tc.acc1, Tx#tc.acc2, Tx#tc.bal1, Tx#tc.bal2, Type),
     CM_current = channel_manager:read(NewId2),
     if
-	((CM_current == empty) and ((Channel == EmptyChannel) and ((APub1 == MyKey) or (APub2 == MyKey)))) -> 
+	%channel == emptychannel means that we are creating a new channel, rather than increasing the amount of money in an existing one.
+	((CM_current == empty) and ((Channel == EmptyChannel) and ((Tx#tc.acc1 == MyKey) or (Tx#tc.acc2 == MyKey)))) -> 
 	    channel_partner:new_channel(NewId2, Ch, Accounts),
 	    channel_manager_feeder:new_channel(NewId2, Ch, Accounts);
 	true -> 1=1

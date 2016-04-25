@@ -29,6 +29,8 @@ digest([SignedTx|Txs], ParentKey, Channels, Accounts, TotalCoins, SecretHashes, 
             da -> delete_account_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
             slasher_tx -> 
 		slasher_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
+            fork_slash_tx -> 
+		fork_slash_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
             reveal -> reveal_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes);
             tc -> to_channel_tx:doit(SignedTx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
             signed_cb -> channel_block_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
@@ -36,9 +38,9 @@ digest([SignedTx|Txs], ParentKey, Channels, Accounts, TotalCoins, SecretHashes, 
             channel_slash -> channel_slash_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
             channel_close -> channel_close_tx:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
 	    reveal_tx -> reveal:doit(Tx, ParentKey, Channels, Accounts, TotalCoins, SecretHashes, NewHeight);
-            _ -> 
+            X -> 
 		io:fwrite(packer:pack(Tx)),
-		1=2
+		X=2
         end,
     digest(Txs, ParentKey, NewChannels, NewAccounts, NewTotalCoins, NewSecretHashes, NewHeight).
 

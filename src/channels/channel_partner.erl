@@ -9,13 +9,14 @@
 init(ok) -> 
     process_flag(trap_exit, true),
     X = db:read(?LOC),
-    if
-        X == "" -> 
-            K = dict:new(),
-            db:save(?LOC,K);
-        true -> K = X
-    end,
-    {ok, K}.
+    Ka = if
+	     X == "" -> 
+		 K = dict:new(),
+		 db:save(?LOC,K),
+		 K;
+	     true -> X
+	 end,
+    {ok, Ka}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 terminate(_, K) -> 
@@ -55,7 +56,7 @@ read(ChId) ->
     end.
 delete(ChId) -> gen_server:call(?MODULE, {delete, ChId}).
 new_channel(ChId, Channel, Accounts) ->
-    Ch = channel_block_tx:channel_block_from_channel(ChId, Channel, 0, 1, constants:max_reveal()-1, 0, [], Accounts),
-    Out = store(ChId, Ch).
+    Ch = keys:sign(channel_block_tx:channel_block_from_channel(ChId, Channel, 0, 1, constants:max_reveal()-1, 0, []), Accounts),
+    store(ChId, Ch).
 
     

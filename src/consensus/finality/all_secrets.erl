@@ -10,13 +10,14 @@ read() -> db:read(?LOC).
 init(ok) -> 
     process_flag(trap_exit, true),
     X = read(),
-    if
-        X == "" -> 
-            K = #x{},
-	    save(K);
-        true -> K = bytes2database(X)
-    end,
-    {ok, K}.
+    Ka = if
+	     X == "" -> 
+		 K = #x{},
+		 save(K),
+		 K;
+	     true -> bytes2database(X)
+	 end,
+    {ok, Ka}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 terminate(_, K) -> 

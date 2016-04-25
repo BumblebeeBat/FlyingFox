@@ -61,18 +61,8 @@ fresh_sync(IP, Port, PeerData) ->
 	    accounts:reset(),
 	    channels:reset(),
 	    DBRoot = backup:hash(),
-	    io:fwrite("to finality from "),
-	    io:fwrite(integer_to_list(N - constants:max_reveal() - 1)),
-	    io:fwrite(" till "),
-	    io:fwrite(integer_to_list(N - constants:min_reveal() - 2)),
-	    io:fwrite("\n"),
 	    blocks_to_finality(N - constants:max_reveal() - 1, N - constants:finality() - 1, IP, Port),
 	    block_tree:reset(),
-	    io:fwrite("get blocks from "),
-	    io:fwrite(integer_to_list(N - constants:min_reveal() - 1)),
-	    io:fwrite(" till "),
-	    io:fwrite(integer_to_list(TheirHeight)),
-	    io:fwrite("\n"),
 	    get_blocks(N - constants:finality() - 1, TheirHeight, IP, Port)
     end,
     0.
@@ -88,9 +78,6 @@ blocks_to_finality(Start, Finish, IP, Port) ->
 give_blocks(Start, Finish, _, _) when Start>Finish -> ok;
 give_blocks(Start, Finish, IP, Port) ->
     Block = block_tree:read_int(Start),
-    %io:fwrite("block "),
-    %io:fwrite(packer:pack(Block)),
-    %io:fwrite("\n"),
     T = case talker:talk({give_block, Block}, IP, Port) of
 	    {ok, 0} -> 1;
 	    {error, _} -> 0
@@ -104,9 +91,9 @@ get_blocks(Start, Finish, IP, Port) ->
     get_blocks(Start + 1, Finish, IP, Port).
 absorb_txs([]) -> ok;
 absorb_txs([Tx|T]) -> 
-    io:fwrite("attempt to absorb tx "),
-    io:fwrite(packer:pack(Tx)),
-    io:fwrite("\n"),
+    %io:fwrite("attempt to absorb tx "),
+    %io:fwrite(packer:pack(Tx)),
+    %io:fwrite("\n"),
     tx_pool_feeder:absorb(Tx),
     absorb_txs(T).
 get_txs(IP, Port) ->

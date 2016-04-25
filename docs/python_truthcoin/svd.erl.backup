@@ -1,0 +1,80 @@
+-module(svd).
+-export([svd/1, test/0]).
+-define(zero, fractions:new(0, 1)).
+-define(one, fractions:new(1, 1)).
+-define(tol, fractions:new(1, 1000000000000000000000000000000)).
+-define(eps, fractions:new(1, 100000000000000)).
+svd(A) ->
+    % Golub and Reinsch state that eps should not be smaller than the
+    % machine precision, ie the smallest number
+    % for which 1+e>1.  tol should be beta/e where beta is the smallest
+    % positive number representable in the computer.
+    true = fractions:smaller_than(?zero, ?tol),
+    true = fractions:smaller_than(?one, fractions:add(?one, ?eps)),
+    Itmax = 50,
+    M = length(A),
+    N = length(hd(A)),
+    true = M > N, 
+    E = make_list(N, ?zero),
+    V = make_list(N, E),
+    {U, G, E2, Q, X} = householders_reduction_to_bidiagonal(M, A, E, E, 0, ?zero, ?zero, N, 0),
+    {V2, G2} = accumulation_right_transformations(N, G, U, E2, 0)
+,
+    {U2, S} = accumulation_left_transformations(N, ?zero, U, Q, 0),
+    Eps2 = Eps * X,
+    {U3, Q2, V3} = diagonalization_bidiagonal_form(N, Itmax, E2, Q, U2, Eps2, 0),
+    ok.
+householders_reduction_to_bidiagonal(M, U, Q, E, G, X, N, N) ->
+    {U, G, E, Q, X}.
+householders_reduction_to_bidiagonal(M, U, Q, E, G, X, I, N) ->
+    E2 = fractions:set_element(E, I, G),
+    %{A, [_|B]} = lists:split(I, E),
+    %E2 = A ++ [G] ++ B,
+    S = hrtb1(U, I, I, M),
+    Bool = not(fractions:less_than(?tol, S)),
+    {G2, S2, U2, Q2} = 
+	if
+	    Bool -> {?zero, S, U, Q};
+	    true ->
+		F = fractions:element(I, fractions:element(I, U)),
+		Bool2 = fractions:less_than(F, ?zero),
+		G03 = fractions:sqrt(S),
+		G3 = if Bool2 -> G03; true -> -G03 end,
+		H = fractions:subtract(fractions:multiply(G3, F), S),
+		U01 = fractions:set_element_matrix(U, I, I, fractions:subtract(F, G)),
+		U02 = hrtb2(L, I, M, U01, H, L, N),
+		Q01 = fractions:set_element(Q, I, G),
+		S01 = hrtb1(?zero, U02, L, N),
+    ok.
+hrtb2(L, I, M, N, U, H, N, N) -> U;
+hrtb2(L, I, M, N, U, H, J, N) ->
+    S = hrtb1(U, L, L, N),
+    F = fractions:div(S, H),
+    U2 = hrb3(J, U, F, I, I, M),
+    hrtb2(L, I, M, N, U2, H, J+1, N).
+hrtb3(_, U, _, _, M, M) -> U;
+hrtb3(J, U, F, I, K, M) ->
+    A = fractions:element(I, fractions:element(K, U)),
+    B = fractions:element(J, fractions:element(K, U)),
+    C = fractions:multiply(A, F),
+    X = fractions:add(B, C),
+    U2 = fractions:set_element_matrix(U, K, J, X),
+    hrtb3(J, U2, I, K+1, M).
+    
+hrtb1(_, _, M, M) -> ?zero;
+hrtb1(U, I, J, M) -> 
+    A = fractions:element(I, fractions:element(J, U)),
+    B = fractions:element(J, fractions:element(I, U)),
+    X = fractions:multiply(A, B),
+    Y = hrtb1(U, I, J+1, M),
+    fractions:add(X, Y).
+accumulation_left_transformations(N, G, U, E, I) ->
+    0.
+accumulation_right_transformations(N, G, U, E, I) ->
+    V.
+    
+make_list(0, _) -> [];
+make_list(Size, Item) ->
+    [Item|make_list(Size - 1)].
+test() ->
+    ok.

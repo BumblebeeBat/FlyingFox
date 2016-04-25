@@ -24,6 +24,7 @@ terminate(_Reason, _Req, _State) -> ok.
 -define(WORD, 10000000).%10 megabytes.
 doit({pubkey}) -> {ok, keys:pubkey()};
 doit({height}) -> {ok, block_tree:height()};
+doit({total_coins}) -> {ok, block_tree:total_coins()};
 doit({give_block, SignedBlock}) -> 
     block_tree:absorb([SignedBlock]),
     {ok, 0};
@@ -88,7 +89,7 @@ doit({unlock, ChId, Secret, SignedCh}) ->
     BH = hash:doit(BetCode),
     Bet = arbitrage:bet_find(BH, Bets),
     Amount = channel_block_tx:bet_amount(Bet),
-    L = arbitrage:check_hash(BH),%[{ChIdLose, ChIdGain, Amount}...]
+    %L = arbitrage:check_hash(BH),%[{ChIdLose, ChIdGain, Amount}...]
     ChId2 = arbitrage:check_loser(BetCode, ChId, Amount*2),
     Ch = block_tree:channel(ChId2),
     Acc1 = channels:acc1(Ch),
@@ -144,9 +145,6 @@ doit({new_channel, SignedTx}) ->
     %make sure the Tx is more than 1/2 funded by the other person.
     %make sure the amount of money is below some limit.
     Tx = sign:data(SignedTx),
-    io:fwrite("min ratio tx "),
-    io:fwrite(packer:pack(Tx)),
-    io:fwrite("\n"),
     true = to_channel_tx:min_ratio(free_constants:liquidity_ratio(), Tx),
     %true = to_channel_tx:half_them(Tx),
     MC = free_constants:max_channel(), 

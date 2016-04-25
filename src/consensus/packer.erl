@@ -5,10 +5,12 @@
 untup(X) when is_tuple(X) -> lists:map(fun(Z) ->untup(Z) end, tuple_to_list(X));
 untup(X) when is_list(X) -> [?KEY|lists:map(fun(Z)->untup(Z) end,X)];
 untup(X) when is_binary(X) -> base64:encode(X);
+%untup(X) when is_binary(X) -> X; %bad
 untup(X) -> X.
 unpack(I) when is_integer(I) -> I;
 unpack(JSON) -> unpack_helper(jiffy:decode(JSON)).
 unpack_helper(J) when is_binary(J) -> base64:decode(J);
+%unpack_helper(J) when is_binary(J) -> J;%bad
 unpack_helper(J) when not is_list(J) -> J;
 unpack_helper(J) when hd(J) == ?KEY -> 
     lists:map(fun(X) -> unpack_helper(X) end, tl(J));

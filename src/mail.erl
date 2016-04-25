@@ -66,9 +66,6 @@ pop(Account, Hashe) ->
 	{ok, Y} -> pop3(Account, Y)
     end.
 pop3(From, M) ->
-    io:fwrite("pop2 M "),
-    io:fwrite(packer:pack(M)),
-    io:fwrite("\n"),
     S = M#msg.lasts,
     if
 	S == unlock ->
@@ -79,9 +76,6 @@ pop3(From, M) ->
 	    Msg = M#msg.msg,
 	    T = ((erlang:monotonic_time() - M#msg.start) div 1000) + 2000000,%2 second fee automatically.
 						%T = timer:now_diff(erlang:monotonic_time(), M#msg.start) + 2000000,%2 second fee automatically.
-	    io:fwrite("M is "),
-	    io:fwrite(packer:pack(M)),
-	    io:fwrite("\n"),
 	    Cost = cost(size(Msg), M#msg.lasts),
 	    R = (M#msg.lasts * 1000000),
 	    Refund = ((R - T) * Cost) div R,
@@ -129,7 +123,19 @@ test() ->
     reveal:reveal(),
     block_tree:buy_block(),
     CreateTx1 = to_channel_tx:create_channel(3, 110000, 1000, <<"delegated_1">>, 0),
-    SignedCreateTx1 = sign:sign_tx(CreateTx1, Pub, Priv, tx_pool:accounts()),
+    P5 = accounts:pub(block_tree:account(5)),
+    P4 = accounts:pub(block_tree:account(4)),
+    P3 = accounts:pub(block_tree:account(3)),
+    P2 = accounts:pub(block_tree:account(2)),
+    P1 = accounts:pub(block_tree:account(1)),
+    ID = case Pub of 
+	P1 -> 1;
+	P2 -> 2;
+	P3 -> 3;
+	P4 -> 4;
+	P5 -> 5
+    end,
+    SignedCreateTx1 = sign:sign_tx(CreateTx1, Pub, Priv, ID, tx_pool:accounts()),
     tx_pool_feeder:absorb(SignedCreateTx1),
     sign_tx:sign(),
     reveal:reveal(),
@@ -138,14 +144,7 @@ test() ->
     Msg = <<"test">>,
     gen_server:cast(?MODULE, {send, 3, Msg, 0}),
     gen_server:cast(?MODULE, {send, 3, Msg, 0}),
-    %io:fwrite(pop_hashes(3)),
     PH = pop_hashes(3),
     {ok, Out} = gen_server:call(?MODULE, {pop, 3, hd(PH)}),
-    io:fwrite("msg "),
-    io:fwrite(packer:pack(Msg)),
-    io:fwrite("\n"),
-    io:fwrite("out "),
-    io:fwrite(packer:pack(Out)),
-    io:fwrite("\n"),
     Msg = Out#msg.msg,
     success.

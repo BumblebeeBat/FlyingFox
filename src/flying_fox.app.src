@@ -6,9 +6,11 @@
   {applications, [
                   kernel,
                   stdlib,
+		  ssl,
 		  cowboy,
                   jiffy
                  ]},
+  {modules, []},
   {mod, { flying_fox_app, []}},
   {env, []}
  ]}.

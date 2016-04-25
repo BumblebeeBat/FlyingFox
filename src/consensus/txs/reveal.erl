@@ -13,15 +13,12 @@ reveal2(Id, Start, End) ->%This is an inefficient implementation. Checks all 9 *
 	true ->
 	    case block_tree:read_int(Start) of
 		<<"none">> -> 
-		    io:fwrite("no such block\n "),
-		    %io:fwrite(integer_to_list(Start)),
 		    before_finality;
 		OriginBlock ->
 		    Block = sign:data(OriginBlock),
 		    OriginTxs = block_tree:block2txs(Block),
 		    case origin_tx(OriginTxs, Id) of
 			<<"none">> -> 
-			    io:fwrite("did not sign\n"),
 			    did_not_sign;
 			X ->
 			    SH = sign_tx:secret_hash(X),
@@ -29,7 +26,6 @@ reveal2(Id, Start, End) ->%This is an inefficient implementation. Checks all 9 *
 			    Secret = secrets:read(SH),
 			    if
 				Secret == <<"none">> ->
-				    io:fwrite("lost the sign\n"),
 				    lost_the_secret;
 				not BTS ->
 				    already_did_it;

@@ -44,28 +44,31 @@ binary_repeat(Times, B) -> binary_repeat(Times, B, <<>>).
 binary_repeat(0, _, X) -> X;
 binary_repeat(Times, B, X) -> binary_repeat(Times - 1, B, <<B/binary, X/binary>>).
 init(ok) -> 
-    case file:read_file(?empty) of
-        {error, enoent} -> 
-	    %constants:initial_channels(),
-	    %create this many channels between account 0 and itself. Store the majority of 0's money in these channels. 
-	    %this is so 0 has the majority of delegations.
-	    IC = constants:initial_coins(),
-	    Delegated = fractions:multiply_int(constants:initial_portion_delegated(), IC),
-	    Top = constants:initial_channels(),
-	    MoneyPerChannel = Delegated div Top,
-	    DeletedArray = all_ones(Top),
-	    Channel = <<0:32,0:32,MoneyPerChannel:48,0:48,0:1,0:32,0:38,1:2,0:1,0:6>>,
-	    Channels = binary_repeat(Top, Channel),
-            write_helper(0, DeletedArray, ?empty),
-            write_helper(0, Channels, ?file);
-	%Top = 0,
-	%DeletedArray = << 0 >>,
-	%write_helper(0, DeletedArray, ?empty),
-	%write_helper(0, <<>>, ?file);
-        {ok, DeletedArray} ->
-            Top = walk(0, DeletedArray)
-    end,
-    {ok, {Top, DeletedArray}}.
+    {T, D} = 
+	case file:read_file(?empty) of
+	    {error, enoent} -> 
+						%constants:initial_channels(),
+						%create this many channels between account 0 and itself. Store the majority of 0's money in these channels. 
+						%this is so 0 has the majority of delegations.
+		IC = constants:initial_coins(),
+		Delegated = fractions:multiply_int(constants:initial_portion_delegated(), IC),
+		Top = constants:initial_channels(),
+		MoneyPerChannel = Delegated div Top,
+		DeletedArray = all_ones(Top),
+		Channel = <<0:32,0:32,MoneyPerChannel:48,0:48,0:1,0:32,0:38,1:2,0:1,0:6>>,
+		Channels = binary_repeat(Top, Channel),
+		write_helper(0, DeletedArray, ?empty),
+		write_helper(0, Channels, ?file),
+		{Top, DeletedArray};
+						%Top = 0,
+						%DeletedArray = << 0 >>,
+						%write_helper(0, DeletedArray, ?empty),
+						%write_helper(0, <<>>, ?file);
+	    {ok, DeletedArray} ->
+		Top = walk(0, DeletedArray),
+		{Top, DeletedArray}
+	end,
+    {ok, {T, D}}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, ok, []).
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 terminate(_, _) -> io:format("died!"), ok.
