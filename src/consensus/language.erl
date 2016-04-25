@@ -97,8 +97,6 @@ run([38|Code], Functions, Variables, Alt, [B|Stack], Gas) ->%call
 	error -> 
 	    io:fwrite("is not a function: "),
 	    io:fwrite(packer:pack(B)),
-	    io:fwrite("\n error in call, known functions: "),
-	    io:fwrite(packer:pack(dict:fetch_keys(Functions))),
 	    io:fwrite("\n"),
 	    io:fwrite("undefined function");
 	{ok, F} ->
@@ -394,8 +392,6 @@ test() ->
     true = [0, 8, 5] == run(assemble(Code1), 1000),
     Two = hash:doit(2),
     HTwo = hash:doit(Two),
-    io:fwrite(packer:pack([Two] ++ hashlock(HTwo))),
-    io:fwrite("\n"),
     [2,{f,1,1},{f,0,1}] = run([Two] ++ hashlock(HTwo), 1000),
     [1,{f,0,1},{f,0,1}] = run([hash:doit(3)] ++ hashlock(HTwo), 1000),
     %H30 = [dup, dup, {integer, 5}, plus, plus, plus],

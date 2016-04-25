@@ -3,9 +3,6 @@
 -record(fork_slash_tx, {acc = 0, nonce = 0, sign_tx = 0, number = 0}).%number is a block that the transgressor signed over on the main chain. That is the signature who's deposit will be slashed.
 slasher(Acc, SignTx, N) -> 
     A = block_tree:account(Acc),
-    io:fwrite("N is "),
-    io:fwrite(integer_to_list(N)),
-    io:fwrite("\n"),
     #fork_slash_tx{acc = Acc, nonce = accounts:nonce(A) + 1, sign_tx = SignTx, number = N}.
     
 doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->

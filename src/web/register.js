@@ -2,9 +2,6 @@
 local_get(["sync", IP, Port]);
 variable_get(["channel_keys"], function(x) {register_doit(x)});
 function register_doit(x) {
-    console.log("wait for id");
-    console.log("x is ");
-    console.log(x);
     if (typeof x == 'undefined'){
 	setTimeout(function() {variable_get(["channel_keys"], function(x) {register_doit(x)});}, 1000);
     } else if ( ( x.length == 1 ) && ( x.pop() == -6 ) ) {
@@ -22,10 +19,5 @@ function new_channel(id) {
 }
 function new_channel2(id, bal) {
     C = Math.min(Math.floor(bal/2), 1000000);
-    console.log("new channel");
-    console.log("id is ");
-    console.log(id);
     local_get(["new_channel", IP, Port, C, Math.floor(C/1.1), 50]);
-    console.log("after new channel");
-    address2(id);
 }

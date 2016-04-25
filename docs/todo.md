@@ -1,4 +1,4 @@
-Building an executable of the software for windows is very important. It needs to include logging, for easy error reporting.
+Building an executable of the software for windows is very important. It needs to include logging, for easy error reporting. That way if a user experiences an error, it is easy for them to show us what went wrong.
 
 http://stackoverflow.com/questions/11796941/how-do-you-compile-an-erlang-program-into-a-standalone-windows-executable
 

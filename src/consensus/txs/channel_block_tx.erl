@@ -187,17 +187,9 @@ bet_results([B|Bets], [Y|Revealed], BetAmount, {Win1, Win2, Loss}) when not is_l
     X = {Win1, Win2, Loss+B#bet.amount},
     bet_results(Bets, Revealed, BetAmount, X);
 bet_results([B|Bets], [R|Revealed], BA, {Win1, Win2, Loss}) ->
-    io:fwrite("bet results r is "),
-    io:fwrite(packer:pack(R)),
-    io:fwrite("\n"),
     {_, X, Del} = language:run_script(R++B#bet.code, constants:gas_limit()),
     true = fractions:is_fraction(X),
     true = fractions:is_fraction(Del),
-    io:fwrite("X is "),
-    io:fwrite(packer:pack(X)),
-    io:fwrite("\n"),
-
-    %X = hd(tl(language:run(R++B#bet.code))),
     Y = fractions:subtract(fractions:subtract(fractions:new(1, 1), X), Del),
     TooSmall1 = fractions:less_than(X, fractions:new(0, 1)),
     TooSmall2 = fractions:less_than(Del, fractions:new(0, 1)),

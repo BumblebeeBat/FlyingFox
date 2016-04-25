@@ -66,9 +66,6 @@ pop(Account, Hashe) ->
 	{ok, Y} -> pop3(Account, Y)
     end.
 pop3(From, M) ->
-    io:fwrite("pop2 M "),
-    io:fwrite(packer:pack(M)),
-    io:fwrite("\n"),
     S = M#msg.lasts,
     if
 	S == unlock ->
@@ -79,9 +76,6 @@ pop3(From, M) ->
 	    Msg = M#msg.msg,
 	    T = ((erlang:monotonic_time() - M#msg.start) div 1000) + 2000000,%2 second fee automatically.
 						%T = timer:now_diff(erlang:monotonic_time(), M#msg.start) + 2000000,%2 second fee automatically.
-	    io:fwrite("M is "),
-	    io:fwrite(packer:pack(M)),
-	    io:fwrite("\n"),
 	    Cost = cost(size(Msg), M#msg.lasts),
 	    R = (M#msg.lasts * 1000000),
 	    Refund = ((R - T) * Cost) div R,
@@ -150,14 +144,7 @@ test() ->
     Msg = <<"test">>,
     gen_server:cast(?MODULE, {send, 3, Msg, 0}),
     gen_server:cast(?MODULE, {send, 3, Msg, 0}),
-    %io:fwrite(pop_hashes(3)),
     PH = pop_hashes(3),
     {ok, Out} = gen_server:call(?MODULE, {pop, 3, hd(PH)}),
-    io:fwrite("msg "),
-    io:fwrite(packer:pack(Msg)),
-    io:fwrite("\n"),
-    io:fwrite("out "),
-    io:fwrite(packer:pack(Out)),
-    io:fwrite("\n"),
     Msg = Out#msg.msg,
     success.

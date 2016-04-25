@@ -13,9 +13,6 @@ empty_block() -> #block{}.
 x_to_block(X) -> X#x.block.
 init(ok) -> 
     SignedBlock = block_finality:top_block(),
-    io:fwrite("top block "),
-    io:fwrite(packer:pack(SignedBlock)),
-    io:fwrite("\n"),
     Block = sign:data(SignedBlock),
     N = Block#block.number,
     X = #x{block = SignedBlock, height = N},
@@ -431,15 +428,6 @@ test() ->
     SplitHashlock = language:run([hash:hash(<<"28">>)] ++ language:hashlock(SH), 1000),
     SplitHashlock = [1, {f, 0, 1}, {f, 0, 1}],
     ChannelHashlock11 = channel_manager:hashlock(24001, ChannelHashlock01, 40, SH, 1),
-    io:fwrite("\n"),
-    io:fwrite("\n"),
-    io:fwrite("\n"),
-    io:fwrite("spend 40 "),
-    io:fwrite(packer:pack(ChannelHashlock11)),
-    io:fwrite("\n"),
-    io:fwrite(packer:pack(channel(24001))),
-    io:fwrite("\n"),
-    io:fwrite("\n"),
     SignedChannelHashlock11 = sign_tx( sign_tx(ChannelHashlock11, Pub, Priv), Pub2, Priv2, 2),
     SignedChannelHashlock21 = sign_tx(channel_timeout_tx:timeout_channel(2, sign:set_revealed(SignedChannelHashlock11, [[hash:doit(1)]])), Pub2, Priv2, 2),
     tx_pool_feeder:absorb(SignedChannelHashlock21),
@@ -450,9 +438,6 @@ test() ->
     %Two problems here. 
     %First off, the bet is only changing the balance by 15, not 30. Probably language:hashlock needs to change a fraction from 1/2 to 1/1.
     %Money is being printed from no where.
-    io:fwrite("signed channel hashlock 22"),
-    io:fwrite(packer:pack(SignedChannelHashlock22)),
-    io:fwrite("\n"),
     tx_pool_feeder:absorb(SignedChannelHashlock22),
     sign_tx:sign(),
     buy_block(),

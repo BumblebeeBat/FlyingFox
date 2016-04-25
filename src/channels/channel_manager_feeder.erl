@@ -32,52 +32,19 @@ handle_call({locked_payment, ChId, SignedChannel, Amount, SecretHash, Spend}, _F
     ID = keys:id(),
     Bet = hd(channel_block_tx:bets(NewCh)),
     A = channel_block_tx:bet_amount(Bet),
-    io:fwrite("bet is "),
-    io:fwrite(packer:pack(Bet)),
-    io:fwrite("\n"),
-    io:fwrite("A is "),
-    io:fwrite(integer_to_list(A)),
-    io:fwrite("\n"),
-    io:fwrite("wants to be "),
-    io:fwrite(integer_to_list(channel_block_tx:bet_amount(Bet))),
-    io:fwrite("\n"),
-    %BetTo = (2 * channel_block_tx:bet_to(Bet)) - 1,
     AA = A,
     AA = abs(Amount div 2),
     To1 = case ID of
 	     Acc1 -> 1;
 	     Acc2 -> -1
 	 end,
-    %To = if
-    %Amount > 0 -> -To1;
-    %true -> To1
-					      %end,
     To = if
 	     Spend -> -To1;
 	     true -> To1
 	 end,
-    %To = if 
-   %Spend -> 
-    %true = (A * TT) < 0,
-		 %(TT+1) div 2;
-    %TT;
-    %true -> 
-    %true = (A * TT) > 0,
-		 %-((TT-1) div 2)
-    %-TT
-%end,
     SecretHash = language:extract_sh(channel_block_tx:bet_code(Bet)),
     Script = language:hashlock(SecretHash),
     NewCha = channel_block_tx:add_bet(Ch2, 2*A, Script, To),%this ensures that they didn't adjust anything else in the channel besides the amount and nonce and bet.
-    io:fwrite("Ch2 is "),
-    io:fwrite(packer:pack(Ch2)),
-    io:fwrite("\n"),
-    io:fwrite("NewCh is "),
-    io:fwrite(packer:pack(NewCh)),
-    io:fwrite("\n"),
-    io:fwrite("NewCha is "),
-    io:fwrite(packer:pack(NewCha)),
-    io:fwrite("\n"),
     NewCh = NewCha,
     NewF = #f{channel = SignedChannel, unlock = [[28]|F#f.unlock]},
     channel_manager:store(ChId, NewF),
@@ -171,12 +138,6 @@ common(ChId, Secret) ->
     SecretHash = hash:doit(Secret),
     OldCh = read_channel(ChId),
     Bets = channel_block_tx:bets(OldCh),
-    io:fwrite("bets are "),
-    io:fwrite(packer:pack(Bets)),
-    io:fwrite("\n"),
-    io:fwrite("secret hash is "),
-    io:fwrite(packer:pack(SecretHash)),
-    io:fwrite("\n"),
     N = match_n(SecretHash, Bets),%if the bets were numbered in order, N is the bet we are unlocking.
     Bet = nth(N, Bets),
     A = channel_block_tx:bet_amount(Bet),

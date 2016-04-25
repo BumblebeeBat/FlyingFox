@@ -9,8 +9,6 @@ is_fraction(_) -> true.
 sqrt({f, A, B}) ->
     sqrt_helper({f, A, B}, {f, 1, 2}).
 sqrt_helper(A, Guess) ->
-    io:fwrite(packer:pack(Guess)),
-    io:fwrite("\n"),
     B = subtract(A, multiply(Guess, Guess)),
     Bool = (less_than(B, {f, 1, 1000}) and (not less_than(B, {f, -1, 1000}))), %correct to 8 decimal places.
     if
