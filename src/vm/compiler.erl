@@ -13,21 +13,17 @@ compile(A) ->
     Words = to_words(D, <<>>, []),
     Macros = get_macros(Words),
     YWords = remove_macros(Words),
-    %ZWords = apply_macros(Macros, YWords),
-    Functions = get_functions(YWords),
-    AWords = remove_functions(YWords),
+    ZWords = apply_macros(Macros, YWords),
+    Functions = get_functions(ZWords),
+    AWords = remove_functions(ZWords),
     BWords = apply_functions(AWords, Functions),
-    CWords = apply_macros(Macros, BWords),
+    %CWords = apply_macros(Macros, BWords),
     reuse_name_check(Macros, Functions),
-    to_opcodes(CWords, Functions, []).
+    to_opcodes(BWords, Functions, []).
 add_spaces(B) -> add_spaces(B, <<"">>).
 reuse_name_check(Macros, Functions) ->
     MacroKeys = dict:fetch_keys(Macros),
     FunctionKeys = dict:fetch_keys(Functions),
-    %io:fwrite("error. you can't reuse the same name for both a function and a macro."),
-    %io:fwrite(packer:pack(FunctionKeys)),
-    %io:fwrite("\n"),
-    io:fwrite(packer:pack(MacroKeys ++ FunctionKeys)),
     L = repeats(MacroKeys ++ FunctionKeys),
     Bool = 0 == length(L),
     if
