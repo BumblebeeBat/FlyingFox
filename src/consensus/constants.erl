@@ -11,7 +11,7 @@ finality() -> 26.%/docs/security.py explains why.
 validators_elected_per_block() -> 54.
 minimum_validators_per_block() -> 36.
 chances_per_address() -> 200. %Each address has this many chances to be a validator per block. this makes it possible to be validator more than once on the same block. 
-master_pub() -> <<"BI18O+ZiQXHw3MGWh4AoopljVHC3JO7zlPfPZuAPENrSCXMyalVfsMmvYQfxADPvJbiQ+P0KFD3ZoBhy9P4k3y8=">>.
+master_pub() -> <<"BJb31Voe6kHdXlEmTdK8nxeOxp/UK7zrTtTZ1aVRlE/gxNWj2Rebx+BmHgDnTe80sq1fRMPRXjE5ny7cw9e4rAw=">>.
 max_size() -> 2000000000.%should be 2 gigabytes, does not include old blocks.
 gas_limit() -> 1000000.%30,000 is enough for an oracle with 30 elements in the matrix. For example 5 oracle participants and 6 decisions.
     
