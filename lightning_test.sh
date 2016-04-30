@@ -1,3 +1,6 @@
+#this quickly tests lightning payments. It is a lot faster and easier than using the browser to test the same thing.
+
+#first run lightning_test_setup to copy the software into 2 other directories.
 #Open up 3 terminals. 
 #Copy the Flying Fox install directory so you have 3 copies. 
 #Set all 3 passwords to "abc". Use the command keys:new("abc"), then copy keys.db to keys_backup.

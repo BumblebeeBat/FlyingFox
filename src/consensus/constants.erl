@@ -62,7 +62,7 @@ portion_of_block_creation_fee_validators() -> ?PBCFV.
 slasher_reward() -> ?SReward.
 -define(BR, fractions:new(1, 1000)).%spending 1000 coins necessarily burns ~1.
 burn_ratio() -> ?BR.
-root() -> "".
+root() -> "data/".
 database() -> root() ++ "database.db".
 entropy() -> root() ++ "entropy.db".
 channel_manager() -> root() ++ "channel_manager.db".

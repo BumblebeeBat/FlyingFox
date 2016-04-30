@@ -1,5 +1,5 @@
 touch temp.db
-rm *.db
+rm data/*.db
 
 if [ -d "backup" ]
 then
@@ -9,7 +9,7 @@ else
     mkdir backup
 fi
 
-if [ -e "keys_backup" ]
+if [ -e "data/keys_backup" ]
 then
-    cp keys_backup keys.db
+    cp data/keys_backup data/keys.db
 fi

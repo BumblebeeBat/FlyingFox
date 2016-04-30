@@ -21,5 +21,6 @@ test() ->
     T = doit("check", 1000),
     X = oracle:test(),
     X = doit("oracle", 180000),
-    success.
+    doit("test", 10000).
+    %success.
     

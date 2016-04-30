@@ -1,3 +1,5 @@
+#this sets up the other 2 copies of the software so we can run the lightning test.
+
 rm -r ../FlyingFox2
 rm -r ../FlyingFox3
 cp -r . ../FlyingFox2

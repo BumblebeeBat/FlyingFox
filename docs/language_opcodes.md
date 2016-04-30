@@ -84,7 +84,7 @@ opcode_number
 
 41 recurse %crash. this word should only be used in the definition of a word.
 
-42 match ( P X -- true/false )Use the binary to look up a defined word. Make sure the word matches the code that follows 'match', otherwise crash. P is a function, X is an integer.
+42 match ( P X -- true/false ) Takes 2 functions as input. One of the functions is a format. If the other function matches the format, then it returns true, otherwise it returns false. The format has several wild cards. -9 is used for recursively refering to itself. -10 is the code for any integer. -13 is for any fraction. -12 is for anything besides the call opcode. -11 is for anything.
 
 43 rem % (A B -- C) only works for integers.
 

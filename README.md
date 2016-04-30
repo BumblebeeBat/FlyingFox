@@ -21,7 +21,9 @@ Facts about Flying Fox:
 
 *Rate of coin creation adjusts to match demand
 
-Code of conduct, development guidelines: Submit pull requests. If I like your code, and it passes tests, I will accept it. Feel free to ask me questions or make github issues.
+---Code of conduct, development guidelines: Submit pull requests. If I like your code, and it passes tests, I will accept it. Feel free to ask me questions or make github issues.
+
+---Installing
 
 Flying Fox has an executable version for 64 bit linux. You can get it here: https://github.com/BumblebeeBat/FFLinuxExecutable64
 
