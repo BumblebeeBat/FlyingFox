@@ -8,6 +8,7 @@ testF(EPub, Priv) ->
     F = compiler:compile(<< <<" binary ">>/binary, Sig0/binary,
       <<"    binary YWJj
 	     binary ">>/binary,  EPub/binary, <<"
+             print
 	     verify_sig
 	     ">>/binary >>),
     [true] = language:run(F, 1000).

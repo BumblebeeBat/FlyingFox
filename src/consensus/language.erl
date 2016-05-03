@@ -134,10 +134,10 @@ run([28|_], _, _, _, _, _) -> %die. Neither person gets money.
     [delete];
 run([44|Code], Functions, Vars, Alt, [Name|[Value|Stack]], Gas) when is_binary(Value)-> %store
     NVars = dict:store(Name, Value, Vars),
-    run(Code, Functions, NVars, Alt, Stack, Gas-(cost(44)*size(Value)));
+    run(Code, Functions, NVars, Alt, Stack, Gas-(cost(44)+size(Value)));
 run([44|Code], Functions, Vars, Alt, [Name|[Value|Stack]], Gas) when is_list(Value)-> %store
     NVars = dict:store(Name, Value, Vars),
-    run(Code, Functions, NVars, Alt, Stack, Gas-(cost(44)*length(Value)));
+    run(Code, Functions, NVars, Alt, Stack, Gas-(cost(44)+length(Value)));
 run([44|Code], Functions, Vars, Alt, [Name|[Value|Stack]], Gas) -> %store
     NVars = dict:store(Name, Value, Vars),
     run(Code, Functions, NVars, Alt, Stack, Gas-cost(44));
@@ -159,6 +159,7 @@ run([Word|Code], Functions, Vars, Alt, Stack, Gas) ->
 run_helper(0, [H|Stack]) -> 
     [hash:doit(H)|Stack];%hash
 run_helper(1, [Pub|[Data|[Sig|Stack]]]) ->%verify_sig
+    %true = is_binary(Data),
     [sign:verify_sig(Data, Sig, Pub)|Stack];
 
 run_helper(Word, [Y|[X|Stack]]) when (is_integer(Word) and ((Word > 1) and (Word < 9))) ->
@@ -218,6 +219,7 @@ run_helper(32, Stack) -> [block_tree:height()|Stack];%height
 run_helper(33, Stack) -> [length(Stack)|Stack];%stack size
 run_helper(34, Stack) -> [false|Stack];%this returns true if called from a channel_slash tx.
 run_helper(35, [X |[Y |Stack]]) -> [(X == Y)|Stack];%check if 2 non-numerical values are equal. like binary.
+%run_helper(37, [Stack]) -> [Stack];%check if 2 non-numerical values are equal. like binary.
 run_helper(43, [X |[Y |Stack]]) -> [(Y rem X)|Stack];%check remainder after division of 2 values.
 %run_helper(36, Stack) -> Stack;
 run_helper(46, Stack) -> 
@@ -229,11 +231,21 @@ run_helper(48, [A|[B|Stack]]) -> %cons
     true = is_list(A),
     [[B|A]|Stack];
 run_helper(49, [A|Stack]) -> [hd(A)|[tl(A)|Stack]];%car/cdr
-%run_helper(50, [A|Stack]) -> [tl(A)|Stack];%cdr
+run_helper(50, [ID|Stack]) -> 
+    Pub = accounts:pub(block_tree:account(ID)),
+    Y = case Pub of
+	[] -> false;
+	X -> X
+    end,
+    [Y|Stack];%id to pub
 run_helper(51, Stack) -> [[]|Stack];% '()
 run_helper(52, [L|Stack]) -> [lists:reverse(L)|Stack];
 run_helper(53, [X|[Y|Stack]]) -> [Y|[X|Stack]];%swap
 run_helper(54, [X|[Y|Stack]]) -> [(X++Y)|Stack];%append lists
+run_helper(56, [ID|Stack]) -> 
+    B = accounts:balance(block_tree:account(ID)),
+    [{integer, B}|Stack];%id to pub
+
 run_helper({f, T, B}, Stack) -> 
     [{f, T, B}|Stack];%load fraction into stack.
 run_helper(B, Stack) when is_binary(B)-> 
@@ -293,7 +305,7 @@ atom2op(stack_size) -> 33; %( -- Size )
 atom2op(slash) -> 34; %( -- true/false)
 atom2op(eq) -> 35; %( X Y -- true/false )
 atom2op(define) -> 36; % make a new word out of all the opcodes between here and the next 37.
-atom2op(stop) -> 37; %crash.
+atom2op(stop) -> 37; %crash
 atom2op(call) -> 38; %Use the binary at the top of the stack to look in our hashtable of defined words. If it exists call the code, otherwise crash.
 atom2op(to_r) -> 39; %( V -- )
 atom2op(from_r) -> 40; %( -- V )
@@ -306,7 +318,7 @@ atom2op(print) -> 46; % ( Y -- X )
 atom2op(gas) -> 47; % ( Y -- X )
 atom2op(cons) -> 48; % ( X Y -- [X|Y] )
 atom2op(car) -> 49; % ( [X|Y] --  X )
-%atom2op(cdr) -> 50; % ( [X|Y] --  Y )
+atom2op(id2pub) -> 50; % ( [X|Y] --  Y )
 atom2op(nil) -> 51; % ( -- [] )
 atom2op(flip_list) -> 52; % ( F -- G )
 atom2op(append_list) -> 54;
@@ -318,11 +330,13 @@ cost(1) -> 20;
 cost(36) -> 40;
 cost(38) -> 20;
 cost(44) -> 20;
+cost(56) -> 20;%looking the account up takes some time.
+cost(50) -> 1306;%15*size of pubkey - 15 for deleting integer + 1
 cost(45) -> 16;%fetch
 cost(10) -> -15; %drop
 cost(11) -> 16; %dup
 cost(14) -> 16; %2dup
-cost(16) -> 16; %pickn (it increase stack size by 1)
+%cost(16) -> 16; %pickn 
 cost(31) -> 16; %total_coins
 cost(32) -> 16; %height
 cost(33) -> 16; %stack_size

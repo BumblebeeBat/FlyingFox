@@ -1,5 +1,5 @@
+we should have an opcode that checks if something is equal to nil without dropping it. So we don't have to expensively duplicate big lists.
 language opcode print needs to cost money based off the amount of data to print out. It should cost a lot, printing is very slow.
-opcode to turn account ID into a pubkey.
 opcode to turn account ID into balance.
 
 Building an executable of the software for windows is very important. It needs to include logging, for easy error reporting. That way if a user experiences an error, it is easy for them to show us what went wrong.

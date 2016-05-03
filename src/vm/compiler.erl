@@ -105,6 +105,37 @@ get_macros([_|T], Functions) -> get_macros(T, Functions).
 get_functions(Words) ->
     get_functions(Words, dict:new()).
 
+get_functions([<<"macroSign">>|[Name|[<<"binary">>|[Priv|[<<"binary">>|[Hash|R]]]]]], Functions) -> 
+    %Make sure Name isn't on the restricted list.
+    case dict:find(Name, Functions) of
+	error ->
+	    Foo = hd(to_opcodes([Hash], Functions, [])),
+	    %true = is_binary(Foo),
+	    Signature = sign:sign(base64:decode(Foo), base64:decode(Priv)),
+	    NewFunctions = dict:store(Name, Signature, Functions),
+	    get_functions(R, NewFunctions);
+	{X, _} ->
+	    io:fwrite("can't name 2 functions the same. reused name: "),
+	    io:fwrite(Name),
+	    io:fwrite("\n"),
+	    X = okay
+    end;
+get_functions([<<"macroSign">>|[Name|[<<"binary">>|[Priv|[Hash|R]]]]], Functions) ->
+    %Make sure Name isn't on the restricted list.
+    case dict:find(Name, Functions) of
+	error ->
+	    Foo = hd(to_opcodes([Hash], Functions, [])),
+	    %true = is_binary(Foo),
+	    Signature = sign:sign(Foo, base64:decode(Priv)),
+	    NewFunctions = dict:store(Name, Signature, Functions),
+	    get_functions(R, NewFunctions);
+	{X, _} ->
+	    io:fwrite("can't name 2 functions the same. reused name: "),
+	    io:fwrite(Name),
+	    io:fwrite("\n"),
+	    X = okay
+    end;
+    
 get_functions([<<":">>|[Name|R]], Functions) ->
     %Make sure Name isn't on the restricted list.
     case dict:find(Name, Functions) of
@@ -129,6 +160,8 @@ split(C, [D|B], Out) ->
 remove_functions(Words) -> rad(Words, []).
 rad([], Out) -> flip(Out);
 rad([<<":">>|[_|T]], Out) -> rad(T, [<<":">>|Out]);
+rad([<<"macroSign">>|[_|[<<"binary">>|[_|[<<"binary">>|[_|T]]]]]], Out) -> rad(T, Out);
+rad([<<"macroSign">>|[_|[<<"binary">>|[_|[_|T]]]]], Out) -> rad(T, Out);
 rad([X|T], Out) -> rad(T, [X|Out]).
 apply_functions(Words, Functions) ->    
     rnf(Words, Functions, []).
@@ -139,6 +172,8 @@ rnf([H|T], Functions, Out) ->
 	{ok, Val} -> rnf(T, Functions, [Val|Out])
     end.
 b2i(X) -> list_to_integer(binary_to_list(X)).
+to_opcodes([<<"id2balance">>|R], F, Out) ->
+    to_opcodes(R, F, [56|Out]);
 to_opcodes([<<"check">>|R], F, Out) ->
     to_opcodes(R, F, [55|Out]);
 to_opcodes([<<"++">>|R], F, Out) ->
@@ -149,6 +184,8 @@ to_opcodes([<<"[">>|R], F, Out) ->
     to_opcodes(R, F, [51|Out]);
 to_opcodes([<<"nil">>|R], F, Out) ->
     to_opcodes(R, F, [51|Out]);
+to_opcodes([<<"id2pub">>|R], F, Out) ->
+    to_opcodes(R, F, [50|Out]);
 to_opcodes([<<"car">>|R], F, Out) ->
     to_opcodes(R, F, [49|Out]);
 to_opcodes([<<"cons">>|R], F, Out) ->

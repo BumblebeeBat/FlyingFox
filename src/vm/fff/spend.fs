@@ -10,8 +10,10 @@
 : normalize2 >r swap normalize3 call ;
 : normalize dup sum call nil swap normalize2 call ;
 
-: spend1 integer 1 integer 3 fraction 1 13;
-: spend2 integer 2 integer 3 fraction 1 11;
+: spend_format integer -10 integer -10 integer -13 integer -10;
+(FromId, ToId, Amount, Nonce)
+: spend1 integer 1 integer 3 fraction 1 13 integer 1;
+: spend2 integer 2 integer 3 fraction 1 11 integer 1;
 
 : give ; ( ids weightings id amount -- new_weightings)
 : verify_sig_dummy drop drop true ;
@@ -21,6 +23,8 @@
 dup >r car spend call ( r> cdr recurse call )
 then
 ; ( ids_list weights_list signed_txs -- new_weights )
+
+(maybe we should store a list of ids on the stack, and use each id to @ fetch a datastructure telling us their balance and nonce.)
 
 macro test
 [ integer 1, integer 2, integer 3 ]

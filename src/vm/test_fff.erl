@@ -21,6 +21,9 @@ test() ->
     T = doit("check", 1000),
     X = oracle:test(),
     X = doit("oracle", 180000),
+    T = doit("2of3multisig", 2000),
+    T = doit("weighted_multisig", 2000),
+    doit("commit_reveal", 2000).
     %doit("spend", 10000).
-    success.
+%success.
     

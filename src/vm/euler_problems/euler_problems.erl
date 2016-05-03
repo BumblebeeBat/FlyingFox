@@ -123,6 +123,6 @@ test() ->
     problem006(8000),
     % [true] = problem007(202491700), % takes like 5 seconds
     [23514624000] = problem008(1300000),
-    problem009(1000000),
-    problem010(100000000000).
+    problem009(1000000).
+    %problem010(100000000000). %never tested, probably takes 13 minutes.
 

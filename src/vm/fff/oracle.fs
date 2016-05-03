@@ -89,7 +89,7 @@ then ;
 outcomes0 call Outcomes !
 Outcomes @ swap wrong_m call swap F @ newWeights call
 Outcomes @ ;
-:doit 
+:doit ( NormalizedWeights VoteMatrix -- NewWeights Outcomes ) 
 dup tuck
 fraction 3 5 
 doit2 call >r swap
