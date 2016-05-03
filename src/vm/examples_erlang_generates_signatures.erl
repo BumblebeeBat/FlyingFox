@@ -1,4 +1,4 @@
--module(test_fff_keys).
+-module(examples_erlang_generates_signatures).
 -export([test/0]).
 
 testF(EPub, Priv) ->

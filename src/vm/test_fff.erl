@@ -25,7 +25,7 @@ test() ->
     T = doit("weighted_multisig", 2000),
     T = doit("commit_reveal", 2000),
     T = doit("double_sign_slash", 8000),
-    T = doit("weighted_multisig001", 3000).
-    %doit("spend", 10000).
-%success.
+    T = doit("weighted_multisig_big", 3000),
+    T = doit("weighted_commit_reveal", 80000),
+    success.
     
