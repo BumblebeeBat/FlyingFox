@@ -15,12 +15,12 @@ test() ->
     T = doit("variable", 1000),
     T = doit("growing_database", 1000),
     T = doit("sidechain", 1000),
-    T = doit("reduce", 2000),
+    T = doit("map", 4000),
+    T = doit("reduce", 4000),
     T = doit("sort", 10000),
-    T = doit("map", 1000),
     T = doit("check", 1000),
     X = oracle:test(),
     X = doit("oracle", 180000),
-    doit("test", 10000).
-    %success.
+    %doit("spend", 10000).
+    success.
     

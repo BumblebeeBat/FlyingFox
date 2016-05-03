@@ -98,9 +98,7 @@ opcode_number
 
 48 cons % ( X Y -- [X|Y] )
 
-49 car % ( [X|Y] -- Y )
-
-50 cdr % ( [X|Y] -- X )
+49 car % ( [X|Y] -- X Y )
 
 51 nil % ( -- [] ) this is the root of a list.
 

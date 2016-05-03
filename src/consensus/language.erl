@@ -66,28 +66,28 @@ run(_, _, _, _, _, Gas) when Gas < 0 ->
     io:fwrite("out of gas"),
     Gas = 0;
 run([], _, _, _, Stack, _) -> Stack;
-run([10|Code], Functions, Variables, Alt, [X|Stack], Gas) when is_list(X)-> %drop
+run([10|Code], Functions, Variables, Alt, [X|Stack], Gas) -> %drop
     run(Code, Functions, Variables, Alt, Stack, Gas-(list_length(X) * cost(10)));
-run([11|Code], Functions, Variables, Alt, [X|Stack], Gas) when is_list(X)-> %dup
-    run(Code, Functions, Variables, Alt, [X|[X|Stack]], Gas-(list_length(X) * cost(11)));
 run([11|Code], Functions, Variables, Alt, [X|Stack], Gas) -> %dup
-    run(Code, Functions, Variables, Alt, [X|[X|Stack]], Gas-cost(11));
-run([14|Code], Functions, Variables, Alt, [X|[Y|Stack]], Gas) when (is_list(Y) and is_list(X))-> %2dup
-    run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-((list_length(X)+list_length(Y))*cost(11)));
-run([14|Code], Functions, Variables, Alt, [X|[Y|Stack]], Gas) when is_list(Y)-> %2dup
-    run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-((1+list_length(Y))*cost(11)));
-run([14|Code], Functions, Variables, Alt, [X|[Y|Stack]], Gas) when is_list(X)-> %2dup
-    run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-((1+list_length(X))*cost(11)));
+    NewGas = Gas-(list_length(X) * cost(11)),
+    %even though it is a new reference to the same data, we still need to charge a fee as if it was duplicated data. Otherwise they can keep deleting the list and get paid negative gas to delete.
+    %NewGas = Gas-(cost(11)),
+    run(Code, Functions, Variables, Alt, [X|[X|Stack]], NewGas);
 run([14|Code], Functions, Variables, Alt, [X|[Y|Stack]], Gas) -> %2dup
-    run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], Gas-cost(11));
+    NewGas = Gas - (cost(14) *(list_length(X) + list_length(Y))),
+    run(Code, Functions, Variables, Alt, [X|[Y|[X|[Y|Stack]]]], NewGas);
 run([17|Code], Functions, Variables, Alt, [true|Stack], Gas) -> %if (case)
     run(Code, Functions, Variables, Alt, Stack, Gas-cost(17));
 run([17|Code], Functions, Variables, Alt, [false|Stack], Gas) -> %if (case)
-    {_, T} = remove_till(18, Code),
-    run(T, Functions, Variables, Alt, Stack, Gas-cost(17));
+    {Skip, T} = remove_till(18, Code),
+    run(T, Functions, Variables, Alt, Stack, Gas-(cost(17)*length(Skip)));
 run([18|Code], Functions, Variables, Alt, Stack, Gas) -> %else
-    {_, T} = remove_till(19, Code),
-    run(T, Functions, Variables, Alt, Stack, Gas-cost(18));
+    {Skip, T} = remove_till(19, Code),
+    run(T, Functions, Variables, Alt, Stack, Gas-(cost(18)*length(Skip)));
+run([35|Code], Functions, Variables, Alt, [X|[Y|Stack]], Gas) ->%equals
+    %10 is drop.
+    NewGas = Gas - cost(35) - (cost(10) * (list_length(X)+list_length(Y))),
+    run(Code, Functions, Variables, Alt, [(X == Y)|Stack],NewGas);
 run([36|Code], Functions, Variables, Alt, Stack, Gas) ->%define
     {H, T} = remove_till(37, Code),
     B = hash:doit(H),
@@ -132,15 +132,26 @@ run([40|Code], Functions, Vars, [N|Alt], Stack, Gas) ->%moves the top of the alt
     run(Code, Functions, Vars, Alt, [N|Stack], Gas - cost(40));
 run([28|_], _, _, _, _, _) -> %die. Neither person gets money.
     [delete];
+run([44|Code], Functions, Vars, Alt, [Name|[Value|Stack]], Gas) when is_binary(Value)-> %store
+    NVars = dict:store(Name, Value, Vars),
+    run(Code, Functions, NVars, Alt, Stack, Gas-(cost(44)*size(Value)));
+run([44|Code], Functions, Vars, Alt, [Name|[Value|Stack]], Gas) when is_list(Value)-> %store
+    NVars = dict:store(Name, Value, Vars),
+    run(Code, Functions, NVars, Alt, Stack, Gas-(cost(44)*length(Value)));
 run([44|Code], Functions, Vars, Alt, [Name|[Value|Stack]], Gas) -> %store
     NVars = dict:store(Name, Value, Vars),
-    run(Code, Functions, NVars, Alt, Stack, Gas);
+    run(Code, Functions, NVars, Alt, Stack, Gas-cost(44));
 run([45|Code], Functions, Vars, Alt, [Name|Stack], Gas) -> %fetch
     X = case dict:find(Name, Vars) of
 	error -> 0;
 	{ok, Val} -> Val
     end,
-    run(Code, Functions, Vars, Alt, [X|Stack], Gas);
+    C = if
+	    is_binary(X) -> size(X);
+	    is_list(X) -> length(X);
+	    true -> 1
+	end,
+    run(Code, Functions, Vars, Alt, [X|Stack], Gas-(cost(45)*C));
 run([47|Code], Functions, Vars, Alt, Stack, Gas) -> %gas
     run(Code, Functions, Vars, Alt, [Gas|Stack], Gas);
 run([Word|Code], Functions, Vars, Alt, Stack, Gas) ->
@@ -152,14 +163,19 @@ run_helper(1, [Pub|[Data|[Sig|Stack]]]) ->%verify_sig
 
 run_helper(Word, [Y|[X|Stack]]) when (is_integer(Word) and ((Word > 1) and (Word < 9))) ->
     Z = if
-	(is_integer(X) and is_integer(Y)) ->
-	    int_arith(Word, X, Y);
-	is_integer(X) ->
-	    frac_arith(Word, fractions:new(X, 1), Y);
-	is_integer(Y) ->
-	    frac_arith(Word, X, fractions:new(Y, 1));
-	true ->
-	    frac_arith(Word, X, Y)
+	    (is_integer(X) and is_integer(Y)) ->
+		I = int_arith(Word, X, Y),
+		if
+		    is_integer(I) ->
+			(I rem ?max_integer);
+		    true -> I
+		end;
+	    is_integer(X) ->
+		frac_arith(Word, fractions:new(X, 1), Y);
+	    is_integer(Y) ->
+		frac_arith(Word, X, fractions:new(Y, 1));
+	    true ->
+		frac_arith(Word, X, Y)
 	end,
     [Z|Stack];
 run_helper(9, [X|[Y|Stack]]) -> %[Y|[X|Stack]];%pow
@@ -169,18 +185,16 @@ run_helper(9, [X|[Y|Stack]]) -> %[Y|[X|Stack]];%pow
 	true -> fractions:exponent(X, Y)
 	end,
     [A|Stack];
-run_helper(10, [_|Stack]) -> Stack;
-%run_helper(11, [X|Stack]) -> [X|[X|Stack]];%dup
+%run_helper(10, [_|Stack]) -> Stack;
 run_helper(12, [X|[Y|[Z|Stack]]]) -> [Y|[Z|[X|Stack]]];%rot
 run_helper(13, [X|[Y|[Z|Stack]]]) -> [Z|[X|[Y|Stack]]];%-rot (tor)
-run_helper(14, [X|[Y|Stack]]) -> [X|[Y|[X|[Y|Stack]]]];%2dup (ddup)
 run_helper(15, [N|[X|Stack]]) -> %tuckn 
-    H = list:sublist(Stack, 1, N),
-    T = list:sublist(Stack, N, 10000000000000000),
+    H = lists:sublist(Stack, 1, N),
+    T = lists:sublist(Stack, N+1, 10000000000000000),
     H ++ [X] ++ T;
 run_helper(16, [N|Stack]) -> %pickn 
-    H = list:sublist(Stack, 1, N),
-    T = list:sublist(Stack, N, 10000000000000000),
+    H = lists:sublist(Stack, 1, N - 1),
+    T = lists:sublist(Stack, N, 10000000000000000),
     [hd(T)] ++ H ++ tl(T);
 run_helper(19, Stack) -> Stack;%then 
 run_helper(20, [X|[Y|Stack]]) -> [(X and Y)|Stack];%and (both)
@@ -214,8 +228,8 @@ run_helper(46, Stack) ->
 run_helper(48, [A|[B|Stack]]) -> %cons
     true = is_list(A),
     [[B|A]|Stack];
-run_helper(49, [A|Stack]) -> [hd(A)|Stack];%car
-run_helper(50, [A|Stack]) -> [tl(A)|Stack];%cdr
+run_helper(49, [A|Stack]) -> [hd(A)|[tl(A)|Stack]];%car/cdr
+%run_helper(50, [A|Stack]) -> [tl(A)|Stack];%cdr
 run_helper(51, Stack) -> [[]|Stack];% '()
 run_helper(52, [L|Stack]) -> [lists:reverse(L)|Stack];
 run_helper(53, [X|[Y|Stack]]) -> [Y|[X|Stack]];%swap
@@ -292,7 +306,7 @@ atom2op(print) -> 46; % ( Y -- X )
 atom2op(gas) -> 47; % ( Y -- X )
 atom2op(cons) -> 48; % ( X Y -- [X|Y] )
 atom2op(car) -> 49; % ( [X|Y] --  X )
-atom2op(cdr) -> 50; % ( [X|Y] --  Y )
+%atom2op(cdr) -> 50; % ( [X|Y] --  Y )
 atom2op(nil) -> 51; % ( -- [] )
 atom2op(flip_list) -> 52; % ( F -- G )
 atom2op(append_list) -> 54;
@@ -307,7 +321,7 @@ cost(44) -> 20;
 cost(45) -> 16;%fetch
 cost(10) -> -15; %drop
 cost(11) -> 16; %dup
-cost(14) -> 31; %2dup
+cost(14) -> 16; %2dup
 cost(16) -> 16; %pickn (it increase stack size by 1)
 cost(31) -> 16; %total_coins
 cost(32) -> 16; %height
@@ -341,12 +355,12 @@ replace(A, B, [A|T], Out) ->
 replace(A, B, [H|T], Out) -> 
     replace(A, B, T, [H|Out]).
 list_length(X) -> list_length(X, 0).
+list_length(B, N) when is_binary(B)-> N+size(B);
 list_length([], N) -> N;
-list_length([H|T], N) when is_list(H) -> 
-    M = list_length(H, 0),
+list_length([H|T], N) -> 
+    M = list_length(H),
     list_length(T, M+N);
-list_length([_|T], N) -> 
-    list_length(T, N+1).
+list_length(_, N) -> N+1.
 hashlock(SecretHash) ->
     assemble([hash, SecretHash, eq, switch, {f, 0, 1}, {f, 1, 1}, 2, else, {f, 0, 1}, {f, 0, 1}, 1, then]).
 valid_secret(Secret, Script) -> 

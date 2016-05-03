@@ -14,7 +14,7 @@ chances_per_address() -> 200. %Each address has this many chances to be a valida
 master_pub() -> <<"BJb31Voe6kHdXlEmTdK8nxeOxp/UK7zrTtTZ1aVRlE/gxNWj2Rebx+BmHgDnTe80sq1fRMPRXjE5ny7cw9e4rAw=">>.
 max_size() -> 2000000000.%should be 2 gigabytes, does not include old blocks.
 gas_limit() -> 1000000.%30,000 is enough for an oracle with 30 elements in the matrix. For example 5 oracle participants and 6 decisions.
-    
+%200,000,000 is enough to find the first 10001 prime numbers.
 backup() -> fractions:new(19, 20).
 %-define(MBS, max_size() div max_reveal() div 10).%use about 10% of size for blocks.
 max_block_size() -> 2000000.%2*26 = 52 megabytes of ram to hold blocks.

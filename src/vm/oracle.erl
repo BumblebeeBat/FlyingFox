@@ -15,6 +15,9 @@ doit2(Matrix, Weights, F) ->
     Outcomes = outcomes(Matrix, Weights),%on order of oracle participants * decisions. call it O(X^2)
     Wrong = wrong_m(Matrix, Outcomes),% O(X^2)
     NewWeights = normalize(new_weights(F, Weights, Wrong)),% O(X)
+    %io:fwrite("newweights "),
+    %io:fwrite(packer:pack(NewWeights)),
+    %io:fwrite("\n"),
     {Outcomes, NewWeights}.
 doit(Matrix, Weights) ->
     %each row of Matrix is a single participant's report.

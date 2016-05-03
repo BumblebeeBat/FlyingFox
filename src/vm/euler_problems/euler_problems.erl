@@ -98,13 +98,31 @@ problem006(Gas) ->
     B = compiler:compile(A),
     C = language:run(B, Gas),
     C = [problem006s()].
-
+problem007(Gas) ->
+    {ok, A} = file:read_file(?loc ++ "007.fs"),
+    B = compiler:compile(A),
+    language:run(B, Gas).
+problem008(Gas) ->
+    {ok, A} = file:read_file(?loc ++ "008.fs"),
+    B = compiler:compile(A),
+    language:run(B, Gas).
+problem009(Gas) ->
+    {ok, A} = file:read_file(?loc ++ "009.fs"),
+    B = compiler:compile(A),
+    language:run(B, Gas).
+problem010(Gas) ->
+    {ok, A} = file:read_file(?loc ++ "010.fs"),
+    B = compiler:compile(A),
+    language:run(B, Gas).
 test() ->
-    problem001(200000),
-    problem002(4000),
+    problem001(20000),
+    problem002(8000),
     problem003(60000),
-    problem004(90000000), % 640000 function calls. takes like 12 seconds.
+    %problem004(90000000), % 640000 function calls. takes like 12 seconds.
     problem005(8000),
     problem006(8000),
-    success.
+    % [true] = problem007(202491700), % takes like 5 seconds
+    [23514624000] = problem008(1300000),
+    problem009(1000000),
+    problem010(100000000000).
 

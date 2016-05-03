@@ -149,8 +149,6 @@ to_opcodes([<<"[">>|R], F, Out) ->
     to_opcodes(R, F, [51|Out]);
 to_opcodes([<<"nil">>|R], F, Out) ->
     to_opcodes(R, F, [51|Out]);
-to_opcodes([<<"cdr">>|R], F, Out) ->
-    to_opcodes(R, F, [50|Out]);
 to_opcodes([<<"car">>|R], F, Out) ->
     to_opcodes(R, F, [49|Out]);
 to_opcodes([<<"cons">>|R], F, Out) ->

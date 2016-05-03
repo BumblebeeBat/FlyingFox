@@ -34,7 +34,7 @@ macro commit_reveal swap dup crf match or_die call rot == or_die ;
  <<" func dup tuck binary ">>/binary, EPub/binary,
      % <<" verify_sig or_die dup integer 2 match integer -10 integer -10 or_die
      <<" verify_sig or_die integer 1337 commit_reveal ">>/binary >>),
-    [55] = language:run(D, 1000).
+    [55] = language:run(D, 2000).
 testI(EPub, Priv) ->
        % here is a contract to punish people for signing contrary results. This contract would be used to stop oracles from outputing 2 contrary results.
    % Sig1, Sig2, func1, func2, Pub1, constant. <--input top ->
@@ -67,7 +67,7 @@ binary ">>/binary, Sign1/binary,
                <<" integer 1337 
           double_signed_slash 
     ">>/binary >>),
-    [] = language:run(E, 1000).
+    [] = language:run(E, 8000).
 testJ(EPub, Priv) ->
 %This is a weighted multisig with 5 keys.
     Sig = sign:sign(<<"abc">>, Priv),
@@ -143,7 +143,7 @@ EPub integer 2 a call
 EPub integer 3 a call
 Bottom @ Top @ Nonce @
 ">>/binary >>),
-    [1, 2, 5] = language:run(A, 10000),
+    [1, 2, 5] = language:run(A, 20000),
     % verify_sig
     % commit_reveal integer 1337
     % function call integer 1 = not if crash else then

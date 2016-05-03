@@ -5,6 +5,8 @@ Flying Fox
 
 Bitcoin Donations: 1GbpRPE83Vjg73KFvTVZ4EnS2qNkiLY5TT
 
+Block explorer for the testnet: http://52.36.106.100:3010/explorer.html
+
 Facts about Flying Fox:
 
 *It uses state channels as a scalability solution. http://www.jeffcoleman.ca/state-channels/
