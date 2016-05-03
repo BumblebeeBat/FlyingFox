@@ -1,4 +1,4 @@
-(  this is a weighted multisig. The first 2 signatures are worth 3, and the last is worth 2. you need 6 total to pass. )
+( this is a weighted multisig. The first 2 signatures are worth 3, and the last is worth 2. you need 6 total to pass. )
 
 macro Priv binary MVptai9RaW0zVHRGWjRrSitRdjVSeVF1b2w1aW1nbi9zQXdESHp2R1BYbz0= ;
 
