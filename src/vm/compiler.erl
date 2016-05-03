@@ -1,7 +1,6 @@
 -module(compiler).
 -export([compile/1]).
 
-%-define(or_die, [19, 18, 28, 17, 23]).%in reverse order because Out is all reverse. 
 -define(or_die, compile(<<" not if crash else then ">>)).
 -define(plus_store, compile(<<" dup @ rot + swap ! ">>)).
 compile(A) ->
@@ -17,7 +16,6 @@ compile(A) ->
     Functions = get_functions(ZWords),
     AWords = remove_functions(ZWords),
     BWords = apply_functions(AWords, Functions),
-    %CWords = apply_macros(Macros, BWords),
     reuse_name_check(Macros, Functions),
     to_opcodes(BWords, Functions, []).
 add_spaces(B) -> add_spaces(B, <<"">>).
@@ -55,7 +53,6 @@ add_spaces(<<44:8, B/binary >>, Out) ->  % ","
     add_spaces(B, <<Out/binary, 32:8, 44:8, 32:8>>);
 add_spaces(<<X:8, B/binary >>, Out) -> 
     add_spaces(B, <<Out/binary, X:8>>).
-
 remove_comments(B) -> remove_comments(B, <<"">>).
 remove_comments(<<"">>, Out) -> Out;
 remove_comments(<<40:8, B/binary >>, Out) -> % [40] == ")".
@@ -69,7 +66,6 @@ remove_comments(<<X:8, B/binary>>, Out) ->
 remove_till(N, <<N:8, B/binary>>) -> B;
 remove_till(N, <<_:8, B/binary>>) -> 
     remove_till(N, B).
-    
 remove_macros(Words) -> remove_macros(Words, []).
 remove_macros([], Out) -> Out;
 remove_macros([<<"macro">>|Words], Out) ->
@@ -102,55 +98,35 @@ get_macros([<<"macro">>|[Name|R]], Functions) ->
     end;
 get_macros([], Functions) -> Functions;
 get_macros([_|T], Functions) -> get_macros(T, Functions).
-get_functions(Words) ->
-    get_functions(Words, dict:new()).
-
+get_functions2(Foo, R, Priv, Name, Functions) ->
+    Signature = sign:sign(Foo, base64:decode(Priv)),
+    get_functions3(Signature, R, Name, Functions).
+get_functions3(Signature, R, Name, Functions) ->
+    case dict:find(Name, Functions) of
+	error ->
+	    NewFunctions = dict:store(Name, Signature, Functions),
+	    get_functions(R, NewFunctions);
+	{X, _} ->
+	    io:fwrite("can't name 2 functions the same. reused name: "),
+	    io:fwrite(Name),
+	    io:fwrite("\n"),
+	    X = okay
+    end.
+get_functions(Words) -> get_functions(Words, dict:new()).
 get_functions([<<"macroSign">>|[Name|[<<"binary">>|[Priv|[<<"binary">>|[Hash|R]]]]]], Functions) -> 
     %Make sure Name isn't on the restricted list.
-    case dict:find(Name, Functions) of
-	error ->
-	    Foo = hd(to_opcodes([Hash], Functions, [])),
-	    %true = is_binary(Foo),
-	    Signature = sign:sign(base64:decode(Foo), base64:decode(Priv)),
-	    NewFunctions = dict:store(Name, Signature, Functions),
-	    get_functions(R, NewFunctions);
-	{X, _} ->
-	    io:fwrite("can't name 2 functions the same. reused name: "),
-	    io:fwrite(Name),
-	    io:fwrite("\n"),
-	    X = okay
-    end;
+    Foo = base64:decode(Hash),
+    get_functions2(Foo, R, Priv, Name, Functions);
 get_functions([<<"macroSign">>|[Name|[<<"binary">>|[Priv|[Hash|R]]]]], Functions) ->
     %Make sure Name isn't on the restricted list.
-    case dict:find(Name, Functions) of
-	error ->
-	    Foo = hd(to_opcodes([Hash], Functions, [])),
-	    %true = is_binary(Foo),
-	    Signature = sign:sign(Foo, base64:decode(Priv)),
-	    NewFunctions = dict:store(Name, Signature, Functions),
-	    get_functions(R, NewFunctions);
-	{X, _} ->
-	    io:fwrite("can't name 2 functions the same. reused name: "),
-	    io:fwrite(Name),
-	    io:fwrite("\n"),
-	    X = okay
-    end;
-    
+    Foo = hd(to_opcodes([Hash], Functions, [])),
+    get_functions2(Foo, R, Priv, Name, Functions);
 get_functions([<<":">>|[Name|R]], Functions) ->
     %Make sure Name isn't on the restricted list.
-    case dict:find(Name, Functions) of
-	error ->
-	    {Code, T} = split(<<";">>, R),
-	    Opcodes = to_opcodes(Code, Functions, []),
-	    NewFunctions = dict:store(Name, hash:doit(Opcodes),Functions),
-	    get_functions(T, NewFunctions);
-	{X, _} ->
-	    io:fwrite("can't name 2 functions the same. reused name: "),
-	    io:fwrite(Name),
-	    io:fwrite("\n"),
-	    X = okay
-    end;
-    
+    {Code, T} = split(<<";">>, R),
+    Opcodes = to_opcodes(Code, Functions, []),
+    S = hash:doit(Opcodes),
+    get_functions3(S, T, Name, Functions);
 get_functions([], Functions) -> Functions;
 get_functions([_|T], Functions) -> get_functions(T, Functions).
 split(C, B) -> split(C, B, []).

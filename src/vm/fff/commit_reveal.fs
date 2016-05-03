@@ -13,5 +13,5 @@ macroSign Sig Priv Func
 macro commit_reveal swap dup crf match or_die call rot == or_die ;
 
 macro test
-Sig Func dup tuck Pub print verify_sig or_die integer 1337 commit_reveal integer 55 == 
+Sig Func dup tuck Pub verify_sig or_die integer 1337 commit_reveal integer 55 == 
 ;
