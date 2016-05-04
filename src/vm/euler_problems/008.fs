@@ -1,6 +1,6 @@
 ( Find the thirteen adjacent digits in the 1000-digit number that have the greatest product. What is the value of this product? )
 
-: map2 dup nil == if drop r> drop else 
+: map2 dupnil== if drop r> drop else 
        car r@ call >r swap r> swap cons swap recurse call then ;
 : map >r nil swap map2 call reverse ; ( List Function -- List )
 
@@ -16,7 +16,7 @@ macro max 2dup - abs tuck + + integer 2 / ;
  dup Scale @ product r> max >r integer 10 / recurse call 
 then;
 : max_product0 integer 0 >r max_product call ;
-: max_list0 dup nil == if drop r> else
+: max_list0 dupnil== if drop r> else
 car r> max >r recurse call then;
 macro max_list integer 0 >r max_list0 call ;
 

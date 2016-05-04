@@ -68,6 +68,9 @@ run(_, _, _, _, _, Gas) when Gas < 0 ->
 run([], _, _, _, Stack, _) -> Stack;
 run([10|Code], Functions, Variables, Alt, [X|Stack], Gas) -> %drop
     run(Code, Functions, Variables, Alt, Stack, Gas-(list_length(X) * cost(10)));
+run([56|Code], Functions, Variables, Alt, Stack, Gas) -> %print
+    L = list_length(Stack),
+    run(Code, Functions, Variables, Alt, Stack, Gas-L-cost(56));
 run([11|Code], Functions, Variables, Alt, [X|Stack], Gas) -> %dup
     NewGas = Gas-(list_length(X) * cost(11)),
     %even though it is a new reference to the same data, we still need to charge a fee as if it was duplicated data. Otherwise they can keep deleting the list and get paid negative gas to delete.
@@ -244,7 +247,10 @@ run_helper(53, [X|[Y|Stack]]) -> [Y|[X|Stack]];%swap
 run_helper(54, [X|[Y|Stack]]) -> [(X++Y)|Stack];%append lists
 run_helper(56, [ID|Stack]) -> 
     B = accounts:balance(block_tree:account(ID)),
-    [{integer, B}|Stack];%id to pub
+    [{integer, B}|Stack];%id to balance
+run_helper(57, [X|Stack]) -> 
+    Y = X == [],
+    [Y|[X|Stack]];% dupnil==
 
 run_helper({f, T, B}, Stack) -> 
     [{f, T, B}|Stack];%load fraction into stack.

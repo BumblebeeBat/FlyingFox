@@ -1,5 +1,5 @@
 :add +; 
-:reduce2 dup nil == if drop r> drop else 
+:reduce2 dupnil== if drop r> drop else 
   car >r swap r> r@ call swap recurse call then;
 :reduce >r reduce2 call; ( Y List Function -- X )
 

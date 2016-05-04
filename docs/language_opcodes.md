@@ -1,4 +1,4 @@
-opcode_number 
+ opcode, symbol for compiled language, stack changes
 
 0 hash ( X -- <<Bytes:256>> )
 
@@ -100,6 +100,8 @@ opcode_number
 
 49 car % ( [X|Y] -- X Y )
 
+50 id2pub % ( ID -- Pubkey )
+
 51 nil % ( -- [] ) this is the root of a list.
 
 52 reverse % % ( F -- G )
@@ -109,6 +111,10 @@ opcode_number
 54 ++ % ( X Y -- Z ) appends 2 lists.
 
 55 check % ( MatchCode I Format Function -- V ) check the value of a variable from a function that fits a format. match(Function, Format, FormatName) would return True.
+
+56 id2balance % ( ID -- Balance )
+
+57 nil== % ( List -- List true/false )
 
 true true
 

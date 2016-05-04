@@ -2,7 +2,7 @@
 
 What is the 10 001st prime number? )
 
-: prime2 dup nil == if drop true else 
+: prime2 dupnil== if drop true else 
   car N @ 2dup swap rem integer 0 == if drop drop drop false else
   swap dup * < if drop true else 
   recurse call then then then ;

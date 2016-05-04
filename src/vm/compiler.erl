@@ -148,6 +148,8 @@ rnf([H|T], Functions, Out) ->
 	{ok, Val} -> rnf(T, Functions, [Val|Out])
     end.
 b2i(X) -> list_to_integer(binary_to_list(X)).
+to_opcodes([<<"dupnil==">>|R], F, Out) ->
+    to_opcodes(R, F, [57|Out]);
 to_opcodes([<<"id2balance">>|R], F, Out) ->
     to_opcodes(R, F, [56|Out]);
 to_opcodes([<<"check">>|R], F, Out) ->

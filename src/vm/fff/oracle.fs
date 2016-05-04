@@ -1,13 +1,13 @@
-: map2 dup nil == if drop r> drop else 
+: map2 dupnil== if drop r> drop else 
        car r@ call >r swap r> swap cons swap recurse call then ;
 : map >r nil swap map2 call reverse ; ( List Function -- List )
-:reduce2 dup nil == if drop r> drop else 
+:reduce2 dupnil== if drop r> drop else 
   car >r swap r> r@ call swap recurse call then;
 :reduce >r reduce2 call;  ( Y List Function -- X )
 
 : sum2 + ;
 : sum fraction 0 1 swap sum2 reduce call ; 
-: normalize3 dup nil == if drop r> drop else
+: normalize3 dupnil== if drop r> drop else
   car r@ / >r swap r> swap cons swap recurse call then ;
 : normalize2 >r swap normalize3 call ;
 : normalize dup sum call nil swap normalize2 call ;
@@ -17,7 +17,7 @@
 )
 
 : newWeights2 ( Wrong OldWeights PunishmentFraction -- NewWeights )
-dup nil == if drop drop else
+dupnil== if drop drop else
   swap car F @ ^ rot car rot * >r rot r> swap cons tuck recurse call then;
 : newWeights F ! nil tuck newWeights2 call normalize call;
 
@@ -25,7 +25,7 @@ dup nil == if drop drop else
 
 macro whelper == and if drop drop r> integer 1 + >r else;
 :wrong2
-dup nil == if drop drop r> else
+dupnil== if drop drop r> else
 ( 2dup car swap car )
 car rot car rot
 2dup integer 1 == swap integer 0 whelper
@@ -42,7 +42,7 @@ then then then then then
 [integer 1, integer 0, integer -1, integer 2]
 wrong call )
 
-:wrong_m2 dup nil == if drop drop r> else
+:wrong_m2 dupnil== if drop drop r> else
 car rot dup rot
 wrong call r> cons >r swap recurse call then ;
 :wrong_m nil >r wrong_m2 call reverse;
@@ -75,7 +75,7 @@ macro pop dup @ car swap rot ! ;
     recurse call
 then;
 macro hd_map2 nil hd_map3 call;
-: hd_map dup nil == if hd_map2 else
+: hd_map dupnil== if hd_map2 else
   car car >r >r integer 1 N +! recurse call
 then;
 

@@ -1,11 +1,11 @@
-: map2 dup nil == if drop r> drop else 
+: map2 dupnil== if drop r> drop else 
   car r@ call >r swap r> swap cons swap recurse call then ;
 : map >r nil swap map2 call reverse ; ( List Function -- List )
 
 :merge2 
-  2dup nil == swap nil == and if drop drop r> else
-  2dup nil == if drop r> ++ else drop
-  2dup swap nil == if drop r> reverse ++ else drop
+  dupnil== rot dupnil== rot and if drop drop r> else swap
+  dupnil== if r> ++ else 
+  swap dupnil== if swap r> reverse ++ else swap
   car >r swap 
   car r> 
   2dup > if else swap then r> cons >r rot cons recurse call

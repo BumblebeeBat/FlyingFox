@@ -121,7 +121,7 @@ test() ->
     %problem004(90000000), % 640000 function calls. takes like 12 seconds.
     problem005(8000),
     problem006(8000),
-    % [true] = problem007(202491700), % takes like 5 seconds
+    [true] = problem007(202491700), % takes like 5 seconds
     [23514624000] = problem008(1300000),
     problem009(1000000).
     %problem010(100000000000). %never tested, probably takes 13 minutes.
