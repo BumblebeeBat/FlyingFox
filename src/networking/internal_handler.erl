@@ -52,21 +52,23 @@ doit({channel_balance2, IP, Port}) ->
     BetAmounts = channel_manager:bet_amounts(OffChannel),
     {ok, Bal + (Sign * channel_block_tx:amount(OffChannel)) - BetAmounts};
 doit({create_account, Pub, Amount, Fee}) -> 
-    create_account_tx:create_account(Pub, Amount, Fee),
+    tx_pool_feeder:absorb(keys:sign(create_account_tx:create_account(Pub, Amount, Fee))),
     {ok, ok};
 doit({spend, To, Amount, Fee}) ->
-    spend_tx:spend(To, Amount, Fee);
-doit({buy_block}) -> sign_tx:sign(), block_tree:buy_block();
+    tx_pool_feeder:absorb(keys:sign(spend_tx:spend(To, Amount, Fee)));
+doit({buy_block}) -> 
+    tx_pool_feeder:absorb(keys:sign(sign_tx:sign())), 
+    block_tree:buy_block();
 doit({sign, Tx}) -> {ok, keys:sign(Tx)};
 doit({create_channel, Partner, Bal1, Bal2, Type, Fee}) ->
-    to_channel_tx:create_channel(Partner, Bal1, Bal2, Type, Fee);
+    keys:sign(to_channel_tx:create_channel(Partner, Bal1, Bal2, Type, Fee));
 doit({to_channel, IP, Port, Inc1, Inc2, Fee}) ->
     {ok, ServerId} = talker:talk({id}, IP, Port),
     ChId = hd(channel_manager:id(ServerId)),
-    SignedTx =  to_channel_tx:to_channel(ChId, Inc1, Inc2, Fee),
+    SignedTx = keys:sign(to_channel_tx:to_channel(ChId, Inc1, Inc2, Fee)),
     talker:talk({to_channel, SignedTx}, IP, Port);
 doit({close_channel, ChId, Amount, Nonce, Fee}) ->
-    channel_block_tx:close_channel(ChId, Amount, Nonce, Fee);
+    keys:sign(channel_block_tx:close_channel(ChId, Amount, Nonce, Fee));
 doit({sync, IP, Port}) ->
     download_blocks:sync(IP, Port);
 doit({pubkey}) -> {ok, keys:pubkey()};

@@ -101,10 +101,10 @@ hashlock(ChId, Ch, Amount, SecretHash, Id) ->
 
 test() ->    
     {Pub, Priv} = sign:new_key(),
-    create_account_tx:create_account(Pub, 620000, 0),
+    tx_pool_feeder:absorb(keys:sign(create_account_tx:create_account(Pub, 620000, 0))),
     Partner = 4,
-    spend_tx:spend(Partner, 10, 0),
-    sign_tx:sign(),
+    tx_pool_feeder:absorb(keys:sign(spend_tx:spend(Partner, 10, 0))),
+    tx_pool_feeder:absorb(keys:sign(sign_tx:sign())),
     reveal:reveal(),
     block_tree:buy_block(),
     P5 = accounts:pub(block_tree:account(5)),
@@ -119,10 +119,10 @@ test() ->
 	P4 -> 4;
 	P5 -> 5
     end,
-    CreateTx1 = to_channel_tx:create_channel(Partner, 110000, 10000, <<"delegated_1">>, 0),
+    CreateTx1 = keys:sign(to_channel_tx:create_channel(Partner, 110000, 10000, <<"delegated_1">>, 0)),
     SignedCreateTx1 = sign:sign_tx(CreateTx1, Pub, Priv, ID, tx_pool:accounts()),
     tx_pool_feeder:absorb(SignedCreateTx1),
-    sign_tx:sign(),
+    tx_pool_feeder:absorb(keys:sign(sign_tx:sign())),
     reveal:reveal(),
     block_tree:buy_block(),
     S = 24004,

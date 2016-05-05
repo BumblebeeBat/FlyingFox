@@ -25,8 +25,7 @@ good_key(S) -> ((S == <<"delegated_1">>) or (S == <<"delegated_2">>)).
 create_channel(To, MyBalance, TheirBalance, ConsensusFlag, Fee) ->
 %When creating a new channel, you don't choose your own ID for the new channel. It will be selected for you by next available.    
     Id = keys:id(),
-    Tx = create_channel2(Id, To, MyBalance, TheirBalance, ConsensusFlag, Fee),
-    keys:sign(Tx).
+    create_channel2(Id, To, MyBalance, TheirBalance, ConsensusFlag, Fee).
 create_channel2(Id, To, MyBalance, TheirBalance, ConsensusFlag, Fee) ->
     Acc = block_tree:account(Id),
     ToAcc = block_tree:account(To),
@@ -42,7 +41,7 @@ to_channel(ChannelId, Inc1, Inc2, Fee) ->
     Channel = block_tree:channel(ChannelId),
     S = channels:type(Channel),
     true = good_key(S),
-    keys:sign(#tc{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), bal1 = channels:bal1(Channel) + Inc1, bal2 = channels:bal2(Channel) + Inc2, consensus_flag = S, id = ChannelId, fee = Fee, nonce = accounts:nonce(Acc) + 1, increment = Inc1 + Inc2}).
+    #tc{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), bal1 = channels:bal1(Channel) + Inc1, bal2 = channels:bal2(Channel) + Inc2, consensus_flag = S, id = ChannelId, fee = Fee, nonce = accounts:nonce(Acc) + 1, increment = Inc1 + Inc2}.
 %sign:set_revealed(SignedTx, ChannelId).
 
 next_top(DBroot, Channels) -> next_top_helper(channels:array(), channels:top(), DBroot, Channels).

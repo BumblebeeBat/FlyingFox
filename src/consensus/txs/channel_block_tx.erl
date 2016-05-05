@@ -63,7 +63,7 @@ make_signed_cb(Acc, CB, Fee, Evidence) ->
     sign:set_revealed(sign:empty(NewCB), Evidence).
 close_channel(Id, Amount, Nonce, Fee) ->
     Channel = block_tree:channel(Id),
-    keys:sign(#channel_block{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), amount = Amount, nonce = Nonce, id = Id, fast = true, fee = Fee}).
+    #channel_block{acc1 = channels:acc1(Channel), acc2 = channels:acc2(Channel), amount = Amount, nonce = Nonce, id = Id, fast = true, fee = Fee}.
 cc_losses(Txs) -> cc_losses(Txs, 0).%filter out channel_block, channel_slash, and channel_close type txs. add up the amount of money in each such channel. 
 cc_losses([], X) -> X;
 cc_losses([SignedTx|T], X) -> 

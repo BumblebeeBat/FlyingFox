@@ -4,8 +4,8 @@
 spend(To, Amount, Fee) ->
     Id = keys:id(),
     Acc = block_tree:account(Id),
-    Tx = #spend{from = Id, nonce = accounts:nonce(Acc) + 1, to = To, amount = Amount, fee = Fee},
-    tx_pool_feeder:absorb(keys:sign(Tx)).
+    #spend{from = Id, nonce = accounts:nonce(Acc) + 1, to = To, amount = Amount, fee = Fee}.
+%tx_pool_feeder:absorb(keys:sign(Tx)).
 doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->
     From = Tx#spend.from,
     false = From == Tx#spend.to,
