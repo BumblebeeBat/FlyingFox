@@ -1,3 +1,22 @@
+We need to be able to use channels to pay the block creator to make a block.
+
+The random number generator needs to be updated.
+It needs the property that only 1 bit of entropy is added per block, and the block creator shouldn't have control of this bit.
+After the validators signed a block, we select one of them deterministicly randomly. When that person reveales, his randomnes mod 2 is the next random bit. If he fails to reveal, then a 0 is added instead.
+
+When the block creator adds signatures to a block, he should have no idea which validator will have control of the random number.
+
+To choose entropy chooser, xor all the secrets together to make the mega secret. xor the mega secret with each secret to get the rank. The highest rank mod 2 is the next bit of entropy.
+
+10th Random number = RN_10
+append bytes operation = <>
+RN_N = hash256(RN_N-1 <> next_bit)
+
+Currently the plan make it hard to DDOS validators is by an onion routing network.
+Another choice is to have each validator pre-compute a chain of data such that each link hashes to the next link of the chain.
+Every time they validate they reveal the next link of their chain.
+If anyone knows a validator's next link, they should be able to punish the validator.
+
 opcode to turn account ID into balance.
 
 Building an executable of the software for windows is very important. It needs to include logging, for easy error reporting. That way if a user experiences an error, it is easy for them to show us what went wrong.
