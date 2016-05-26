@@ -1,4 +1,10 @@
-We need to be able to use channels to pay the block creator to make a block.
+Website advertising Flying Fox, with 3 big pictures and at least one gif, and a short catchphrase to describe the project.
+It should collect email addresses of people who want to be in the oracle.
+Eventually, this page will link to the crowdsale page.
+
+A crowdsale app. it has tens of thousands of bitcoin addresses. People sign up with a flying fox address to be assigined a temporary bitcoin address. Then if they pay bitcoin to that address, then they will recieve some of the initial distribution of flying foxes.
+
+Opcode to find out which account payed to create a block.
 
 The random number generator needs to be updated.
 It needs the property that only 1 bit of entropy is added per block, and the block creator shouldn't have control of this bit.
@@ -16,8 +22,6 @@ Currently the plan make it hard to DDOS validators is by an onion routing networ
 Another choice is to have each validator pre-compute a chain of data such that each link hashes to the next link of the chain.
 Every time they validate they reveal the next link of their chain.
 If anyone knows a validator's next link, they should be able to punish the validator.
-
-opcode to turn account ID into balance.
 
 Building an executable of the software for windows is very important. It needs to include logging, for easy error reporting. That way if a user experiences an error, it is easy for them to show us what went wrong.
 

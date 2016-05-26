@@ -12,11 +12,11 @@ A problem with proof of stake systems that are based on how much money you have 
 
 Some problems with full-on delegated proof of stake is that delegates will invest in advertising, which makes this consensus method expensive, and delegates don't have to be invested in the currency to get powerful.
 
-There is a problem with the lightning network. Putting your money into a channel reduces the number of people that the money can be spent to, which reduces network liquidity and destroys value. This is similar to the problem that security-bond proof-of-stake consensus protocols have. If you lock up money, that is the same as destroying the interest rate of that money. 
+There is a problem with the lightning network. Putting your money into a channel reduces the number of people that the money can be spent to, which reduces network liquidity and destroys value. This is similar to the problem that security-bond proof-of-stake consensus protocols have. If you lockn up money, that is the same as destroying the interest rate of that money. 
 
 -------> The value that gets destroyed for maintaining channels can simultaneously be used to secure blockchain consensus, so we don't have to destroy value twice. We can kill 2 birds with 1 stone. <--------
 
-One of the 2 participants in the channel is delegated as validator. He has a small probability to participate in the consensus process for each block. The probability he can participate is based on how much money is in the channel. The validator needs to be online to sign blocks.
+One of the 2 participants in the channel is delegated as validator. He has a small probability to participate in the consensus process for each block. The probability he can participate is based on how much money is in the channel. The validator needs to be online to sign blocks. Every time the validator signs a block, he locks some money up as a security deposit. If he double-signs onto a different chain, this security deposit is taken away. You cannot use the same money for a security deposit and a channel at the same time.
 
 The most powerful validators will have servers running 24/7 in multiple locations, that way they can have fast latency to keep customers. They will pay advertising to attract customers. They will have ongoing profits that they would lose if the blockchain broke. They will be providing a real service other than heaters: processing channel payments.
 
@@ -25,8 +25,9 @@ Flying Fox is the first blockchain to implement lightning consensus.
 related article: http://www.truthcoin.info/blog/pow-cheapest/
 
 
-The critical value we care about for blockchain consensus is the (cost to control 0.01% more of consensus for people who do not own any coins)/(cost to control 0.01% more of consensus for people who own 10% of coins.) I call it the efficiency of the blockchain. For POW it is 1, because you mine at the same rate regardless of how many coins you own. For every POS proposed, besides Flying Fox, it is about 1, the cost of locking up coins is the same, whether you own the coins or not. The cost of buying votes is the same, whether you own the coins or not. 
-In Flying Fox, the effeciency is >100.
+The critical value we care about for blockchain consensus is the (cost to control 0.01% more of consensus for people who do not own any coins)-(cost to control 0.01% more of consensus for people who own 10% of coins.) I call it the efficiency of the blockchain. For POW it is 1, because you mine at the same rate regardless of how many coins you own. For every POS proposed, besides Flying Fox, it is about 1, the cost of locking up coins is the same, whether you own the coins or not. The cost of buying votes is the same, whether you own the coins or not. 
+In Flying Fox, the effeciency is much greater. For rich people, they can get paid to providing liquidity, so the cost is negative.
+For poor people who can't provide liquidity, it costs as much as the interest rate to lock up the coins.
 
 If you don't own any money, but want to control consensus, this is possible in Flying Fox. You open a channel with someone who does have money, have yourself be the validator, and pay them to keep some money in this channel.
 Since you have no money, you can't facilitate channel payments to anyone else. Your partners money is locked up and innaccessible. Your partner is losing value by the interest rate. You need to pay them at least this much.

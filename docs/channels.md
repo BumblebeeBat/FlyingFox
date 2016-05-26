@@ -9,8 +9,6 @@ It is possible to create secure channels with all these features:
 5. You don't trust your partner.
 6. No fee for spending funds through the channel.
 7. Spend money as fast as sending a message, you don't have to wait for any confirmations.
-8. Payments and bets inside of a channel can be secret from everyone except your partner.
-9. Channel block can be OTR encrypted, so that the participants can have deniability for non-final channel blocks, allowing betting and trading in secret.
 
 Bitcoin channels will eventually be able to do everything except #9 and #3. For #3 in bitcoin, each additional hash-lock in a channel doubles the time and space requirements. `O(N^2)`
 
@@ -87,7 +85,9 @@ Your partner has to wait at least delay amount of time before they can take the 
 #### About bets:
 The total amount of money in a channel is conserved. Some money could be locked to either participant, and some money could be locked into bets.
 
-There are at least 3 types of bets: hashlock, oracle, burn, and signature. 
+Bets are written in a turing complete forth-like language.
+
+Some of the better types of bets I have written so far: hashlock, oracle, and signature. 
 
 
 All 3 types look like:

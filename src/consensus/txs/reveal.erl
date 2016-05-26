@@ -1,9 +1,8 @@
 -module(reveal).
--export([doit/7, reveal/0, origin_tx/2]).
+-export([doit/7, reveal/1, origin_tx/2]).
 -record(reveal_tx, {acc = 0, nonce = 0, secret = [], height = 0}).
 
-reveal() ->
-    Id = keys:id(),
+reveal(Id) -> %keys:id()
     CurrentHeight = block_tree:height(),
     reveal2(Id, CurrentHeight - constants:max_reveal(), CurrentHeight - constants:min_reveal()).
 reveal2(_, Start, End) when Start > End -> ok;
@@ -30,7 +29,8 @@ reveal2(Id, Start, End) ->%This is an inefficient implementation. Checks all 9 *
 				not BTS ->
 				    already_did_it;
 				true ->
-				    tx_pool_feeder:absorb(keys:sign(#reveal_tx{acc = Id, nonce = accounts:nonce(block_tree:account(Id)) + 1, secret = Secret, height = Start}))
+				    #reveal_tx{acc = Id, nonce = accounts:nonce(block_tree:account(Id)) + 1, secret = Secret, height = Start}
+						%tx_pool_feeder:absorb(keys:sign(#reveal_tx{acc = Id, nonce = accounts:nonce(block_tree:account(Id)) + 1, secret = Secret, height = Start}))
 			    end
 		    end
 	    end

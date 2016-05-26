@@ -1,14 +1,8 @@
 -module(channel_slash_tx).
--export([doit/7, channel_slash/1, channel_block/1, make_tx/3]).
+-export([doit/7, channel_block/1, make_tx/3]).
 -record(channel_slash, {acc = 0, nonce = 0, channel_block = 0, fee=0}).
 channel_block(Tx) ->
     Tx#channel_slash.channel_block.
-channel_slash(ChannelTx) ->
-    MyId = keys:id(),
-    channel_slash(ChannelTx, MyId).
-channel_slash(ChannelTx, MyId) ->
-    Acc = block_tree:account(MyId),
-    tx_pool_feeder:absorb(keys:sign(#channel_slash{acc = MyId, nonce = accounts:nonce(Acc), channel_block = ChannelTx})).
 make_tx(Id, CB, Fee) ->
     %Id = keys:id(),
     Acc = block_tree:account(Id),
