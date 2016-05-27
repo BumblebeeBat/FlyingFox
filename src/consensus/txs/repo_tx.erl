@@ -3,15 +3,14 @@
 %If you can provide evidence that someone doesn't have enough money left to validate, you can take some of their money, which simultaniously deletes all their delegation, and changes the consensus_flag in the channels to off.
 
 -module(repo_tx).
--export([doit/7, repo/3, losses/1]).
+-export([doit/7, repo/4, losses/1]).
 -record(repo, {acc = 0, nonce = 0, target = 0, fee = 0, delegated = 0, channels = []}).
-repo(Target, Fee, Channels) ->
-    Acc = keys:id(),
+repo(Target, Fee, Channels, Acc) -> %Acc is keys:id()
     A = block_tree:account(Acc),
     T = block_tree:account(Target),
     true = low_balance(T, block_tree:total_coins(), block_tree:height()),
     Nonce = accounts:nonce(A),
-    tx_pool_feeder:absorb(keys:sign(#repo{acc = Acc, nonce = Nonce + 1, target = Target, fee = Fee, channels = Channels, delegated = accounts:delegated(T)})).
+    #repo{acc = Acc, nonce = Nonce + 1, target = Target, fee = Fee, channels = Channels, delegated = accounts:delegated(T)}.
 low_balance(Acc, TotalCoins, NewHeight) -> 
     UCost = accounts:unit_cost(Acc, TotalCoins),
     MinBalance = UCost * constants:max_reveal(),

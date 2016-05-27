@@ -1,21 +1,11 @@
 -module(channel_funds_limit_tx).
--export([doit/7, losses/3, make_tx/2]).
+-export([doit/7, losses/3, make_tx/3]).
 %allows you to instantly close the channel, and take all the money, but only if your partner is very low on funds, and will soon lose his account.
 -record(channel_funds_limit, {acc = 0, nonce = 0, id = 0, fee = 0}).
-make_tx(ChannelId, Fee) ->
-    Id = keys:id(),
+make_tx(ChannelId, Fee, Id) -> %Id is keys:id()
     Acc = block_tree:account(Id),
     Nonce = accounts:nonce(Acc),
-    %Channel = block_tree:channel(ChannelId),
-    %CAC1 = channels:acc1(Channel),
-    %CAC2 = channels:acc2(Channel),
-    %if
-    %(CAC1 == Id) -> Part = CAC2;
-    %(CAC2 == Id) -> Part = CAC1
-    %end,
-    %Partner = block_tree:account(Part),
-    %true = low_balance(Partner, block_tree:total_coins(), block_tree:height()),
-    tx_pool_feeder:absorb(keys:sign(#channel_funds_limit{acc = Id, nonce = Nonce + 1, id = ChannelId, fee = Fee})).
+    #channel_funds_limit{acc = Id, nonce = Nonce + 1, id = ChannelId, fee = Fee}.
 losses(Txs, Channels, ParentKey) -> losses(Txs, Channels, ParentKey, 0).
 losses([], _, _, X) -> X;
 losses([SignedTx|Txs], Channels, ParentKey, X) -> 

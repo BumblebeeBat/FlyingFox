@@ -251,16 +251,18 @@ absorb([Block|T]) -> write(Block), absorb(T).
 %secret(N, SH, SecretsDict) -> secret(N, SH, read(top), SecretsDict).
 check() ->
     gen_server:call(?MODULE, check).
-secret(N, SH, H, SecretsDict) ->
+secret(N, SH, Block, SecretsDict) ->
     Key = {N, SH},
     B = dict:is_key(Key, SecretsDict),
     if
         B -> dict:fetch(Key, SecretsDict);
-        true -> secret_helper(Key, H)
+        true -> secret_helper(Key, Block)
     end.
-secret_helper({N, SH}, finality) -> all_secrets:exists(N, SH);
-secret_helper(Key, H) -> 
-    X = read(H),
+secret_helper({N, SH}, finality) -> 
+    io:fwrite("Check finality"),
+    all_secrets:exists(N, SH);
+secret_helper(Key, Block) -> 
+    X = read(Block),
     Secrets = X#x.secrets,
     Parent = X#x.parent,
     case dict:find(Key, Secrets) of
@@ -370,16 +372,14 @@ test() ->
     Acc1 = account(1),
     A1 = accounts:balance(Acc1),
     tx_pool_feeder:absorb(keys:sign(channel_block_tx:make_signed_cb(keys:id(), SignedChannelTx, 0, []))),
-    %tx_pool_feeder:absorb(SignedChannelTx),
     Acc2 = account(1),
     A2 = accounts:balance(Acc2),
     true = A2 < A1,%4000 fee per block, only gain 1010.
-    tx_pool_feeder:absorb(channel_timeout_tx:timeout_channel(SignedTimeoutTx)),
-    tx_pool_feeder:absorb(channel_timeout_tx:timeout_channel(SignedSlasherTx)),
+    tx_pool_feeder:absorb(keys:sign(channel_timeout_tx:timeout_channel(keys:id(), SignedTimeoutTx))),
+    tx_pool_feeder:absorb(keys:sign(channel_timeout_tx:timeout_channel(keys:id(), SignedSlasherTx))),
     tx_pool_feeder:absorb(keys:sign(sign_tx:sign())),
-    %tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
     buy_block(),
-    tx_pool_feeder:absorb(channel_close_tx:slow_close(24001)),
+    tx_pool_feeder:absorb(keys:sign(channel_close_tx:slow_close(24001, keys:id()))),
     SlashBlock = channel_block_tx:channel_block(24002, 0, 2, 5, 0),
     SignedSlashBlock = sign_tx(SlashBlock, Pub, Priv),
     _AccOne = account(1),
@@ -474,9 +474,9 @@ long_test() ->
     tx_pool_feeder:absorb(keys:sign(create_account_tx:create_account(Pub, 620000, 0))),
     tx_pool_feeder:absorb(keys:sign(spend_tx:spend(1, 10, 0))),
     tx_pool_feeder:absorb(keys:sign(sign_tx:sign())),
-    tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
+    %tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
     buy_block(),
-    tx_pool_feeder:absorb(sign_tx(slasher_tx:slasher(1, keys:sign({sign_tx, 0, 0, 0, 0, 0, 0})), Pub, Priv)),
+    tx_pool_feeder:absorb(sign_tx(slasher_tx:slasher(1, keys:sign({sign_tx, 0, 0, 0, 0, 0, 0, 0})), Pub, Priv)),
     %Top = read(read(top)),
     CreateTx1 = keys:sign(to_channel_tx:create_channel(1, 110000, 1000, <<"delegated_1">>, 0)),
     SignedCreateTx1 = sign_tx(CreateTx1, Pub, Priv),
@@ -488,14 +488,14 @@ long_test() ->
     SignedCreateTx3 = sign_tx(CreateTx3, Pub, Priv),
     tx_pool_feeder:absorb(SignedCreateTx3),
     tx_pool_feeder:absorb(keys:sign(sign_tx:sign())),
-    tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
+    %tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
     buy_block(),
     %Top2 = read(read(top)),
     ToChannel = keys:sign(to_channel_tx:to_channel(24000, 0, 10, 0)),
     SignedToChannel = sign_tx(ToChannel, Pub, Priv),
     tx_pool_feeder:absorb(SignedToChannel),
     tx_pool_feeder:absorb(keys:sign(sign_tx:sign())),
-    tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
+    %tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
     buy_block(),%needs to start with some big channels with myself, so I have enough delegation.
     %Top3 = read(read(top)),
     ChannelTx = keys:sign(channel_block_tx:close_channel(24000, -200, 1, 0)),
@@ -507,50 +507,39 @@ long_test() ->
     Acc1 = account(1),
     A1 = accounts:balance(Acc1),
     tx_pool_feeder:absorb(keys:sign(channel_block_tx:make_signed_cb(keys:id(), SignedChannelTx, 0, []))),
-    %tx_pool_feeder:absorb(SignedChannelTx),
     Acc2 = account(1),
     A2 = accounts:balance(Acc2),
     true = A2 < A1,%4000 fee per block, only gain 1010.
-    tx_pool_feeder:absorb(channel_timeout_tx:timeout_channel(keys:sign(SignedTimeoutTx))),
-    tx_pool_feeder:absorb(channel_timeout_tx:timeout_channel(keys:sign(SignedSlasherTx))),
+    tx_pool_feeder:absorb(keys:sign(channel_timeout_tx:timeout_channel(keys:id(), keys:sign(SignedTimeoutTx)))),
+    tx_pool_feeder:absorb(keys:sign(channel_timeout_tx:timeout_channel(keys:id(), keys:sign(SignedSlasherTx)))),
     tx_pool_feeder:absorb(keys:sign(sign_tx:sign())),
-    tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
+    %tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
     buy_block(),
-    %Top4 = read(read(top)),
-    %1 = power(Top4#x.block),
-    tx_pool_feeder:absorb(channel_close_tx:slow_close(24001)),
+    tx_pool_feeder:absorb(keys:sign(channel_close_tx:slow_close(24001, keys:id()))),
     SlashBlock = channel_block_tx:channel_block(24002, 0, 2, 5, 0),
     SignedSlashBlock = sign_tx(SlashBlock, Pub, Priv),
-    %AccOne = account(1),
     ChannelSlashTx = channel_slash_tx:make_tx(1, SignedSlashBlock, 0),
-    %ChannelSlashTx = {channel_slash, 1, accounts:nonce(AccOne), SignedSlashBlock},
     SignedChannelSlashTx = sign_tx(ChannelSlashTx, Pub, Priv),
-    %SignedChannelSlashTx = sign:sign_tx(ChannelSlashTx, Pub, Priv, 1, tx_pool:accounts()),
     tx_pool_feeder:absorb(SignedChannelSlashTx),
     tx_pool_feeder:absorb(keys:sign(sign_tx:sign())),
-    tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
+    %tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
     buy_block(),
     tx_pool_feeder:absorb(keys:sign(sign_tx:sign())),
-    tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
-    %Top5 = read(read(top)),
+    %tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
     {Pub2, Priv2} = sign:new_key(),
     tx_pool_feeder:absorb(keys:sign(create_account_tx:create_account(Pub2, 650000, 0))),
     buy_block(),
     tx_pool_feeder:absorb(keys:sign(sign_tx:sign())),
-    tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
-    tx_pool_feeder:absorb(sign_tx(delete_account_tx:delete_account(2, 0, 0), Pub2, Priv2)),
-    %{Pub3, Priv3} = sign:new_key(),
+    tx_pool_feeder:absorb(sign_tx(delete_account_tx:delete_account(2, 0, 0), Pub2, Priv2, 2)),
     tx_pool_feeder:absorb(keys:sign(create_account_tx:create_account(Pub2, 680000, 0))),
     buy_block(),
     CreateTxq = keys:sign(to_channel_tx:create_channel(2, 110000, 0, <<"delegated_2">>, 0)),
-    SignedCreateTxq = sign_tx(CreateTxq, Pub2, Priv2),
+    SignedCreateTxq = sign_tx(CreateTxq, Pub2, Priv2, 2),
     EmptyChannel = channels:empty(),
     true = EmptyChannel == channel(24000),
     tx_pool_feeder:absorb(SignedCreateTxq),
     false = EmptyChannel == channel(24000),
-    tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
-    tx_pool_feeder:absorb(keys:sign(sign_tx:sign())),
-
+    %tx_pool_feeder:absorb(keys:sign(sign_tx:sign())),
     F = fun() -> tx_pool_feeder:absorb(keys:sign(sign_tx:sign())), buy_block() end,
     G = fun() -> F(), F(), F(), F(), F(), F(), F(), F() end,
     H = fun() -> G(), G(), G(), G(), G(), G(), G(), G() end,
@@ -564,7 +553,17 @@ long_test() ->
     D2a = accounts:delegated(account(1)),
     %to_channel_tx:create_channel(1, 10000, 1000, non_delegated, 0),
     %to_channel_tx:create_channel(1, 10000, 1000, delegated_2, 0),
-    F2 = fun() -> tx_pool_feeder:absorb(keys:sign(sign_tx:sign())), tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))), buy_block() , timer:sleep(200) end,
+    F2 = fun() -> 
+		 tx_pool_feeder:absorb(keys:sign(sign_tx:sign())), 
+		 R = reveal:reveal(keys:id()),
+		 if
+		     is_atom(R) -> ok;
+		     true -> 
+			 tx_pool_feeder:absorb(keys:sign(R))
+		 end,
+		 %tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))), 
+		 buy_block(), 
+		 timer:sleep(200) end,
     G2 = fun() -> F2(), F2(), F2(), F2(), F2(), F2(), F2(), F2() end,
     H2 = fun() -> G2(), G2(), G2(), G2(), G2(), G2(), G2(), G2() end,
     H2(),
@@ -589,8 +588,8 @@ long_test() ->
     Acc2a = account(2),
     false = EmptyAccount == Acc2a,
     timer:sleep(5000),
-    channel_funds_limit_tx:make_tx(24000, 0),
-    repo_tx:repo(2, 0, []),
+    tx_pool_feeder:absorb(keys:sign(channel_funds_limit_tx:make_tx(24000, 0, keys:id()))),
+    tx_pool_feeder:absorb(keys:sign(repo_tx:repo(2, 0, [], keys:id()))),
     Acc2b = account(2),
     true = EmptyAccount == Acc2b,
     success.

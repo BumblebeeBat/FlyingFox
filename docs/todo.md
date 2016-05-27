@@ -1,3 +1,5 @@
+We need a web wallet so that users don't have to install anything. The external API should get a lot bigger. the internal api should be used for signing, and nothing else.
+
 Website advertising Flying Fox, with 3 big pictures and at least one gif, and a short catchphrase to describe the project.
 It should collect email addresses of people who want to be in the oracle.
 Eventually, this page will link to the crowdsale page.

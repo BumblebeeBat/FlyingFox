@@ -8,34 +8,40 @@ reveal(Id) -> %keys:id()
 reveal2(_, Start, End) when Start > End -> ok;
 reveal2(Id, Start, End) ->%This is an inefficient implementation. Checks all 9 * finality() spots every time.
     if
-	Start < 1 -> ok;
+	Start > End -> revealed_all;
+	Start < 1 -> reveal2(Id, Start+1, End);
 	true ->
 	    case block_tree:read_int(Start) of
 		<<"none">> -> 
-		    before_finality;
+		    io:fwrite("non existance block\n\n"),
+		    reveal2(Id, Start+1, End);
 		OriginBlock ->
 		    Block = sign:data(OriginBlock),
 		    OriginTxs = block_tree:block2txs(Block),
 		    case origin_tx(OriginTxs, Id) of
 			<<"none">> -> 
-			    did_not_sign;
+			    io:fwrite("did not sign\n\n"),
+			    reveal2(Id, Start+1, End);
+			%did_not_sign;
 			X ->
 			    SH = sign_tx:secret_hash(X),
 			    BTS = block_tree:secret(Start-1, SH, block_tree:read(top), tx_pool:secrets()),
 			    Secret = secrets:read(SH),
 			    if
 				Secret == <<"none">> ->
-				    lost_the_secret;
+				    io:fwrite("lost the secret\n\n"),
+				    %lost_the_secret;
+				    reveal2(Id, Start + 1, End);
 				not BTS ->
-				    already_did_it;
+				%already_did_it;
+				    reveal2(Id, Start + 1, End);
 				true ->
 				    #reveal_tx{acc = Id, nonce = accounts:nonce(block_tree:account(Id)) + 1, secret = Secret, height = Start}
-						%tx_pool_feeder:absorb(keys:sign(#reveal_tx{acc = Id, nonce = accounts:nonce(block_tree:account(Id)) + 1, secret = Secret, height = Start}))
 			    end
 		    end
 	    end
-    end,
-    reveal2(Id, Start + 1, End).
+    end.
+%reveal2(Id, Start + 1, End).
 
 doit(Tx, ParentKey, Channels, Accounts, TotalCoins, Secrets, NewHeight) ->    
     H = Tx#reveal_tx.height,

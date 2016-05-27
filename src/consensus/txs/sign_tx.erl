@@ -36,7 +36,6 @@ sign() ->
 	R -> 0;
         length(W) > 0 ->
 	    Tx = #sign_tx{acc = Id, nonce = accounts:nonce(Acc) + 1, secret_hash = secrets:new(), winners = W, prev_hash = ParentKey, number = block_tree:block_number(PBlock), finality_ancestor = AHash},
-            %tx_pool_feeder:absorb(keys:sign(Tx));
             Tx;
         true ->
             io:fwrite("cannot sign, did not win this round\n")

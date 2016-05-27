@@ -1,12 +1,9 @@
 -module(channel_timeout_tx).
--export([doit/7, timeout_channel/1, timeout_channel/2, channel_block/1]).
+-export([doit/7, timeout_channel/2, channel_block/1]).
 -record(timeout, {acc = 0, nonce = 0, fee = 0, channel_block = 0}).
 %If your partner is not helping you, this is how you start the process of closing the channel. 
 %You should only use the final channel-state, or else your partner can punish you for cheating.
 channel_block(X) -> X#timeout.channel_block.
-timeout_channel(ChannelTx) ->
-    Id = keys:id(),
-    keys:sign(timeout_channel(Id, ChannelTx)).
 timeout_channel(Id, ChannelTx) ->
     Acc = block_tree:account(Id),
     #timeout{acc = Id, nonce = accounts:nonce(Acc) + 1, channel_block = ChannelTx}.

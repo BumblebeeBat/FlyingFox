@@ -66,7 +66,7 @@ handle_call({exists, Height, SH}, _From, X) ->
     Gap = constants:max_reveal() - constants:min_reveal(),
     O = if
 	    H > Gap -> false;
-	    H < X#x.start -> false;
+	    Height < X#x.start -> false;
 	    true -> 
 		Block = nth(H, X#x.blocks),
 		in_list(SH, Block)
