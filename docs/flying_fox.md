@@ -10,4 +10,4 @@ Innovations:
 
 * Flying Fox is the first implementation of state channel blockchain scaling. Which requires less assumptions than sharding style scaling. Sharding is experimental, we don't know how to build it yet. Channels are simple and understood.
 
-* All of this has been successfully implemented in the erlang language as a part of Flying Fox. 
+* All of this has been successfully implemented in the erlang language as a part of Flying Fox.
