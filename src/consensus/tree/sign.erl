@@ -1,5 +1,5 @@
 -module(sign).
--export([test/0,new_key/0,sign_tx/4,sign_tx/5,sign/2,verify_sig/3,shared_secret/2,verify/2,data/1,revealed/1,empty/1,empty/0,set_revealed/2,verify_1/2,verify_2/2]).
+-export([test/0,new_key/0,sign_tx/5,sign/2,verify_sig/3,shared_secret/2,verify/2,data/1,revealed/1,empty/1,empty/0,set_revealed/2,verify_1/2,verify_2/2]).
 -record(signed, {data="", sig="", sig2="", revealed=[]}).
 empty() -> #signed{}.
 empty(X) -> #signed{data=X}.
@@ -40,8 +40,6 @@ verify(SignedTx, Accounts) ->
 	    verify_both(SignedTx, accounts:pub(Acc1), accounts:pub(Acc2));
 	true -> verify_1(SignedTx, accounts:pub(Acc1))
     end.
-sign_tx(SignedTx, Pub, Priv, Accounts) ->
-    sign_tx(SignedTx, Pub, Priv, keys:id(), Accounts).
 sign_tx(SignedTx, Pub, Priv, ID, Accounts) when element(1, SignedTx) == signed ->
     Tx = SignedTx#signed.data,
     R = SignedTx#signed.revealed,
@@ -86,7 +84,24 @@ test() ->
     Accounts = dict:store(1, Acc2, dict:store(0, Acc, dict:new())),
     Tx = {channel_block, 0, 1},
     Signed = sign_tx(sign_tx(Tx, Pub, Priv, 0, Accounts), Pub2, Priv2, 1, Accounts),
-    Signed2 = sign_tx({spend, 0}, Pub, Priv, Accounts),
+    Signed2 = sign_tx({spend, 0}, Pub, Priv, 0, Accounts),
+    Verbose = true,
+    if
+	Verbose ->
+	    io:fwrite("pubkeys\n"),
+	    io:fwrite(Pub),
+	    io:fwrite("\n"),
+	    io:fwrite(Pub2),
+	    io:fwrite("\n"),
+	    io:fwrite("privkeys\n"),
+	    io:fwrite(Priv),
+	    io:fwrite("\n"),
+	    io:fwrite(Priv2),
+	    io:fwrite("\n"),
+	    io:fwrite("signed tx\n"),
+	    io:fwrite(packer:pack(Signed));
+	true -> ok
+    end,
     true = verify(Signed2, Accounts),
     true = verify(Signed, Accounts),
     true = verify_both(Signed, Pub2, Pub) 

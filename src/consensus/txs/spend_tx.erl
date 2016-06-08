@@ -1,8 +1,8 @@
 -module(spend_tx).
--export([doit/7, spend/3]).
+-export([doit/7, spend/4]).
 -record(spend, {from = 0, nonce = 0, to = 0, amount = 0, fee = 0}).
-spend(To, Amount, Fee) ->
-    Id = keys:id(),
+spend(To, Amount, Fee, Id) ->
+    %Id = keys:id(),
     Acc = block_tree:account(Id),
     #spend{from = Id, nonce = accounts:nonce(Acc) + 1, to = To, amount = Amount, fee = Fee}.
 doit(Tx, ParentKey, Channels, Accounts, TotalCoins, S, NewHeight) ->

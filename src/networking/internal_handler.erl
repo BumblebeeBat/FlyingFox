@@ -21,6 +21,9 @@ handle(Req, State) ->
 init(_Type, Req, _Opts) -> {ok, Req, no_state}.
 terminate(_Reason, _Req, _State) -> ok.
 -define(POP, <<1,6,3,87,3,5>>).
+doit({sign, Tx}) -> {ok, keys:sign(Tx)};
+
+
 doit({balance}) ->
     {ok, accounts:balance(block_tree:account(keys:id()))};
 doit({channel_balance, IP, Port}) ->
@@ -38,6 +41,8 @@ doit({channel_balance, IP, Port}) ->
     BetAmounts = channel_manager:bet_amounts(OffChannel),
     {ok, Bal + (Sign * channel_block_tx:amount(OffChannel)) - BetAmounts};
 doit({channel_balance2, IP, Port}) ->
+    %This looks identical to the one above. It should probably be deleted.
+    %balance.js uses it.
     {ok, ServerId} = talker:talk({id}, IP, Port),
     ChId = hd(channel_manager:id(ServerId)),
     OnChannel = block_tree:channel(ChId),
@@ -57,9 +62,8 @@ doit({create_account, Pub, Amount, Fee}) ->
 doit({spend, To, Amount, Fee}) ->
     tx_pool_feeder:absorb(keys:sign(spend_tx:spend(To, Amount, Fee)));
 doit({buy_block}) -> 
-    tx_pool_feeder:absorb(keys:sign(sign_tx:sign())), 
+    tx_pool_feeder:absorb(keys:sign(sign_tx:sign(keys:id()))), 
     block_tree:buy_block();
-doit({sign, Tx}) -> {ok, keys:sign(Tx)};
 doit({create_channel, Partner, Bal1, Bal2, Type, Fee}) ->
     keys:sign(to_channel_tx:create_channel(Partner, Bal1, Bal2, Type, Fee));
 doit({to_channel, IP, Port, Inc1, Inc2, Fee}) ->

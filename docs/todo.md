@@ -1,4 +1,11 @@
-We need a web wallet so that users don't have to install anything. The external API should get a lot bigger. the internal api should be used for signing, and nothing else.
+We need a web wallet so that users don't have to install anything. The external API should get a lot bigger.
+* We need javascript to handle the signing of transactions
+
+For the web wallet to support channels, we need to make a javascript channel manager to keep track of your channel state.
+* internal handler register
+* internal handler channel_spend
+* internal handler new_channel
+* internal handler lightning_spend
 
 Website advertising Flying Fox, with 3 big pictures and at least one gif, and a short catchphrase to describe the project.
 It should collect email addresses of people who want to be in the oracle.
