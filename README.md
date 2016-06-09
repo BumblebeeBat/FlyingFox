@@ -21,8 +21,6 @@ Facts about Flying Fox:
 
 *Judgement on the outcome of bets occurs off-chain, in the lightning network. Truthcoin style oracles http://www.truthcoin.info/
 
-*Rate of coin creation adjusts to match demand
-
 ---Code of conduct, development guidelines: Submit pull requests. If I like your code, and it passes tests, I will accept it. Feel free to ask me questions or make github issues.
 
 ---Installing
