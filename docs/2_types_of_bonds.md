@@ -1,13 +1,14 @@
-There are 2 seperate things you are trying to do with proof of stake bonds:
+Don't Reuse Bonds in Proof of Stake
 
-1)  If there is a double-sign, someone should get punished. Don't lock up too much excess, because it costs value to lock up value by the interest rate.
+Most proof of stake systems use the security bonds, the "stake", for 2 unrelated goals.
 
-2)Measure the opinion of a large group of people who are well invested in the system, so that the decision made is in the best interest of it's users.
+1 Ownership of stake determines how much power you have in deciding the next block of the chain. The people who have power in deciding the next block need to be sufficiently invested in the system so that they wont do a retirement attack double-spend to steal money.
 
-If you use a single set of safety deposits to do both things, then it does both things poorly.
+2 If validators should double-sign, the stake gets destroyed to punish them.
 
-It isn't enough money to accurately measure the opinion of the majority, so it doesn't accomplish (2) well.
+2 To protect against double-signing, the bonds need to be locked up an innaccessible for a long time. This is expensive by the interest rate on the locked up funds, but since the bond can be relativly small like 1/10000th of the market cap, we are fine.
 
-It is more money than is needed to be deleted in the case of double-sign. Locking up more than necessary is expensive. So it doesn't accomplish (1) well either.
+1 To protect against retirment attacks, the bond needs to be very big. Bigger than 1/2 of the market cap hopefully. Luckily this bond doesn't have to be innaccessible. We can use DPOS or mix this bond with the channel mechanism so that the money is spendable all the time.
 
-In flying fox we use the money in the channels for (2), because almost all the money is in channels. We make the validators give a safety deposit for (1), because we can make the safety deposit be the size we need.
+
+If we use the same bond to accomplish both (1) and (2), then it will do both things poorly. It will be too big for (1), and it will be too small for (2).
