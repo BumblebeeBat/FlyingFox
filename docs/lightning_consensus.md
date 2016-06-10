@@ -1,6 +1,17 @@
 Lightning Consensus
 ===================
 
+Benefits:
+
+* Profits go back to the users.
+
+* You can make a profit by buying coins and leaving your computer off
+
+* proof of stake bonds are not reused for multiple purposes.
+
+
+
+
 A cryptocurrency is money built out of software. 
 
 The consensus protocol is the rules that participants must obey to participate in a cryptocurrency. The rules are carefully chosen so that it is expensive to control money that you don't own. The most popular cryptocurrency consensus protocols today are of the proof-of-work variety. Other proposals are: delegated proof-of-stake, various security bond proof of stakes, byzantine fault tolerant algorithms, and coin-age proof of stake.
