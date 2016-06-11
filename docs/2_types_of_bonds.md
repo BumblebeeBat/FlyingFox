@@ -22,7 +22,6 @@ how much value the validators control
 how much value is on the chain
 
 
-The bond needs to be very big. Bigger than 9/10ths of the market cap hopefully. Luckily this bond doesn't have to be innaccessible. We mix this bond with the channel mechanism so that the money is spendable all the time.
-
+The bond needs to be very big. Bigger than 9/10ths of the market cap hopefully. Luckily this bond doesn't have to be innaccessible because it can never get slashed. The nodes participating in this bond need to be online frequently. 
 
 If we use the same bond to accomplish both (1) and (2), then it will do both things poorly. It will be too big for (1), and it will be too small for (2).
