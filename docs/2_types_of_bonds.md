@@ -10,16 +10,18 @@ Most proof of stake systems use the security bonds, the "stake", for 2 unrelated
 
 1 
 A ratio:
-how much value the validator needs to lose to commit a malicious soft-fork attack
+
+(how much value the validator needs to lose to commit a malicious soft-fork attack)
 /
-how much value gets destroyed on the chain.
+(how much value gets destroyed on the chain.)
 
 Ideally this ratio should stay as close to 1 as possible, that way the attacker is only able to destroy as much money as he pays to execute the attack.
 
 An upper limit on that ratio is this ratio:
-how much value the validators control
+
+(how much value the validators control)
 /
-how much value is on the chain
+(how much value is on the chain)
 
 
 The bond needs to be very big. Bigger than 9/10ths of the market cap hopefully. Luckily this bond doesn't have to be innaccessible because it can never get slashed. The nodes participating in this bond need to be online frequently. 
