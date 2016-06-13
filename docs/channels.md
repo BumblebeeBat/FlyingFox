@@ -1,5 +1,9 @@
 # Channels
 
+A payment channel is a relationship between 2 people so that they can send money repeatedly, and only record their final settlement on the blockchain. 
+This is more affordable than storing every money-transfer on the blockchain.
+The rules of the payment channel are enforced by providing evidence to the blockchain about the current channel state.
+
 It is possible to create secure channels with all these features:
 
 1. You can spend money in them without publishing anything to the blockchain.
