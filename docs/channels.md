@@ -59,14 +59,15 @@ The entire channel state consists of 2 channel contracts. One is the most recent
 
 ```
 { 
-  to:Bool,
-  amount:Integer,
+  amount1:Integer,
+  amount2:Integer,
   delay:Integer,
   pub1:Pubkey,
   pub2:Pubkey
 }
 ```
-`to` tells which side of the channel to put your money into. It is possible to put money into channels you don't control. `delay` is only used when you first create a new channel. 
+This puts money into both sides at the same time. The money in amount1 comes from account1's balance.
+`delay` is only used when you first create a new channel, not when you increase the amount of money
 
 Preferably it should be possible to make one tx that both participants sign that moves some of each of their money into the channel. That way neither person has to go first.
 

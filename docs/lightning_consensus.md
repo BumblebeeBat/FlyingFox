@@ -6,14 +6,16 @@ A cryptocurrency is money built out of software.
 The consensus protocol is the rules that participants must obey to participate in a cryptocurrency.
 The rules are carefully chosen so that it is expensive to control money that you don't own.
 The most popular cryptocurrency consensus protocols today are of the proof-of-work variety.
-Other proposals are: delegated proof-of-stake, various security bond proof of stakes, byzantine fault tolerant algorithms, and coin-age proof of stake.
 Lightning Consensus is a new consensus protocol proposed in this paper.
 It is more scalable and less expensive to operate than the existing methods, such as:
 
-* [DPOS](docs/delegated_pow_problem.md)
+* [DPOS (bitshares) ](docs/delegated_pos_problem.md)
 
+* [Unbonded POS (NXT, Peercoin)](docs/unbonded_pos_problems.md)
 
-There is a problem with the lightning network. Putting your money into a channel reduces the number of people that the money can be spent to, which reduces network liquidity and destroys value. This is similar to the problem that security-bond proof-of-stake consensus protocols have. If you lockn up money, that is the same as destroying the interest rate of that money. 
+* [Bonded POS where bonds are re-used for multiple purposes (Casper, Tendermint)](docs/2_types_of_bonds.md)
+
+There is a problem with the lightning network. Putting your money into a channel reduces the number of people that the money can be spent to, which reduces network liquidity and destroys value. This is similar to the problem that security-bond proof-of-stake consensus protocols have. If you lock up money, that is the same as destroying the interest rate of that money.
 
 The value that gets destroyed for maintaining channels can simultaneously be used to secure blockchain consensus, so we don't have to destroy value twice. We can kill 2 birds with 1 stone.
 
