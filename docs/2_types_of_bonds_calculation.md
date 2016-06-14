@@ -11,9 +11,9 @@ The cost to attack tendermint with a soft fork is as much as buying 2/3rds of th
 
 The cost to attack Flying Fox with a soft fork is as much as buying 2/3rds of all the money in channels, around 65% of the coins.
 
-Tendermint's security against soft forks is about 16x lower than Flying Fox's. Or more generally 2/3*3/2/X = 1/X
+Tendermint's security against soft forks is about 16x lower than Flying Fox's. Or more generally 2 / 3 * 3 / 2 / X = 1 / X
 
-16*8=128. or X*4000/26/X = 128
+16 * 8 = 128. or X * 4000 / 26 / X = 128
 For the same operating cost, Flying Fox consensus is 128 times more secure.
 
 The value of tendermint bonds doesn't matter. When we use "X" as the value, the X cancels out. Flying Fox is still 128 times more efficient.
