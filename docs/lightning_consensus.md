@@ -9,11 +9,11 @@ The most popular cryptocurrency consensus protocols today are of the proof-of-wo
 Lightning Consensus is a new consensus protocol proposed in this paper.
 It is more scalable and less expensive to operate than the existing methods, such as:
 
-* [DPOS (bitshares) ](docs/delegated_pos_problem.md)
+* [DPOS (bitshares)](delegated_pos_problem.md)
 
-* [Unbonded POS (NXT, Peercoin)](docs/unbonded_pos_problems.md)
+* [Unbonded POS (NXT, Peercoin)](unbonded_pos_problems.md)
 
-* [Bonded POS where bonds are re-used for multiple purposes (Casper, Tendermint)](docs/2_types_of_bonds.md)
+* [Bonded POS where bonds are re-used for multiple purposes (Casper, Tendermint)](2_types_of_bonds.md)
 
 There is a problem with the lightning network. Putting your money into a channel reduces the number of people that the money can be spent to, which reduces network liquidity and destroys value. This is similar to the problem that security-bond proof-of-stake consensus protocols have. If you lock up money, that is the same as destroying the interest rate of that money.
 

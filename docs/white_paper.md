@@ -14,17 +14,17 @@ In this paper, we propose a platform for trustlessly enforcing programmable gamb
 
 2. State Channels
 
-A [state channel](docs/lightning_network.md) is a relationship between 2 accounts which allows them to transfer money back and forth without recording anything to the blockchain. They are also used to make and resolve bets.
+A [state channel](lightning_network.md) is a relationship between 2 accounts which allows them to transfer money back and forth without recording anything to the blockchain. They are also used to make and resolve bets.
 
-3. [Bonded Proof of Stake](docs/2_types_of_bonds.md)
+3. [Bonded Proof of Stake](2_types_of_bonds.md)
 
 Bonded Proof of Stake is a type of consensus where some of the users put their money into bonds, making the money innaccessible for a time. They participate in choosing the next block for the chain. If they break any rule, their bond is taken away. If they follow all the rules, they get paid transaction fees from the users.
 
-4. [Delegated Proof of Stake](docs/delegated_pow_problem.md)
+4. [Delegated Proof of Stake](delegated_pow_problem.md)
 
 is a type of consensus where the users elect someone to be their representative. The representatives choose what block to add to the chain next.
 
-5. [Lightning Consensus](docs/lightning_consensus.md)
+5. [Lightning Consensus](lightning_consensus.md)
 
 Lightning Consensus is a Bonded Proof of Stake system that also has Delegated Proof of Stake properties. Each channel chooses one of the two participants to be the representative. Your likelyhood of being selected as validator increases the more money you have in channels. The economic situation of choosing someone to be your channel participant is such that it is expensive to buy votes. 
 

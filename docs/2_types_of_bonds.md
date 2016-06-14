@@ -24,4 +24,4 @@ The bond needs to be very big. Bigger than 9/10ths of the market cap hopefully. 
 
 If we use the same bond to accomplish both (1) and (2), then it will do both things poorly. It will be too big for (1), and it will be too small for (2).
 
-[calculation of exactly how much more secure having 2 types of bonds makes us](docs/2_types_of_bonds_calculation.md)
+[calculation of exactly how much more secure having 2 types of bonds makes us](2_types_of_bonds_calculation.md)

@@ -18,4 +18,4 @@ For the same operating cost, Flying Fox consensus is 128 times more secure.
 
 The value of tendermint bonds doesn't matter. When we use "X" as the value, the X cancels out. Flying Fox is still 128 times more efficient.
 
-[explanation for why 2 types of bonds is so much more efficient](docs/2_types_of_bonds.md)
+[explanation for why 2 types of bonds is so much more efficient](2_types_of_bonds.md)
