@@ -17,19 +17,29 @@ and S is the portion of the value on the blockchain in the small bond.
 In the case of Flying Fox, L / S = 128
 
 The interest rate is R.
+
 `CostConsensus(A) = X * R`.
+
 `CostConsensus(B) = S * R`.
+
 `CostConsensus(A)/CostConsensus(B) = (S/X)`.
 
-CostSoftFork(A) = 2 * X / 3.
-CostSoftFork(B) = 2 * L / 3.
-CostSoftFork(A) / CostSoftFork(B) = X / L.
 
-SecurityEfficiency(A) = 2 * X / 3 / (X * R) = 2 / (3 * R)
-SecurityEfficiency(B) = 2 * L / 3 / (S * R) = 2 * L / (3 * R * S)
-SecurityEfficiency(A) / SecurityEfficiency(B) = S / L.
+`CostSoftFork(A) = 2 * X / 3`.
 
-In the case of flying fox, L / S = 128, so the 2-bond blockchain has 128 times higher security efficiency than the 1-bond blockchain.
+`CostSoftFork(B) = 2 * L / 3`.
+
+`CostSoftFork(A) / CostSoftFork(B) = X / L`.
+
+
+`SecurityEfficiency(A) = 2 * X / 3 / (X * R) = 2 / (3 * R)`
+
+`SecurityEfficiency(B) = 2 * L / 3 / (S * R) = 2 * L / (3 * R * S)`
+
+`SecurityEfficiency(A) / SecurityEfficiency(B) = S / L`.
+
+
+In the case of flying fox, `L / S = 128`, so the 2-bond blockchain has 128 times higher security efficiency than the 1-bond blockchain.
 
 So, given the same operating costs, Flying Fox can secure a market cap that is 128 times larger than bonded proof of stake systems that only have 1 type of bond.
 
