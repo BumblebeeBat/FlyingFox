@@ -14,7 +14,7 @@ It is possible to create secure channels with all these features:
 6. No fee for spending funds through the channel.
 7. Spend money as fast as sending a message, you don't have to wait for any confirmations.
 
-Bitcoin channels will eventually be able to do everything except #9 and #3. For #3 in bitcoin, each additional hash-lock in a channel doubles the time and space requirements. `O(N^2)`
+Bitcoin channels will eventually be able to do everything except #3. For #3 in bitcoin, each additional hash-lock in a channel doubles the time and space requirements. `O(N^2)`
 
 #### Limitations that channels have, compared with on-blockchain tx:
 

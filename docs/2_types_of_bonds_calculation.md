@@ -4,7 +4,7 @@ Security efficiency is important because, for any blockchain consensus protocol,
 When we compare cars, we look at miles per gallon, called "fuel efficiency". How much you spend to run the car divided by how far you can drive it.
 When we compare consensus protocols, we look at "security efficiency". Which is how much you spend to successfully attack the consensus protocol divided by the cost to maintain consensus for a day.
 
-`SecurityEfficiency(Blockchain) = CostSoftFork(Blockchain) / CostConsensus(Blockchain)`
+`SecurityEfficiency(Blockchain) = CostAttack(Blockchain) / CostConsensus(Blockchain)`
 
 Blockchain A has 1 type of bond. `1 >= X > 0`.
 where X is the portion of the value on the blockchain that is in bonds.
@@ -22,13 +22,13 @@ The interest rate is R. For Blockchain B, the interest rate only applies to the 
 
 `CostConsensus(A)/CostConsensus(B) = (S/X)`.
 
-For blockchain B, the soft fork needs to be agreed upon by a majority of the large bond, because the validators are chosen from among them. For A, there is only one bond, and the validators are chosen from it.
+For blockchain B, the attack needs to be agreed upon by a majority of the large bond, because the validators are chosen from among them. For A, there is only one bond, and the validators are chosen from it.
 
-`CostSoftFork(A) = X / 2`.
+`CostAttack(A) = X / 2`.
 
-`CostSoftFork(B) = L / 2`.
+`CostAttack(B) = L / 2`.
 
-`CostSoftFork(A) / CostSoftFork(B) = X / L`.
+`CostAttack(A) / CostAttack(B) = X / L`.
 
 
 `SecurityEfficiency(A) = X / (2 * X * R) = 1 / (2 * R)`
