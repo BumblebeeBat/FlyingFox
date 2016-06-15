@@ -1,6 +1,6 @@
 Calculation of how much more efficient a blockchain can be if it splits its bonds into 2 types.
 
-Security efficiency is important because, for any blockchain consensus protocol, doubling spending on security should double the cost of an attack.
+Security efficiency is important because, for any blockchain consensus protocol, doubling spending on security should double the cost of an attack. Just like doubling the gas in a cars tank makes it drive twice as far.
 When we compare cars, we look at miles per gallon, called "fuel efficiency". How much you have to spend to run the car.
 When we compare consensus protocols, we look at "security efficiency". How much you have to spend to successfully attack the consensus protocol divided by the cost to maintain consensus for a day.
 
@@ -14,7 +14,7 @@ Where L is the portion of the value on the blockchain in the big bond.
 and S is the portion of the value on the blockchain in the small bond.
 In the case of Flying Fox, `L / S = 128`
 
-The interest rate is R. For Blockchain B, the interest rate only applies to the smaller bond which is locked up as a security deposit. Since the big bond is spendable, the interest rate doesn't apply.
+The interest rate is R. For Blockchain B, the interest rate only applies to the smaller bond which is locked up as a security deposit. Since the big bond is spendable, we don't lose value by the interest rate.
 
 `CostConsensus(A) = X * R`.
 
