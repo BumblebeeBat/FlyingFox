@@ -1,4 +1,4 @@
-Calculation of how much more efficient a blockchain can be if it's bonds are split into 2 types.
+Calculation of how much more efficient a blockchain can be if its bonds are split into 2 types.
 
 Security efficiency is important because, for any blockchain consensus protocol, doubling spending on security should double the cost of an attack. Just like doubling the gas in a car's tank makes it drive twice as far.
 When we compare cars, we look at miles per gallon, called "fuel efficiency". How much you have to spend to run the car divided by how far you drive it.
