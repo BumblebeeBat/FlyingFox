@@ -2,7 +2,7 @@ Calculation of how much more efficient a blockchain can be if it splits its bond
 
 Security efficiency is important because, for any blockchain consensus protocol, doubling spending on security should double the cost of an attack.
 When we compare cars, we look at miles per gallon, called "fuel efficiency". How much you have to spend to run the car.
-When we compare consensus protocols, we look at "security efficiency". How much you have to spend to successfully attack the consensus protocol divided by the amount of value in the consensus protocol.
+When we compare consensus protocols, we look at "security efficiency". How much you have to spend to successfully attack the consensus protocol divided by the cost to maintain consensus for a day.
 
 `SecurityEfficiency(Blockchain) = CostSoftFork(Blockchain) / CostConsensus(Blockchain)`
 
