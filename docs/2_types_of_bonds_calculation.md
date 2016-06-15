@@ -14,7 +14,7 @@ Where L is the portion of the value on the blockchain in the big bond.
 and S is the portion of the value on the blockchain in the small bond.
 In the case of Flying Fox, `L / S = 128`
 
-The interest rate is R.
+The interest rate is R. For Blockchain B, the interest rate only applies to the smaller bond which is locked up as a security deposit. Since the big bond is spendable, the interest rate doesn't apply.
 
 `CostConsensus(A) = X * R`.
 
@@ -22,17 +22,18 @@ The interest rate is R.
 
 `CostConsensus(A)/CostConsensus(B) = (S/X)`.
 
+For blockchain B, the soft fork needs to be agreed upon by a majority of the large bond, because the validators are chosen from among them. For A, there is only one bond, and the validators are chosen from it.
 
-`CostSoftFork(A) = 2 * X / 3`.
+`CostSoftFork(A) = X / 2`.
 
-`CostSoftFork(B) = 2 * L / 3`.
+`CostSoftFork(B) = L / 2`.
 
 `CostSoftFork(A) / CostSoftFork(B) = X / L`.
 
 
-`SecurityEfficiency(A) = 2 * X / 3 / (X * R) = 2 / (3 * R)`
+`SecurityEfficiency(A) = X / (2 * X * R) = 1 / (2 * R)`
 
-`SecurityEfficiency(B) = 2 * L / 3 / (S * R) = 2 * L / (3 * R * S)`
+`SecurityEfficiency(B) = L / (2 * S * R) = L / (2 * R * S)`
 
 `SecurityEfficiency(A) / SecurityEfficiency(B) = S / L`.
 
