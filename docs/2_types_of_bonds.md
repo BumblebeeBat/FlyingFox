@@ -12,5 +12,4 @@ If we use the same bond to accomplish both (1) and (2), then it will do both thi
 
 [calculation of exactly how much more secure having 2 types of bonds makes us](2_types_of_bonds_calculation.md)
 
-DPOS is one way to solve this problem.
-Flying Fox mixes the delegation mechanism with the channel mechanism, which is another way to solve this problem.
+Flying Fox mixes the delegation mechanism with the channel mechanism, which is a way to create the second type of bonds.
