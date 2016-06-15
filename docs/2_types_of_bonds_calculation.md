@@ -11,10 +11,10 @@ The security efficiency of a blockchain is (cost to do a soft fork attack)/(cost
 Blockchain A has 1 type of bond. `1 >= X > 0`.
 where X is the portion of the value on the blockchain that is in bonds.
 
-Blockchain B has 2 types of bonds. `1 > L > S > 0`, `L+S <= 1`.
+Blockchain B has 2 types of bonds. `1 > L > S > 0`, `L + S <= 1`.
 Where L is the portion of the value on the blockchain in the big bond.
 and S is the portion of the value on the blockchain in the small bond.
-In the case of Flying Fox, L / S = 128
+In the case of Flying Fox, `L / S = 128`
 
 The interest rate is R.
 
