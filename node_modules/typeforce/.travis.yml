@@ -1,0 +1,15 @@
+sudo: false
+language: node_js
+node_js:
+  - "0.10"
+  - "0.12"
+  - "iojs"
+  - "4.0.0"
+  - "5.0.0"
+env:
+  - TEST_SUITE=unit
+matrix:
+    include:
+        - node_js: "0.12"
+          env: TEST_SUITE=standard
+script: "npm run-script $TEST_SUITE"

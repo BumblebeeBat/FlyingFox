@@ -1,5 +1,7 @@
 abstract: We show that shard scaling is insecure against soft-fork attacks, and that state-channel scaling is secure.
 
+Sharding is contradictory with this goal: money inside of baby chains should give it's owner just as much power over consensus as the same amount of money on the main chain.
+
 N is the number of transactions made. Without scaling O(N) is how many transactions need to be processed by every node. With scaling O(log(N)) is how many transactions need to be processed by every node.
 
 The scaling methods being researched now look like many baby blockchains that are linked to one big one. The baby blockchains have many transactions, but only rarely report their state to the main chain.
