@@ -1,8 +1,14 @@
 Calculation of how much more efficient a blockchain can be if its bonds are split into 2 types.
 
-Security efficiency is important because, for any blockchain consensus protocol, doubling spending on security should double the cost of an attack. Just like doubling the gas in a car's tank makes it drive twice as far.
+For any blockchain protocol, if you double spending on security, then you are also doubling the cost to attack. 
+
+Similarly in home security, if you build your walls twice as thick, it will cost twice as much to build, and it costs twice as much to penetrate.
+When looking at the efficiency of a home security strategy, you are interested in the cost to rob the house, divided by the cost to build and maintain the security system.
+When looking at the "security efficiency" of a blockchain consensus protocol, we are interested in the cost to attack the system, divided by the cost to maintain the system.
+
+Doubling the gas in a car's tank makes it drive twice as far.
 When we compare cars, we look at miles per gallon, called "fuel efficiency". How much you spend to run the car divided by how far you can drive it.
-When we compare consensus protocols, we look at "security efficiency". Which is how much you spend to successfully attack the consensus protocol divided by the cost to maintain consensus for a day.
+When we compare consensus protocols, we look at "security efficiency". Which is how much you would need to spend to successfully attack the consensus protocol divided by the cost to maintain consensus for a day.
 
 `SecurityEfficiency(Blockchain) = CostAttack(Blockchain) / CostConsensus(Blockchain)`
 
@@ -38,7 +44,7 @@ For blockchain B, the attack needs to be agreed upon by a majority of the large 
 `SecurityEfficiency(A) / SecurityEfficiency(B) = S / L`.
 
 
-In the case of flying fox, `L / S = 128`, so the 2-bond blockchain has 128 times higher security efficiency than the 1-bond blockchain.
+In the case of flying fox, `L / S = 128`, so the 2-bond blockchain has 128 times higher efficiency than the 1-bond blockchain.
 
 So, given the same operating costs, Flying Fox can secure a market cap that is 128 times larger than bonded proof of stake systems that only have 1 type of bond.
 

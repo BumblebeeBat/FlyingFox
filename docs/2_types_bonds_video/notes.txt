@@ -1,0 +1,1 @@
+convert video from ogg to mp3 by double clicking it. ubuntu has a utility "audio converter"
