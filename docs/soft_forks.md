@@ -5,4 +5,8 @@ Because any block that isn't in numerical order gets censored.
 
 Soft forks allow the addition of any censorship rule.
 
-It seems like a soft fork could change consensus in any way.
+There exists some distribution of humans who has control over soft forks. I call it the "soft fork distribution".
+
+In short-finality systems like tendermint, it takes 2/3rds consensus of the soft for distribution for a soft fork to happen, but any 1/3rd can create an ultimatum for the other 2/3rds: Either the soft fork happens, or we stop making new blocks.
+
+In long-finality systems like Flying Fox and Casper, it takes a simple majority to cause a soft fork.

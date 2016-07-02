@@ -5,7 +5,7 @@ read(F) ->
     case file:read_file(F) of
         {ok, Out} -> binary_to_term(Out);
         {error, enoent} -> 
-            io:fwrite("file does not exist\n"),
+            %io:fwrite("file does not exist\n"),
             "";
         {error, Reason} -> Reason
     end.
