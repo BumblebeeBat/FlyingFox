@@ -3,6 +3,7 @@
 
 hash(S) -> 
     crypto:hmac(sha256, S, "").
+doit(S) when is_binary(S) -> hash(S);
 doit(S) -> hash(term_to_binary(S)).
 file(S) -> 
     {ok, F} = file:open(S, [read, binary]),

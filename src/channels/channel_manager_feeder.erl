@@ -96,17 +96,24 @@ recieve_account(Acc, MinAmount, SignedPayment) ->
 recieve(ChId, MinAmount, SignedPayment) ->
     %we need to verify that the other party signed it.
     ID = keys:id(),
+    Pub = sign:pub(SignedPayment),
+    PAddr = sign:pubkey2address(Pub),
     Payment = sign:data(SignedPayment),
     A1 = channel_block_tx:acc1(Payment),
     A2 = channel_block_tx:acc2(Payment),
     Acc1 = block_tree:account(A1),
     Acc2 = block_tree:account(A2),
-    Pub1 = accounts:pub(Acc1),
-    Pub2 = accounts:pub(Acc2),
-    true = case ID of
-               A1 -> sign:verify_2(SignedPayment, Pub2);
-               A2 -> sign:verify_1(SignedPayment, Pub1)
-    end,
+    Addr1 = accounts:addr(Acc1),
+    Addr2 = accounts:addr(Acc2),
+    %Pub1 = accounts:pub(Acc1),
+    %Pub2 = accounts:pub(Acc2),
+    true = case PAddr of
+	       Addr1 -> sign:verify_1(SignedPayment, PAddr);
+	       Addr2 -> sign:verify_2(SignedPayment, PAddr)
+	   end,
+    %A1 -> sign:verify_2(SignedPayment, Pub2);
+    %A2 -> sign:verify_1(SignedPayment, Pub1)
+    %end,
     true = channel_block_tx:is_cb(Payment),
     gen_server:call(?MODULE, {recieve, ID, MinAmount, ChId, SignedPayment}).
 channel(X) -> X#f.channel.

@@ -1,11 +1,15 @@
 -module(create_account_tx).
 -export([doit/7, create_account/3]).
--record(ca, {from = 0, nonce = 0, pub = <<"">>, amount = 0, fee = 0}).
+-record(ca, {from = 0, nonce = 0, address = <<"">>, amount = 0, fee = 0}).
 
-create_account(Pub, Amount, Fee) ->
+create_account(Addr, Amount, Fee) ->
+    A = if
+	    size(Addr) > 85 -> sign:pubkey2address(Addr);
+	    true -> Addr
+	end,
     Id = keys:id(),
     Acc = block_tree:account(Id),
-    #ca{from = Id, nonce = accounts:nonce(Acc) + 1, pub = Pub, amount = Amount, fee = Fee}.
+    #ca{from = Id, nonce = accounts:nonce(Acc) + 1, address = A, amount = Amount, fee = Fee}.
 next_top(DBroot, Accounts) -> 
     Array = accounts:array(),
     next_top_helper(Array, accounts:top(), DBroot, Accounts).
@@ -22,14 +26,16 @@ next_top_helper(Array, Top, DBroot, Accounts) ->
     end.
     
 doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NS, NewHeight) ->
-    Pub = if
-	      size(Tx#ca.pub) == 65 -> base64:encode(Tx#ca.pub);
-	      true -> Tx#ca.pub
-	  end,
+    %Addr = if
+    %size(Tx#ca.address) == 65 -> base64:encode(Tx#ca.address);
+    %true -> Tx#ca.address
+    %end,
+    Addr = Tx#ca.address,
+    %Addr = sign:pubkey2address(Pub),
     F = block_tree:account(Tx#ca.from, ParentKey, Accounts),
     NewId = next_top(ParentKey, Accounts),
     true = NewId < constants:max_address(),
-    NT = accounts:update(accounts:empty(Pub), NewHeight, Tx#ca.amount, 0, 0, TotalCoins),
+    NT = accounts:update(accounts:empty(Addr), NewHeight, Tx#ca.amount, 0, 0, TotalCoins),
     NF = accounts:update(F, NewHeight, (-Tx#ca.amount - constants:create_account_fee() - Tx#ca.fee), 0, 1, TotalCoins),
     Nonce = accounts:nonce(NF),
     Nonce = Tx#ca.nonce,
@@ -37,8 +43,9 @@ doit(Tx, ParentKey, Channels, Accounts, TotalCoins, NS, NewHeight) ->
     Accounts3 = dict:store(Tx#ca.from, NF, Accounts2),
     MyId = keys:id(),
     MyPub = keys:pubkey(),
+    MyAddress = sign:pubkey2address(MyPub),
     if
-	((Pub == MyPub) and (MyId == -1)) -> keys:update_id(NewId);
+	((Addr == MyAddress) and (MyId == -1)) -> keys:update_id(NewId);
 	true -> 1 = 1
     end,
     {Channels, Accounts3, TotalCoins - constants:create_account_fee(), NS}.

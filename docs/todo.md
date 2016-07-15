@@ -1,3 +1,5 @@
+the language needs a word for turning pubkeys into addresses.
+
 We need a web wallet so that users don't have to install anything. The external API should get a lot bigger.
 * We need javascript to handle the signing of transactions
 

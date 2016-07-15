@@ -54,7 +54,7 @@ handle_cast({id_update, Id}, R) ->
     db:save(?LOC(), X),
     {noreply, #f{pub = R#f.pub, priv = R#f.priv, id = Id}};
 handle_cast({new, Brainwallet}, _R) ->
-    {Pub, Priv} = sign:new_key(),
+    {_, Pub, Priv} = sign:hard_new_key(),
     store(Pub, Priv, Brainwallet, -1),
     {noreply, #f{pub=Pub, priv=Priv}};
 handle_cast({unlock, Brainwallet}, _) ->

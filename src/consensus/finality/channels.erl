@@ -52,18 +52,14 @@ init(ok) ->
 						%this is so 0 has the majority of delegations.
 		IC = constants:initial_coins(),
 		Delegated = fractions:multiply_int(constants:initial_portion_delegated(), IC),
-		Top = constants:initial_channels(),
-		MoneyPerChannel = Delegated div Top,
-		DeletedArray = all_ones(Top),
+		InitialChannels = constants:initial_channels(),
+		MoneyPerChannel = Delegated div InitialChannels,
+		DeletedArray = all_ones(InitialChannels),
 		Channel = <<0:32,0:32,MoneyPerChannel:48,0:48,0:1,0:32,0:38,1:2,0:1,0:6>>,
-		Channels = binary_repeat(Top, Channel),
+		Channels = binary_repeat(InitialChannels, Channel),
 		write_helper(0, DeletedArray, ?empty),
 		write_helper(0, Channels, ?file),
-		{Top, DeletedArray};
-						%Top = 0,
-						%DeletedArray = << 0 >>,
-						%write_helper(0, DeletedArray, ?empty),
-						%write_helper(0, <<>>, ?file);
+		{InitialChannels, DeletedArray};
 	    {ok, DeletedArray} ->
 		Top = walk(0, DeletedArray),
 		{Top, DeletedArray}

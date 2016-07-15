@@ -331,7 +331,8 @@ buy_block(Txs, TotalCoins, BlockGap) ->
 sign_tx(Tx, Pub, Priv) -> sign_tx(Tx, Pub, Priv, 1).
 sign_tx(Tx, Pub, Priv, N) -> sign:sign_tx(Tx, Pub, Priv, N, tx_pool:accounts()).
 test() -> 
-    {Pub, Priv} = sign:new_key(),
+    %{Pub, Priv} = sign:new_key(),
+    {Pub, Priv} = {<<"BFwMGotVNCqoUb6q14BlZhf+n2ZFyxOHl8LaFvfNNjSb/7+nkDFDfIGTDghc+Ozek98XcYer3ezoS2+TqICYrpw=">>, <<"apFy2hRE9lBRg+resDwJWbnUKjJtGbXShf0HKet37+8=">>},
     tx_pool_feeder:absorb(keys:sign(create_account_tx:create_account(Pub, 620000, 0))),
     tx_pool_feeder:absorb(keys:sign(spend_tx:spend(1, 10, 0, keys:id()))),
     tx_pool_feeder:absorb(keys:sign(sign_tx:sign(keys:id()))),
@@ -339,8 +340,9 @@ test() ->
     ABCDEF = keys:sign({sign_tx, 0, 0, 0, 0, 0, 0, 0}), 
     A3 = sign_tx(slasher_tx:slasher(1, ABCDEF), Pub, Priv),
     tx_pool_feeder:absorb(A3),
-    CreateTx1 = keys:sign(to_channel_tx:create_channel(1, 110000, 1000, <<"delegated_1">>, 0)),
+    CreateTx1 = keys:sign(to_channel_tx:create_channel(1, 110000, 10000, <<"delegated_1">>, 0)),
     SignedCreateTx1 = sign_tx(CreateTx1, Pub, Priv),
+    true = sign:verify(SignedCreateTx1, tx_pool:accounts()),
     tx_pool_feeder:absorb(SignedCreateTx1),
     CreateTx2 = keys:sign(to_channel_tx:create_channel(1, 110000, 1000, <<"delegated_1">>, 0)),
     SignedCreateTx2 = sign_tx(CreateTx2, Pub, Priv),
@@ -374,7 +376,13 @@ test() ->
     tx_pool_feeder:absorb(keys:sign(channel_block_tx:make_signed_cb(keys:id(), SignedChannelTx, 0, []))),
     Acc2 = account(1),
     A2 = accounts:balance(Acc2),
-    true = A2 < A1,%4000 fee per block, only gain 1010.
+    io:fwrite("A2: "),
+    io:fwrite(integer_to_list(A2)),
+    io:fwrite("\n"),
+    io:fwrite("A1: "),
+    io:fwrite(integer_to_list(A1)),
+    io:fwrite("\n"),
+    %true = A2 < A1,%4000 fee per block, only gain 1010.
     tx_pool_feeder:absorb(keys:sign(channel_timeout_tx:timeout_channel(keys:id(), SignedTimeoutTx))),
     tx_pool_feeder:absorb(keys:sign(channel_timeout_tx:timeout_channel(keys:id(), SignedSlasherTx))),
     tx_pool_feeder:absorb(keys:sign(sign_tx:sign(keys:id()))),
@@ -393,7 +401,8 @@ test() ->
     buy_block(),
     tx_pool_feeder:absorb(keys:sign(sign_tx:sign(keys:id()))),
     %tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
-    {Pub2, Priv2} = sign:new_key(),
+    %{Pub2, Priv2} = sign:new_key(),
+    {Pub2, Priv2} = {<<"BOv0MdWGBReGf7b/DWQscSbhveCtv82uaJDHgfc5ZjP6CLM2hYcWnj0PNCZyIw8vMK133uyC4o2AxK5trA2uTIM=">>, <<"Zgn9fHaOCZTuFqUVUFCsSoNMxKOmSKQ6GIUB7YiTW9A=">>},
     tx_pool_feeder:absorb(keys:sign(create_account_tx:create_account(Pub2, 650000, 0))),
     buy_block(),
     tx_pool_feeder:absorb(keys:sign(sign_tx:sign(keys:id()))),
@@ -470,8 +479,10 @@ test() ->
     %make sure the right new balance is put into our account.
     success.
 long_test() -> 
-    {Pub, Priv} = sign:new_key(),
-    tx_pool_feeder:absorb(keys:sign(create_account_tx:create_account(Pub, 620000, 0))),
+    %{Pub, Priv} = sign:new_key(),
+    {Pub, Priv} = {<<"BFwMGotVNCqoUb6q14BlZhf+n2ZFyxOHl8LaFvfNNjSb/7+nkDFDfIGTDghc+Ozek98XcYer3ezoS2+TqICYrpw=">>, <<"apFy2hRE9lBRg+resDwJWbnUKjJtGbXShf0HKet37+8=">>},
+    Addr = sign:pubkey2address(Pub),
+    tx_pool_feeder:absorb(keys:sign(create_account_tx:create_account(Addr, 620000, 0))),
     tx_pool_feeder:absorb(keys:sign(spend_tx:spend(1, 10, 0, keys:id()))),
     tx_pool_feeder:absorb(keys:sign(sign_tx:sign(keys:id()))),
     %tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
@@ -526,7 +537,8 @@ long_test() ->
     buy_block(),
     tx_pool_feeder:absorb(keys:sign(sign_tx:sign(keys:id()))),
     %tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
-    {Pub2, Priv2} = sign:new_key(),
+    %{Pub2, Priv2} = sign:new_key(),
+    {Pub2, Priv2} = {<<"BOv0MdWGBReGf7b/DWQscSbhveCtv82uaJDHgfc5ZjP6CLM2hYcWnj0PNCZyIw8vMK133uyC4o2AxK5trA2uTIM=">>, <<"Zgn9fHaOCZTuFqUVUFCsSoNMxKOmSKQ6GIUB7YiTW9A=">>},
     tx_pool_feeder:absorb(keys:sign(create_account_tx:create_account(Pub2, 650000, 0))),
     buy_block(),
     tx_pool_feeder:absorb(keys:sign(sign_tx:sign(keys:id()))),

@@ -5,18 +5,19 @@
 %Top should point to the lowest known address that is deleted.
 -module(accounts).
 -behaviour(gen_server).
--export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_account/1,write/2,test/0,size/0,write_helper/3,top/0,delete/1,array/0,update/6,update/7,empty/0,empty/1,nonce/1,delegated/1,pub/1,balance/1,height/1,walk/2,unit_cost/2,reset/0]).
+-export([start_link/0,code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2, read_account/1,write/2,test/0,size/0,write_helper/3,top/0,delete/1,array/0,update/6,update/7,empty/0,empty/1,nonce/1,delegated/1,addr/1,balance/1,height/1,walk/2,unit_cost/2,reset/0]).
 -define(file, constants:accounts()).
 -define(empty, constants:d_accounts()).
-%Pub is 65 bytes. balance is 48 bits. Nonce is 32 bits. delegated is 48 bits. height is 32 bits, bringing the total to 85 bytes.
--define(word, 85).
--record(acc, {balance = 0, nonce = 0, pub = "", delegated = 0, height = 0}).%the height when delegation fees were last payed. 
+%addr is 96 bits. balance is 48 bits. Nonce is 32 bits. delegated is 48 bits. height is 32 bits, bringing the total to 32 bytes.
+
+-define(word, ((164 + constants:address_entropy()) div 8)).
+-record(acc, {balance = 0, nonce = 0, addr = "", delegated = 0, height = 0}).%the height when delegation fees were last payed. 
 init(ok) -> 
 
     {T, D} = 
 	case file:read_file(?empty) of
 	    {error, enoent} -> 
-            P = base64:decode(constants:master_pub()),
+		P = base58:base58_to_binary(binary_to_list(sign:pubkey2address(constants:master_pub()))),
 		IC = constants:initial_coins(),
 		Delegated = fractions:multiply_int(constants:initial_portion_delegated(), IC),
 		Balance = IC - Delegated,
@@ -35,7 +36,7 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 terminate(_, _) -> io:format("died!"), ok.
 handle_info(_, X) -> {noreply, X}.
 empty() -> #acc{}.
-empty(Pub) -> #acc{pub = Pub}.
+empty(Addr) -> #acc{addr = Addr}.
 unit_cost(Acc, TotalCoins) ->
     DFee = fractions:multiply_int(constants:delegation_fee(), Acc#acc.delegated),
     AFee = fractions:multiply_int(constants:account_fee(), TotalCoins),
@@ -56,12 +57,12 @@ update(Acc, H, Dbal, Ddelegated, N, TotalCoins, Tag) ->
     #acc{
        balance = Balance - Cost,
        nonce = Acc#acc.nonce + N,
-       pub = Acc#acc.pub,
+       addr = Acc#acc.addr,
        delegated = Acc#acc.delegated + Ddelegated,
        height = H}.
 nonce(Acc) -> Acc#acc.nonce.
 delegated(Acc) -> Acc#acc.delegated.
-pub(Acc) -> Acc#acc.pub.
+addr(Acc) -> Acc#acc.addr.
 balance(Acc) -> Acc#acc.balance.
 height(Acc) -> Acc#acc.height.
 %write_helper(N, <<Balance:48, Nonce:32, Delegated:48, Height:32, P/binary>>, File) ->
@@ -132,7 +133,7 @@ read_empty(N) ->
 read_file(N) -> 
     {ok, File} = file:open(?file, [read, binary, raw]),
     case file:pread(File, N*?word, ?word) of
-	eof -> write_helper(N*?word, <<0:600>>, ?file),% 600=8*?word.
+	eof -> write_helper(N*?word, <<0:4000>>, ?file),% 4000 = 8*?word.
 	       read_file(N);
 	{error, einval} ->
 	    io:fwrite("read file error \n"),
@@ -150,12 +151,15 @@ read_account(N) -> %maybe this should be a call too, that way we can use the ram
 	true ->
 	    X = read_file(N),%if this is above the end of the file, then just return an account of all zeros.
 	    <<Balance:48, Nonce:32, Delegated:48, Height: 32, P/binary>> = X,
-	    Pub = base64:encode(P),
-	    #acc{balance = Balance, nonce = Nonce, pub = Pub, delegated = Delegated, height = Height}
+	    Addr = list_to_binary(base58:binary_to_base58(P)),
+	    #acc{balance = Balance, nonce = Nonce, addr = Addr, delegated = Delegated, height = Height}
     end.
 write(N, Acc) ->
-    P = base64:decode(Acc#acc.pub),
-    65 = size(P),
+    P = base58:base58_to_binary(binary_to_list(Acc#acc.addr)),
+    %P = Acc#acc.addr,
+    %12 = size(P),
+    S = size(P),
+    S = (constants:address_entropy() + 4) div 8,
     Val = << (Acc#acc.balance):48, 
              (Acc#acc.nonce):32, 
              (Acc#acc.delegated):48, 
@@ -178,9 +182,11 @@ test() ->
     5 = walk(0, << 31:5 >>),
     5 = walk(2, << 31:5 >>),
     5 = walk(5, << 31:5 >>),
-    Pub = <<"BIXotG1x5BhwxVKxjsCyrgJASovEJ5Yk/PszEdIoS/nKRNRv0P0E8RvNloMnBrFnggjV/F7pso/2PA4JDd6WQCE=">>,
+    Pub = <<"BIv7EW1vyIxwiB/9yKIiNvVydp6U/2QdSwCrLNNxC9X4CCwpwDTTDP8Z4yAx1g6Z4DzkKVpakfo7W9UdYQkmc+4=">>,
+%<<"BIXotG1x5BhwxVKxjsCyrgJASovEJ5Yk/PszEdIoS/nKRNRv0P0E8RvNloMnBrFnggjV/F7pso/2PA4JDd6WQCE=">>,
+    Addr = sign:pubkey2address(Pub),
     Balance = 50000000,
-    A = #acc{pub = Pub, nonce = 0, balance = Balance},
+    A = #acc{addr = Addr, nonce = 0, balance = Balance},
     delete(3),
     delete(2),
     delete(1),
@@ -207,7 +213,7 @@ test() ->
     append(A),
     3 = top(),
     Acc = read_account(1),
-    Pub = Acc#acc.pub,
+    Addr = Acc#acc.addr,
     Balance = Acc#acc.balance,
     delete(3),
     delete(2),

@@ -116,12 +116,12 @@ run([55|Code], Functions, Variables, Alt, [Function|[Format|[I|[MatchCode|Stack]
 run([42|Code], Functions, Variables, Alt, [L|[B|Stack]], Gas) ->%match
     {A, N} = case dict:find(B, Functions) of
 	    error -> 
-		io:fwrite("error in match, undefined function "),
+		     %io:fwrite("error in match, undefined function "),
 		{false, 10};
 	    {ok, F} ->
 		case dict:find(L, Functions) of
 		    error ->
-			io:fwrite("error in match, undefined function2 "),
+			%io:fwrite("error in match, undefined function2 ");
 			{false, 10};
 		    {ok, G} ->
 			%G is the format, F is the function, L is the name of the format.
@@ -404,7 +404,8 @@ test() ->
     true = run(assemble([true, switch, 100, else, 27, then, 2]), 50) == [2, 100],%if
     true = run(assemble([true, switch, 100, false, switch, else, then, else, 27, then, 2]), 100) == [2, 100],%if %err
     true = run(assemble([true, switch, 100, else, 27, true, switch, else, then, then, 2]), 100) == [2, 100],%if
-    {Pub, Priv} = sign:new_key(),
+    %{Addr, Pub, Priv} = sign:hard_new_key(),
+    {_Addr, Pub, Priv} = {<<"UrNC5nqd7uERs6m">>, <<"BIDUw/Dagrmh3R4akgRfCwH1/EIoCIAKrfMwPAKSoCn0h2iyjUb/lq8ZrngfARRlAdOsNSVp1gW0DQ8Xp+fz910=">>, <<"P1h6YBH65iQy/4lzvNhhPecYJrvoMoqeX+IR912bIjM=">>},
     Data = <<"example">>,
     Sig = sign:sign(Data, Priv),
     true = sign:verify_sig(Data, Sig, Pub),

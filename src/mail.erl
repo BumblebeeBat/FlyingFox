@@ -116,19 +116,20 @@ internal_send(To, Msg, Seconds) ->
 
             
 test() ->            
-    {Pub, Priv} = sign:new_key(),
+    {Addr, Pub, Priv} = sign:hard_new_key(),
+    %{Addr, Pub, Priv} = {<<"UrNC5nqd7uERs6m">>, <<"BIDUw/Dagrmh3R4akgRfCwH1/EIoCIAKrfMwPAKSoCn0h2iyjUb/lq8ZrngfARRlAdOsNSVp1gW0DQ8Xp+fz910=">>, <<"P1h6YBH65iQy/4lzvNhhPecYJrvoMoqeX+IR912bIjM=">>},
     tx_pool_feeder:absorb(keys:sign(create_account_tx:create_account(Pub, 620000, 0))),
     tx_pool_feeder:absorb(keys:sign(spend_tx:spend(1, 10, 0, keys:id()))),
     tx_pool_feeder:absorb(keys:sign(sign_tx:sign(keys:id()))),
     %tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
     block_tree:buy_block(),
     CreateTx1 = keys:sign(to_channel_tx:create_channel(3, 110000, 1000, <<"delegated_1">>, 0)),
-    P5 = accounts:pub(block_tree:account(5)),
-    P4 = accounts:pub(block_tree:account(4)),
-    P3 = accounts:pub(block_tree:account(3)),
-    P2 = accounts:pub(block_tree:account(2)),
-    P1 = accounts:pub(block_tree:account(1)),
-    ID = case Pub of 
+    P5 = accounts:addr(block_tree:account(5)),
+    P4 = accounts:addr(block_tree:account(4)),
+    P3 = accounts:addr(block_tree:account(3)),
+    P2 = accounts:addr(block_tree:account(2)),
+    P1 = accounts:addr(block_tree:account(1)),
+    ID = case Addr of 
 	P1 -> 1;
 	P2 -> 2;
 	P3 -> 3;

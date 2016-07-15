@@ -11,7 +11,8 @@ finality() -> 26.%/docs/security.py explains why.
 validators_elected_per_block() -> 54.
 minimum_validators_per_block() -> 36.
 chances_per_address() -> 200. %Each address has this many chances to be a validator per block. this makes it possible to be validator more than once on the same block. 
-master_pub() -> <<"BDaKCuuVIX1X19T7R4OGyUEzZ6JUpQlVI+coOVxS/KfdYri5Ny8clnnsBbo3LMCsyhiZ6RmvwFBKNsgE9ehOi9U=">>.
+address_entropy() -> 92.
+master_pub() -> <<"BMDq+C+mI+Al4f5WHtq93IrCDaCrq0VU6+BxRaRZ0CgPjGppwu6nIg654GQGx8jQWwvVkjvODtDpKayUInZiOJQ=">>.
 max_size() -> 2000000000.%should be 2 gigabytes, does not include old blocks.
 gas_limit() -> 1000000.%30,000 is enough for an oracle with 30 elements in the matrix. For example 5 oracle participants and 6 decisions.
 %200,000,000 is enough to find the first 10001 prime numbers.
@@ -37,6 +38,7 @@ delete_account_reward() -> 0.%create_account_fee() * 19 div 20. % 95% refund.
 security_ratio() -> fractions:new(3, 2).
 -define(SecurityBondsPerWinner, fractions:new(1, 4000 * minimum_validators_per_block())). 
 security_bonds_per_winner() -> ?SecurityBondsPerWinner.% so around 0.5% of money is locked up at a time, and it takes around 4000 blocks to move all the money. %this money goes from validators, to themselves. 
+%At most, a channel can contain 1/4000th of the money.
 initial_channels() -> %Around 10000 channels.
     MVB = minimum_validators_per_block(),
     D = fractions:divide(security_ratio(), security_bonds_per_winner()),

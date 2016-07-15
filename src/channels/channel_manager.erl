@@ -100,27 +100,30 @@ hashlock(ChId, Ch, Amount, SecretHash, Id) ->
 
 
 test() ->    
-    {Pub, Priv} = sign:new_key(),
+    %{Pub, Priv} = sign:new_key(),
+    %{Addr, Pub, Priv} = {<<"VNSU5QDMZCvWmAU">>, <<"BN9moEiPOf9+rkCf+r10w8JzuDKnLyafUS18dgoA1OIiNeycYyx7vgcTYPDApZtZ0bP5vLms3E1QJDVPMWlWO7s=">>, <<"AteceXn/9Epq1TQaLO27EPn9SyjvNzL1p2Ot8Rpen/g=">>},
+    {Addr, Pub, Priv} = sign:hard_new_key(),
     tx_pool_feeder:absorb(keys:sign(create_account_tx:create_account(Pub, 620000, 0))),
     Partner = 4,
     tx_pool_feeder:absorb(keys:sign(spend_tx:spend(Partner, 10, 0, keys:id()))),
     tx_pool_feeder:absorb(keys:sign(sign_tx:sign(keys:id()))),
     %tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
     block_tree:buy_block(),
-    P5 = accounts:pub(block_tree:account(5)),
-    P4 = accounts:pub(block_tree:account(4)),
-    P3 = accounts:pub(block_tree:account(3)),
-    P2 = accounts:pub(block_tree:account(2)),
-    P1 = accounts:pub(block_tree:account(1)),
-    ID = case Pub of 
+    P5 = accounts:addr(block_tree:account(5)),
+    P4 = accounts:addr(block_tree:account(4)),
+    P3 = accounts:addr(block_tree:account(3)),
+    P2 = accounts:addr(block_tree:account(2)),
+    P1 = accounts:addr(block_tree:account(1)),
+    ID = case Addr of 
 	P1 -> 1;
 	P2 -> 2;
 	P3 -> 3;
 	P4 -> 4;
 	P5 -> 5
     end,
-    CreateTx1 = keys:sign(to_channel_tx:create_channel(Partner, 110000, 10000, <<"delegated_1">>, 0)),
+    CreateTx1 = keys:sign(to_channel_tx:create_channel(ID, 110000, 10000, <<"delegated_1">>, 0)),
     SignedCreateTx1 = sign:sign_tx(CreateTx1, Pub, Priv, ID, tx_pool:accounts()),
+    true = sign:verify(SignedCreateTx1, tx_pool:accounts()),
     tx_pool_feeder:absorb(SignedCreateTx1),
     tx_pool_feeder:absorb(keys:sign(sign_tx:sign(keys:id()))),
     %tx_pool_feeder:absorb(keys:sign(reveal:reveal(keys:id()))),
