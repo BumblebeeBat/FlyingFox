@@ -76,6 +76,8 @@ doit({close_channel, ChId, Amount, Nonce, Fee}) ->
 doit({sync, IP, Port}) ->
     download_blocks:sync(IP, Port);
 doit({pubkey}) -> {ok, keys:pubkey()};
+doit({address}) -> {ok, sign:pubkey2address(keys:pubkey())};
+doit({address, X}) -> {ok, sign:pubkey2address(X)};
 doit({id}) -> {ok,  keys:id()};
 doit({channel_ids, Partner}) -> {ok, channel_manager:id(Partner)};
 doit({new_pubkey, Password}) -> 

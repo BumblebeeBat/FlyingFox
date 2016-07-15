@@ -9,5 +9,5 @@ setTimeout(id_number_func, 2000);
 function id_number1(id) {
     var balance = document.getElementById("id_number");
     //balance.innerHTML = "id_number ".concat(atob(id));
-    balance.innerHTML = "address ".concat(id);
+    balance.innerHTML = "id ".concat(id);
 }

@@ -3,7 +3,7 @@ function create_account1() {
     var create_pubkey = document.createElement("INPUT");
     create_pubkey.setAttribute("type", "text"); 
     var pubkey_info = document.createElement("h8");
-    pubkey_info.innerHTML = "new account pubkey: ";
+    pubkey_info.innerHTML = "new account address: ";
     document.body.appendChild(document.createElement("br"));
     document.body.appendChild(pubkey_info);
     document.body.appendChild(create_pubkey);
