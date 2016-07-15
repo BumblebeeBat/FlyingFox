@@ -9,7 +9,7 @@
 	integer 27
     then ;
 : doit integer 1 == if
-	hash binary 6DIFJeegWoFCARdzPWKgFaMGniG5vD8Qh+WgPZBb5HQ=  == swap dup format match rot and or_die call else
+	hash binary 2J54tzk6WXTncb03djRc/Tjlw0/0M25ZTmyuyaCRkGw= print == swap dup format match rot and or_die call else
 	integer 555
     then ;
 

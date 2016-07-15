@@ -251,6 +251,9 @@ run_helper(56, [ID|Stack]) ->
 run_helper(57, [X|Stack]) -> 
     Y = X == [],
     [Y|[X|Stack]];% dupnil==
+run_helper(58, [X|Stack]) -> 
+    Y = sign:pubkey2address(X),
+    [Y|Stack];% pub2addr
 
 run_helper({f, T, B}, Stack) -> 
     [{f, T, B}|Stack];%load fraction into stack.

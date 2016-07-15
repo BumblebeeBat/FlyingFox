@@ -33,5 +33,6 @@ test1() ->
     S = mail:test(),
     S = arbitrage:test(),
     S = channel_manager:test(),
+    S = test_fff:test(),
     S.
     

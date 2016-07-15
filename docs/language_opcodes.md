@@ -116,6 +116,8 @@
 
 57 nil== % ( List -- List true/false )
 
+58 pub2addr % ( Pub -- Addr )
+
 true true
 
 false false
