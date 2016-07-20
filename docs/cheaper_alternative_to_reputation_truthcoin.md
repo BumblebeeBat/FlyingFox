@@ -7,3 +7,7 @@ So if there are 1000 markets, each with $10,000 of gambling, then there would be
 Using my new method at most $10,000 would need be locked up in safety deposits at any one moment. It only takes an 10 minutes to collect votes. Locking up $10,000 for only 10 minutes is very affordable.
 
 Using the old reputation as a currency method, there would need to be a minimum of $10 million locked up in reputation 24/7, very expensive.
+
+It is bad to reuse bonds to different things. Every judgment needs a seperate safety deposit. We shouldn't use a large pool of reputation currency for all the different judgments.
+
+If you reuse the same money for bonds that don't occur at the same time, then the money needs to be locked up a long time, this is expensive. By making each bond only do one thing, we can unlock it as quickly as possible, which is more affordable.
