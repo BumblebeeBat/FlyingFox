@@ -167,8 +167,8 @@ test() ->
 	    io:fwrite(Priv2),
 	    io:fwrite("\n"),
 	    io:fwrite("signed tx\n"),
-	    io:fwrite(packer:pack(Signed));
-	    io:fwrite("\n"),
+	    io:fwrite(packer:pack(Signed)),
+	    io:fwrite("\n");
 	true -> ok
     end,
     true = verify(Signed2, Accounts),

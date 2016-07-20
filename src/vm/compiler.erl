@@ -55,7 +55,7 @@ add_spaces(<<X:8, B/binary >>, Out) ->
     add_spaces(B, <<Out/binary, X:8>>).
 remove_comments(B) -> remove_comments(B, <<"">>).
 remove_comments(<<"">>, Out) -> Out;
-remove_comments(<<40:8, B/binary >>, Out) -> % [40] == ")".
+remove_comments(<<40:8, B/binary >>, Out) -> % [40] == "(".
     C = remove_till(41, B), % [41] == ")".
     remove_comments(C, Out);
 remove_comments(<<37:8, B/binary >>, Out) -> % [37] == "%".

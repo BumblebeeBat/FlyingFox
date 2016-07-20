@@ -268,6 +268,9 @@ cp security_comparison_2.png tmp/1968.png
 cp security_comparison_2.png tmp/1969.png
 #sleep 4
 
+rm -r tmp
+rm video.mp4
+mkdir tmp
 ffmpeg -framerate 1 -pattern_type glob -i 'tmp/*.png' -i louder.mp3 -c:v libx264 -r 1 -c:a copy -shortest video.mp4
 
 rm -r tmp
