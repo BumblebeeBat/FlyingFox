@@ -11,10 +11,10 @@ Carol wants to gamble on the election. She thinks Trump will win.
 Carol makes a bet with Bob. Bob bets on Hilary, Carol bets on Trump.
 Bob's new bet cancels out his old bet with Alice. He is now neutral.
 
-Alice and Carol form a channel. Using a hashlock, all 3 channels are updated.
+Alice and Carol form a channel. Using a hashlock, all 3 channels are updated simultaniously.
 
-* The Alice-Carol channel is used to make a bet on the presidential election. Alice bets on Obama, Carol on Trump.
+* The Alice-Carol channel is used to make a bet on the presidential election. Alice bets on Obama, Carol on Trump. Locking up liquidity.
 
-* The Alice-Bob channel is emptied of bets.
+* The Alice-Bob channel is emptied of bets, which unlocks liquidity.
 
-* The Bob-Carrol channel is emptied of bets.
+* The Bob-Carrol channel is emptied of bets, which unlocks liquidity.
