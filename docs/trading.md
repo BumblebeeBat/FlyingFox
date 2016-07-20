@@ -1,4 +1,4 @@
-There are 2 ways the blockchain trading is being designed today.
+There are 2 ways the trading is being designed on blockchains today.
 
 The naive choice looks like this:
 trading is broken up into multiple independent interactions with the blockchain. Creating the market,
