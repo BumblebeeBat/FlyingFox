@@ -1,9 +1,10 @@
 We need the outcome of the decision to be decided using a decentralized method called the oracle protocol.
 
-The way truthcoin is currently designed, rewarding the oracle participants is a decentralized process.
-Does rewarding the oracle participants need to be decentralized?
+Taking and giving safety deposits from the oracle needs to be decentralized. If it was centralized, the leader could purposefully make himself into a lying reporter, and take all the money.
 
-What if I have centralized control of a switch. After the decision is already made, after the gamblers collect their winnings, I have control over which way to flip the switch. If I flip it one way, then the honest half of the oracle participants get more rep, and dishonest ones lose rep. If I flip it the other way, then the liars get more rep, and the honest participants lose rep.
+Does rewarding rep to the oracle participants need to be decentralized? 
+
+What if I have centralized control of a switch. After the decision is already made, after the gamblers collect their winnings, I have control over which way to flip the switch. If I flip it one way, then the honest half of the oracle participants get more reputation, and dishonest ones lose their reputation. If I flip it the other way, then the liars get more rep, and the honest participants lose rep.
 
 Would this be as secure as a fully-decentralized version of truthcoin?
 
