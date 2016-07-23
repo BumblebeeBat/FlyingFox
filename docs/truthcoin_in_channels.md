@@ -1,3 +1,10 @@
+The thing below with leaders does not work. If the leader and reporters collude, they can steal all the money being gambled.
+
+Using reputation as money is better because after an attack the reputation's value can go to zero.
+
+
+
+
 How do we put truthcoin into the channels mechanism?
 
 (I mention a "leader" several times. To make this process decentralized, the leader can be replaced by a N of M group of managers)
@@ -26,10 +33,12 @@ reporter before revealing judgement:
 
 1) I commit to revealing this secret when asked. If I fail to reveal, then pay the gamblers my safety deposit. Do not give it to validators, or to the leader. This is to make sure there is no incentive to censor someone from revealing.
 
-reporter after revealing:
 
-1)
 
+
+
+
+gamblers need to verify that the leader and his reporters deleted money to punish validators who double-report. If double-reporting happens, the validators money should be distributed to the gamblers.
 
 
 
