@@ -1,5 +1,5 @@
 The thing below with leaders does not work. If the leader and reporters collude, they can steal all the money being gambled.
-
+v
 Using reputation as money is better because after an attack the reputation's value can go to zero.
 
 
@@ -52,11 +52,13 @@ What it would look like if we did it on-chain, with tx-types:
 
 4) bet in a market
 
-5) agree to be an oracle for a market. This is a large tx signed by everyone who will participate as an oracle.
+5) agree to be an oracle for a market. This is a large tx signed by everyone who will participate as an oracle. This creates a new currency out of the money.
 
 6) commit to a report. only oracle participants make this tx.
 
 7) reveal the report you committed to.
+
+8) convert the reputation back to fungible currency. (Validators censor this if they dislike something the oracle did)
 
 Half-way
 

@@ -3,7 +3,7 @@ The limitation with reputation is that the total amount of money in the markets 
 This paper improves on Bitcoin Hivemind's and augur's protocols by reducing the amount of money that needs to be locked up. The amount of money locked in safety deposits only ever needs be as big as the current amount of value being judged over in the moment.
 
 To form a oracle, a group of people transform the native currency into a subcurency. They have an agreement with the blockchain, so that after X number of blocks have passed they will be allowed to transform the subcurrency back into native currency, as long as the validators let them include their withdrawl into a block.
-They should have a limit to how big of a fee they can pay, whichever is less: 1% of how much money they have in the subcurrency, or the median tx fee over the last X blocks. We don't want them to be able to bribe the validators into letting them get away without full punishment.
+They should have a limit to how big of a fee they can pay, whichever is less: 1% of how much money they have in the subcurrency, or the median tx fee over the last X blocks. We don't want them to be able to bribe the validators into letting them get away without full punishment. Hopefully the validator's only incentive will be the value of the currency.
 This way we can quickly increase the value of reputation when we need it, and unlock the money for other purposes when we don't.
 It also makes it easy for the blockchain to know the relative value of reputation and internal currency.
 This makes it possible for us to give the money from lying validators to the gamblers.
@@ -21,9 +21,9 @@ Example:
 
 if there are 1000 markets, each with $10,000 of gambling, then there would be $10 million being gambled in truthcoin.
 
-Using my new method only $20,000 would need be locked up in safety deposits at any one moment. It only takes 10 minutes to collect votes. Locking up $20,000 for only 10 minutes is very affordable.
-
 Using the old reputation as a currency method, there would need to be a minimum of $10 million locked up in reputation 24/7, very expensive.
+
+Using my new method only $30,000 would need be locked up in safety deposits at any one moment. It only takes 10 minutes to collect votes. Locking up $30,000 for only 10 minutes is very affordable.
 
 
 
