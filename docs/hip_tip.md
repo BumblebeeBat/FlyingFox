@@ -44,7 +44,7 @@ Using my new method only $30,000 would need be locked up in safety deposits at a
 
 Notes
 
-
+[We can do all this off-chain](colored_lightning.md)
 
 Attribution
 
