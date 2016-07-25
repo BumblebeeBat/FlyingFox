@@ -1,11 +1,6 @@
-The thing below with leaders does not work. If the leader and reporters collude, they can steal all the money being gambled.
-v
-Using reputation as money is better because after an attack the reputation's value can go to zero.
-
-
-
-
 How do we put truthcoin into the channels mechanism?
+
+[We should used colored lightning for the safety deposit that the reporter holds](colored_lightning.md)
 
 (I mention a "leader" several times. To make this process decentralized, the leader can be replaced by a N of M group of managers)
 

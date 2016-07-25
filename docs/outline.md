@@ -33,7 +33,8 @@ Every address has a nonce that updates on each tx. To be valid, the tx must incl
 - channel_close
 - channel_funds_limit
 - repo
-- pow
+- transform flying foxes into colored foxes
+- transform colored foxes back to flying foxes
 
 #### spend:
 For users to give money to each other. Creator of the tx has a fee which is >=0. The fee pays the creator of the block.
