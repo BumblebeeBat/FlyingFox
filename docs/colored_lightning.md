@@ -5,8 +5,6 @@ So if you want a dapp that involves 2 colors of coins, then people will need to 
 
 Colored Lightning allow us to move a greater variety of computation off-chain into the state-channels. Specifically, it lets us move prediction market judgement off-chain.
 
-It is also a lot more affordable than the existing on-chain mechanisms, [as explained here](cheaper_alternative_to_reputation_truthcoin.md)
-
 Colored channels solves a problem inherent to channels. If there are >2 nodes in a channel network dapp, it isn't possible to enforce that money gets deleted in a channel you don't control. So in a simple example, if Bob, Charlie, and Alice had channels in a triangle, Bob couldn't be sure that Alice and Charlie are actually deleting money in their channel.
 Alice and Charlie might be splitting the money they are supposed to delete, and keeping it.
 
