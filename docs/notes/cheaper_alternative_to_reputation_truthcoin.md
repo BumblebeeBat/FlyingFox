@@ -17,16 +17,6 @@ In Augur there are coins called "reputation". The maximum amount of money being 
 Using the simplification, every market has a seperate safety deposit stopping the judges from double-signing. The subcurrencies used to make the deposit only needs to exist for long enough for all the reporters to report. So this is much more affordable than augur/hivemind's reputation.
 
 
-Example:
-
-if there are 1000 markets, each with $10,000 of gambling, then there would be $10 million being gambled in truthcoin.
-
-Using the old reputation as a currency method, there would need to be a minimum of $10 million locked up in reputation 24/7, very expensive.
-
-Using my new method only $30,000 would need be locked up in safety deposits at any one moment. It only takes 10 minutes to collect votes. Locking up $30,000 for only 10 minutes is very affordable.
-
-
-
 generalizing this concept:
 
 It is bad to reuse bonds to different things. Every judgment needs a seperate safety deposit. We shouldn't use a large pool of reputation currency for all the different judgments.
