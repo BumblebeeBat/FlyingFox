@@ -8,6 +8,9 @@ Synthetic assets are made up of financial derivatives. For example, if I have a 
 If I use my A-coins to make a bet that B will increase in value relative to A, then the value of my bet changes as the value of B-coins change. If I made made multiple bets, I could create an asset out of A-coins which almost exactly matches the price movement of B-coins.
 So if B-coins doubled in value, then my asset on the A-blockchain will also double in value.
 
+Pegging only has 1 purpose. Moving assets to other chains.
+Synthetic assets are a tool that can be used to build many different useful things.
+
 Besides mimicing other blockchains, synthetic assets can be used to mimic apple shares, or gold, or US savings bonds.
 Synthetic assets can be made to give you extra leverage. They give far more freedom that pegging.
 
