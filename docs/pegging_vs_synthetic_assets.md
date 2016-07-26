@@ -14,3 +14,11 @@ Synthetic assets can be made to give you extra leverage. They give far more free
 Adding synthetic assets to a blockchain is fairly simple. You need a reliable oracle, and markets for trading.
 Financial derivatives let you gamble on sporting events, and participate in crowdfunding, and learn secrets about the world with prediction markets.
 Pegging doesn't have any of these features.
+
+Pegging can break blockchain consensus. The consensus mechanism is designed to be barely secure enough to protect the coins that exists in it. If we put coins from a different blockchain, those coins change value all the time relative to native currency.
+If they get to valuable, then more attacks become profitable. In the extreme it is like this:
+if ethereum let people move bitcoins onto ethereum.
+The price of ether drops to zero, but there are still thousands of bitcoin on the chain.
+An attacker could easily buy up all the rep, or bribe the validators to confiscate the bitcoins.
+
+Synthetic assets don't have this problem.
