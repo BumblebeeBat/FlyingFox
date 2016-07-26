@@ -19,7 +19,7 @@ Financial derivatives let you gamble on sporting events, and participate in crow
 Pegging doesn't have any of these features.
 
 Pegging can break blockchain consensus. The consensus mechanism is designed to be barely secure enough to protect the coins that exists in it. If we put coins from a different blockchain, those coins change value all the time relative to native currency.
-If they get to valuable, then more attacks become profitable. In the extreme it is like this:
+If they get too valuable, then more attacks become profitable. In the extreme it is like this:
 if ethereum let people move bitcoins onto ethereum.
 The price of ether drops to zero, but there are still thousands of bitcoin on the chain.
 An attacker could easily buy up all the ether, or bribe the validators to confiscate the bitcoins.
