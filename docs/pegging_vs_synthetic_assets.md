@@ -10,9 +10,9 @@ So if B-coins doubled in value, then my asset on the A-blockchain will also doub
 
 First a numbered list of the reasons, then detailed explanations:
 
-1) you would need to write light clients for all the different blockchains into one blockchain, and maintain that mess. If any other blockchain updates, so do you.
+1) you would need to write light clients for all the different blockchains into one blockchain, and maintain that mess. If any other blockchain updates, so do you. So pegging is a much greater quantity of software than synthetic assets.
 
-2) the code you are writing is consensus code, so it is 100x more expensive
+2) the code that would need to be written for pegging is consensus code, it is 100x more expensive to maintain per line than non-consensus code.
 
 3) financial derivatives can be used as a platform to build all sorts of other useful things, pegging cannot.
 
