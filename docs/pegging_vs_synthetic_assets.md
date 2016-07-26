@@ -22,3 +22,11 @@ The price of ether drops to zero, but there are still thousands of bitcoin on th
 An attacker could easily buy up all the ether, or bribe the validators to confiscate the bitcoins.
 
 Synthetic assets don't have this problem.
+
+
+You could use state channels to trade A-coins on blockchain B for B-coins on blockchain A, without modifying any blockchain consensus code.
+
+Pegging involves writing custom code for every pair of blockchains that are linked. This code is in the blockchain consensus, it is the most expensive kind of code to write.
+
+It takes about 100x more work to write and maintain a line of consensus code vs a line of code.
+
