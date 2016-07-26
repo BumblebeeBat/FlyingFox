@@ -7,12 +7,12 @@ the purpose of this document is to explain a way to reduce the operating costs o
 Motivation
 
 Recent research in blockchain consensus technology has come to a general rules regarding safety deposts:
-* Don't reuse safety deposits at different times
+* Don't reuse safety deposits at different times. 
 If a safety deposit is used to disincentivize multiple actions at different times, then the safety deposit will need to be locked up for a longer time period that contains all the actions we want to disinventivize. Leaving the safety deposit locked for a longer time period costs more money.
-* Don't reuse safety deposits for different things at the same time
+* Don't reuse safety deposits for different things at the same time. 
 Once a safety deposit is destroyed to punish one action, there is no deposit left to disincentive other actions. 
 So a small failure can propagate into a bigger one.
-* Don't collect a safety deposit until you know how big it will need to be
+* Don't collect a safety deposit until you know how big it will need to be.
 Otherwise we could end up locking up too much money at once, which would make the protocol more expensive. Or we could lock up not-enough, which means we have to unlock the security deposit, and then collect a bigger one.
 
 Problem
