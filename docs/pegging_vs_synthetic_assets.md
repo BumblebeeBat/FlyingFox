@@ -19,6 +19,6 @@ Pegging can break blockchain consensus. The consensus mechanism is designed to b
 If they get to valuable, then more attacks become profitable. In the extreme it is like this:
 if ethereum let people move bitcoins onto ethereum.
 The price of ether drops to zero, but there are still thousands of bitcoin on the chain.
-An attacker could easily buy up all the rep, or bribe the validators to confiscate the bitcoins.
+An attacker could easily buy up all the ether, or bribe the validators to confiscate the bitcoins.
 
 Synthetic assets don't have this problem.
