@@ -8,6 +8,17 @@ Synthetic assets are made up of financial derivatives. For example, if I have a 
 If I use my A-coins to make a bet that B will increase in value relative to A, then the value of my bet changes as the value of B-coins change. If I made made multiple bets, I could create an asset out of A-coins which almost exactly matches the price movement of B-coins.
 So if B-coins doubled in value, then my asset on the A-blockchain will also double in value.
 
+First a numbered list of the reasons, then detailed explanations:
+
+1) you would need to write light clients for all the different blockchains into one blockchain, and maintain that mess. If any other blockchain updates, so do you.
+
+2) the code you are writing is consensus code, so it is 100x more expensive
+
+3) financial derivatives can be used as a platform to build all sorts of other useful things, pegging cannot.
+
+4) pegging can break blockchain consensus, by putting too much non-native value onto a blockchain.
+
+
 Pegging only has 1 purpose. Moving assets to other chains.
 Synthetic assets are a tool that can be used to build many different useful things.
 
@@ -33,3 +44,7 @@ Pegging involves writing custom code for every pair of blockchains that are link
 
 It takes about 100x more work to write and maintain a line of consensus code vs a line of code.
 
+One disadvantage of synthetic assets is that you need money locked up to secure each derivative. All this locked up money makes it more expensive by the interest rate.
+
+Using a combination of synethic assets and cross chain atomic trading solves this problem.
+First you put a trade on the exchange to buy the synthetic asset. Then you go offline. Once you come back online days later, you see that you have purchased the synthetic asset. Now you can instantly trade the synthetic asset for coins on the other blockchain, using cross-chain atomic swap.
