@@ -33,8 +33,8 @@ Every address has a nonce that updates on each tx. To be valid, the tx must incl
 - channel_close
 - channel_funds_limit
 - repo
-- transform flying foxes into colored foxes
-- transform colored foxes back to flying foxes
+- make_oracle
+- disband_oracle
 
 #### spend:
 For users to give money to each other. Creator of the tx has a fee which is >=0. The fee pays the creator of the block.
@@ -107,59 +107,20 @@ If you can provide evidence that someone doesn't have enough money left to valid
 
 #### pow
 
-When you need to get work done, it is possible to make a contract on the bitcoin blockchain to anonymously hire someone to do your Flying Fox work for you.
 Can grow the market cap up to 0.1% per block. Price to produce new coins is determined by a mechanism the block creator participates in.
 80 bytes total, {4:version, 32:hashPrevBlock, 32:MerkleRoot, 4:time, 4:difficulty, 4:nonce}
 inside the work we need 1) address to be rewarded, 2) hash of a recent block. 
 The more recent the block you reference, the bigger the reward.
 
-Thoughts on bets:
-forth-like language, similar to bitcoin.
+### make_oracle
 
-A betting language would need to:
-2) opcode: to do sha256 on arbitrary sized data, to allow merkle proofs
-3) opcode: check signature
-4) opcodes: * / + - #convert integers to fraction when necessary.
-6) opcodes: rot swap drop dup 2dup -rot tuck-n, pick-n
-#8) opcode: to delete the money in the bet so neither party gets it. #unsolveable scriptPubs gives this functionality.
-9) opcodes: if else then
-10) opcodes: and or xor nand not
-11) opcodes: > < == #convert integers to fraction when necessary.
-13) opcodes: append_binaries, remove N bytes from right of binary, remove N bytes from left of binary.
-14) opcode: flip stack
-15) opcode: fail 
-16) opcode: fraction2int #rounds down to the nearest integer.
-16) opcode: int2fraction #takes 2 integers.
-7) opcodes: aware of blockchain facts: totalcoins, height.
-12) opcode: stackdepth
+* transforms flying foxes into colored foxes
+* signed by everyone who will participate
+* one person is the manager. Everyone has a channel with him, your colored coins are in the channel.
+* A number is given. This is the ratio of how much money the manager has in every channel. This money came from the manager's account.
 
-Code would mostly be integer codes like:
-0, 1, 5, 30
-But it would have Things mixed in:
-<<>>, {f, 3, 2}, {integer, 33}
+### disband_oracle
 
-I could have the datastructure be a list of Things,
-examples of Things:
-* <<>>
-* <<123, 44, 0, 1>>
-* {f, 23, 100} % fraction.
-* {f, 0, 1}
-* {f, 230000000, 1}
-* 27
-* 0
-* true/false
-
-The code could be a list of Things and Opcodes. Things get pushed to the stack.
-
-The bet is a list of bytes in the language. The key to unlock the bet and find it's outcome is another list of bytes.
-Checking find the outcome of the bet is as easy as appending the bet to the key, and run the bytes through the VM.
-When the script finishes, the output looks like:
-
-[ X, Y, Z, ...]
-
-Where X is the top of the stack.
-X is the portion of the money that gets deleted, between 0 and 1.
-Y is the portion that goes to player 2, between 0 and 1.
-Z is a nonce. Only the highest nonced output possible is valid, otherwise your partner could slash you.
-
-If there is a stack underflow, or any other error processing opcodes, then it is an invalid tx.
+* transform colored foxes back to flying foxes
+* needs to be signed by the manager.
+* closes all the channels.

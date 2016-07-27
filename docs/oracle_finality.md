@@ -12,4 +12,4 @@ In the case of Flying Fox, the oracle-finality period will be decided by the val
 
 If we could get 12% of the money on the blockchain participating in the oracle, then that means we could judge over about 2% of the money every day.
 
-If a massive bet went through that used 60% of the money on the blockchain, it would take 30 days to be completely judged over.
+If a massive bet went through that used 60% of the money on the blockchain, it would take 30 days to be completely judged over. 
