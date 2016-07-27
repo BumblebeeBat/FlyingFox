@@ -4,3 +4,4 @@ Oracles also have an idea of finality. It is the amount of time that reporter's 
 
 The minimum rate of cost of operating an oracle is (the maximum amount of safety deposits bonded at any one time in the last finality period) * (the interest rate)
 
+If we use the blockchain validators for part of the oracle consensus mechansim, then the oracle finality period needs to be long enough in the future so that the blockchain validators can realize the scandal of a lying oracle and react to it.
