@@ -44,7 +44,7 @@ Pegging involves writing custom code for every pair of blockchains that are link
 
 It takes about 100x more work to write and maintain a line of consensus code vs a line of code.
 
-One disadvantage of synthetic assets is that you need money locked up to secure each derivative. All this locked up money makes it more expensive by the interest rate.
+One disadvantage of synthetic assets is that you need money locked up to secure each derivative. All this locked up money makes it more expensive by the interest rate. Especially since cryptocurrency is so volatile, the margins will need to be very wide.
 
 Using a combination of synethic assets and cross chain atomic trading solves this problem.
 First you put a trade on the exchange to buy the synthetic asset. Then you go offline. Once you come back online days later, you see that you have purchased the synthetic asset. Now you can instantly trade the synthetic asset for coins on the other blockchain, using cross-chain atomic swap.
