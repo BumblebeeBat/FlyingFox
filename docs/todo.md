@@ -1,3 +1,5 @@
+Make sure that nodes prefer building on the branch that was most expensive, not the heighest branch. Make sure when nodes sign on a block, it is a commitment to only sign on decendents of that blocks 10th ancestor.
+
 there needs to be a minimum amount of time to keep a channel open until you can close it. Otherwise, people who make channels with themselves 
 
 
