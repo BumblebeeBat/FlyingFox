@@ -1,4 +1,4 @@
-Tendermint is unprepared for double-spend attacks
+Tendermint is unnable to disincentivize double-spend attacks
 
 A double-spend attack is when the validators re-make one or more blocks to undo payments. The cost of an attack like this is at least 1/3rd of the security deposits from the validators. The maximum profit from an attack like this is the volume of money that was transfered in the block.
 
