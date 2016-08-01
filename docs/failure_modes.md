@@ -16,8 +16,12 @@ Forking in BFT systems happens when at least 1/3 of the validators double sign. 
 
 Forking in flying fox happens when more than 1/2 of the validator stake is controlled by people who want to maintain the fork. This is because 1/2 of validator stake will control more than 1 in 26 blocks, which is the largest gap than can be jumped. So they can just barely keep the fork alive.
 
-Bribe failure in BFT systems is not often discussed. Tendermint requires each validator to keep timestamps and evidence from their communications with the other nodes. The evidence can later be used to discover who was byzantine. Since the programmers are the ones who create the new protocol after failures, probably the programmers would be the ones being bribed. This situation needs to be experimented on.
+Bribe failure in BFT systems. Tendermint requires each validator to keep timestamps and evidence from their communications with the other nodes. The evidence can later be used to discover who was byzantine. Since the programmers are the ones who create the new protocol after failures, probably the programmers would be the ones being bribed. This situation needs to be experimented on.
 
 Bribe failures in flying fox never happen because the people who disagree can use the jumping a gap mechanism to fight. If 2 people want contradictory valid state-changes, then they take turns undoing each other's transactions until the cost exceeds the benefit. The money that would have gone to bribe someone instead gets burned.
 
 I talk more about flying foxes 1/2 vs BFT 1/3 in the file security.py
+
+There are 2 types of bribe failures. I discuss them in more detail [here](tendermint01.md) and [here](tendermint04.md)
+
+There is another type of attack called a "soft fork attack" that I talk about (here)[tendermint02.md]

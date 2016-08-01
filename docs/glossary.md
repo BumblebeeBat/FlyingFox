@@ -38,3 +38,5 @@ Now Alice has enough money in her channel to gamble with Bob, and no one had to 
 block height - This is how many blocks there are between the genesis, and the top of the block tree. Blocks are looked up from the database by height. 
 
 block number - This number starts at 0, and usually increments by 1 per block. This number determines who the signers are for the block. If insufficient signers can be found for number N, then the signers for block N+1 can go first, but it costs more exponentially. In the situation where a block number is skipped, the height is NOT skipped. So the block number starts equal to block height at 0, and block number grows equal to or faster than height.
+
+cryptoeconomic security - A mechanism is considered cryptoeconomically secure against attack X when we can prove that the cost of performing attack X exceeds the amount of money that can be stolen or destroyed by attack X.

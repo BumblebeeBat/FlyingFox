@@ -1,3 +1,6 @@
+there needs to be a minimum amount of time to keep a channel open until you can close it. Otherwise, people who make channels with themselves 
+
+
 the language needs a word for turning pubkeys into addresses.
 
 We need a web wallet so that users don't have to install anything. The external API should get a lot bigger.
