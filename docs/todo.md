@@ -1,4 +1,6 @@
-Make sure that nodes prefer building on the branch that was most expensive, not the heighest branch. Make sure when nodes sign on a block, it is a commitment to only sign on decendents of that blocks 10th ancestor.
+finality_ancestor is currently from finality blocks ago. We need to make it like 1/2 finality blocks ago. It is so that when validators sign on a block, they are committing to only sign on relatives closer than 10 cousin's away.
+
+Make sure that nodes prefer building on the branch that was most expensive, not the heighest branch. 
 
 there needs to be a minimum amount of time to keep a channel open until you can close it. Otherwise, people who make channels with themselves 
 
