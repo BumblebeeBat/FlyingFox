@@ -33,8 +33,14 @@ Every address has a nonce that updates on each tx. To be valid, the tx must incl
 - channel_close
 - channel_funds_limit
 - repo
-- make_oracle
-- disband_oracle
+- make_megachannel
+- to_megachannel
+- megachannel_end
+- megachannel_block
+- megachannel_timeout
+- megachannel_slash
+- megachannel_close
+- garbage_collect_megachannel
 
 #### spend:
 For users to give money to each other. Creator of the tx has a fee which is >=0. The fee pays the creator of the block.
@@ -70,6 +76,7 @@ After you sign, you wait a while, and eventually are able to make this tx. This 
 Spends money into a channel. Possibly creates new channel. This extends the amount of time the channel is involved with the consensus process. This can re-add the channel to the consensus process.
 
 #### channel_block:
+- signed by both parties with active final bit. closes the channel immediately.
 - Proposes a final state for this channel.
 - No longer possible to `to_channel`. 
 - Should be possible to have the channel state so some of the money is decided by the outcome of `contract + contract_state + oracle_id`.
@@ -90,6 +97,7 @@ You can only use the final channel-state, or else your partner can punish you fo
 #### channel_slash
 
 If you partner tries closing the channel at the wrong point in history, this is how you provide evidence of the true final state, and punish him for cheating.
+* if the leader under-reported in the megachannel_end tx about how much money is in your channel, then all the money in the megachannel is deleted.
 
 #### channel_close
 
@@ -112,15 +120,62 @@ Can grow the market cap up to 0.1% per block. Price to produce new coins is dete
 inside the work we need 1) address to be rewarded, 2) hash of a recent block. 
 The more recent the block you reference, the bigger the reward.
 
-### make_oracle
+### make_megachannel
 
-* transforms flying foxes into colored foxes
-* signed by everyone who will participate
-* one person is the manager. Everyone has a channel with him, your colored coins are in the channel.
-* A number is given. This is the ratio of how much money the manager has in every channel. This money came from the manager's account.
+* Everyone makes channels with the same guy, the "leader".
+* the leader is a "n of m multisig", so it might be multiple people.
+* he is the one who did the "make_megachannel" tx.
+* There is a minimum amount of time that megachannels need to stay open. Users won't participate in markets for megachannels that will close too soon, because users want the validators have enough time to react to a scandal.
 
-### disband_oracle
+### to_megachannel
 
-* transform colored foxes back to flying foxes
-* needs to be signed by the manager.
-* closes all the channels.
+* This is almost the same as a to_channel tx.
+* you join the megachannel, and have a channel with the leader.
+* You can't close the channel unless the entire megachannel closes together.
+
+### megachannel_end
+
+* The leader makes this.
+* The leader commits to a time that the megachannel will die. There is a limit to how near in the future he can set the date. We need to make sure the validators have enough time to decide to censor the closing of the channel.
+* This publishes the final balance of every channel. So the leader can work with users to move money between the channels off-chain.
+* The leader publishes this tx type over and over to give the data for all the channels that are closing.
+* If the leader tries to claim more money than the megachannel contains, then none of the channels will be able to close, and all the money in the megachannel is deleted.
+
+### megachannel_block
+
+* the leader has to wait enough time after the megachannel_end before he can do this, or he has to wait until the expiration date for the megachannel that was made when the megachannel was first made.
+* closes one or more of the channels in the megachannel.
+* similar to channel_block.
+* needs the signature of both parties.
+* Users can agree to have money moved from their channel to a different one. If that happened, then the leader publishes the agreement in both channel_states.
+
+### megachannel_timeout
+
+* If the leader didn't close before the expiration date, then anyone can make this tx.
+* if you aren't cooperating with the leader, then he can make this against you.
+* similar to channel_timeout.
+
+### megachannel_slash
+
+* If the leader tried closing your channel at the wrong point in history, or he didn't publish your history at all, then you can use this to publish a history.
+* you can't publish a history from earlier than what the leader published.
+* similar to channel_slash
+
+### megachannel_leader_close
+
+* If the leader waited enough time without getting slashed, then he can use this tx to get his and your money out.
+
+### megachannel_user_close
+
+* If you are satisfied with the final state published by the leader, then you can use this to get your money out immediately. Or you can wait the delay, and the leader will probably use a megachannel_leader_close tx to close it for you.
+
+### disband_megachannel
+
+* everyone gets their money out.
+* needs to either be signed by the leader, or have had the timer run out.
+* closes all the channels. This is the only way to close channels that are in the megachannel.
+* There is a time limit for when this tx can happen. If the validators censor this tx, then the money gets deleted.
+
+### garbage_collect_megachannel
+
+* used to garbage collect the unusable data from a megachannel that ran out of time.

@@ -1,3 +1,5 @@
+finality_ancestor DOES NOT WORK. validators will just split their money into lots of tiny accounts, so that no single account gets selected as validator twice in the same finality period.
+
 finality_ancestor is currently from finality blocks ago. We need to make it like 1/2 finality blocks ago. It is so that when validators sign on a block, they are committing to only sign on relatives closer than 10 cousin's away.
 
 Make sure that nodes prefer building on the branch that was most expensive, not the heighest branch. 

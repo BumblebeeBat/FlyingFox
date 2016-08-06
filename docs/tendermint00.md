@@ -1,0 +1,2 @@
+I wrote these documents about tendermint to encourage them to improve. I am very impressed with their team, and everything I have seen of their software looks like high-quality cutting edge technology.
+Flying Fox also has security flaws. This is a new field with lots of exploring happening.

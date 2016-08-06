@@ -7,6 +7,9 @@ Bitcoin Donations: 1GbpRPE83Vjg73KFvTVZ4EnS2qNkiLY5TT
 
 Block explorer for the testnet: http://52.36.106.100:3010/explorer.html
 
+A security flaw was found in this software that is difficult to fix. I am planning on starting over with a new github project.
+The flaw is that if the coins are distributed too thinly amount too many people, that it becomes cheap to bribe the validators to keep a fork alive.
+
 [non-technical explanation](docs/goal.md)
 
 [innovations in Flying Fox](docs/innovations.md)
