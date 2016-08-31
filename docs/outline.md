@@ -33,14 +33,6 @@ Every address has a nonce that updates on each tx. To be valid, the tx must incl
 - channel_close
 - channel_funds_limit
 - repo
-- make_megachannel
-- to_megachannel
-- megachannel_end
-- megachannel_block
-- megachannel_timeout
-- megachannel_slash
-- megachannel_close
-- garbage_collect_megachannel
 
 #### spend:
 For users to give money to each other. Creator of the tx has a fee which is >=0. The fee pays the creator of the block.

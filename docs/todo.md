@@ -1,3 +1,12 @@
+We need a new word in the language. If Alice and Bob have a channel, using this new word with Charlie's address makes it so the money is locked down for a period of time, and eventually Charlie gets the money.
+The purpose of this new word is so that Charlie can be the judge, and the validators decide if Charlie should keep his money.
+
+We need to add a POW component to each block. We should have a POW faucet to discover the cost of POW, and charge an amount similar to the cost of burn to make a block. This is important so that an attacker can't make 1000s of blocks at the same height and fill up our RAM to make us crash.
+
+Instead of finality ancestor we need a second type of sign transaction.
+Everyone who is a validator needs to do this second type of signature at least once per week.
+If a block has 2/3rds of the first type of sign, it is eligible. If it has 2/3rds of everyone, then it is finalized.
+
 finality_ancestor DOES NOT WORK. validators will just split their money into lots of tiny accounts, so that no single account gets selected as validator twice in the same finality period.
 
 finality_ancestor is currently from finality blocks ago. We need to make it like 1/2 finality blocks ago. It is so that when validators sign on a block, they are committing to only sign on relatives closer than 10 cousin's away.

@@ -1,0 +1,2 @@
+the goal of this project is to describe the optimal blockchain enforced financial derivatives system, without specifying what blockchain it is built on.
+It will include rough drafts of the contracts in erlang.

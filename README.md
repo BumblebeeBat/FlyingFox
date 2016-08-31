@@ -10,6 +10,9 @@ Block explorer for the testnet: http://52.36.106.100:3010/explorer.html
 A security flaw was found in this software that is difficult to fix. I am planning on starting over with a new github project.
 The flaw is that if the coins are distributed too thinly amount too many people, that it becomes cheap to bribe the validators to keep a fork alive.
 
+lightning consensus is a bad idea. combining the consensus mechanism with the channel mechanism is a bad idea.
+It does increase the amount of voice we get in making consensus decisions, but there are other more efficient ways to achieve this goal.
+
 [non-technical explanation](docs/goal.md)
 
 [innovations in Flying Fox](docs/innovations.md)

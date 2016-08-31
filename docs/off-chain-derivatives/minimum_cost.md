@@ -1,0 +1,2 @@
+To provide judgement, you need to lock up as much money as you are judging over as a safety deposit. That way if the judge lies, it costs as much as he can steal.
+The safety deposit needs to be locked up long enough so that the distribution of coin holders can work together to punish the judge.
