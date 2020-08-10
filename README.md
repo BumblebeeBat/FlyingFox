@@ -1,13 +1,9 @@
 Flying Fox
 ==========
 
-[![Join the chat at https://gitter.im/BumblebeeBat/FlyingFox](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/BumblebeeBat/FlyingFox?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+Work has been moved to Amoveo: https://github.com/zack-bitcoin/amoveo
 
-Bitcoin Donations: 1GbpRPE83Vjg73KFvTVZ4EnS2qNkiLY5TT
-
-Block explorer for the testnet: http://52.36.106.100:3010/explorer.html
-
-A security flaw was found in this software that is difficult to fix. I am planning on starting over with a new github project.
+A security flaw was found in this software in this repository that is difficult to fix. I am planning on starting over with a new github project.
 The flaw is that if the coins are distributed too thinly amount too many people, that it becomes cheap to bribe the validators to keep a fork alive.
 
 lightning consensus is a bad idea. combining the consensus mechanism with the channel mechanism is a bad idea.
